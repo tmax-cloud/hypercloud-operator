@@ -1,4 +1,4 @@
-package k8s.example.client.controller;
+package k8s.example.client.k8s;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;

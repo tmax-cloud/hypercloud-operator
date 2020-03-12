@@ -1,4 +1,4 @@
-package k8s.example.client.controller.util;
+package k8s.example.client.k8s.util;
 
 import java.util.HashMap;
 import java.util.Map;

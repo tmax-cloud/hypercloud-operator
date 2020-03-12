@@ -44,7 +44,6 @@ dependencies {
 
 task doBuild {
 	dependsOn "makeJar"
-	dependsOn "makeOperatorJar"
 	dependsOn "copyDependencies"
 	dependsOn "copyDependencies2"
 	dependsOn "copyStartShell"
@@ -63,26 +62,8 @@ task makeJar(type: Jar) {
     }
 }
 
-task makeOperatorJar(type: Jar) {
-	archiveName "template-operator.jar"
-	destinationDir = file("build/template")
-	
-	from(sourceSets.main.output.classesDirs) {
-		include("k8s/example/client/controller/**")
-	}
-	manifest {
-		attributes 'Main-Class': 'k8s.example.client.controller.OperatorManager'
-		attributes "Class-Path": configurations.compile.collect { it.getName() }.join(' ')
-	}
-}
-
 task copyDependencies(type: Copy) {
 	into "build/hypercloud4-server"
-	from configurations.compile
-}
-
-task copyDependencies2(type: Copy) {
-	into "build/template"
 	from configurations.compile
 }
 
@@ -96,7 +77,7 @@ task copyRegistryWatcherHome(type: Copy) {
 	into 'build/registrywatcher'
 }
 
-task copyDependencies3(type: Copy) {
+task copyDependencies2(type: Copy) {
 	into "build/registrywatcher/lib"
 	from configurations.compile
 }

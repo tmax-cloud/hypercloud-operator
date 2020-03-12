@@ -1,4 +1,4 @@
-package k8s.example.client.controller;
+package k8s.example.client.k8s;
 
 import java.io.IOException;
 import java.util.Date;
@@ -38,13 +38,13 @@ import io.kubernetes.client.openapi.JSON.SqlDateTypeAdapter;
 import io.kubernetes.client.openapi.models.V1DeleteOptions;
 import io.kubernetes.client.util.Watch;
 import k8s.example.client.Constants;
-import k8s.example.client.controller.apis.CustomResourceApi;
+import k8s.example.client.k8s.apis.CustomResourceApi;
 import okio.ByteString;
 
 public class InstanceOperator extends Thread {
 	private final Watch<Object> watchInstance;
 	private ExecutorService executorService;
-	private Logger logger = OperatorManager.logger;
+	private Logger logger = LoggerFactory.getLogger("OperatorManager");
 	private Logger logger2 = LoggerFactory.getLogger("Operator");
 	private static int latestResourceVersion = 0;
 	

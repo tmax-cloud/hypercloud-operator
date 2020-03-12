@@ -22,6 +22,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
+import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -78,6 +79,7 @@ import k8s.example.client.Constants;
 import k8s.example.client.DataObject.TokenCR;
 import k8s.example.client.DataObject.User;
 import k8s.example.client.DataObject.UserCR;
+import k8s.example.client.k8s.apis.CustomResourceApi;
 import k8s.example.client.Util;
 import k8s.example.client.models.CommandExecOut;
 import k8s.example.client.models.Registry;
@@ -91,6 +93,9 @@ public class K8sApiCaller {
 	private static CoreV1Api api;
 	private static AppsV1Api appApi;
 	private static CustomObjectsApi customObjectApi;
+	private static CustomResourceApi templateApi;
+	private static ObjectMapper mapper = new ObjectMapper();
+	private static Gson gson = new GsonBuilder().create();
 
 	public static void initK8SClient() throws Exception {
 		k8sClient = Config.fromCluster();
@@ -101,7 +106,8 @@ public class K8sApiCaller {
 
 		api = new CoreV1Api();
 		appApi = new AppsV1Api();
-		customObjectApi = new CustomObjectsApi();    	
+		customObjectApi = new CustomObjectsApi();
+		templateApi = new CustomResourceApi();
 	}
 
 	public static void startWatcher() throws Exception {    	
@@ -119,7 +125,7 @@ public class K8sApiCaller {
 			JsonObject respJson = (JsonObject) new JsonParser().parse((new Gson()).toJson(response));
 
 			// Register Joda deserialization module because of creationTimestamp of k8s object
-			ObjectMapper mapper = new ObjectMapper();
+			
 			mapper.registerModule(new JodaModule());
 			ArrayList<UserCR> userList = mapper.readValue((new Gson()).toJson(respJson.get("items")), new TypeReference<ArrayList<UserCR>>() {});
 
@@ -137,7 +143,7 @@ public class K8sApiCaller {
         	throw e;
         }
     	
-		System.out.println("Latest resource version: " + userLatestResourceVersion);
+		System.out.println("User Latest resource version: " + userLatestResourceVersion);
 
 		// registry
 		int registryLatestResourceVersion = 0;
@@ -152,7 +158,6 @@ public class K8sApiCaller {
 			JsonObject respJson = (JsonObject) new JsonParser().parse((new Gson()).toJson(response));
 
 			// Register Joda deserialization module because of creationTimestamp of k8s object
-			ObjectMapper mapper = new ObjectMapper();
 			mapper.registerModule(new JodaModule());
 			ArrayList<Registry> registryList = mapper.readValue((new Gson()).toJson(respJson.get("items")), new TypeReference<ArrayList<Registry>>() {});
 
@@ -165,8 +170,40 @@ public class K8sApiCaller {
 			e.printStackTrace();
 		}
 
-		System.out.println("Latest resource version: " + registryLatestResourceVersion);
-
+		System.out.println("Registry Latest resource version: " + registryLatestResourceVersion);
+		
+		// Operator
+		int instanceLatestResourceVersion = 0;
+		try {
+			Object result = templateApi.listNamespacedCustomObject(
+					Constants.CUSTOM_OBJECT_GROUP, 
+					Constants.CUSTOM_OBJECT_VERSION, 
+					Constants.TEMPLATE_NAMESPACE, 
+					Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, 
+					null, null, null, null, null, null, null, Boolean.FALSE);
+			
+			String JsonInString = gson.toJson(result);
+			JsonFactory factory = mapper.getFactory();
+			com.fasterxml.jackson.core.JsonParser parser = factory.createParser(JsonInString);
+			JsonNode customObjectList = mapper.readTree(parser);
+			
+			if(customObjectList.get("items").isArray()) {
+				for(JsonNode instance : customObjectList.get("items")) {
+					int instanceResourceVersion = instance.get("metadata").get("resourceVersion").asInt();
+					instanceLatestResourceVersion = (instanceLatestResourceVersion >= instanceResourceVersion) ? instanceLatestResourceVersion : instanceResourceVersion;
+				}
+			}
+		} catch (ApiException e) {
+			System.out.println("Response body: " + e.getResponseBody());
+        	e.printStackTrace();
+        	throw e;
+		} catch (Exception e) {
+			System.out.println("Exception: " + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		}
+		
+		System.out.println("Instance Latest resource version: " + instanceLatestResourceVersion);
 
 		// Start user watch
 		System.out.println("Start user watcher");
@@ -177,6 +214,11 @@ public class K8sApiCaller {
 		System.out.println("Start registry watcher");
 		RegistryWatcher registryWatcher = new RegistryWatcher(k8sClient, customObjectApi, String.valueOf(registryLatestResourceVersion));
 		registryWatcher.start();
+		
+		// Start Operator
+		System.out.println("Start Template Instance Operator");
+		InstanceOperator instanceOperator = new InstanceOperator(k8sClient, templateApi, instanceLatestResourceVersion);
+		instanceOperator.start();
 
 		while(true) {
 			if(!userWatcher.isAlive()) {
@@ -193,6 +235,14 @@ public class K8sApiCaller {
 				registryWatcher.interrupt();
 				registryWatcher = new RegistryWatcher(k8sClient, customObjectApi, registryLatestResourceVersionStr);
 				registryWatcher.start();
+			}
+			
+			if(!instanceOperator.isAlive()) {
+				instanceLatestResourceVersion = InstanceOperator.getLatestResourceVersion();
+				System.out.println(("Template Instance Operator is not Alive. Restart Operator! (Latest Resource Version: " + instanceLatestResourceVersion + ")"));
+				instanceOperator.interrupt();
+				instanceOperator = new InstanceOperator(k8sClient, templateApi, instanceLatestResourceVersion);
+				instanceOperator.start();
 			}
 
 			Thread.sleep(10000); // Period: 10 sec
