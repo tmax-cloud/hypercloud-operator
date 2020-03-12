@@ -1,0 +1,50 @@
+apiVersion: tmax.co.kr/v1
+kind: Template
+metadata:
+  name: nginx-template
+  namespace: hypercloud-system
+objects:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: ${NAME}
+    labels:
+      app: ${NAME}
+  spec:
+    selector:
+      matchLabels:
+        app: ${NAME}
+    template:
+      metadata:
+        labels:
+          app: ${NAME}
+      spec:
+        containers:
+        - name: ${NAME}
+          image: ${IMAGE}
+          ports:
+          - name: http
+            containerPort: 80
+          resources:
+            requests:
+              cpu: 1
+        tolerations:
+        - effect: NoExecute
+          key: node.kubernetes.io/not-ready
+          tolerationSeconds: 10
+        - effect: NoExecute
+          key: node.kubernetes.io/unreachable
+          tolerationSeconds: 10
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: ${NAME}
+  spec:
+    ports:
+    - name: http
+      port: 81
+      protocol: TCP
+      targetPort: 80
+    selector:
+      app: ${NAME}
+    type: LoadBalancer
