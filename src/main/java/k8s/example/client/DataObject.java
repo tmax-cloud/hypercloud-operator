@@ -16,7 +16,7 @@ public class DataObject {
 	
 	@JsonIgnoreProperties(ignoreUnknown = true)
     public static class TokenCR {
-    	private String apiVersion = "tmax.co.kr/v1";
+    	private String apiVersion = "tmax.io/v1";
     	private String kind = "Token";
     	private V1ObjectMeta metadata;
     	private String accessToken;
