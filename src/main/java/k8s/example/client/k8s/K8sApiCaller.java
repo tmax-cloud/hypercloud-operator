@@ -82,6 +82,7 @@ import k8s.example.client.DataObject.UserCR;
 import k8s.example.client.k8s.apis.CustomResourceApi;
 import k8s.example.client.Util;
 import k8s.example.client.models.CommandExecOut;
+import k8s.example.client.models.ProvisionInDO;
 import k8s.example.client.models.Registry;
 import k8s.example.client.models.RegistryStatus;
 import k8s.example.client.models.ServiceOffering;
@@ -1320,12 +1321,12 @@ public class K8sApiCaller {
 				ServicePlan servicePlan = new ServicePlan();
 				
 				service.setName(template.get("metadata").get("name").asText());
-				service.setId(template.get("metadata").get("uid").asText());
+				service.setId(template.get("metadata").get("name").asText());
 				service.setDescription(template.get("metadata").get("name").asText());
 				service.setBindable(false);
 				
 				servicePlan.setId(service.getId() + "-" + "plan1");
-				servicePlan.setName("Example Plan");
+				servicePlan.setName("example-plan");
 				servicePlan.setDescription("Example Plan");
 				planList.add(servicePlan);
 				service.setPlans(planList);
@@ -1335,6 +1336,12 @@ public class K8sApiCaller {
 			catalog.setServices(serviceList);
 		}
 		return catalog;
+	}
+	
+	public static Object createServiceInstance(String instanceId, ProvisionInDO inDO) throws ApiException {
+		String templateName = inDO.getService_id();
+		Object parameters = inDO.getParameters();
+		return templateName;
 	}
 	
 	private static JsonNode numberTypeConverter(JsonNode jsonNode) {
