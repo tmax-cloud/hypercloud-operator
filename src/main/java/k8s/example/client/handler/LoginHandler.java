@@ -114,4 +114,12 @@ public class LoginHandler extends GeneralHandler {
 		System.out.println();
 		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO));
     }
+	
+	@Override
+    public Response other(
+      String method, UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
+		System.out.println("***** OPTIONS /login");
+		
+		return Util.setCors(NanoHTTPD.newFixedLengthResponse(""));
+    }
 }
