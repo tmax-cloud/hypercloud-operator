@@ -1,9 +1,9 @@
-apiVersion: tmax.co.kr/v1
+apiVersion: tmax.io/v1
 kind: User
 metadata:
   annotations:
     kubectl.kubernetes.io/last-applied-configuration: |
-      {"apiVersion":"tmax.co.kr/v1","kind":"User","metadata":{"annotations":{},"labels":{"app":"test","encrypted":"f"},"name":"admin-tmax.co.kr"},"status":"active","userInfo":{"department":"CK2-4","description":"For test","email":"admin@tmax.co.kr","name":"Admin","password":"c7ad44cbad762a5da0a452f9e854fdc1e0e7a52a38015f23f3eab1d80b931dd472634dfac71cd34ebc35d16ab7fb8a90c81f975113d6c7538dc69dd8de9077ec","phone":"010-5730-8221","position":"developer"}}
+      {"apiVersion":"tmax.io/v1","kind":"User","metadata":{"annotations":{},"labels":{"app":"test","encrypted":"f"},"name":"admin-tmax.co.kr"},"status":"active","userInfo":{"department":"CK2-4","description":"For test","email":"admin@tmax.co.kr","name":"Admin","password":"c7ad44cbad762a5da0a452f9e854fdc1e0e7a52a38015f23f3eab1d80b931dd472634dfac71cd34ebc35d16ab7fb8a90c81f975113d6c7538dc69dd8de9077ec","phone":"010-5730-8221","position":"developer"}}
   creationTimestamp: "2020-03-13T05:14:36Z"
   generation: 3
   labels:
@@ -11,7 +11,7 @@ metadata:
     encrypted: t
   name: admin-tmax.co.kr
   resourceVersion: "8268758"
-  selfLink: /apis/tmax.co.kr/v1/users/admin-tmax.co.kr
+  selfLink: /apis/tmax.io/v1/users/admin-tmax.co.kr
   uid: eca984a0-0a99-4329-b826-6fc9ec973cfa
 status: active
 userInfo:
