@@ -91,13 +91,8 @@ public class LogoutHandler extends GeneralHandler {
 		}
 		
 		System.out.println();
-		Response resp = NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO);
-		resp.addHeader("Access-Control-Allow-Origin", "*");
-        resp.addHeader("Access-Control-Max-Age", "3628800");
-        resp.addHeader("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS");
-        resp.addHeader("Access-Control-Allow-Headers", "X-Requested-With");
-        resp.addHeader("Access-Control-Allow-Headers", "Authorization");
-		return resp;
+		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO));
+
 	}
 	
 	private boolean verifyAccessToken (String accessToken, String userId, String tokenId, String issuer) throws Exception {

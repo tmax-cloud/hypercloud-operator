@@ -99,7 +99,7 @@ public class K8sApiCaller {
 
 	public static void initK8SClient() throws Exception {
 		k8sClient = Config.fromCluster();
-		k8sClient.setConnectTimeout(0);
+		k8sClient.setConnectTimeout(5000);
 		k8sClient.setReadTimeout(0);
 		k8sClient.setWriteTimeout(0);		
 		Configuration.setDefaultApiClient(k8sClient);
