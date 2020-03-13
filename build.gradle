@@ -45,7 +45,6 @@ dependencies {
 task doBuild {
 	dependsOn "makeJar"
 	dependsOn "copyDependencies"
-	dependsOn "copyDependencies2"
 	dependsOn "copyStartShell"
 }
 
@@ -70,14 +69,4 @@ task copyDependencies(type: Copy) {
 task copyStartShell(type: Copy) {
 	into "build"
 	from "start.sh"
-}
-
-task copyRegistryWatcherHome(type: Copy) {
-	from '_registry-watcher'
-	into 'build/registrywatcher'
-}
-
-task copyDependencies2(type: Copy) {
-	into "build/registrywatcher/lib"
-	from configurations.compile
 }
