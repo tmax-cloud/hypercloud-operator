@@ -49,8 +49,8 @@ task doBuild {
 }
 
 task makeJar(type: Jar) {
-    archiveName "hypercloud4-server.jar"
-    destinationDir = file("build/hypercloud4-server")
+    archiveName "hypercloud4-operator.jar"
+    destinationDir = file("build/hypercloud4-operator")
 
     from(sourceSets.main.output.classesDirs) {
         include("**")
@@ -62,7 +62,7 @@ task makeJar(type: Jar) {
 }
 
 task copyDependencies(type: Copy) {
-	into "build/hypercloud4-server"
+	into "build/hypercloud4-operator"
 	from configurations.compile
 }
 
