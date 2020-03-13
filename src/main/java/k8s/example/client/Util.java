@@ -5,6 +5,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 
+import fi.iki.elonen.NanoHTTPD;
+import fi.iki.elonen.NanoHTTPD.Response;
+
 public class Util {	
     public static Date getDateFromSecond(long seconds) {
 		return Date.from(LocalDateTime.now().plusSeconds(seconds).atZone(ZoneId.systemDefault()).toInstant());
@@ -29,5 +32,18 @@ public class Util {
 			}
 			return ret;
 		}
+    }
+    
+    public static Response setCors( Response resp ) {
+		resp.addHeader("Access-Control-Allow-Origin", "*");
+        resp.addHeader("Access-Control-Max-Age", "3628800");
+        resp.addHeader("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS");
+        resp.addHeader("Access-Control-Allow-Headers", "X-Requested-With");
+        resp.addHeader("Access-Control-Allow-Headers", "Accept");
+        resp.addHeader("Access-Control-Allow-Headers", "Authorization");
+        resp.addHeader("Access-Control-Allow-Headers", "Content-Type");
+        resp.addHeader("Access-Control-Allow-Headers", "Referer");
+        resp.addHeader("Access-Control-Allow-Headers", "User-Agent");
+		return resp;
     }
 }

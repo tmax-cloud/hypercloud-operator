@@ -1,13 +1,12 @@
 package k8s.example.client;
 
 public class Constants {
-	public static final String WEBHOOK_NAMESPACE = "hypercloud-system";
 	public static final String ISSUER = "Tmax-ProAuth-WebHook";
 	public static final String ACCESS_TOKEN_SECRET_KEY = "Access-Token-Secret-Key";
 	public static final String REFRESH_TOKEN_SECRET_KEY = "Refresh-Token-Secret-Key";
-	public static final String TEMPLATE_NAMESPACE = "hypercloud-system";
+	public static final String TEMPLATE_NAMESPACE = "hypercloud4-system";
 	
-	public static final String CUSTOM_OBJECT_GROUP = "tmax.co.kr";
+	public static final String CUSTOM_OBJECT_GROUP = "tmax.io";
 	public static final String CUSTOM_OBJECT_VERSION = "v1";
 	public static final String CUSTOM_OBJECT_PLURAL_USER = "users";
 	public static final String CUSTOM_OBJECT_PLURAL_TOKEN = "tokens";

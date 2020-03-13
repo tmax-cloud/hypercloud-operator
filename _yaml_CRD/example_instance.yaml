@@ -1,4 +1,4 @@
-apiVersion: tmax.co.kr/v1
+apiVersion: tmax.io/v1
 kind: TemplateInstance
 metadata:
   name: nginx-template-instance
