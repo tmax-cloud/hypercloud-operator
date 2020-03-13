@@ -1204,7 +1204,7 @@ public class K8sApiCaller {
 		try {
 			V1Secret result;
 			Map<String, byte[]> secretMap = new HashMap<>();
-			result = api.createNamespacedSecret(Constants.WEBHOOK_NAMESPACE, secret, "true", null, null);
+			result = api.createNamespacedSecret(namespace, secret, "true", null, null);
 			
 			System.out.println("[result]" + result);
 
