@@ -93,10 +93,11 @@ public class OperatorFunc {
 		pluralMapper.put("CSINode", "csinodes");
 		pluralMapper.put("StorageClass", "storageclasses");
 		pluralMapper.put("VolumeAttachment", "volumeattachments");
-//		pluralMapper.put("", "");
-//		pluralMapper.put("", "");
-//		pluralMapper.put("", "");
-//		pluralMapper.put("", "");
+		pluralMapper.put("Task", "tasks");
+		pluralMapper.put("TaskRun", "taskruns");
+		pluralMapper.put("Pipeline", "pipelines");
+		pluralMapper.put("PipelineRun", "pipelineruns");
+		pluralMapper.put("PipelineResource", "pipelineresources");
 //		pluralMapper.put("", "");
 //		pluralMapper.put("", "");
 //		pluralMapper.put("", "");
