@@ -4,10 +4,10 @@ public class RegistrySpec {
 	private String image = null;
 	private String description = null;
 	private boolean shared = false;
-	private String storageSize = null;
 	private String loginId = null;
 	private String loginPassword = null;
-	private String serviceJSON = null;
+	private RegistryService service = null;
+	private RegistryPVC persistentVolumeClaim = null;
 
 	public String getImage() {
 		return image;
@@ -27,12 +27,6 @@ public class RegistrySpec {
 	public void setShared(boolean shared) {
 		this.shared = shared;
 	}
-	public String getStorageSize() {
-		return storageSize;
-	}
-	public void setStorageSize(String storageSize) {
-		this.storageSize = storageSize;
-	}
 	public String getLoginId() {
 		return loginId;
 	}
@@ -45,23 +39,28 @@ public class RegistrySpec {
 	public void setLoginPassword(String loginPassword) {
 		this.loginPassword = loginPassword;
 	}
-	public String getServiceJSON() {
-		return serviceJSON;
+	public RegistryService getService() {
+		return service;
 	}
-	public void setServiceJSON(String serviceJSON) {
-		this.serviceJSON = serviceJSON;
+	public void setService(RegistryService service) {
+		this.service = service;
 	}
-	
+	public RegistryPVC getPersistentVolumeClaim() {
+		return persistentVolumeClaim;
+	}
+	public void setPersistentVolumeClaim(RegistryPVC persistentVolumeClaim) {
+		this.persistentVolumeClaim = persistentVolumeClaim;
+	}
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("class RegistrySpec {\n");
 		sb.append("    image: ").append(toIndentedString(image)).append("\n");
 		sb.append("    description: ").append(toIndentedString(description)).append("\n");
 		sb.append("    shared: ").append(toIndentedString(shared)).append("\n");
-		sb.append("    storageSize: ").append(toIndentedString(storageSize)).append("\n");
 		sb.append("    loginId: ").append(toIndentedString(loginId)).append("\n");
 		sb.append("    loginPassword: ").append(toIndentedString(loginPassword)).append("\n");
-		sb.append("    serviceJSON: ").append(toIndentedString(serviceJSON)).append("\n");
+		sb.append("    service: ").append(toIndentedString(service)).append("\n");
+		sb.append("    persistentVolumeClaim: ").append(toIndentedString(persistentVolumeClaim)).append("\n");
 		sb.append("}");
 		return sb.toString();
 	}

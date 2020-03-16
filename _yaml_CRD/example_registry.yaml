@@ -8,6 +8,11 @@ metadata:
 spec:
   image: 192.168.6.110:5000/registry:b004
   description: test
-  storageSize: "10Gi"
   loginId: tmax
   loginPassword: tmax123
+  service:
+     type: LoadBalancer
+  persistentVolumeClaim:
+     accessModes: [ReadWriteMany]
+     storageSize: 10Gi
+     storageClassName: csi-cephfs-sc

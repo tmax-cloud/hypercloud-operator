@@ -1,0 +1,34 @@
+apiVersion: tmax.io/v1
+kind: Registry
+metadata: 
+  name: example-registry
+  namespace: hypercloud-system
+  labels:
+    obj: registry
+spec:
+  image: example/registry:b004
+  description: example
+  storageSize: example
+  loginId: example
+  loginPassword: example
+
+  
+apiVersion: tmax.io/v1
+kind: Registry
+metadata: 
+  name: example
+  namespace: example
+  labels:
+    obj: registry
+spec:
+  image: example/registry:b004
+  description: example
+  loginId: example
+  loginPassword: example
+  service:
+     nodeIP: example
+     type: example
+  persistentVolumeClaim:
+     accessModes: example
+     storageSize: example
+     storageClassName: example

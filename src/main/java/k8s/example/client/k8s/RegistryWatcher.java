@@ -12,6 +12,8 @@ import io.kubernetes.client.openapi.apis.CustomObjectsApi;
 import io.kubernetes.client.util.Watch;
 import k8s.example.client.Constants;
 import k8s.example.client.models.Registry;
+import k8s.example.client.models.RegistryCondition;
+import k8s.example.client.models.RegistryStatus;
 
 public class RegistryWatcher extends Thread {
 	private final Watch<Registry> watchRegistry;
@@ -73,13 +75,16 @@ public class RegistryWatcher extends Thread {
 							K8sApiCaller.initRegistry(registry.getMetadata().getName(), registry);
 							System.out.println("Creating registry");
 						}
-						else if(registry.getStatus().getPhase().equals("Creating")) {
-							K8sApiCaller.createRegistry(registry.getMetadata().getName(), registry);
-							System.out.println("Registry is running");
+						else if( registry.getStatus().getConditions() != null) {
+							for( RegistryCondition registryCondition : registry.getStatus().getConditions()) {
+								if( registryCondition.getType().equals("Phase")) {
+									if (registryCondition.getStatus().equals(RegistryStatus.REGISTRY_PHASE_CREATING)) {
+										K8sApiCaller.createRegistry(registry);
+										System.out.println("Registry is running");
+									}
+								}
+							}
 						}
-						//					else if(registry.getStatus().getPhase().equals("Running")) {
-						////						K8sApiCaller.createRegistry(registry.getMetadata().getName(), registry);
-						//					}
 					}
 				} catch (ApiException e) {
 					System.out.println("ApiException: " + e.getMessage());
