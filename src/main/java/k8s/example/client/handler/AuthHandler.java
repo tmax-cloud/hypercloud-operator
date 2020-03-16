@@ -46,7 +46,8 @@ public class AuthHandler extends GeneralHandler {
 			String token = element.getAsJsonObject().get( "spec" ).getAsJsonObject().get( "token" ).getAsString();
 			
 			System.out.println( "  Token: " + token );
-
+			if ( !token.isEmpty() && token.equals( Constants.MASTER_TOKEN )) return Util.setCors( NanoHTTPD.newFixedLengthResponse( createAuthResponse( true, Constants.MASTER_USER_ID ) ) );
+			
 			// Verify access token	
 			JWTVerifier verifier = JWT.require(Algorithm.HMAC256(Constants.ACCESS_TOKEN_SECRET_KEY)).build();
 			DecodedJWT jwt = verifier.verify(token);

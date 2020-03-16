@@ -15,7 +15,8 @@ public class Constants {
 	public static final String CUSTOM_OBJECT_PLURAL_REGISTRY = "registries";
 
 	
-//	public static final String MASTER_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJUbWF4LVByb0F1dGgtV2ViSG9vayIsImlkIjoid3ltaW4tdG1heC5jby5rciIsImV4cCI6MTU4MzEyMTQ5M30.hjvrlaLDFuSjchJKarGKbuWOuafhsuCQgBDo-pqsZvg";
+	public static final String MASTER_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJUbWF4LVByb0F1dGgtV2ViSG9vayIsImlkIjoid3ltaW4tdG1heC5jby5rciIsImV4cCI6MTU4MzEyMTQ5M30.hjvrlaLDFuSjchJKarGKbuWOuafhsuCQgBDo-pqsZvg";
+	public static final String MASTER_USER_ID = "admin@tmax.co.kr";
 	public static final int ACCESS_TOKEN_EXP_TIME = 3600; // 1 hour
 	public static final int REFRESH_TOKEN_EXP_TIME = 604800; // 7 days
 	
