@@ -45,6 +45,7 @@ public class Registry {
 		this.status = status;
 	}
 
+	
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("class Registry {\n");
