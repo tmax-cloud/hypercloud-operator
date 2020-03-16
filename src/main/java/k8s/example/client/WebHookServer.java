@@ -9,6 +9,7 @@ import k8s.example.client.handler.CatalogHandler;
 import k8s.example.client.handler.LoginHandler;
 import k8s.example.client.handler.LogoutHandler;
 import k8s.example.client.handler.RefreshHandler;
+import k8s.example.client.handler.ServiceInstanceHandler;
 
 public class WebHookServer extends RouterNanoHTTPD {
     public WebHookServer() throws IOException {
@@ -25,5 +26,6 @@ public class WebHookServer extends RouterNanoHTTPD {
     	addRoute("/authenticate", AuthHandler.class);
     	addRoute("/refresh", RefreshHandler.class);
     	addRoute("/v2/catalog", CatalogHandler.class);
+    	addRoute("/v2/service_instances", ServiceInstanceHandler.class);
     }
 }
