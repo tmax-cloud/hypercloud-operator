@@ -1,5 +1,5 @@
 #!/bin/sh
 
-nohup /usr/bin/java -jar /home/tmax/hypercloud4-server/hypercloud4-server.jar >> /home/tmax/hypercloud4-server/stdout.log &
+nohup /usr/bin/java -jar /home/tmax/hypercloud4-operator/hypercloud4-operator.jar >> /home/tmax/hypercloud4-operator/stdout.log &
 
 tail -f /dev/null

@@ -100,8 +100,8 @@ public class RefreshHandler extends GeneralHandler {
 		}
 		
 		System.out.println();
-		return NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO);
-    }
+		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO));
+	}
 	
 	private boolean verifyRefreshToken(String accessToken, String refreshToken, String tokenName, String issuer) throws Exception {
 		boolean result = false;		

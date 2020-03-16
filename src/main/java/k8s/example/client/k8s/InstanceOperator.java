@@ -1,6 +1,8 @@
-package k8s.example.client.controller;
+package k8s.example.client.k8s;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
@@ -14,8 +16,6 @@ import org.joda.time.format.ISODateTimeFormat;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,14 +38,12 @@ import io.kubernetes.client.openapi.JSON.SqlDateTypeAdapter;
 import io.kubernetes.client.openapi.models.V1DeleteOptions;
 import io.kubernetes.client.util.Watch;
 import k8s.example.client.Constants;
-import k8s.example.client.controller.apis.CustomResourceApi;
+import k8s.example.client.k8s.apis.CustomResourceApi;
 import okio.ByteString;
 
 public class InstanceOperator extends Thread {
 	private final Watch<Object> watchInstance;
 	private ExecutorService executorService;
-	private Logger logger = OperatorManager.logger;
-	private Logger logger2 = LoggerFactory.getLogger("Operator");
 	private static int latestResourceVersion = 0;
 	
 	ApiClient client = null;
@@ -98,30 +96,30 @@ public class InstanceOperator extends Thread {
 			watchInstance.forEach(response -> {
 				try {
 					if(Thread.interrupted()) {
-						logger.info("Interrupted!");
+						System.out.println("Interrupted!");
 						watchInstance.close();
 						executorService.shutdown();
 					}
 				} catch(Exception e) {
-					logger.info(e.getMessage());
+					System.out.println(e.getMessage());
 				}
 				
 				try {
 					String statusPhrase = null;
 					JsonNode instanceObj = numberTypeConverter(objectToJsonNode(response.object));
-					logger2.info("Event Type : " + response.type.toString()); //ADDED, MODIFIED, DELETED
-					logger2.info("Object : " + instanceObj.toString());
+					System.out.println("[Template Operator] Event Type : " + response.type.toString()); //ADDED, MODIFIED, DELETED
+					System.out.println("[Template Operator] Object : " + instanceObj.toString());
 					
 	        		if(instanceObj.get("metadata").get("resourceVersion").asInt() > latestResourceVersion) {
 	        			latestResourceVersion = instanceObj.get("metadata").get("resourceVersion").asInt();
-	        			logger2.info("Instance Name : " + instanceObj.get("metadata").get("name"));
-	        			logger2.info("Custom LatestResourceVersion : " + latestResourceVersion);
+	        			System.out.println("[Template Operator] Instance Name : " + instanceObj.get("metadata").get("name"));
+	        			System.out.println("[Template Operator] Custom LatestResourceVersion : " + latestResourceVersion);
 	        		}
 	        		
 	        		if(response.type.toString().equals("ADDED")) {
 	        			String templateName = instanceObj.get("spec").get("template").get("metadata").get("name").asText();
-	        			logger2.info("Template Instance " + instanceObj.get("metadata").get("name") + " is ADDED");
-	        			logger2.info("Template Name : " + templateName);
+	        			System.out.println("[Template Operator] Template Instance " + instanceObj.get("metadata").get("name") + " is ADDED");
+	        			System.out.println("[Template Operator] Template Name : " + templateName);
 	        			
 	        			Object template = tpApi.getNamespacedCustomObject(
 	        					Constants.CUSTOM_OBJECT_GROUP, 
@@ -129,7 +127,7 @@ public class InstanceOperator extends Thread {
 	        					Constants.TEMPLATE_NAMESPACE, 
 	        					Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE, 
 	        					templateName);
-	        			logger2.info("Template : " + template.toString());
+	        			System.out.println("[Template Operator] Template : " + template.toString());
 	        			
 	        			JsonNode templateObjs = numberTypeConverter(objectToJsonNode(template).get("objects"));
 	        			JsonNode parameters = instanceObj.get("spec").get("template").get("parameters");
@@ -143,7 +141,7 @@ public class InstanceOperator extends Thread {
 	        			if(templateObjs.isArray()) {
 	        				for(JsonNode object : templateObjs) {
 		        				String objStr = object.toString();
-		        				logger2.info("Template Object : " + objStr);
+		        				System.out.println("[Template Operator] Template Object : " + objStr);
 		        				
 		        				for(JsonNode parameter : parameters) {
 			        				String paramName = null;
@@ -154,14 +152,14 @@ public class InstanceOperator extends Thread {
 				        				
 			        				}
 			        				if(objStr.contains("${" + paramName + "}")) {
-			        					logger2.info("Parameter Name to be replaced : " + "${" + paramName + "}");
-				        				logger2.info("Parameter Value to be replaced : " + paramValue);
+			        					System.out.println("[Template Operator] Parameter Name to be replaced : " + "${" + paramName + "}");
+				        				System.out.println("[Template Operator] Parameter Value to be replaced : " + paramValue);
 			        					objStr = objStr.replace("${" + paramName + "}", paramValue);
 			        				}
 			        			}
 
 		        				JsonNode replacedObject = numberTypeConverter(mapper.readTree(objStr));
-		        				logger2.info("Replaced Template Object : " + replacedObject);
+		        				System.out.println("[Template Operator] Replaced Template Object : " + replacedObject);
 		        				
 		        				if(!objStr.contains("$")) {
 		        					String apiGroup = null;
@@ -195,10 +193,17 @@ public class InstanceOperator extends Thread {
 		        							        							        					
 		        					try {
 		        						Object result = tpApi.createNamespacedCustomObject(apiGroup, apiVersion, namespace, kind, bodyObj, null);
-		        						logger2.info(result.toString());
+		        						System.out.println(result.toString());
 		        						statusPhrase = Constants.STATUS_RUNNING;
 		        					} catch (ApiException e) {
-		        						throw new Exception(e.getResponseBody());
+		        						System.out.println("[Template Operator] ApiException: " + e.getMessage());
+		        						System.out.println(e.getResponseBody());
+		        						statusPhrase = Constants.STATUS_ERROR;
+		        					} catch (Exception e) {
+		        						System.out.println("[Template Operator] Exception: " + e.getMessage());
+		        						StringWriter sw = new StringWriter();
+		        						e.printStackTrace(new PrintWriter(sw));
+		        						System.out.println(sw.toString());
 		        					}
 		        				} else {
 		        					throw new Exception("Some non-replaced parameters or invaild values exist");
@@ -209,7 +214,7 @@ public class InstanceOperator extends Thread {
 	        			obj.put("objects", objArr);
     					tpObj.put("template", obj);
     					specObj.put("spec", tpObj);
-    					logger2.info("Object to be patched : " + specObj.toString());
+    					System.out.println("[Template Operator] Object to be patched : " + specObj.toString());
     					
     					JSONObject patch = new JSONObject();
     					JSONArray patchArray = new JSONArray();
@@ -234,16 +239,16 @@ public class InstanceOperator extends Thread {
     					
     					try{
     						Object result = tpApi.patchNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, Constants.TEMPLATE_NAMESPACE, Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, instanceObj.get("metadata").get("name").asText(), patchArray);
-    						logger2.info(result.toString());
+    						System.out.println(result.toString());
     						result = tpApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, Constants.TEMPLATE_NAMESPACE, Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, instanceObj.get("metadata").get("name").asText(), patchStatusArray);
-    						logger2.info(result.toString());
+    						System.out.println(result.toString());
     					} catch (ApiException e) {
     						throw new Exception(e.getResponseBody());
     					}
     					
 	        		} else if(response.type.toString().equals("DELETED")) {
 	        			V1DeleteOptions body = new V1DeleteOptions();
-	        			logger2.info("Template Instance " + instanceObj.get("metadata").get("name") + " is DELETED");
+	        			System.out.println("[Template Operator] Template Instance " + instanceObj.get("metadata").get("name") + " is DELETED");
 	        			JsonNode instanceObjs = instanceObj.get("spec").get("template").get("objects");
 	        			
 	        			if(instanceObjs.isArray()) {
@@ -274,10 +279,10 @@ public class InstanceOperator extends Thread {
 	        						kind = object.get("kind").asText();
 	        					}
 	        					
-	        					logger2.info(apiVersion + "/" + kind + " \"" + name + "\" deleted");
+	        					System.out.println(apiVersion + "/" + kind + " \"" + name + "\" deleted");
 	        					try {
 	        						Object result = tpApi.deleteNamespacedCustomObject(apiGroup, apiVersion, namespace, kind, name, body, 0, null, null);
-	        						logger2.info(result.toString());
+	        						System.out.println(result.toString());
 	        					} catch (ApiException e) {
 	        						throw new Exception(e.getResponseBody());
 	        					}
@@ -285,7 +290,7 @@ public class InstanceOperator extends Thread {
 	        			}
 	        		}
 				} catch(Exception e) {
-					logger2.info(e.getMessage());
+					System.out.println(e.getMessage());
 				} 
         				
 //        				if(reason.equals("Running") || reason.equals("Completed") || reason.equals("Error")) {
@@ -306,7 +311,7 @@ public class InstanceOperator extends Thread {
         		}
     		);
 		} catch (Exception e) {
-			logger.info("Instance Operator Exception: " + e.getMessage());
+			System.out.println("[Template Operator] Instance Operator Exception: " + e.getMessage());
 			executorService.shutdown();
 		}
 	}
@@ -341,7 +346,7 @@ public class InstanceOperator extends Thread {
 		try {
 			resultNode = mapper.readTree(objectStr);
 		} catch (IOException e) {
-			logger2.info(e.getMessage());
+			System.out.println(e.getMessage());
 		}
 		return resultNode;
 	}

@@ -91,8 +91,9 @@ public class LogoutHandler extends GeneralHandler {
 		}
 		
 		System.out.println();
-		return NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO);
-    }
+		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO));
+
+	}
 	
 	private boolean verifyAccessToken (String accessToken, String userId, String tokenId, String issuer) throws Exception {
 		boolean result = false;		

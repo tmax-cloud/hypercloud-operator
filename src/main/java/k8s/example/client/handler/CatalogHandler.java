@@ -13,6 +13,7 @@ import fi.iki.elonen.NanoHTTPD.Response.Status;
 import fi.iki.elonen.router.RouterNanoHTTPD.GeneralHandler;
 import fi.iki.elonen.router.RouterNanoHTTPD.UriResource;
 import io.kubernetes.client.openapi.ApiException;
+import k8s.example.client.Util;
 import k8s.example.client.k8s.K8sApiCaller;
 import k8s.example.client.models.Services;
 
@@ -40,6 +41,6 @@ public class CatalogHandler extends GeneralHandler {
 		System.out.println("Catalog : " + outDO);
 		
 		System.out.println();
-		return NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO);
-    }
+		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO));
+	}
 }

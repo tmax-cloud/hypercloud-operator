@@ -1,4 +1,4 @@
-package k8s.example.client.controller.util;
+package k8s.example.client.k8s.util;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -93,10 +93,11 @@ public class OperatorFunc {
 		pluralMapper.put("CSINode", "csinodes");
 		pluralMapper.put("StorageClass", "storageclasses");
 		pluralMapper.put("VolumeAttachment", "volumeattachments");
-//		pluralMapper.put("", "");
-//		pluralMapper.put("", "");
-//		pluralMapper.put("", "");
-//		pluralMapper.put("", "");
+		pluralMapper.put("Task", "tasks");
+		pluralMapper.put("TaskRun", "taskruns");
+		pluralMapper.put("Pipeline", "pipelines");
+		pluralMapper.put("PipelineRun", "pipelineruns");
+		pluralMapper.put("PipelineResource", "pipelineresources");
 //		pluralMapper.put("", "");
 //		pluralMapper.put("", "");
 //		pluralMapper.put("", "");

@@ -22,7 +22,7 @@ public class RegistryWatcher extends Thread {
 
 	RegistryWatcher(ApiClient client, CustomObjectsApi api, String resourceVersion) throws Exception {
 		watchRegistry = Watch.createWatch(client,
-				api.listClusterCustomObjectCall("tmax.co.kr", "v1", "registries", null, null, null, "obj=registry", null, resourceVersion, null, Boolean.TRUE, null),
+				api.listClusterCustomObjectCall("tmax.io", "v1", "registries", null, null, null, "obj=registry", null, resourceVersion, null, Boolean.TRUE, null),
 				new TypeToken<Watch.Response<Registry>>() {}.getType());
 
 		this.api = api;

@@ -11,7 +11,7 @@
  */
 
 
-package k8s.example.client.controller.apis;
+package k8s.example.client.k8s.apis;
 
 import io.kubernetes.client.openapi.ApiCallback;
 import io.kubernetes.client.openapi.ApiClient;
@@ -28,7 +28,7 @@ import java.io.IOException;
 
 
 import io.kubernetes.client.openapi.models.V1DeleteOptions;
-import k8s.example.client.controller.util.OperatorFunc;
+import k8s.example.client.k8s.util.OperatorFunc;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;

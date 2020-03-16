@@ -74,7 +74,8 @@ public class AuthHandler extends GeneralHandler {
 		}
 		
 		System.out.println();
-		return NanoHTTPD.newFixedLengthResponse( response );
+		return Util.setCors(NanoHTTPD.newFixedLengthResponse( response ));
+
     }
 	
 	private boolean verifyAccessToken (String accessToken, String userId, String tokenId, String issuer) throws Exception {

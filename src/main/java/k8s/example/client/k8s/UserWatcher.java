@@ -17,8 +17,8 @@ public class UserWatcher extends Thread {
 
 	UserWatcher(ApiClient client, CustomObjectsApi api, String resourceVersion) throws Exception {
 		watchUser = Watch.createWatch(client,
-				//api.listClusterCustomObjectCall("tmax.co.kr", "v1", "users", null, null, null, "encrypted=f", null, resourceVersion, null, Boolean.TRUE, null),
-				api.listClusterCustomObjectCall("tmax.co.kr", "v1", "users", null, null, null, "encrypted=f", null, null, null, Boolean.TRUE, null),
+				//api.listClusterCustomObjectCall("tmax.io", "v1", "users", null, null, null, "encrypted=f", null, resourceVersion, null, Boolean.TRUE, null),
+				api.listClusterCustomObjectCall("tmax.io", "v1", "users", null, null, null, "encrypted=f", null, null, null, Boolean.TRUE, null),
 				new TypeToken<Watch.Response<UserCR>>() {}.getType());
 
 		latestResourceVersion = resourceVersion;
