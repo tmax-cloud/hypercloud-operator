@@ -13,11 +13,13 @@ import com.google.gson.GsonBuilder;
 
 import fi.iki.elonen.NanoHTTPD;
 import fi.iki.elonen.NanoHTTPD.IHTTPSession;
+import fi.iki.elonen.NanoHTTPD.Method;
 import fi.iki.elonen.NanoHTTPD.Response;
 import fi.iki.elonen.NanoHTTPD.Response.IStatus;
 import fi.iki.elonen.NanoHTTPD.Response.Status;
 import fi.iki.elonen.router.RouterNanoHTTPD.GeneralHandler;
 import fi.iki.elonen.router.RouterNanoHTTPD.UriResource;
+import k8s.example.client.Util;
 import k8s.example.client.k8s.K8sApiCaller;
 import k8s.example.client.models.ProvisionInDO;
 
@@ -52,10 +54,10 @@ public class ServiceInstanceHandler extends GeneralHandler {
 			System.out.println("Service Plan ID: " + inDO.getPlan_id());
 			System.out.println("Context: " + inDO.getContext().toString());
 			
-			response = K8sApiCaller.createServiceInstance(instanceId, inDO);
+			response = K8sApiCaller.createTemplateInstance(instanceId, inDO);
 			status = Status.OK;
 		} catch (Exception e) {
-			System.out.println( "  Get Catalog fail" );
+			System.out.println( "  Failed to provision instance of service class \"" + inDO.getService_id() + "\"");
 			System.out.println( "Exception message: " + e.getMessage() );
 			e.printStackTrace();
 			status = Status.BAD_REQUEST;
@@ -64,6 +66,34 @@ public class ServiceInstanceHandler extends GeneralHandler {
 		Gson gson = new GsonBuilder().setPrettyPrinting().create();
 		outDO = gson.toJson(response).toString();
 		System.out.println("Response : " + outDO);
+		
+		System.out.println();
+		return NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO);
+    }
+	
+	@Override
+    public Response delete(
+      UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
+		System.out.println("***** DELETE /v2/service_instances");
+		
+		String serviceClassName = session.getParameters().get("service_id").get(0);
+		String instanceId = urlParams.get("instance_id");
+		System.out.println("Service Class Name: " + serviceClassName);
+		System.out.println("Instance ID: " + instanceId);
+		
+		Object response = null;
+		String outDO = null;
+		IStatus status = null;
+		
+		try {
+			response = K8sApiCaller.deleteTemplateInstance(instanceId);
+			status = Status.OK;
+		} catch (Exception e) {
+			System.out.println( "  Failed to delete instance of service class \"" + serviceClassName + "\"");
+			System.out.println( "Exception message: " + e.getMessage() );
+			e.printStackTrace();
+			status = Status.BAD_REQUEST;
+		}
 		
 		System.out.println();
 		return NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO);

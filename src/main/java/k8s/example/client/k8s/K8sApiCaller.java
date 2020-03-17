@@ -1619,7 +1619,7 @@ public class K8sApiCaller {
 		return catalog;
 	}
 	
-	public static Object createServiceInstance(String instanceId, ProvisionInDO inDO) throws Exception {
+	public static Object createTemplateInstance(String instanceId, ProvisionInDO inDO) throws Exception {
 		Object response = null;
 		TemplateInstance instance = new TemplateInstance();
 		Metadata instanceMeta = new Metadata();
@@ -1666,6 +1666,32 @@ public class K8sApiCaller {
         	e.printStackTrace();
         	throw e;
 		}
+		
+		return response;
+	}
+	
+	public static Object deleteTemplateInstance(String instanceId) throws Exception {
+		Object response = null;
+		
+		try {
+    		V1DeleteOptions body = new V1DeleteOptions();
+    		
+        	response = customObjectApi.deleteNamespacedCustomObject(
+        			Constants.CUSTOM_OBJECT_GROUP,
+					Constants.CUSTOM_OBJECT_VERSION,
+					Constants.TEMPLATE_NAMESPACE,
+					Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE,
+					instanceId, 
+					body, 0, null, null);
+        } catch (ApiException e) {
+        	System.out.println("Response body: " + e.getResponseBody());
+        	e.printStackTrace();
+        	throw e;
+        } catch (Exception e) {
+        	System.out.println("Exception message: " + e.getMessage());
+        	e.printStackTrace();
+        	throw e;
+        }
 		
 		return response;
 	}
