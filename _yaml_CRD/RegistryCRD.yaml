@@ -23,7 +23,7 @@ spec:
       properties:
         spec:
           type: object
-          required: [image, loginId, loginPassword, persistentVolumeClaim]
+          required: [image, loginId, loginPassword, service, persistentVolumeClaim]
           description: registry information
           properties:
             image:
