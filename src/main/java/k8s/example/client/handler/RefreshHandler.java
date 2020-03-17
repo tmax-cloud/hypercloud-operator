@@ -118,4 +118,12 @@ public class RefreshHandler extends GeneralHandler {
 		
 		return result;
 	}
+	
+	@Override
+    public Response other(
+      String method, UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
+		System.out.println("***** OPTIONS /refresh");
+		
+		return Util.setCors(NanoHTTPD.newFixedLengthResponse(""));
+    }
 }

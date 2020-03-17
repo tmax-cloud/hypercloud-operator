@@ -109,4 +109,12 @@ public class LogoutHandler extends GeneralHandler {
 		
 		return result;
 	}
+	
+	@Override
+    public Response other(
+      String method, UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
+		System.out.println("***** OPTIONS /logout");
+		
+		return Util.setCors(NanoHTTPD.newFixedLengthResponse(""));
+    }
 }
