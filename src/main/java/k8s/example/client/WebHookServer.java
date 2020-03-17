@@ -25,7 +25,8 @@ public class WebHookServer extends RouterNanoHTTPD {
     	addRoute("/logout", LogoutHandler.class);
     	addRoute("/authenticate", AuthHandler.class);
     	addRoute("/refresh", RefreshHandler.class);
+//    	addRoute("/v2/", CatalogHandler.class, "catalog", "service_instances");
     	addRoute("/v2/catalog", CatalogHandler.class);
-    	addRoute("/v2/service_instances", ServiceInstanceHandler.class);
+    	addRoute("/v2/service_instances/:instance_id", ServiceInstanceHandler.class);
     }
 }

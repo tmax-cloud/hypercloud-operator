@@ -1,6 +1,6 @@
 package k8s.example.client.models;
 
-import org.json.simple.JSONObject;
+import java.util.Map;
 
 public class ProvisionInDO {
 
@@ -9,7 +9,7 @@ public class ProvisionInDO {
 	private Object context = null;
 	private String organization_guid = null;
 	private String space_guid = null;
-	private Object parameters = null;
+	private Map<String, String> parameters = null;
 	private MaintenanceInfo maintenance_info = null;
 	
 	public String getService_id() {
@@ -42,10 +42,10 @@ public class ProvisionInDO {
 	public void setSpace_guid(String space_guid) {
 		this.space_guid = space_guid;
 	}
-	public Object getParameters() {
+	public Map<String, String> getParameters() {
 		return parameters;
 	}
-	public void setParameters(Object parameters) {
+	public void setParameters(Map<String, String> parameters) {
 		this.parameters = parameters;
 	}
 	public MaintenanceInfo getMaintenance_info() {

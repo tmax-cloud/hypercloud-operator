@@ -21,9 +21,11 @@ public class CatalogHandler extends GeneralHandler {
 	@Override
     public Response get(
       UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
+		
 		System.out.println("***** GET /v2/catalog");
 		
 		Services catalog = null;
+		String outDO = null;
 		IStatus status = null;
 		
 		try {
@@ -37,7 +39,7 @@ public class CatalogHandler extends GeneralHandler {
 		}
 		
 		Gson gson = new GsonBuilder().setPrettyPrinting().create();
-		String outDO = gson.toJson(catalog).toString();
+		outDO = gson.toJson(catalog).toString();
 		System.out.println("Catalog : " + outDO);
 		
 		System.out.println();

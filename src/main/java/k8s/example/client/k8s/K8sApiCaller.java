@@ -86,6 +86,7 @@ import k8s.example.client.k8s.apis.CustomResourceApi;
 import k8s.example.client.StringUtil;
 import k8s.example.client.Util;
 import k8s.example.client.models.CommandExecOut;
+import k8s.example.client.models.Metadata;
 import k8s.example.client.models.ProvisionInDO;
 import k8s.example.client.models.Registry;
 import k8s.example.client.models.RegistryPVC;
@@ -94,6 +95,10 @@ import k8s.example.client.models.RegistryStatus;
 import k8s.example.client.models.ServiceOffering;
 import k8s.example.client.models.ServicePlan;
 import k8s.example.client.models.Services;
+import k8s.example.client.models.TemplateInstance;
+import k8s.example.client.models.TemplateInstanceSpec;
+import k8s.example.client.models.TemplateInstanceSpecTemplate;
+import k8s.example.client.models.TemplateParameter;
 
 public class K8sApiCaller {	
 	private static ApiClient k8sClient;
@@ -1614,10 +1619,55 @@ public class K8sApiCaller {
 		return catalog;
 	}
 	
-	public static Object createServiceInstance(String instanceId, ProvisionInDO inDO) throws ApiException {
-		String templateName = inDO.getService_id();
-		Object parameters = inDO.getParameters();
-		return templateName;
+	public static Object createServiceInstance(String instanceId, ProvisionInDO inDO) throws Exception {
+		Object response = null;
+		TemplateInstance instance = new TemplateInstance();
+		Metadata instanceMeta = new Metadata();
+		Metadata templateMeta = new Metadata();
+		TemplateInstanceSpec spec = new TemplateInstanceSpec();
+		TemplateInstanceSpecTemplate template = new TemplateInstanceSpecTemplate();
+		List<TemplateParameter> parameters = new ArrayList<TemplateParameter>();
+		
+		try {
+			instance.setApiVersion(Constants.CUSTOM_OBJECT_GROUP + "/" + Constants.CUSTOM_OBJECT_VERSION);
+			instance.setKind(Constants.CUSTOM_OBJECT_KIND_TEMPLATE_INSTANCE);
+			instanceMeta.setName(instanceId);
+			instanceMeta.setNamespace(Constants.TEMPLATE_NAMESPACE);
+			instance.setMeatdata(instanceMeta);
+			
+			templateMeta.setName(inDO.getService_id());
+			template.setMetadata(templateMeta);
+			
+			for(String key : inDO.getParameters().keySet()) {
+				TemplateParameter parameter = new TemplateParameter();
+				parameter.setName(key);
+				parameter.setValue(inDO.getParameters().get(key));
+				parameters.add(parameter);
+			}
+			template.setParameters(parameters);
+			spec.setTemplate(template);
+			instance.setSpec(spec);
+			
+			JSONParser parser = new JSONParser();        	
+	    	JSONObject bodyObj = (JSONObject) parser.parse(new Gson().toJson(instance));
+	    	
+	    	response = customObjectApi.createNamespacedCustomObject(
+	    			Constants.CUSTOM_OBJECT_GROUP,
+					Constants.CUSTOM_OBJECT_VERSION, 
+					Constants.TEMPLATE_NAMESPACE,
+					Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE,
+					bodyObj, null);
+		} catch(ApiException e) {
+			System.out.println("Response body: " + e.getResponseBody());
+        	e.printStackTrace();
+        	throw e;
+		} catch(Exception e) {
+			System.out.println("Exception message: " + e.getMessage());
+        	e.printStackTrace();
+        	throw e;
+		}
+		
+		return response;
 	}
 	
 	private static JsonNode numberTypeConverter(JsonNode jsonNode) {
