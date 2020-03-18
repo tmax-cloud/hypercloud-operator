@@ -161,7 +161,7 @@ public class InstanceOperator extends Thread {
 		        				JsonNode replacedObject = numberTypeConverter(mapper.readTree(objStr));
 		        				System.out.println("[Template Operator] Replaced Template Object : " + replacedObject);
 		        				
-		        				if(!objStr.contains("$")) {
+		        				if(!objStr.contains("${")) {
 		        					String apiGroup = null;
 		        					String apiVersion = null;
 		        					String namespace = null;

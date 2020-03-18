@@ -98,7 +98,7 @@ public class OperatorFunc {
 		pluralMapper.put("Pipeline", "pipelines");
 		pluralMapper.put("PipelineRun", "pipelineruns");
 		pluralMapper.put("PipelineResource", "pipelineresources");
-//		pluralMapper.put("", "");
+		pluralMapper.put("Condition", "conditions");
 //		pluralMapper.put("", "");
 //		pluralMapper.put("", "");
 //		pluralMapper.put("", "");
