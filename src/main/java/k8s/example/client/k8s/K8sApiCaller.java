@@ -185,6 +185,38 @@ public class K8sApiCaller {
 		System.out.println("Registry Latest resource version: " + registryLatestResourceVersion);
 		
 		// Operator
+		int templateLatestResourceVersion = 0;
+		try {
+			Object result = templateApi.listNamespacedCustomObject(
+					Constants.CUSTOM_OBJECT_GROUP, 
+					Constants.CUSTOM_OBJECT_VERSION,
+					Constants.TEMPLATE_NAMESPACE, 
+					Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE, 
+					null, null, null, null, null, null, null, Boolean.FALSE);
+			
+			String JsonInString = gson.toJson(result);
+			JsonFactory factory = mapper.getFactory();
+			com.fasterxml.jackson.core.JsonParser parser = factory.createParser(JsonInString);
+			JsonNode customObjectList = mapper.readTree(parser);
+			
+			if(customObjectList.get("items").isArray()) {
+				for(JsonNode instance : customObjectList.get("items")) {
+					int instanceResourceVersion = instance.get("metadata").get("resourceVersion").asInt();
+					templateLatestResourceVersion = (templateLatestResourceVersion >= instanceResourceVersion) ? templateLatestResourceVersion : instanceResourceVersion;
+				}
+			}
+		} catch (ApiException e) {
+			System.out.println("Response body: " + e.getResponseBody());
+        	e.printStackTrace();
+        	throw e;
+		} catch (Exception e) {
+			System.out.println("Exception: " + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		}
+		
+		System.out.println("Template Latest resource version: " + templateLatestResourceVersion);
+		
 		int instanceLatestResourceVersion = 0;
 		try {
 			Object result = templateApi.listNamespacedCustomObject(
@@ -228,7 +260,11 @@ public class K8sApiCaller {
 		registryWatcher.start();
 		
 		// Start Operator
-		System.out.println("Start Template Instance Operator");
+		System.out.println("Start Template Operator");
+		TemplateOperator templateOperator = new TemplateOperator(k8sClient, templateApi, templateLatestResourceVersion);
+		templateOperator.start();
+		
+		System.out.println("Start Instance Operator");
 		InstanceOperator instanceOperator = new InstanceOperator(k8sClient, templateApi, instanceLatestResourceVersion);
 		instanceOperator.start();
 
@@ -249,9 +285,17 @@ public class K8sApiCaller {
 				registryWatcher.start();
 			}
 			
+			if(!templateOperator.isAlive()) {
+				templateLatestResourceVersion = InstanceOperator.getLatestResourceVersion();
+				System.out.println(("Template Operator is not Alive. Restart Operator! (Latest Resource Version: " + templateLatestResourceVersion + ")"));
+				templateOperator.interrupt();
+				templateOperator = new TemplateOperator(k8sClient, templateApi, templateLatestResourceVersion);
+				templateOperator.start();
+			}
+			
 			if(!instanceOperator.isAlive()) {
 				instanceLatestResourceVersion = InstanceOperator.getLatestResourceVersion();
-				System.out.println(("Template Instance Operator is not Alive. Restart Operator! (Latest Resource Version: " + instanceLatestResourceVersion + ")"));
+				System.out.println(("Instance Operator is not Alive. Restart Operator! (Latest Resource Version: " + instanceLatestResourceVersion + ")"));
 				instanceOperator.interrupt();
 				instanceOperator = new InstanceOperator(k8sClient, templateApi, instanceLatestResourceVersion);
 				instanceOperator.start();
@@ -1604,11 +1648,14 @@ public class K8sApiCaller {
 				service.setName(template.get("metadata").get("name").asText());
 				service.setId(template.get("metadata").get("name").asText());
 				service.setDescription(template.get("metadata").get("name").asText());
-				service.setBindable(false);
+				service.setBindable(true);
+				service.setBindings_retrievable(true);
+				service.setInstances_retrievable(false);
 				
 				servicePlan.setId(service.getId() + "-" + "plan1");
 				servicePlan.setName("example-plan");
 				servicePlan.setDescription("Example Plan");
+				servicePlan.setBindable(true);
 				planList.add(servicePlan);
 				service.setPlans(planList);
 				serviceList.add(service);
