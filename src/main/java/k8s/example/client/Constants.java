@@ -12,6 +12,7 @@ public class Constants {
 	public static final String CUSTOM_OBJECT_PLURAL_TOKEN = "tokens";
 	public static final String CUSTOM_OBJECT_PLURAL_TEMPLATE = "templates";
 	public static final String CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE = "templateinstances";
+	public static final String CUSTOM_OBJECT_KIND_TEMPLATE_INSTANCE = "TemplateInstance";
 	public static final String CUSTOM_OBJECT_PLURAL_REGISTRY = "registries";
 	public static final String CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM = "namespaceclaims";
 	public static final String K8S_RESOURCE_QUOTA_POSTFIX = "-quota";

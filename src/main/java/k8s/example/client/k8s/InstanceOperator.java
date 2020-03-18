@@ -107,19 +107,19 @@ public class InstanceOperator extends Thread {
 				try {
 					String statusPhrase = null;
 					JsonNode instanceObj = numberTypeConverter(objectToJsonNode(response.object));
-					System.out.println("[Template Operator] Event Type : " + response.type.toString()); //ADDED, MODIFIED, DELETED
-					System.out.println("[Template Operator] Object : " + instanceObj.toString());
+					System.out.println("[Instance Operator] Event Type : " + response.type.toString()); //ADDED, MODIFIED, DELETED
+					System.out.println("[Instance Operator] Object : " + instanceObj.toString());
 					
 	        		if(instanceObj.get("metadata").get("resourceVersion").asInt() > latestResourceVersion) {
 	        			latestResourceVersion = instanceObj.get("metadata").get("resourceVersion").asInt();
-	        			System.out.println("[Template Operator] Instance Name : " + instanceObj.get("metadata").get("name"));
-	        			System.out.println("[Template Operator] Custom LatestResourceVersion : " + latestResourceVersion);
+	        			System.out.println("[Instance Operator] Instance Name : " + instanceObj.get("metadata").get("name"));
+	        			System.out.println("[Instance Operator] Custom LatestResourceVersion : " + latestResourceVersion);
 	        		}
 	        		
 	        		if(response.type.toString().equals("ADDED")) {
 	        			String templateName = instanceObj.get("spec").get("template").get("metadata").get("name").asText();
-	        			System.out.println("[Template Operator] Template Instance " + instanceObj.get("metadata").get("name") + " is ADDED");
-	        			System.out.println("[Template Operator] Template Name : " + templateName);
+	        			System.out.println("[Instance Operator] Template Instance " + instanceObj.get("metadata").get("name") + " is ADDED");
+	        			System.out.println("[Instance Operator] Template Name : " + templateName);
 	        			
 	        			Object template = tpApi.getNamespacedCustomObject(
 	        					Constants.CUSTOM_OBJECT_GROUP, 
@@ -127,7 +127,7 @@ public class InstanceOperator extends Thread {
 	        					Constants.TEMPLATE_NAMESPACE, 
 	        					Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE, 
 	        					templateName);
-	        			System.out.println("[Template Operator] Template : " + template.toString());
+	        			System.out.println("[Instance Operator] Template : " + template.toString());
 	        			
 	        			JsonNode templateObjs = numberTypeConverter(objectToJsonNode(template).get("objects"));
 	        			JsonNode parameters = instanceObj.get("spec").get("template").get("parameters");
@@ -141,7 +141,7 @@ public class InstanceOperator extends Thread {
 	        			if(templateObjs.isArray()) {
 	        				for(JsonNode object : templateObjs) {
 		        				String objStr = object.toString();
-		        				System.out.println("[Template Operator] Template Object : " + objStr);
+		        				System.out.println("[Instance Operator] Template Object : " + objStr);
 		        				
 		        				for(JsonNode parameter : parameters) {
 			        				String paramName = null;
@@ -152,14 +152,14 @@ public class InstanceOperator extends Thread {
 				        				
 			        				}
 			        				if(objStr.contains("${" + paramName + "}")) {
-			        					System.out.println("[Template Operator] Parameter Name to be replaced : " + "${" + paramName + "}");
-				        				System.out.println("[Template Operator] Parameter Value to be replaced : " + paramValue);
+			        					System.out.println("[Instance Operator] Parameter Name to be replaced : " + "${" + paramName + "}");
+				        				System.out.println("[Instance Operator] Parameter Value to be replaced : " + paramValue);
 			        					objStr = objStr.replace("${" + paramName + "}", paramValue);
 			        				}
 			        			}
 
 		        				JsonNode replacedObject = numberTypeConverter(mapper.readTree(objStr));
-		        				System.out.println("[Template Operator] Replaced Template Object : " + replacedObject);
+		        				System.out.println("[Instance Operator] Replaced Template Object : " + replacedObject);
 		        				
 		        				if(!objStr.contains("${")) {
 		        					String apiGroup = null;
@@ -196,11 +196,11 @@ public class InstanceOperator extends Thread {
 		        						System.out.println(result.toString());
 		        						statusPhrase = Constants.STATUS_RUNNING;
 		        					} catch (ApiException e) {
-		        						System.out.println("[Template Operator] ApiException: " + e.getMessage());
+		        						System.out.println("[Instance Operator] ApiException: " + e.getMessage());
 		        						System.out.println(e.getResponseBody());
 		        						statusPhrase = Constants.STATUS_ERROR;
 		        					} catch (Exception e) {
-		        						System.out.println("[Template Operator] Exception: " + e.getMessage());
+		        						System.out.println("[Instance Operator] Exception: " + e.getMessage());
 		        						StringWriter sw = new StringWriter();
 		        						e.printStackTrace(new PrintWriter(sw));
 		        						System.out.println(sw.toString());
@@ -214,7 +214,7 @@ public class InstanceOperator extends Thread {
 	        			obj.put("objects", objArr);
     					tpObj.put("template", obj);
     					specObj.put("spec", tpObj);
-    					System.out.println("[Template Operator] Object to be patched : " + specObj.toString());
+    					System.out.println("[Instance Operator] Object to be patched : " + specObj.toString());
     					
     					JSONObject patch = new JSONObject();
     					JSONArray patchArray = new JSONArray();
@@ -248,7 +248,7 @@ public class InstanceOperator extends Thread {
     					
 	        		} else if(response.type.toString().equals("DELETED")) {
 	        			V1DeleteOptions body = new V1DeleteOptions();
-	        			System.out.println("[Template Operator] Template Instance " + instanceObj.get("metadata").get("name") + " is DELETED");
+	        			System.out.println("[Instance Operator] Template Instance " + instanceObj.get("metadata").get("name") + " is DELETED");
 	        			JsonNode instanceObjs = instanceObj.get("spec").get("template").get("objects");
 	        			
 	        			if(instanceObjs.isArray()) {
@@ -311,7 +311,7 @@ public class InstanceOperator extends Thread {
         		}
     		);
 		} catch (Exception e) {
-			System.out.println("[Template Operator] Instance Operator Exception: " + e.getMessage());
+			System.out.println("[Instance Operator] Instance Operator Exception: " + e.getMessage());
 			executorService.shutdown();
 		}
 	}

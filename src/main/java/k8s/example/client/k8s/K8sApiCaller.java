@@ -94,6 +94,7 @@ import k8s.example.client.StringUtil;
 import k8s.example.client.Util;
 import k8s.example.client.models.CommandExecOut;
 import k8s.example.client.models.NamespaceClaim;
+import k8s.example.client.models.Metadata;
 import k8s.example.client.models.ProvisionInDO;
 import k8s.example.client.models.Registry;
 import k8s.example.client.models.RegistryPVC;
@@ -102,6 +103,10 @@ import k8s.example.client.models.RegistryStatus;
 import k8s.example.client.models.ServiceOffering;
 import k8s.example.client.models.ServicePlan;
 import k8s.example.client.models.Services;
+import k8s.example.client.models.TemplateInstance;
+import k8s.example.client.models.TemplateInstanceSpec;
+import k8s.example.client.models.TemplateInstanceSpecTemplate;
+import k8s.example.client.models.TemplateParameter;
 
 public class K8sApiCaller {	
 	private static ApiClient k8sClient;
@@ -190,6 +195,38 @@ public class K8sApiCaller {
 		System.out.println("Registry Latest resource version: " + registryLatestResourceVersion);
 		
 		// Operator
+		int templateLatestResourceVersion = 0;
+		try {
+			Object result = templateApi.listNamespacedCustomObject(
+					Constants.CUSTOM_OBJECT_GROUP, 
+					Constants.CUSTOM_OBJECT_VERSION,
+					Constants.TEMPLATE_NAMESPACE, 
+					Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE, 
+					null, null, null, null, null, null, null, Boolean.FALSE);
+			
+			String JsonInString = gson.toJson(result);
+			JsonFactory factory = mapper.getFactory();
+			com.fasterxml.jackson.core.JsonParser parser = factory.createParser(JsonInString);
+			JsonNode customObjectList = mapper.readTree(parser);
+			
+			if(customObjectList.get("items").isArray()) {
+				for(JsonNode instance : customObjectList.get("items")) {
+					int instanceResourceVersion = instance.get("metadata").get("resourceVersion").asInt();
+					templateLatestResourceVersion = (templateLatestResourceVersion >= instanceResourceVersion) ? templateLatestResourceVersion : instanceResourceVersion;
+				}
+			}
+		} catch (ApiException e) {
+			System.out.println("Response body: " + e.getResponseBody());
+        	e.printStackTrace();
+        	throw e;
+		} catch (Exception e) {
+			System.out.println("Exception: " + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		}
+		
+		System.out.println("Template Latest resource version: " + templateLatestResourceVersion);
+		
 		int instanceLatestResourceVersion = 0;
 		try {
 			Object result = templateApi.listNamespacedCustomObject(
@@ -236,7 +273,11 @@ public class K8sApiCaller {
 		registryWatcher.start();
 		
 		// Start Operator
-		System.out.println("Start Template Instance Operator");
+		System.out.println("Start Template Operator");
+		TemplateOperator templateOperator = new TemplateOperator(k8sClient, templateApi, templateLatestResourceVersion);
+		templateOperator.start();
+		
+		System.out.println("Start Instance Operator");
 		InstanceOperator instanceOperator = new InstanceOperator(k8sClient, templateApi, instanceLatestResourceVersion);
 		instanceOperator.start();
 		
@@ -262,9 +303,17 @@ public class K8sApiCaller {
 				registryWatcher.start();
 			}
 			
+			if(!templateOperator.isAlive()) {
+				templateLatestResourceVersion = InstanceOperator.getLatestResourceVersion();
+				System.out.println(("Template Operator is not Alive. Restart Operator! (Latest Resource Version: " + templateLatestResourceVersion + ")"));
+				templateOperator.interrupt();
+				templateOperator = new TemplateOperator(k8sClient, templateApi, templateLatestResourceVersion);
+				templateOperator.start();
+			}
+			
 			if(!instanceOperator.isAlive()) {
 				instanceLatestResourceVersion = InstanceOperator.getLatestResourceVersion();
-				System.out.println(("Template Instance Operator is not Alive. Restart Operator! (Latest Resource Version: " + instanceLatestResourceVersion + ")"));
+				System.out.println(("Instance Operator is not Alive. Restart Operator! (Latest Resource Version: " + instanceLatestResourceVersion + ")"));
 				instanceOperator.interrupt();
 				instanceOperator = new InstanceOperator(k8sClient, templateApi, instanceLatestResourceVersion);
 				instanceOperator.start();
@@ -1625,11 +1674,14 @@ public class K8sApiCaller {
 				service.setName(template.get("metadata").get("name").asText());
 				service.setId(template.get("metadata").get("name").asText());
 				service.setDescription(template.get("metadata").get("name").asText());
-				service.setBindable(false);
+				service.setBindable(true);
+				service.setBindings_retrievable(true);
+				service.setInstances_retrievable(false);
 				
 				servicePlan.setId(service.getId() + "-" + "plan1");
 				servicePlan.setName("example-plan");
 				servicePlan.setDescription("Example Plan");
+				servicePlan.setBindable(true);
 				planList.add(servicePlan);
 				service.setPlans(planList);
 				serviceList.add(service);
@@ -1640,10 +1692,81 @@ public class K8sApiCaller {
 		return catalog;
 	}
 	
-	public static Object createServiceInstance(String instanceId, ProvisionInDO inDO) throws ApiException {
-		String templateName = inDO.getService_id();
-		Object parameters = inDO.getParameters();
-		return templateName;
+	public static Object createTemplateInstance(String instanceId, ProvisionInDO inDO) throws Exception {
+		Object response = null;
+		TemplateInstance instance = new TemplateInstance();
+		Metadata instanceMeta = new Metadata();
+		Metadata templateMeta = new Metadata();
+		TemplateInstanceSpec spec = new TemplateInstanceSpec();
+		TemplateInstanceSpecTemplate template = new TemplateInstanceSpecTemplate();
+		List<TemplateParameter> parameters = new ArrayList<TemplateParameter>();
+		
+		try {
+			instance.setApiVersion(Constants.CUSTOM_OBJECT_GROUP + "/" + Constants.CUSTOM_OBJECT_VERSION);
+			instance.setKind(Constants.CUSTOM_OBJECT_KIND_TEMPLATE_INSTANCE);
+			instanceMeta.setName(instanceId);
+			instanceMeta.setNamespace(Constants.TEMPLATE_NAMESPACE);
+			instance.setMeatdata(instanceMeta);
+			
+			templateMeta.setName(inDO.getService_id());
+			template.setMetadata(templateMeta);
+			
+			for(String key : inDO.getParameters().keySet()) {
+				TemplateParameter parameter = new TemplateParameter();
+				parameter.setName(key);
+				parameter.setValue(inDO.getParameters().get(key));
+				parameters.add(parameter);
+			}
+			template.setParameters(parameters);
+			spec.setTemplate(template);
+			instance.setSpec(spec);
+			
+			JSONParser parser = new JSONParser();        	
+	    	JSONObject bodyObj = (JSONObject) parser.parse(new Gson().toJson(instance));
+	    	
+	    	response = customObjectApi.createNamespacedCustomObject(
+	    			Constants.CUSTOM_OBJECT_GROUP,
+					Constants.CUSTOM_OBJECT_VERSION, 
+					Constants.TEMPLATE_NAMESPACE,
+					Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE,
+					bodyObj, null);
+		} catch(ApiException e) {
+			System.out.println("Response body: " + e.getResponseBody());
+        	e.printStackTrace();
+        	throw e;
+		} catch(Exception e) {
+			System.out.println("Exception message: " + e.getMessage());
+        	e.printStackTrace();
+        	throw e;
+		}
+		
+		return response;
+	}
+	
+	public static Object deleteTemplateInstance(String instanceId) throws Exception {
+		Object response = null;
+		
+		try {
+    		V1DeleteOptions body = new V1DeleteOptions();
+    		
+        	response = customObjectApi.deleteNamespacedCustomObject(
+        			Constants.CUSTOM_OBJECT_GROUP,
+					Constants.CUSTOM_OBJECT_VERSION,
+					Constants.TEMPLATE_NAMESPACE,
+					Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE,
+					instanceId, 
+					body, 0, null, null);
+        } catch (ApiException e) {
+        	System.out.println("Response body: " + e.getResponseBody());
+        	e.printStackTrace();
+        	throw e;
+        } catch (Exception e) {
+        	System.out.println("Exception message: " + e.getMessage());
+        	e.printStackTrace();
+        	throw e;
+        }
+		
+		return response;
 	}
 	
 	private static JsonNode numberTypeConverter(JsonNode jsonNode) {
