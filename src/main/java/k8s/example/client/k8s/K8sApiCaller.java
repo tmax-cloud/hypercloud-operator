@@ -21,12 +21,14 @@ import java.util.UUID;
 import org.apache.commons.codec.binary.Base64;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
 import org.json.simple.parser.JSONParser;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -59,6 +61,7 @@ import io.kubernetes.client.openapi.models.V1Node;
 import io.kubernetes.client.openapi.models.V1NodeAddress;
 import io.kubernetes.client.openapi.models.V1NodeList;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import io.kubernetes.client.openapi.models.V1OwnerReference;
 import io.kubernetes.client.openapi.models.V1PersistentVolumeClaim;
 import io.kubernetes.client.openapi.models.V1PersistentVolumeClaimSpec;
 import io.kubernetes.client.openapi.models.V1PersistentVolumeClaimVolumeSource;
@@ -85,13 +88,21 @@ import k8s.example.client.DataObject.UserCR;
 import k8s.example.client.k8s.apis.CustomResourceApi;
 import k8s.example.client.StringUtil;
 import k8s.example.client.Util;
+import k8s.example.client.models.BindingInDO;
+import k8s.example.client.models.BrokerResponse;
 import k8s.example.client.models.CommandExecOut;
+import k8s.example.client.models.Cost;
+import k8s.example.client.models.InputParametersSchema;
 import k8s.example.client.models.Metadata;
+import k8s.example.client.models.PlanMetadata;
 import k8s.example.client.models.ProvisionInDO;
 import k8s.example.client.models.Registry;
 import k8s.example.client.models.RegistryPVC;
 import k8s.example.client.models.RegistryService;
 import k8s.example.client.models.RegistryStatus;
+import k8s.example.client.models.Schemas;
+import k8s.example.client.models.ServiceInstanceSchema;
+import k8s.example.client.models.ServiceMetadata;
 import k8s.example.client.models.ServiceOffering;
 import k8s.example.client.models.ServicePlan;
 import k8s.example.client.models.Services;
@@ -201,8 +212,8 @@ public class K8sApiCaller {
 			
 			if(customObjectList.get("items").isArray()) {
 				for(JsonNode instance : customObjectList.get("items")) {
-					int instanceResourceVersion = instance.get("metadata").get("resourceVersion").asInt();
-					templateLatestResourceVersion = (templateLatestResourceVersion >= instanceResourceVersion) ? templateLatestResourceVersion : instanceResourceVersion;
+					int templateResourceVersion = instance.get("metadata").get("resourceVersion").asInt();
+					templateLatestResourceVersion = (templateLatestResourceVersion >= templateResourceVersion) ? templateLatestResourceVersion : templateResourceVersion;
 				}
 			}
 		} catch (ApiException e) {
@@ -286,7 +297,7 @@ public class K8sApiCaller {
 			}
 			
 			if(!templateOperator.isAlive()) {
-				templateLatestResourceVersion = InstanceOperator.getLatestResourceVersion();
+				templateLatestResourceVersion = TemplateOperator.getLatestResourceVersion();
 				System.out.println(("Template Operator is not Alive. Restart Operator! (Latest Resource Version: " + templateLatestResourceVersion + ")"));
 				templateOperator.interrupt();
 				templateOperator = new TemplateOperator(k8sClient, templateApi, templateLatestResourceVersion);
@@ -1491,7 +1502,7 @@ public class K8sApiCaller {
 		
 		if( type != null && type.equals(Constants.K8S_SECRET_TYPE_DOCKER_CONFIG_JSON)) {
 			metadata.setName(Constants.K8S_PREFIX + Constants.K8S_REGISTRY_PREFIX + secretName.toLowerCase());
-		}else {
+		} else {
 			metadata.setName(Constants.K8S_PREFIX + secretName.toLowerCase());
 		}
 		
@@ -1642,25 +1653,73 @@ public class K8sApiCaller {
 		if(templateList.isArray()) {
 			for(JsonNode template : templateList) {
 				ServiceOffering service = new ServiceOffering();
+				ServiceMetadata serviceMeta = new ServiceMetadata();
 				List<ServicePlan> planList = new ArrayList<ServicePlan>();
-				ServicePlan servicePlan = new ServicePlan();
 				
 				service.setName(template.get("metadata").get("name").asText());
 				service.setId(template.get("metadata").get("name").asText());
 				service.setDescription(template.get("metadata").get("name").asText());
-				service.setBindable(true);
-				service.setBindings_retrievable(true);
+				serviceMeta.setImageUrl(template.get("imageUrl").asText());
+				service.setMetadata(serviceMeta);
+				
+				JsonNode objectKinds = template.get("objectKinds");
+				if(objectKinds.isArray()) {
+					List<String> kinds = null;
+					ObjectReader reader = mapper.readerFor(new TypeReference<List<String>>() {});
+					try {
+						kinds = reader.readValue(objectKinds);
+					} catch (IOException e) {
+						System.out.println(e.getMessage());;
+					}
+					
+					if(kinds.contains("Secret")) {
+						service.setBindable(true);
+					}
+				}
+				
+				service.setBindings_retrievable(false);
 				service.setInstances_retrievable(false);
 				
-				servicePlan.setId(service.getId() + "-" + "plan1");
-				servicePlan.setName("example-plan");
-				servicePlan.setDescription("Example Plan");
-				servicePlan.setBindable(true);
-				planList.add(servicePlan);
+				JsonNode plans = template.get("plans");
+				if(plans.isArray()) {
+					for(JsonNode plan : plans) {
+						ServicePlan servicePlan = new ServicePlan();
+						PlanMetadata planMeta = new PlanMetadata();
+						List<String> bullets = new ArrayList<String>();
+						Cost planCost = new Cost();
+						Schemas planSchema = new Schemas();
+						ServiceInstanceSchema instanceSchema = new ServiceInstanceSchema();
+						InputParametersSchema create = new InputParametersSchema();
+						Map<String, String> parameters = null;
+						
+						servicePlan.setId(plan.get("name").asText());
+						servicePlan.setName(plan.get("name").asText());
+						servicePlan.setDescription(plan.get("description").asText());
+						servicePlan.setBindable(plan.get("bindable").asBoolean());
+						
+						for(JsonNode bullet : plan.get("metadata").get("bullets")) {
+							bullets.add(bullet.asText());
+						}
+						planMeta.setBullets(bullets);
+						
+						planCost.setAmount(plan.get("metadata").get("costs").get("amount").asText());
+						planCost.setUnit(plan.get("metadata").get("costs").get("unit").asText());
+						planMeta.setCosts(planCost);
+						servicePlan.setMetadata(planMeta);
+						
+						parameters = mapper.convertValue(plan.get("schemas").get("service_instance").get("create").get("parameters"), new TypeReference<Map<String, String>>(){});
+						create.setParameters(parameters);
+//						create = mapper.convertValue(plan.get("schemas").get("service_instance").get("create"), new TypeReference<InputParametersSchema>(){});
+						instanceSchema.setCreate(create);
+						planSchema.setService_instance(instanceSchema);
+						servicePlan.setSchemas(planSchema);
+						planList.add(servicePlan);
+					}
+				}
+				
 				service.setPlans(planList);
 				serviceList.add(service);
 			}
-			
 			catalog.setServices(serviceList);
 		}
 		return catalog;
@@ -1743,6 +1802,40 @@ public class K8sApiCaller {
 		return response;
 	}
 	
+	public static BrokerResponse insertBindingSecret(String instanceId, String bindingId, BindingInDO inDO) throws Exception {
+		try {
+			String instanceSecretName = null;
+			String instanceSecretNamespace = null;
+			Object response = customObjectApi.getNamespacedCustomObject(
+					Constants.CUSTOM_OBJECT_GROUP, 
+					Constants.CUSTOM_OBJECT_VERSION, 
+					Constants.TEMPLATE_NAMESPACE, 
+					Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, 
+					instanceId);
+			
+			JsonNode templateInstance = objectToJsonNode2(gson.toJson(response));
+			System.out.println("instanceNode: " + templateInstance.asText());
+			JsonNode objects = templateInstance.get("spec");
+			System.out.println("Objects: " + objects.toString());
+			
+			if(objects.isArray()) {
+				for(JsonNode object : objects) {
+					if(object.get("kind").asText().equals("Secret")) {
+						instanceSecretName = object.get("metadata").get("name").asText();
+						instanceSecretNamespace = object.get("metadata").get("namespace").asText();
+					}
+				}
+			}
+			
+//			V1Secret instanceSecret = api.readNamespacedSecret(instanceSecretName, instanceSecretNamespace, null, null, null);
+			
+			return null;
+		} catch (ApiException e) {
+			e.printStackTrace();
+			throw e;
+		}
+	}
+	
 	private static JsonNode numberTypeConverter(JsonNode jsonNode) {
 		if (jsonNode.isObject()) {
 			ObjectNode objectNode = (ObjectNode) jsonNode;
@@ -1777,6 +1870,11 @@ public class K8sApiCaller {
 		} catch (IOException e) {
 			System.out.println(e.getMessage());
 		}
+		return resultNode;
+	}
+	
+	private static JsonNode objectToJsonNode2(Object object) throws IOException {
+		JsonNode resultNode = mapper.valueToTree(object);
 		return resultNode;
 	}
 }

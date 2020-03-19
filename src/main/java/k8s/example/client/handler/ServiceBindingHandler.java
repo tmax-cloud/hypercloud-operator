@@ -20,6 +20,7 @@ import fi.iki.elonen.router.RouterNanoHTTPD.GeneralHandler;
 import fi.iki.elonen.router.RouterNanoHTTPD.UriResource;
 import k8s.example.client.k8s.K8sApiCaller;
 import k8s.example.client.models.BindingInDO;
+import k8s.example.client.models.BrokerResponse;
 import k8s.example.client.models.ProvisionInDO;
 
 public class ServiceBindingHandler extends GeneralHandler {
@@ -28,7 +29,7 @@ public class ServiceBindingHandler extends GeneralHandler {
       UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
 		System.out.println("***** PUT /v2/service_instances/:instance_id/service_bindings/:binding_id");
 		
-		Object response = null;
+		BrokerResponse response = null;
 		Map<String, String> body = new HashMap<String, String>();
 		
         try {
@@ -36,7 +37,7 @@ public class ServiceBindingHandler extends GeneralHandler {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
+
 		String instanceId = urlParams.get("instance_id");
 		String bindingId = urlParams.get("binding_id");
 		System.out.println("Instance ID: " + instanceId);
@@ -57,14 +58,48 @@ public class ServiceBindingHandler extends GeneralHandler {
 			if(!inDO.getBind_resource().getApp_guid().isEmpty()) {
 				System.out.println("Application GUID: " + inDO.getBind_resource().getApp_guid());
 			}
-			if(!inDO.getBind_resource().getRoute().isEmpty()) {
-				System.out.println("Application URL: " + inDO.getBind_resource().getRoute());
-			}
-//			
-//			response = K8sApiCaller.createTemplateInstance(instanceId, inDO);
+//			if(!inDO.getBind_resource().getRoute().isEmpty()) {
+//				System.out.println("Application URL: " + inDO.getBind_resource().getRoute());
+//			}
+			
+			response = K8sApiCaller.insertBindingSecret(instanceId, bindingId, inDO);
+			
 			status = Status.OK;
 		} catch (Exception e) {
 			System.out.println( "  Failed to bind instance of service class \"" + inDO.getService_id() + "\"");
+			System.out.println( "Exception message: " + e.getMessage() );
+			e.printStackTrace();
+			status = Status.BAD_REQUEST;
+		}
+		
+		Gson gson = new GsonBuilder().setPrettyPrinting().create();
+		outDO = gson.toJson(response).toString();
+		System.out.println("Response : " + outDO);
+		
+		System.out.println();
+		return NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO);
+    }
+	
+	@Override
+    public Response delete(
+      UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
+		System.out.println("***** DELETE /v2/service_instances/:instance_id/service_bindings/:binding_id");
+		
+		String serviceClassName = session.getParameters().get("service_id").get(0);
+		String instanceId = urlParams.get("instance_id");
+		String bindingId = urlParams.get("binding_id");
+		System.out.println("Instance ID: " + instanceId);
+		System.out.println("Binding ID: " + bindingId);
+		
+		BrokerResponse response = new BrokerResponse();
+		String outDO = null;
+		IStatus status = null;
+		
+		try {
+			response.setOperation("");
+			status = Status.OK;
+		} catch (Exception e) {
+			System.out.println( "  Failed to unbind instance of service class \"" + serviceClassName + "\"");
 			System.out.println( "Exception message: " + e.getMessage() );
 			e.printStackTrace();
 			status = Status.BAD_REQUEST;
