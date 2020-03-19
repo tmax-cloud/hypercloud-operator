@@ -1,16 +1,16 @@
 package k8s.example.client.models;
 
-import org.json.simple.JSONObject;
+import java.util.Map;
 
 public class InputParametersSchema {
 
-	private JSONObject parameters = null;
+	private Map<String, String> parameters = null;
 
-	public JSONObject getParameters() {
+	public Map<String, String> getParameters() {
 		return parameters;
 	}
 
-	public void setParameters(JSONObject parameters) {
+	public void setParameters(Map<String, String> parameters) {
 		this.parameters = parameters;
 	}
 
