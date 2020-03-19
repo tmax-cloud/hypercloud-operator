@@ -2,7 +2,7 @@ package k8s.example.client.models;
 
 import java.util.Date;
 
-public class NamespaceClaimStatus {
+public class ClaimStatus {
 	public static final String NAMESPACE_CLAIM_AWAITING = "Awaiting";
 	public static final String NAMESPACE_CLAIM_SUCCESS = "Success";
 	public static final String NAMESPACE_CLAIM_REJECT = "Reject";

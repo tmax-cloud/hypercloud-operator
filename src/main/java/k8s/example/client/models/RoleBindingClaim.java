@@ -1,52 +1,80 @@
 package k8s.example.client.models;
 
-import io.kubernetes.client.openapi.models.V1ObjectMeta;
-import io.kubernetes.client.openapi.models.V1ResourceQuotaSpec;
+import java.util.ArrayList;
+import java.util.List;
 
-public class NamespaceClaim {
+import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import io.kubernetes.client.openapi.models.V1RoleRef;
+import io.kubernetes.client.openapi.models.V1Subject;
+
+public class RoleBindingClaim {
 	private String apiVersion = "tmax.io/v1";
-	private String kind = null;
+	private String kind = "RoleBindingClaim";
 	private V1ObjectMeta metadata = null;
-	private V1ResourceQuotaSpec spec = null;
+	private List<V1Subject> subjects = null;
+	private V1RoleRef roleRef = null;
 	private ClaimStatus status = null;
 	
 	public String getApiVersion() {
 		return apiVersion;
 	}
+
 	public void setApiVersion(String apiVersion) {
 		this.apiVersion = apiVersion;
 	}
+
 	public String getKind() {
 		return kind;
 	}
+
 	public void setKind(String kind) {
 		this.kind = kind;
 	}
+
 	public V1ObjectMeta getMetadata() {
 		return metadata;
 	}
+
 	public void setMetadata(V1ObjectMeta metadata) {
 		this.metadata = metadata;
 	}
-	public V1ResourceQuotaSpec getSpec() {
-		return spec;
+
+	public List<V1Subject> getSubjects() {
+		return subjects;
 	}
-	public void setSpec(V1ResourceQuotaSpec spec) {
-		this.spec = spec;
+
+	public void setSubjects(List<V1Subject> subjects) {
+		this.subjects = subjects;
 	}
+	
+	public void addSubjects(V1Subject subjects) {
+		if ( this.subjects == null ) this.subjects = new ArrayList<>(); 
+		this.subjects.add(subjects);
+	}
+
+	public V1RoleRef getRoleRef() {
+		return roleRef;
+	}
+
+	public void setRoleRef(V1RoleRef roleRef) {
+		this.roleRef = roleRef;
+	}
+
 	public ClaimStatus getStatus() {
 		return status;
 	}
+
 	public void setStatus(ClaimStatus status) {
 		this.status = status;
 	}
-	
+
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("class Namespace Claim {\n");
 		sb.append("    apiVersion: ").append(toIndentedString(apiVersion)).append("\n");
 		if(metadata != null ) 	sb.append("    metadata: ").append(toIndentedString(metadata.toString())).append("\n");
-		if(spec != null ) 		sb.append("    spec: ").append(toIndentedString(spec.toString())).append("\n");
+		if(subjects != null ) 		sb.append("    subjects: ").append(toIndentedString(subjects.toString())).append("\n");
+		if(roleRef != null ) 		sb.append("    roleRef: ").append(toIndentedString(roleRef.toString())).append("\n");
 		if(status != null ) 	sb.append("    status: ").append(toIndentedString(status.toString())).append("\n");
 		sb.append("}");
 		return sb.toString();
