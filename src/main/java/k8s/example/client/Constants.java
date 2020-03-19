@@ -15,6 +15,7 @@ public class Constants {
 	public static final String CUSTOM_OBJECT_KIND_TEMPLATE_INSTANCE = "TemplateInstance";
 	public static final String CUSTOM_OBJECT_PLURAL_REGISTRY = "registries";
 	public static final String CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM = "namespaceclaims";
+	public static final String CUSTOM_OBJECT_PLURAL_RESOURCEQUOTACLAIM = "resourcequotaclaims";
 	public static final String K8S_RESOURCE_QUOTA_POSTFIX = "-quota";
 	
 	public static final String CLUSTER_ROLE_NAMESPACE_OWNER = "namespace-owner";
@@ -68,9 +69,9 @@ public class Constants {
 	public static final String EVENT_TYPE_DELETED = "DELETED";
 	
 	// Namespace Claim Status
-	public static final String NAMESPACE_CLAIM_STATUS_AWAITING = "Awaiting";
-	public static final String NAMESPACE_CLAIM_STATUS_SUCCESS = "Success";
-	public static final String NAMESPACE_CLAIM_STATUS_REJECT = "Reject";
-	public static final String NAMESPACE_CLAIM_STATUS_ERROR = "Error";
+	public static final String CLAIM_STATUS_AWAITING = "Awaiting";
+	public static final String CLAIM_STATUS_SUCCESS = "Success";
+	public static final String CLAIM_STATUS_REJECT = "Reject";
+	public static final String CLAIM_STATUS_ERROR = "Error";
 
 }

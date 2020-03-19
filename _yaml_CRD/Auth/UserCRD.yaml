@@ -18,6 +18,10 @@ spec:
   preserveUnknownFields: false
   validation:
     openAPIV3Schema:
+      # required 'metadata.labels.encrypted: f'
+      # metadata.name ex) admin-tmax.co.kr -> @ Must be entered as -
+      # userInfo.email ex) admin@tmax.co.kr -> Email and name should be the same
+      # The user controller will encrypt the password and update label 'encrypted: t'
       type: object
       required: [userInfo, status]
       properties:
@@ -32,6 +36,7 @@ spec:
               type: string
             passwordSalt:
               type: string
+              description: do not enter
             email:
               type: string
             phone:
