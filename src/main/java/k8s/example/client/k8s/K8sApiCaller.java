@@ -48,6 +48,7 @@ import io.kubernetes.client.openapi.Configuration;
 import io.kubernetes.client.openapi.apis.AppsV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.apis.CustomObjectsApi;
+import io.kubernetes.client.openapi.apis.RbacAuthorizationV1Api;
 import io.kubernetes.client.openapi.models.V1Container;
 import io.kubernetes.client.openapi.models.V1ContainerPort;
 import io.kubernetes.client.openapi.models.V1DeleteOptions;
@@ -57,6 +58,7 @@ import io.kubernetes.client.openapi.models.V1ExecAction;
 import io.kubernetes.client.openapi.models.V1Handler;
 import io.kubernetes.client.openapi.models.V1LabelSelector;
 import io.kubernetes.client.openapi.models.V1Lifecycle;
+import io.kubernetes.client.openapi.models.V1Namespace;
 import io.kubernetes.client.openapi.models.V1Node;
 import io.kubernetes.client.openapi.models.V1NodeAddress;
 import io.kubernetes.client.openapi.models.V1NodeList;
@@ -71,13 +73,18 @@ import io.kubernetes.client.openapi.models.V1PodSpec;
 import io.kubernetes.client.openapi.models.V1PodTemplateSpec;
 import io.kubernetes.client.openapi.models.V1ReplicaSetBuilder;
 import io.kubernetes.client.openapi.models.V1ReplicaSetSpec;
+import io.kubernetes.client.openapi.models.V1ResourceQuota;
+import io.kubernetes.client.openapi.models.V1ResourceQuotaSpec;
 import io.kubernetes.client.openapi.models.V1ResourceRequirements;
+import io.kubernetes.client.openapi.models.V1RoleBinding;
+import io.kubernetes.client.openapi.models.V1RoleRef;
 import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.openapi.models.V1SecretKeySelector;
 import io.kubernetes.client.openapi.models.V1SecretVolumeSource;
 import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.V1ServicePort;
 import io.kubernetes.client.openapi.models.V1ServiceSpec;
+import io.kubernetes.client.openapi.models.V1Subject;
 import io.kubernetes.client.openapi.models.V1Volume;
 import io.kubernetes.client.openapi.models.V1VolumeMount;
 import io.kubernetes.client.util.Config;
@@ -93,6 +100,7 @@ import k8s.example.client.models.BrokerResponse;
 import k8s.example.client.models.CommandExecOut;
 import k8s.example.client.models.Cost;
 import k8s.example.client.models.InputParametersSchema;
+import k8s.example.client.models.NamespaceClaim;
 import k8s.example.client.models.Metadata;
 import k8s.example.client.models.PlanMetadata;
 import k8s.example.client.models.ProvisionInDO;
@@ -115,6 +123,7 @@ public class K8sApiCaller {
 	private static ApiClient k8sClient;
 	private static CoreV1Api api;
 	private static AppsV1Api appApi;
+	private static RbacAuthorizationV1Api rbacApi;
 	private static CustomObjectsApi customObjectApi;
 	private static CustomResourceApi templateApi;
 	private static ObjectMapper mapper = new ObjectMapper();
@@ -129,6 +138,7 @@ public class K8sApiCaller {
 
 		api = new CoreV1Api();
 		appApi = new AppsV1Api();
+		rbacApi = new RbacAuthorizationV1Api();
 		customObjectApi = new CustomObjectsApi();
 		templateApi = new CustomResourceApi();
 	}
@@ -260,6 +270,9 @@ public class K8sApiCaller {
 		
 		System.out.println("Instance Latest resource version: " + instanceLatestResourceVersion);
 
+		// Get NamespaceClaim LatestResourceVersion
+		int nscLatestResourceVersion = getLatestResourceVersion( Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM );
+		
 		// Start user watch
 		System.out.println("Start user watcher");
 		UserWatcher userWatcher = new UserWatcher(k8sClient, customObjectApi, String.valueOf(userLatestResourceVersion));
@@ -278,6 +291,11 @@ public class K8sApiCaller {
 		System.out.println("Start Instance Operator");
 		InstanceOperator instanceOperator = new InstanceOperator(k8sClient, templateApi, instanceLatestResourceVersion);
 		instanceOperator.start();
+		
+		// Start NamespaceClaim Controller
+		System.out.println("Start NamespaceClaim Operator");
+		NamespaceClaimController nscOperator = new NamespaceClaimController(k8sClient, customObjectApi, nscLatestResourceVersion);
+		nscOperator.start();
 
 		while(true) {
 			if(!userWatcher.isAlive()) {
@@ -310,6 +328,14 @@ public class K8sApiCaller {
 				instanceOperator.interrupt();
 				instanceOperator = new InstanceOperator(k8sClient, templateApi, instanceLatestResourceVersion);
 				instanceOperator.start();
+			}
+			
+			if(!nscOperator.isAlive()) {
+				nscLatestResourceVersion = NamespaceClaimController.getLatestResourceVersion();
+				System.out.println(("Namespace Claim Controller is not Alive. Restart Controller! (Latest Resource Version: " + nscLatestResourceVersion + ")"));
+				nscOperator.interrupt();
+				nscOperator = new NamespaceClaimController(k8sClient, customObjectApi, nscLatestResourceVersion);
+				nscOperator.start();
 			}
 
 			Thread.sleep(10000); // Period: 10 sec
@@ -1877,4 +1903,134 @@ public class K8sApiCaller {
 		JsonNode resultNode = mapper.valueToTree(object);
 		return resultNode;
 	}
+
+	/**
+	 * START method for Namespace Claim Controller by seonho_choi
+	 * DO-NOT-DELETE
+	 */
+	private static int getLatestResourceVersion( String customResourceName ) throws Exception {
+		int latestResourceVersion = 0;
+		try {
+			Object result = templateApi.listClusterCustomObject(
+					Constants.CUSTOM_OBJECT_GROUP, 
+					Constants.CUSTOM_OBJECT_VERSION, 
+					customResourceName, 
+					null, null, null, null, null, null, null, Boolean.FALSE);
+			
+			String JsonInString = gson.toJson(result);
+			JsonFactory factory = mapper.getFactory();
+			com.fasterxml.jackson.core.JsonParser parser = factory.createParser(JsonInString);
+			JsonNode customObjectList = mapper.readTree(parser);
+			
+			if(customObjectList.get("items").isArray()) {
+				for(JsonNode instance : customObjectList.get("items")) {
+					int resourceVersion = instance.get("metadata").get("resourceVersion").asInt();
+					latestResourceVersion = (latestResourceVersion >= resourceVersion) ? latestResourceVersion : resourceVersion;
+				}
+			}
+		} catch (ApiException e) {
+			System.out.println("Response body: " + e.getResponseBody());
+        	e.printStackTrace();
+        	throw e;
+		} catch (Exception e) {
+			System.out.println("Exception: " + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		}
+		return latestResourceVersion;
+	}
+	
+	public static void createNamespace( NamespaceClaim claim ) throws Throwable {
+		System.out.println( "[K8S ApiCaller] Create Namespace Start" );
+		
+		V1Namespace namespace = new V1Namespace();
+		V1ObjectMeta namespaceMeta = new V1ObjectMeta();
+		Map<String,String> label = new HashMap<>();
+		label.put( "fromClaim", claim.getMetadata().getName() );
+		label.put( Constants.NAMESPACE_OWNER_LABEL, claim.getMetadata().getLabels().get( Constants.NAMESPACE_OWNER_LABEL ) );
+		namespaceMeta.setLabels( label );
+		namespaceMeta.setName( claim.getMetadata().getName() );
+		namespace.setMetadata( namespaceMeta );
+
+		V1Namespace namespaceResult;
+		try {
+			namespaceResult = api.createNamespace( namespace, null, null, null );
+		} catch (ApiException e) {
+			System.out.println( e.getResponseBody() );
+			throw e;
+		}
+		
+		V1ResourceQuota quota = new V1ResourceQuota();
+		V1ObjectMeta quotaMeta = new V1ObjectMeta();
+		quotaMeta.setName( claim.getMetadata().getName()  );
+		quotaMeta.setNamespace( claim.getMetadata().getName() );
+		Map<String,String> quotaLabel = new HashMap<>();
+		quotaLabel.put( "fromClaim", claim.getMetadata().getName() );
+		quotaLabel.put( Constants.NAMESPACE_OWNER_LABEL, claim.getMetadata().getLabels().get( Constants.NAMESPACE_OWNER_LABEL ) );
+		quotaMeta.setLabels( quotaLabel );
+		V1ResourceQuotaSpec spec = claim.getSpec();
+		quota.setMetadata( quotaMeta );
+		quota.setSpec( spec );
+		
+		V1ResourceQuota quotaResult;
+		try {
+			quotaResult = api.createNamespacedResourceQuota( claim.getMetadata().getName(), quota, null, null, null );
+		} catch (ApiException e) {
+			System.out.println( e.getResponseBody() );
+			throw e;
+		}
+	}
+	
+	public static void ownerRoleBinding( NamespaceClaim claim ) throws ApiException {
+		System.out.println( "[K8S ApiCaller] Namespace Owner Role Binding" );
+
+		V1RoleBinding roleBinding = new V1RoleBinding();
+		V1ObjectMeta metadata = new V1ObjectMeta();
+		V1Subject subject = new V1Subject();
+		V1RoleRef roleRef = new V1RoleRef();
+		metadata.setName( claim.getMetadata().getName() + "-owner" );
+		metadata.setNamespace( claim.getMetadata().getName() );
+		subject.setKind( "User" );
+		subject.setName( claim.getMetadata().getLabels().get(Constants.NAMESPACE_OWNER_LABEL).replace("-", "@") );
+		subject.setNamespace( claim.getMetadata().getName() );
+		roleRef.setKind( "ClusterRole" );
+		roleRef.setName( Constants.CLUSTER_ROLE_NAMESPACE_OWNER );
+		roleRef.setApiGroup( "rbac.authorization.k8s.io" );
+		
+		roleBinding.setMetadata( metadata );
+		roleBinding.addSubjectsItem( subject );
+		roleBinding.setRoleRef( roleRef );
+		
+		try {
+			rbacApi.createNamespacedRoleBinding( claim.getMetadata().getName(), roleBinding, null, null, null);
+		} catch (ApiException e) {
+			System.out.println( e.getResponseBody() );
+			throw e;
+		}
+		
+	}
+	
+	public static boolean namespaceAlreadyExist( String name ) throws Throwable {
+		System.out.println( "[K8S ApiCaller] Get Namespace Start" );
+
+		V1Namespace namespaceResult;
+		try {
+			namespaceResult = api.readNamespace( name, null, null, null);
+		} catch (ApiException e) {
+			System.out.println( "[K8S ApiCaller][Exception] Namespace-" + name + " is not Exist" );
+			return false;
+		}
+		
+		if ( namespaceResult.getMetadata() == null || namespaceResult.getMetadata().getName() == null || namespaceResult.getMetadata().getName().isEmpty() ) {
+			System.out.println( "[K8S ApiCaller] Namespace-" + name + " is not Exist" );
+			return false;
+		} else {
+			System.out.println( namespaceResult.toString() );
+			return true;
+		}
+	}
+	/**
+	 * END method for Namespace Claim Controller by seonho_choi
+	 * DO-NOT-DELETE
+	 */
 }

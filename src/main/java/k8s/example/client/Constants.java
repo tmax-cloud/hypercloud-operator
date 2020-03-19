@@ -14,7 +14,12 @@ public class Constants {
 	public static final String CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE = "templateinstances";
 	public static final String CUSTOM_OBJECT_KIND_TEMPLATE_INSTANCE = "TemplateInstance";
 	public static final String CUSTOM_OBJECT_PLURAL_REGISTRY = "registries";
-
+	public static final String CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM = "namespaceclaims";
+	public static final String K8S_RESOURCE_QUOTA_POSTFIX = "-quota";
+	
+	public static final String CLUSTER_ROLE_NAMESPACE_OWNER = "namespace-owner";
+	public static final String CLUSTER_ROLE_NAMESPACE_USER = "namespace-user";
+	public static final String NAMESPACE_OWNER_LABEL = "ownerUserName";
 	
 	public static final String MASTER_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJUbWF4LVByb0F1dGgtV2ViSG9vayIsImlkIjoid3ltaW4tdG1heC5jby5rciIsImV4cCI6MTU4MzEyMTQ5M30.hjvrlaLDFuSjchJKarGKbuWOuafhsuCQgBDo-pqsZvg";
 	public static final String MASTER_USER_ID = "admin@tmax.co.kr";
@@ -56,4 +61,16 @@ public class Constants {
 	// Status
 	public static final String STATUS_RUNNING = "Running";
 	public static final String STATUS_ERROR = "Error";
+	
+	// Custom Object Event Type
+	public static final String EVENT_TYPE_ADDED = "ADDED";
+	public static final String EVENT_TYPE_MODIFIED = "MODIFIED";
+	public static final String EVENT_TYPE_DELETED = "DELETED";
+	
+	// Namespace Claim Status
+	public static final String NAMESPACE_CLAIM_STATUS_AWAITING = "Awaiting";
+	public static final String NAMESPACE_CLAIM_STATUS_SUCCESS = "Success";
+	public static final String NAMESPACE_CLAIM_STATUS_REJECT = "Reject";
+	public static final String NAMESPACE_CLAIM_STATUS_ERROR = "Error";
+
 }
