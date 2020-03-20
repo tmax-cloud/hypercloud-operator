@@ -80,6 +80,10 @@ public class TemplateOperator extends Thread {
 	        			if(templateObjs.isArray()) {
 	        				for(JsonNode object : templateObjs) {
 	        					String kind = object.get("kind").asText();
+	        					if(kind.equals("Service")) {
+	        						String type = object.get("spec").get("type").asText();
+	        						kind += " (" + type + ")";
+	        					}
 	        					kindArr.add(kind);
 		        			}
 	        			}

@@ -20,6 +20,7 @@ import fi.iki.elonen.router.RouterNanoHTTPD.GeneralHandler;
 import fi.iki.elonen.router.RouterNanoHTTPD.UriResource;
 import k8s.example.client.k8s.K8sApiCaller;
 import k8s.example.client.models.BindingInDO;
+import k8s.example.client.models.BindingOutDO;
 import k8s.example.client.models.BrokerResponse;
 import k8s.example.client.models.ProvisionInDO;
 
@@ -29,7 +30,7 @@ public class ServiceBindingHandler extends GeneralHandler {
       UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
 		System.out.println("***** PUT /v2/service_instances/:instance_id/service_bindings/:binding_id");
 		
-		BrokerResponse response = null;
+		BindingOutDO response = null;
 		Map<String, String> body = new HashMap<String, String>();
 		
         try {
@@ -63,7 +64,6 @@ public class ServiceBindingHandler extends GeneralHandler {
 //			}
 			
 			response = K8sApiCaller.insertBindingSecret(instanceId, bindingId, inDO);
-			
 			status = Status.OK;
 		} catch (Exception e) {
 			System.out.println( "  Failed to bind instance of service class \"" + inDO.getService_id() + "\"");
