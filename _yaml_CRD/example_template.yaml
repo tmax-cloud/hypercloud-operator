@@ -2,7 +2,8 @@ apiVersion: tmax.io/v1
 kind: Template
 metadata:
   name: nginx-template
-  namespace: hypercloud-system
+  namespace: hypercloud4-system
+imageUrl: example.com/example.gif
 objects:
 - apiVersion: apps/v1
   kind: Deployment
@@ -48,3 +49,46 @@ objects:
     selector:
       app: ${NAME}
     type: LoadBalancer
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    name: ${NAME}
+  data:
+    host: ZHVtbXk=
+plans:
+- name: example-plan1
+  description: example
+  metadata:
+    bullets:
+    - feat 1
+    - feat 2
+    costs:
+      amount: 100
+      unit: $
+  free: false
+  bindable: true
+  plan_updateable: false
+  schemas:
+    service_instance:
+      create:
+        parameters:
+          NAME: nginx1
+          IMAGE: nginx:1
+- name: example-plan2
+  description: example
+  metadata:
+    bullets:
+    - feat 1
+    - feat 2
+    costs:
+      amount: 200
+      unit: $
+  free: false
+  bindable: true
+  plan_updateable: false
+  schemas:
+    service_instance:
+      create:
+        parameters:
+          NAME: nginx2
+          IMAGE: nginx:1
