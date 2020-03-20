@@ -55,5 +55,5 @@ rules:
   resources: ['*']
   verbs: ['*']
 - apiGroups: ['tmax.io']
-  resources: ['template','templateinstances','registries','namespaceclaims','resourcequotaclaims','users']
+  resources: ['template','templateinstances','registries','namespaceclaims','users']
   verbs: ['*']

@@ -1,12 +1,14 @@
 
-1. /hypercloud-operator/_yaml_Install/1.initialization.yaml ½ÇÇà
+1. /hypercloud-operator/_yaml_Install/1.initialization.yaml ì‹¤í–‰
 
-2. /hypercloud-operator/_yaml_Install/2.hypercloud4-operator.yaml ½ÇÇà
+2. /hypercloud-operator/_yaml_Install/2.hypercloud4-operator.yaml ì‹¤í–‰
 
-3. /hypercloud-operator/_yaml_Install/3.secret-watcher.yaml ½ÇÇà
+3. /hypercloud-operator/_yaml_Install/3.secret-watcher.yaml ì‹¤í–‰
 
-4. authenticate webhook ¼³Á¤
-    - webhook-config ¿¡ HYPERCLOUD_IP Ä¡È¯
-    - /etc/kubernetes/pki directory ¿¡ webhook-config º¹»ç
-	- kube api-server manifest ¼³Á¤¿¡ ¾Æ·¡ ¹®±¸ Ãß°¡
+3. /hypercloud-operator/_yaml_Install/4.default-auth-object-init.yaml ì‹¤í–‰
+
+4. authenticate webhook ì„¤ì •
+    - webhook-config ì— HYPERCLOUD_IP ì¹˜í™˜
+    - /etc/kubernetes/pki directory ì— webhook-config ë³µì‚¬
+	- kube api-server manifest ì„¤ì •ì— ì•„ë˜ ë¬¸êµ¬ ì¶”ê°€
 	- "--authentication-token-webhook-config-file=/etc/kubernetes/pki/webhook-config"
