@@ -89,6 +89,8 @@ import io.kubernetes.client.openapi.models.V1Volume;
 import io.kubernetes.client.openapi.models.V1VolumeMount;
 import io.kubernetes.client.util.Config;
 import k8s.example.client.Constants;
+import k8s.example.client.DataObject.Client;
+import k8s.example.client.DataObject.ClientCR;
 import k8s.example.client.DataObject.TokenCR;
 import k8s.example.client.DataObject.User;
 import k8s.example.client.DataObject.UserCR;
@@ -408,6 +410,41 @@ public class K8sApiCaller {
 					Constants.CUSTOM_OBJECT_PLURAL_TOKEN,
 					tokenName, 
 					body, 0, null, null);
+        } catch (ApiException e) {
+        	System.out.println("Response body: " + e.getResponseBody());
+        	e.printStackTrace();
+        	throw e;
+        } catch (Exception e) {
+        	System.out.println("Exception message: " + e.getMessage());
+        	e.printStackTrace();
+        	throw e;
+        }
+    }
+    
+    public static void saveClient(Client clientInfo) throws Exception {
+    	
+    	try {
+    		ClientCR clientCR = new ClientCR();
+    		
+    		// Set name & label
+        	V1ObjectMeta metadata = new V1ObjectMeta();
+        	metadata.setName(clientInfo.getAppName());        	
+//        	Map<String, String> label = new HashMap<>();   있어야할지 판단 안됨
+//        	label.put("client", );
+        	clientCR.setMetadata(metadata);
+        	
+        	// Set ClientInfo
+        	clientCR.setClientInfo(clientInfo);
+       	
+        	// Make body
+        	JSONParser parser = new JSONParser();        	
+        	JSONObject bodyObj = (JSONObject) parser.parse(new Gson().toJson(clientCR));
+        	
+        	customObjectApi.createClusterCustomObject(
+        			Constants.CUSTOM_OBJECT_GROUP,
+					Constants.CUSTOM_OBJECT_VERSION, 
+					Constants.CUSTOM_OBJECT_PLURAL_CLIENT,
+					bodyObj, null);
         } catch (ApiException e) {
         	System.out.println("Response body: " + e.getResponseBody());
         	e.printStackTrace();
