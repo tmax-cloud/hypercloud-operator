@@ -58,6 +58,7 @@ import io.kubernetes.client.openapi.models.V1ExecAction;
 import io.kubernetes.client.openapi.models.V1Handler;
 import io.kubernetes.client.openapi.models.V1LabelSelector;
 import io.kubernetes.client.openapi.models.V1Lifecycle;
+import io.kubernetes.client.openapi.models.V1LoadBalancerIngress;
 import io.kubernetes.client.openapi.models.V1Namespace;
 import io.kubernetes.client.openapi.models.V1Node;
 import io.kubernetes.client.openapi.models.V1NodeAddress;
@@ -98,9 +99,11 @@ import k8s.example.client.k8s.apis.CustomResourceApi;
 import k8s.example.client.StringUtil;
 import k8s.example.client.Util;
 import k8s.example.client.models.BindingInDO;
+import k8s.example.client.models.BindingOutDO;
 import k8s.example.client.models.BrokerResponse;
 import k8s.example.client.models.CommandExecOut;
 import k8s.example.client.models.Cost;
+import k8s.example.client.models.Endpoint;
 import k8s.example.client.models.InputParametersSchema;
 import k8s.example.client.models.NamespaceClaim;
 import k8s.example.client.models.Metadata;
@@ -117,6 +120,7 @@ import k8s.example.client.models.ServiceMetadata;
 import k8s.example.client.models.ServiceOffering;
 import k8s.example.client.models.ServicePlan;
 import k8s.example.client.models.Services;
+import k8s.example.client.models.Template;
 import k8s.example.client.models.TemplateInstance;
 import k8s.example.client.models.TemplateInstanceSpec;
 import k8s.example.client.models.TemplateInstanceSpecTemplate;
@@ -300,17 +304,17 @@ public class K8sApiCaller {
 		instanceOperator.start();
 		
 		// Start NamespaceClaim Controller
-		System.out.println("Start NamespaceClaim Operator");
+		System.out.println("Start NamespaceClaim Controller");
 		NamespaceClaimController nscOperator = new NamespaceClaimController(k8sClient, customObjectApi, nscLatestResourceVersion);
 		nscOperator.start();
 		
 		// Start ResourceQuotaClaim Controller
-		System.out.println("Start ResourceQuotaClaim Operator");
+		System.out.println("Start ResourceQuotaClaim Controller");
 		ResourceQuotaClaimController rqcOperator = new ResourceQuotaClaimController(k8sClient, customObjectApi, rqcLatestResourceVersion);
 		rqcOperator.start();
 		
 		// Start RoleBindingClaim Controller
-		System.out.println("Start RoleBindingClaim Operator");
+		System.out.println("Start RoleBindingClaim Controller");
 		RoleBindingClaimController rbcOperator = new RoleBindingClaimController(k8sClient, customObjectApi, rbcLatestResourceVersion);
 		rbcOperator.start();
 
@@ -1766,7 +1770,7 @@ public class K8sApiCaller {
 						System.out.println(e.getMessage());;
 					}
 					
-					if(kinds.contains("Secret")) {
+					if(kinds.contains("Secret") || kinds.contains("Service (LoadBalancer)")) {
 						service.setBindable(true);
 					}
 				}
@@ -1803,7 +1807,6 @@ public class K8sApiCaller {
 						
 						parameters = mapper.convertValue(plan.get("schemas").get("service_instance").get("create").get("parameters"), new TypeReference<Map<String, String>>(){});
 						create.setParameters(parameters);
-//						create = mapper.convertValue(plan.get("schemas").get("service_instance").get("create"), new TypeReference<InputParametersSchema>(){});
 						instanceSchema.setCreate(create);
 						planSchema.setService_instance(instanceSchema);
 						servicePlan.setSchemas(planSchema);
@@ -1833,7 +1836,7 @@ public class K8sApiCaller {
 			instance.setKind(Constants.CUSTOM_OBJECT_KIND_TEMPLATE_INSTANCE);
 			instanceMeta.setName(instanceId);
 			instanceMeta.setNamespace(Constants.TEMPLATE_NAMESPACE);
-			instance.setMeatdata(instanceMeta);
+			instance.setMetadata(instanceMeta);
 			
 			templateMeta.setName(inDO.getService_id());
 			template.setMetadata(templateMeta);
@@ -1896,10 +1899,10 @@ public class K8sApiCaller {
 		return response;
 	}
 	
-	public static BrokerResponse insertBindingSecret(String instanceId, String bindingId, BindingInDO inDO) throws Exception {
+	public static BindingOutDO insertBindingSecret(String instanceId, String bindingId, BindingInDO inDO) throws Exception {
+		BindingOutDO outDO = new BindingOutDO();
+		
 		try {
-			String instanceSecretName = null;
-			String instanceSecretNamespace = null;
 			Object response = customObjectApi.getNamespacedCustomObject(
 					Constants.CUSTOM_OBJECT_GROUP, 
 					Constants.CUSTOM_OBJECT_VERSION, 
@@ -1907,23 +1910,41 @@ public class K8sApiCaller {
 					Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, 
 					instanceId);
 			
-			JsonNode templateInstance = objectToJsonNode2(gson.toJson(response));
-			System.out.println("instanceNode: " + templateInstance.asText());
-			JsonNode objects = templateInstance.get("spec");
-			System.out.println("Objects: " + objects.toString());
-			
-			if(objects.isArray()) {
-				for(JsonNode object : objects) {
-					if(object.get("kind").asText().equals("Secret")) {
-						instanceSecretName = object.get("metadata").get("name").asText();
-						instanceSecretNamespace = object.get("metadata").get("namespace").asText();
+			TemplateInstance templateInstance = mapper.readValue(gson.toJson(response), TemplateInstance.class);
+			List<Object> objects = templateInstance.getSpec().getTemplate().getObjects();
+					
+			for(Object object : objects) {
+				JSONObject objectJson = (JSONObject) JSONValue.parse(gson.toJson(object));
+				JSONObject metadataJson = (JSONObject) JSONValue.parse(objectJson.get("metadata").toString());
+				
+				String name = metadataJson.get("name").toString();
+				String namespace = "default";
+				if(metadataJson.get("namespace") != null) {
+					namespace = metadataJson.get("namespace").toString();
+				}
+				
+				if(objectJson.get("kind").toString().equals("Service")) {
+					List<Endpoint> endPointList = new ArrayList<Endpoint>();
+					V1Service service = api.readNamespacedService(name, namespace, null, null, null);
+					if(service.getSpec().getType().equals("LoadBalancer")) {
+						for(V1LoadBalancerIngress ip : service.getStatus().getLoadBalancer().getIngress()) {
+							Endpoint endPoint = new Endpoint();
+							List<String> ports = new ArrayList<String>();
+							endPoint.setHost(ip.getIp());
+							for(V1ServicePort port : service.getSpec().getPorts()) {
+								ports.add(String.valueOf(port.getPort()));
+							}
+							endPoint.setPorts(ports);
+							endPointList.add(endPoint);
+						}
+						outDO.setEndpoints(endPointList);
 					}
+				} else if(objectJson.get("kind").toString().equals("Secret")) {
+					V1Secret secret = api.readNamespacedSecret(name, namespace, null, null, null);
+					outDO.setCredentials(secret.getData()); //수정
 				}
 			}
-			
-//			V1Secret instanceSecret = api.readNamespacedSecret(instanceSecretName, instanceSecretNamespace, null, null, null);
-			
-			return null;
+			return outDO;
 		} catch (ApiException e) {
 			e.printStackTrace();
 			throw e;
@@ -1967,7 +1988,7 @@ public class K8sApiCaller {
 		return resultNode;
 	}
 	
-	private static JsonNode objectToJsonNode2(Object object) throws IOException {
+	private static JsonNode objectToJsonNodeForBinding(Object object) throws IOException {
 		JsonNode resultNode = mapper.valueToTree(object);
 		return resultNode;
 	}
@@ -2053,8 +2074,8 @@ public class K8sApiCaller {
 		
 		V1ResourceQuota quota = new V1ResourceQuota();
 		V1ObjectMeta quotaMeta = new V1ObjectMeta();
-		quotaMeta.setName( claim.getMetadata().getName()  );
-		quotaMeta.setNamespace( claim.getMetadata().getName() );
+		quotaMeta.setName( claim.getMetadata().getNamespace() );
+		quotaMeta.setNamespace( claim.getMetadata().getNamespace() );
 		Map<String,String> quotaLabel = new HashMap<>();
 		quotaLabel.put( "fromClaim", claim.getMetadata().getName() );
 		quotaMeta.setLabels( quotaLabel );
@@ -2076,14 +2097,14 @@ public class K8sApiCaller {
 				
 		V1ResourceQuota quota = new V1ResourceQuota();
 		V1ObjectMeta quotaMeta = new V1ObjectMeta();
-		quotaMeta.setName( claim.getMetadata().getNamespace() + Constants.K8S_RESOURCE_QUOTA_POSTFIX );
+		quotaMeta.setName( claim.getMetadata().getNamespace() );
 		quotaMeta.setNamespace( claim.getMetadata().getNamespace() );
 		V1ResourceQuotaSpec spec = claim.getSpec();
 		quota.setMetadata( quotaMeta );
 		quota.setSpec( spec );
 		
 		try {
-			api.replaceNamespacedResourceQuota( claim.getMetadata().getNamespace() + Constants.K8S_RESOURCE_QUOTA_POSTFIX, claim.getMetadata().getNamespace(), quota, null, null, null);
+			api.replaceNamespacedResourceQuota( claim.getMetadata().getNamespace(), claim.getMetadata().getNamespace(), quota, null, null, null);
 		} catch (ApiException e) {
 			System.out.println( e.getResponseBody() );
 			throw e;
@@ -2115,14 +2136,14 @@ public class K8sApiCaller {
 
 		V1ResourceQuota resourceQuotaResult;
 		try {
-			resourceQuotaResult = api.readNamespacedResourceQuota(namespace + Constants.K8S_RESOURCE_QUOTA_POSTFIX, namespace, null, null, null);
+			resourceQuotaResult = api.readNamespacedResourceQuota(namespace, namespace, null, null, null);
 		} catch (ApiException e) {
-			System.out.println( "[K8S ApiCaller][Exception] ResourceQuota-" + namespace + Constants.K8S_RESOURCE_QUOTA_POSTFIX + " is not Exist" );
+			System.out.println( "[K8S ApiCaller][Exception] ResourceQuota-" + namespace + " is not Exist" );
 			return false;
 		}
 		
 		if ( resourceQuotaResult == null ) {
-			System.out.println( "[K8S ApiCaller][Exception] ResourceQuota-" + namespace + Constants.K8S_RESOURCE_QUOTA_POSTFIX + " is not Exist" );
+			System.out.println( "[K8S ApiCaller][Exception] ResourceQuota-" + namespace + " is not Exist" );
 			return false;
 		} else {
 			System.out.println( resourceQuotaResult.toString() );
@@ -2154,12 +2175,15 @@ public class K8sApiCaller {
 		System.out.println( "[K8S ApiCaller] Create RoleBinding Start" );
 
 		V1RoleBinding roleBinding = new V1RoleBinding();
-		roleBinding.setMetadata( claim.getMetadata() );
+		V1ObjectMeta roleBindingMeta = new V1ObjectMeta();
+		roleBindingMeta.setName( claim.getMetadata().getName() );
+		roleBindingMeta.setNamespace( claim.getMetadata().getNamespace() );
+		roleBinding.setMetadata( roleBindingMeta );
 		roleBinding.setSubjects( claim.getSubjects() );
 		roleBinding.setRoleRef( claim.getRoleRef() );
 		
 		try {
-			rbacApi.createNamespacedRoleBinding( claim.getMetadata().getName(), roleBinding, null, null, null);
+			rbacApi.createNamespacedRoleBinding( claim.getMetadata().getNamespace(), roleBinding, null, null, null);
 		} catch (ApiException e) {
 			System.out.println( e.getResponseBody() );
 			throw e;

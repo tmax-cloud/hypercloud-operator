@@ -18,7 +18,6 @@ public class Constants {
 	public static final String CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM = "namespaceclaims";
 	public static final String CUSTOM_OBJECT_PLURAL_RESOURCEQUOTACLAIM = "resourcequotaclaims";
 	public static final String CUSTOM_OBJECT_PLURAL_ROLEBINDINGCLAIM = "rolebindingclaims";
-	public static final String K8S_RESOURCE_QUOTA_POSTFIX = "-quota";
 	
 	public static final String CLUSTER_ROLE_NAMESPACE_OWNER = "namespace-owner";
 	public static final String CLUSTER_ROLE_NAMESPACE_USER = "namespace-user";

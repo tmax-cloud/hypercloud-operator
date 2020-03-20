@@ -1,10 +1,8 @@
 apiVersion: tmax.io/v1
 kind: ResourceQuotaClaim
 metadata:
-  name: test
-  namespace: test
+  name: example
+  namespace: example
 spec:
   hard:
     limits.cpu: "2"
-    limits.memory: "2Gi"
-    requests.storage: "2Gi"
