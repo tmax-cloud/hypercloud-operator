@@ -3,7 +3,7 @@ kind: User
 metadata: 
   name: example-tmax.co.kr
   labels: 
-    encrypt: f
+    encrypted: f
 userInfo:
   name: example
   password: "example"
