@@ -1901,6 +1901,7 @@ public class K8sApiCaller {
 	
 	public static BindingOutDO insertBindingSecret(String instanceId, String bindingId, BindingInDO inDO) throws Exception {
 		BindingOutDO outDO = new BindingOutDO();
+		Map<String, Object> secretMap = new HashMap<String, Object>();
 		
 		try {
 			Object response = customObjectApi.getNamespacedCustomObject(
@@ -1931,17 +1932,25 @@ public class K8sApiCaller {
 							Endpoint endPoint = new Endpoint();
 							List<String> ports = new ArrayList<String>();
 							endPoint.setHost(ip.getIp());
+							secretMap.put("instance-ip", ip.getIp());
+							
 							for(V1ServicePort port : service.getSpec().getPorts()) {
 								ports.add(String.valueOf(port.getPort()));
 							}
 							endPoint.setPorts(ports);
+							secretMap.put("instance-port", ports);
 							endPointList.add(endPoint);
 						}
 						outDO.setEndpoints(endPointList);
 					}
 				} else if(objectJson.get("kind").toString().equals("Secret")) {
 					V1Secret secret = api.readNamespacedSecret(name, namespace, null, null, null);
-					outDO.setCredentials(secret.getData()); //수정
+					Map<String, byte[]> data = secret.getData();
+					for(String key : data.keySet()) {
+						secretMap.put(key, new String(data.get(key)));
+					}
+					
+					outDO.setCredentials(secretMap);
 				}
 			}
 			return outDO;
