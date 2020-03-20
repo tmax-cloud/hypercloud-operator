@@ -90,6 +90,8 @@ import io.kubernetes.client.openapi.models.V1Volume;
 import io.kubernetes.client.openapi.models.V1VolumeMount;
 import io.kubernetes.client.util.Config;
 import k8s.example.client.Constants;
+import k8s.example.client.DataObject.Client;
+import k8s.example.client.DataObject.ClientCR;
 import k8s.example.client.DataObject.TokenCR;
 import k8s.example.client.DataObject.User;
 import k8s.example.client.DataObject.UserCR;
@@ -111,6 +113,7 @@ import k8s.example.client.models.Registry;
 import k8s.example.client.models.RegistryPVC;
 import k8s.example.client.models.RegistryService;
 import k8s.example.client.models.RegistryStatus;
+import k8s.example.client.models.RoleBindingClaim;
 import k8s.example.client.models.Schemas;
 import k8s.example.client.models.ServiceInstanceSchema;
 import k8s.example.client.models.ServiceMetadata;
@@ -135,7 +138,7 @@ public class K8sApiCaller {
 
 	public static void initK8SClient() throws Exception {
 		k8sClient = Config.fromCluster();
-		k8sClient.setConnectTimeout(5000);
+		k8sClient.setConnectTimeout(0);
 		k8sClient.setReadTimeout(0);
 		k8sClient.setWriteTimeout(0);		
 		Configuration.setDefaultApiClient(k8sClient);
@@ -276,6 +279,10 @@ public class K8sApiCaller {
 
 		// Get NamespaceClaim LatestResourceVersion
 		int nscLatestResourceVersion = getLatestResourceVersion( Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM );
+		// Get NamespaceClaim LatestResourceVersion
+		int rqcLatestResourceVersion = getLatestResourceVersion( Constants.CUSTOM_OBJECT_PLURAL_RESOURCEQUOTACLAIM );
+		// Get RoleBindingClaim LatestResourceVersion
+		int rbcLatestResourceVersion = getLatestResourceVersion( Constants.CUSTOM_OBJECT_PLURAL_ROLEBINDINGCLAIM );
 		
 		// Start user watch
 		System.out.println("Start user watcher");
@@ -300,6 +307,16 @@ public class K8sApiCaller {
 		System.out.println("Start NamespaceClaim Operator");
 		NamespaceClaimController nscOperator = new NamespaceClaimController(k8sClient, customObjectApi, nscLatestResourceVersion);
 		nscOperator.start();
+		
+		// Start ResourceQuotaClaim Controller
+		System.out.println("Start ResourceQuotaClaim Operator");
+		ResourceQuotaClaimController rqcOperator = new ResourceQuotaClaimController(k8sClient, customObjectApi, rqcLatestResourceVersion);
+		rqcOperator.start();
+		
+		// Start RoleBindingClaim Controller
+		System.out.println("Start RoleBindingClaim Operator");
+		RoleBindingClaimController rbcOperator = new RoleBindingClaimController(k8sClient, customObjectApi, rbcLatestResourceVersion);
+		rbcOperator.start();
 
 		while(true) {
 			if(!userWatcher.isAlive()) {
@@ -340,6 +357,22 @@ public class K8sApiCaller {
 				nscOperator.interrupt();
 				nscOperator = new NamespaceClaimController(k8sClient, customObjectApi, nscLatestResourceVersion);
 				nscOperator.start();
+			}
+			
+			if(!rqcOperator.isAlive()) {
+				rqcLatestResourceVersion = ResourceQuotaClaimController.getLatestResourceVersion();
+				System.out.println(("ResourceQuota Claim Controller is not Alive. Restart Controller! (Latest Resource Version: " + rqcLatestResourceVersion + ")"));
+				rqcOperator.interrupt();
+				rqcOperator = new ResourceQuotaClaimController(k8sClient, customObjectApi, rqcLatestResourceVersion);
+				rqcOperator.start();
+			}
+			
+			if(!rbcOperator.isAlive()) {
+				rbcLatestResourceVersion = RoleBindingClaimController.getLatestResourceVersion();
+				System.out.println(("RoleBinding Claim Controller is not Alive. Restart Controller! (Latest Resource Version: " + rbcLatestResourceVersion + ")"));
+				rbcOperator.interrupt();
+				rbcOperator = new RoleBindingClaimController(k8sClient, customObjectApi, rbcLatestResourceVersion);
+				rbcOperator.start();
 			}
 
 			Thread.sleep(10000); // Period: 10 sec
@@ -412,6 +445,41 @@ public class K8sApiCaller {
 					Constants.CUSTOM_OBJECT_PLURAL_TOKEN,
 					tokenName, 
 					body, 0, null, null);
+        } catch (ApiException e) {
+        	System.out.println("Response body: " + e.getResponseBody());
+        	e.printStackTrace();
+        	throw e;
+        } catch (Exception e) {
+        	System.out.println("Exception message: " + e.getMessage());
+        	e.printStackTrace();
+        	throw e;
+        }
+    }
+    
+    public static void saveClient(Client clientInfo) throws Exception {
+    	
+    	try {
+    		ClientCR clientCR = new ClientCR();
+    		
+    		// Set name & label
+        	V1ObjectMeta metadata = new V1ObjectMeta();
+        	metadata.setName(clientInfo.getAppName());        	
+//        	Map<String, String> label = new HashMap<>();   있어야할지 판단 안됨
+//        	label.put("client", );
+        	clientCR.setMetadata(metadata);
+        	
+        	// Set ClientInfo
+        	clientCR.setClientInfo(clientInfo);
+       	
+        	// Make body
+        	JSONParser parser = new JSONParser();        	
+        	JSONObject bodyObj = (JSONObject) parser.parse(new Gson().toJson(clientCR));
+        	
+        	customObjectApi.createClusterCustomObject(
+        			Constants.CUSTOM_OBJECT_GROUP,
+					Constants.CUSTOM_OBJECT_VERSION, 
+					Constants.CUSTOM_OBJECT_PLURAL_CLIENT,
+					bodyObj, null);
         } catch (ApiException e) {
         	System.out.println("Response body: " + e.getResponseBody());
         	e.printStackTrace();
@@ -1932,7 +2000,8 @@ public class K8sApiCaller {
 	private static int getLatestResourceVersion( String customResourceName ) throws Exception {
 		int latestResourceVersion = 0;
 		try {
-			Object result = templateApi.listClusterCustomObject(
+			
+			Object result = customObjectApi.listClusterCustomObject(
 					Constants.CUSTOM_OBJECT_GROUP, 
 					Constants.CUSTOM_OBJECT_VERSION, 
 					customResourceName, 
@@ -1968,7 +2037,6 @@ public class K8sApiCaller {
 		V1ObjectMeta namespaceMeta = new V1ObjectMeta();
 		Map<String,String> label = new HashMap<>();
 		label.put( "fromClaim", claim.getMetadata().getName() );
-		label.put( Constants.NAMESPACE_OWNER_LABEL, claim.getMetadata().getLabels().get( Constants.NAMESPACE_OWNER_LABEL ) );
 		namespaceMeta.setLabels( label );
 		namespaceMeta.setName( claim.getMetadata().getName() );
 		namespace.setMetadata( namespaceMeta );
@@ -1987,7 +2055,6 @@ public class K8sApiCaller {
 		quotaMeta.setNamespace( claim.getMetadata().getName() );
 		Map<String,String> quotaLabel = new HashMap<>();
 		quotaLabel.put( "fromClaim", claim.getMetadata().getName() );
-		quotaLabel.put( Constants.NAMESPACE_OWNER_LABEL, claim.getMetadata().getLabels().get( Constants.NAMESPACE_OWNER_LABEL ) );
 		quotaMeta.setLabels( quotaLabel );
 		V1ResourceQuotaSpec spec = claim.getSpec();
 		quota.setMetadata( quotaMeta );
@@ -2002,33 +2069,46 @@ public class K8sApiCaller {
 		}
 	}
 	
-	public static void ownerRoleBinding( NamespaceClaim claim ) throws ApiException {
-		System.out.println( "[K8S ApiCaller] Namespace Owner Role Binding" );
-
-		V1RoleBinding roleBinding = new V1RoleBinding();
-		V1ObjectMeta metadata = new V1ObjectMeta();
-		V1Subject subject = new V1Subject();
-		V1RoleRef roleRef = new V1RoleRef();
-		metadata.setName( claim.getMetadata().getName() + "-owner" );
-		metadata.setNamespace( claim.getMetadata().getName() );
-		subject.setKind( "User" );
-		subject.setName( claim.getMetadata().getLabels().get(Constants.NAMESPACE_OWNER_LABEL).replace("-", "@") );
-		subject.setNamespace( claim.getMetadata().getName() );
-		roleRef.setKind( "ClusterRole" );
-		roleRef.setName( Constants.CLUSTER_ROLE_NAMESPACE_OWNER );
-		roleRef.setApiGroup( "rbac.authorization.k8s.io" );
+	public static void createResourceQuota( NamespaceClaim claim ) throws Throwable {
+		System.out.println( "[K8S ApiCaller] Create Resource Quota Start" );
 		
-		roleBinding.setMetadata( metadata );
-		roleBinding.addSubjectsItem( subject );
-		roleBinding.setRoleRef( roleRef );
+		V1ResourceQuota quota = new V1ResourceQuota();
+		V1ObjectMeta quotaMeta = new V1ObjectMeta();
+		quotaMeta.setName( claim.getMetadata().getName()  );
+		quotaMeta.setNamespace( claim.getMetadata().getName() );
+		Map<String,String> quotaLabel = new HashMap<>();
+		quotaLabel.put( "fromClaim", claim.getMetadata().getName() );
+		quotaMeta.setLabels( quotaLabel );
+		V1ResourceQuotaSpec spec = claim.getSpec();
+		quota.setMetadata( quotaMeta );
+		quota.setSpec( spec );
 		
+		V1ResourceQuota quotaResult;
 		try {
-			rbacApi.createNamespacedRoleBinding( claim.getMetadata().getName(), roleBinding, null, null, null);
+			quotaResult = api.createNamespacedResourceQuota( claim.getMetadata().getNamespace(), quota, null, null, null );
 		} catch (ApiException e) {
 			System.out.println( e.getResponseBody() );
 			throw e;
 		}
+	}
+	
+	public static void updateResourceQuota( NamespaceClaim claim ) throws Throwable {
+		System.out.println( "[K8S ApiCaller] Update Resource Quota Start" );
+				
+		V1ResourceQuota quota = new V1ResourceQuota();
+		V1ObjectMeta quotaMeta = new V1ObjectMeta();
+		quotaMeta.setName( claim.getMetadata().getNamespace() + Constants.K8S_RESOURCE_QUOTA_POSTFIX );
+		quotaMeta.setNamespace( claim.getMetadata().getNamespace() );
+		V1ResourceQuotaSpec spec = claim.getSpec();
+		quota.setMetadata( quotaMeta );
+		quota.setSpec( spec );
 		
+		try {
+			api.replaceNamespacedResourceQuota( claim.getMetadata().getNamespace() + Constants.K8S_RESOURCE_QUOTA_POSTFIX, claim.getMetadata().getNamespace(), quota, null, null, null);
+		} catch (ApiException e) {
+			System.out.println( e.getResponseBody() );
+			throw e;
+		}
 	}
 	
 	public static boolean namespaceAlreadyExist( String name ) throws Throwable {
@@ -2042,12 +2122,68 @@ public class K8sApiCaller {
 			return false;
 		}
 		
-		if ( namespaceResult.getMetadata() == null || namespaceResult.getMetadata().getName() == null || namespaceResult.getMetadata().getName().isEmpty() ) {
+		if ( namespaceResult == null ) {
 			System.out.println( "[K8S ApiCaller] Namespace-" + name + " is not Exist" );
 			return false;
 		} else {
 			System.out.println( namespaceResult.toString() );
 			return true;
+		}
+	}
+	
+	public static boolean resourcequotaAlreadyExist( String namespace ) throws Throwable {
+		System.out.println( "[K8S ApiCaller] Get Resource Quota Start" );
+
+		V1ResourceQuota resourceQuotaResult;
+		try {
+			resourceQuotaResult = api.readNamespacedResourceQuota(namespace + Constants.K8S_RESOURCE_QUOTA_POSTFIX, namespace, null, null, null);
+		} catch (ApiException e) {
+			System.out.println( "[K8S ApiCaller][Exception] ResourceQuota-" + namespace + Constants.K8S_RESOURCE_QUOTA_POSTFIX + " is not Exist" );
+			return false;
+		}
+		
+		if ( resourceQuotaResult == null ) {
+			System.out.println( "[K8S ApiCaller][Exception] ResourceQuota-" + namespace + Constants.K8S_RESOURCE_QUOTA_POSTFIX + " is not Exist" );
+			return false;
+		} else {
+			System.out.println( resourceQuotaResult.toString() );
+			return true;
+		}
+	}
+	
+	public static boolean roleBindingAlreadyExist( String name, String namespace ) throws Throwable {
+		System.out.println( "[K8S ApiCaller] Get RoleBinding Start" );
+
+		V1RoleBinding roleBindingResult;
+		try {
+			roleBindingResult = rbacApi.readNamespacedRoleBinding(name, namespace, null);
+		} catch (ApiException e) {
+			System.out.println( "[K8S ApiCaller][Exception] RoleBinding-" + name + " is not Exist" );
+			return false;
+		}
+		
+		if ( roleBindingResult == null ) {
+			System.out.println( "[K8S ApiCaller][Exception] RoleBinding-" + name + " is not Exist" );
+			return false;
+		} else {
+			System.out.println( roleBindingResult.toString() );
+			return true;
+		}
+	}
+	
+	public static void createRoleBinding( RoleBindingClaim claim ) throws ApiException {
+		System.out.println( "[K8S ApiCaller] Create RoleBinding Start" );
+
+		V1RoleBinding roleBinding = new V1RoleBinding();
+		roleBinding.setMetadata( claim.getMetadata() );
+		roleBinding.setSubjects( claim.getSubjects() );
+		roleBinding.setRoleRef( claim.getRoleRef() );
+		
+		try {
+			rbacApi.createNamespacedRoleBinding( claim.getMetadata().getName(), roleBinding, null, null, null);
+		} catch (ApiException e) {
+			System.out.println( e.getResponseBody() );
+			throw e;
 		}
 	}
 	/**

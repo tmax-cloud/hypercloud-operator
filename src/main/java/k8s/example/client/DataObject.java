@@ -117,4 +117,44 @@ public class DataObject {
     	public void setUid(String uid)	{ this.uid = uid; }
     }
     
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class ClientCR {
+    	private String apiVersion;
+    	private String kind;
+    	private V1ObjectMeta metadata;
+    	private Client clientInfo;
+    	private String status;
+    	
+    	public String getApiVersion() { return apiVersion; }
+    	public String getKind() { return kind; }
+    	public V1ObjectMeta getMetadata() { return metadata; }
+    	public Client getClientInfo() { return clientInfo; }
+    	public String getStatus() { return status; }
+    	
+    	public void setClientInfo(Client clientInfo) { this.clientInfo = clientInfo; }
+    	public void setStatus(String status) { this.status = status; }
+    	public void setMetadata(V1ObjectMeta metadata) { this.metadata = metadata; }
+			
+    }
+    
+    public static class Client {
+    	private String appName;
+    	private String originUri;
+    	private String redirectUri;
+    	private String clientId;
+    	private String clientSecret;
+    	
+    	public String getAppName() { return appName; }
+    	public String getOriginUri() { return originUri; }
+    	public String getRedirectUri() { return redirectUri; }
+    	public String getClientId() { return clientId; }
+    	public String getClientSecret() { return clientSecret; }
+    	
+    	public void setAppName(String appName) { this.appName = appName; }
+    	public void setOriginUri(String originUri) { this.originUri = originUri; }
+    	public void setRedirectUri(String redirectUri) { this.redirectUri = redirectUri; }
+    	public void setClientId(String clientId) { this.clientId = clientId; }
+    	public void setClientSecret(String clientSecret) { this.clientSecret = clientSecret; }
+    }
+    
 }
