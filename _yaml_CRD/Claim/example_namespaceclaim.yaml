@@ -1,0 +1,9 @@
+apiVersion: tmax.io/v1
+kind: NamespaceClaim
+metadata:
+  name: example-namespace
+spec:
+  hard:
+    limits.cpu: "1"
+    limits.memory: "1Gi"
+    requests.storage: "1Gi"

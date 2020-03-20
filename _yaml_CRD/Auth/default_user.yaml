@@ -1,13 +1,13 @@
 apiVersion: tmax.io/v1
 kind: User
 metadata: 
-  name: test-tmax.co.kr
+  name: example-tmax.co.kr
   labels: 
     encrypt: f
 userInfo:
-  name: test
-  password: "1234"
-  email: test@tmax.co.kr
+  name: example
+  password: "example"
+  email: example@tmax.co.kr
   department: Cloud
   position: developer
   phone: 010-0000-0000
