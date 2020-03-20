@@ -1,0 +1,12 @@
+apiVersion: tmax.io/v1
+kind: RoleBindingClaim
+metadata:
+  name: binding-test
+  namespace: test
+subjects:
+- kind: User
+  name: test@tmax.co.kr
+roleRef:
+  kind: ClusterRole
+  name: namespace-owner
+  apiGroup: rbac.authorization.k8s.io

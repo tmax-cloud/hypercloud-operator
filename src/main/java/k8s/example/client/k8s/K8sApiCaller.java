@@ -298,17 +298,17 @@ public class K8sApiCaller {
 		instanceOperator.start();
 		
 		// Start NamespaceClaim Controller
-		System.out.println("Start NamespaceClaim Operator");
+		System.out.println("Start NamespaceClaim Controller");
 		NamespaceClaimController nscOperator = new NamespaceClaimController(k8sClient, customObjectApi, nscLatestResourceVersion);
 		nscOperator.start();
 		
 		// Start ResourceQuotaClaim Controller
-		System.out.println("Start ResourceQuotaClaim Operator");
+		System.out.println("Start ResourceQuotaClaim Controller");
 		ResourceQuotaClaimController rqcOperator = new ResourceQuotaClaimController(k8sClient, customObjectApi, rqcLatestResourceVersion);
 		rqcOperator.start();
 		
 		// Start RoleBindingClaim Controller
-		System.out.println("Start RoleBindingClaim Operator");
+		System.out.println("Start RoleBindingClaim Controller");
 		RoleBindingClaimController rbcOperator = new RoleBindingClaimController(k8sClient, customObjectApi, rbcLatestResourceVersion);
 		rbcOperator.start();
 
@@ -2016,8 +2016,8 @@ public class K8sApiCaller {
 		
 		V1ResourceQuota quota = new V1ResourceQuota();
 		V1ObjectMeta quotaMeta = new V1ObjectMeta();
-		quotaMeta.setName( claim.getMetadata().getName()  );
-		quotaMeta.setNamespace( claim.getMetadata().getName() );
+		quotaMeta.setName( claim.getMetadata().getNamespace() );
+		quotaMeta.setNamespace( claim.getMetadata().getNamespace() );
 		Map<String,String> quotaLabel = new HashMap<>();
 		quotaLabel.put( "fromClaim", claim.getMetadata().getName() );
 		quotaMeta.setLabels( quotaLabel );
@@ -2039,14 +2039,14 @@ public class K8sApiCaller {
 				
 		V1ResourceQuota quota = new V1ResourceQuota();
 		V1ObjectMeta quotaMeta = new V1ObjectMeta();
-		quotaMeta.setName( claim.getMetadata().getNamespace() + Constants.K8S_RESOURCE_QUOTA_POSTFIX );
+		quotaMeta.setName( claim.getMetadata().getNamespace() );
 		quotaMeta.setNamespace( claim.getMetadata().getNamespace() );
 		V1ResourceQuotaSpec spec = claim.getSpec();
 		quota.setMetadata( quotaMeta );
 		quota.setSpec( spec );
 		
 		try {
-			api.replaceNamespacedResourceQuota( claim.getMetadata().getNamespace() + Constants.K8S_RESOURCE_QUOTA_POSTFIX, claim.getMetadata().getNamespace(), quota, null, null, null);
+			api.replaceNamespacedResourceQuota( claim.getMetadata().getNamespace(), claim.getMetadata().getNamespace(), quota, null, null, null);
 		} catch (ApiException e) {
 			System.out.println( e.getResponseBody() );
 			throw e;
@@ -2078,14 +2078,14 @@ public class K8sApiCaller {
 
 		V1ResourceQuota resourceQuotaResult;
 		try {
-			resourceQuotaResult = api.readNamespacedResourceQuota(namespace + Constants.K8S_RESOURCE_QUOTA_POSTFIX, namespace, null, null, null);
+			resourceQuotaResult = api.readNamespacedResourceQuota(namespace, namespace, null, null, null);
 		} catch (ApiException e) {
-			System.out.println( "[K8S ApiCaller][Exception] ResourceQuota-" + namespace + Constants.K8S_RESOURCE_QUOTA_POSTFIX + " is not Exist" );
+			System.out.println( "[K8S ApiCaller][Exception] ResourceQuota-" + namespace + " is not Exist" );
 			return false;
 		}
 		
 		if ( resourceQuotaResult == null ) {
-			System.out.println( "[K8S ApiCaller][Exception] ResourceQuota-" + namespace + Constants.K8S_RESOURCE_QUOTA_POSTFIX + " is not Exist" );
+			System.out.println( "[K8S ApiCaller][Exception] ResourceQuota-" + namespace + " is not Exist" );
 			return false;
 		} else {
 			System.out.println( resourceQuotaResult.toString() );
@@ -2117,12 +2117,15 @@ public class K8sApiCaller {
 		System.out.println( "[K8S ApiCaller] Create RoleBinding Start" );
 
 		V1RoleBinding roleBinding = new V1RoleBinding();
-		roleBinding.setMetadata( claim.getMetadata() );
+		V1ObjectMeta roleBindingMeta = new V1ObjectMeta();
+		roleBindingMeta.setName( claim.getMetadata().getName() );
+		roleBindingMeta.setNamespace( claim.getMetadata().getNamespace() );
+		roleBinding.setMetadata( roleBindingMeta );
 		roleBinding.setSubjects( claim.getSubjects() );
 		roleBinding.setRoleRef( claim.getRoleRef() );
 		
 		try {
-			rbacApi.createNamespacedRoleBinding( claim.getMetadata().getName(), roleBinding, null, null, null);
+			rbacApi.createNamespacedRoleBinding( claim.getMetadata().getNamespace(), roleBinding, null, null, null);
 		} catch (ApiException e) {
 			System.out.println( e.getResponseBody() );
 			throw e;

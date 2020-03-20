@@ -125,16 +125,13 @@ public class ResourceQuotaClaimController extends Thread {
 			api.patchNamespacedCustomObjectStatus(
 					Constants.CUSTOM_OBJECT_GROUP, 
 					Constants.CUSTOM_OBJECT_VERSION, 
-					Constants.CUSTOM_OBJECT_PLURAL_RESOURCEQUOTACLAIM, 
 					namespace, 
+					Constants.CUSTOM_OBJECT_PLURAL_RESOURCEQUOTACLAIM,  
 					name, 
 					patchStatusArray );
 		} catch (ApiException e) {
 			System.out.println(e.getResponseBody());
 			System.out.println("ApiException Code: " + e.getCode());
-			if( e.getCode() == 404 ) {
-				System.out.println("Event Type ADDED but Claim is deleted");
-			}
 			throw e;
 		}
 	}
@@ -146,15 +143,12 @@ public class ResourceQuotaClaimController extends Thread {
 			claimJson = api.getNamespacedCustomObject(
 					Constants.CUSTOM_OBJECT_GROUP, 
 					Constants.CUSTOM_OBJECT_VERSION, 
-					Constants.CUSTOM_OBJECT_PLURAL_RESOURCEQUOTACLAIM, 
 					namespace, 
+					Constants.CUSTOM_OBJECT_PLURAL_RESOURCEQUOTACLAIM,  
 					name );
 		} catch (ApiException e) {
 			System.out.println(e.getResponseBody());
 			System.out.println("ApiException Code: " + e.getCode());
-			if( e.getCode() == 404 ) {
-				System.out.println("Event Type MODIFIED but Claim is deleted");
-			}
 			throw e;
 		}
 

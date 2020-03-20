@@ -129,9 +129,6 @@ public class NamespaceClaimController extends Thread {
 		} catch (ApiException e) {
 			System.out.println(e.getResponseBody());
 			System.out.println("ApiException Code: " + e.getCode());
-			if( e.getCode() == 404 ) {
-				System.out.println("Event Type ADDED but Claim is deleted");
-			}
 			throw e;
 		}
 	}
@@ -148,9 +145,6 @@ public class NamespaceClaimController extends Thread {
 		} catch (ApiException e) {
 			System.out.println(e.getResponseBody());
 			System.out.println("ApiException Code: " + e.getCode());
-			if( e.getCode() == 404 ) {
-				System.out.println("Event Type MODIFIED but Claim is deleted");
-			}
 			throw e;
 		}
 

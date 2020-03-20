@@ -23,11 +23,7 @@ spec:
         # Admins can change the 'status' of the resourcequotaclaim.
         # If Admin change the Status to 'Success', resourcequota is updated.
         type: object
-        required:
-          - apiVersion
-          - kind
-          - metadata
-          - spec
+        required: [apiVersion,kind,metadata,spec]
         properties:
           apiVersion:
             type: string
@@ -36,8 +32,6 @@ spec:
           metadata:
             type: object
             properties:
-              generateName:
-                type: string
               name:
                 type: string
           spec:

@@ -32,24 +32,21 @@ spec:
           metadata:
             type: object
             properties:
-              generateName:
-                type: string
               name:
                 type: string
           subjects:
             # Equal RoleBinding Subjects Spec
-            type: object
-            properties:
-              subjects:
-                type: array
-                items:
-                  type: object
-                  required: [kind,name]
-                  properties:
-                    kind:
-                      type: string
-                    name:
-                      type: string
+            type: array
+            items:
+              type: object
+              required: [kind,name]
+              properties:
+                kind:
+                  type: string
+                name:
+                  type: string
+                apiGroup:
+                  type: string
           roleRef:
             # Equal RoleBinding roleRef Spec
             type: object
