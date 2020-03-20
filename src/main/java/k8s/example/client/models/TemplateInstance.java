@@ -20,10 +20,10 @@ public class TemplateInstance {
 	public void setKind(String kind) {
 		this.kind = kind;
 	}
-	public Object getMeatdata() {
+	public Object getMetadata() {
 		return metadata;
 	}
-	public void setMeatdata(Metadata metadata) {
+	public void setMetadata(Metadata metadata) {
 		this.metadata = metadata;
 	}
 	public TemplateInstanceSpec getSpec() {

@@ -58,6 +58,7 @@ import io.kubernetes.client.openapi.models.V1ExecAction;
 import io.kubernetes.client.openapi.models.V1Handler;
 import io.kubernetes.client.openapi.models.V1LabelSelector;
 import io.kubernetes.client.openapi.models.V1Lifecycle;
+import io.kubernetes.client.openapi.models.V1LoadBalancerIngress;
 import io.kubernetes.client.openapi.models.V1Namespace;
 import io.kubernetes.client.openapi.models.V1Node;
 import io.kubernetes.client.openapi.models.V1NodeAddress;
@@ -96,9 +97,11 @@ import k8s.example.client.k8s.apis.CustomResourceApi;
 import k8s.example.client.StringUtil;
 import k8s.example.client.Util;
 import k8s.example.client.models.BindingInDO;
+import k8s.example.client.models.BindingOutDO;
 import k8s.example.client.models.BrokerResponse;
 import k8s.example.client.models.CommandExecOut;
 import k8s.example.client.models.Cost;
+import k8s.example.client.models.Endpoint;
 import k8s.example.client.models.InputParametersSchema;
 import k8s.example.client.models.NamespaceClaim;
 import k8s.example.client.models.Metadata;
@@ -114,6 +117,7 @@ import k8s.example.client.models.ServiceMetadata;
 import k8s.example.client.models.ServiceOffering;
 import k8s.example.client.models.ServicePlan;
 import k8s.example.client.models.Services;
+import k8s.example.client.models.Template;
 import k8s.example.client.models.TemplateInstance;
 import k8s.example.client.models.TemplateInstanceSpec;
 import k8s.example.client.models.TemplateInstanceSpecTemplate;
@@ -1698,7 +1702,7 @@ public class K8sApiCaller {
 						System.out.println(e.getMessage());;
 					}
 					
-					if(kinds.contains("Secret")) {
+					if(kinds.contains("Secret") || kinds.contains("Service (LoadBalancer)")) {
 						service.setBindable(true);
 					}
 				}
@@ -1735,7 +1739,6 @@ public class K8sApiCaller {
 						
 						parameters = mapper.convertValue(plan.get("schemas").get("service_instance").get("create").get("parameters"), new TypeReference<Map<String, String>>(){});
 						create.setParameters(parameters);
-//						create = mapper.convertValue(plan.get("schemas").get("service_instance").get("create"), new TypeReference<InputParametersSchema>(){});
 						instanceSchema.setCreate(create);
 						planSchema.setService_instance(instanceSchema);
 						servicePlan.setSchemas(planSchema);
@@ -1765,7 +1768,7 @@ public class K8sApiCaller {
 			instance.setKind(Constants.CUSTOM_OBJECT_KIND_TEMPLATE_INSTANCE);
 			instanceMeta.setName(instanceId);
 			instanceMeta.setNamespace(Constants.TEMPLATE_NAMESPACE);
-			instance.setMeatdata(instanceMeta);
+			instance.setMetadata(instanceMeta);
 			
 			templateMeta.setName(inDO.getService_id());
 			template.setMetadata(templateMeta);
@@ -1828,10 +1831,10 @@ public class K8sApiCaller {
 		return response;
 	}
 	
-	public static BrokerResponse insertBindingSecret(String instanceId, String bindingId, BindingInDO inDO) throws Exception {
+	public static BindingOutDO insertBindingSecret(String instanceId, String bindingId, BindingInDO inDO) throws Exception {
+		BindingOutDO outDO = new BindingOutDO();
+		
 		try {
-			String instanceSecretName = null;
-			String instanceSecretNamespace = null;
 			Object response = customObjectApi.getNamespacedCustomObject(
 					Constants.CUSTOM_OBJECT_GROUP, 
 					Constants.CUSTOM_OBJECT_VERSION, 
@@ -1839,23 +1842,41 @@ public class K8sApiCaller {
 					Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, 
 					instanceId);
 			
-			JsonNode templateInstance = objectToJsonNode2(gson.toJson(response));
-			System.out.println("instanceNode: " + templateInstance.asText());
-			JsonNode objects = templateInstance.get("spec");
-			System.out.println("Objects: " + objects.toString());
-			
-			if(objects.isArray()) {
-				for(JsonNode object : objects) {
-					if(object.get("kind").asText().equals("Secret")) {
-						instanceSecretName = object.get("metadata").get("name").asText();
-						instanceSecretNamespace = object.get("metadata").get("namespace").asText();
+			TemplateInstance templateInstance = mapper.readValue(gson.toJson(response), TemplateInstance.class);
+			List<Object> objects = templateInstance.getSpec().getTemplate().getObjects();
+					
+			for(Object object : objects) {
+				JSONObject objectJson = (JSONObject) JSONValue.parse(gson.toJson(object));
+				JSONObject metadataJson = (JSONObject) JSONValue.parse(objectJson.get("metadata").toString());
+				
+				String name = metadataJson.get("name").toString();
+				String namespace = "default";
+				if(metadataJson.get("namespace") != null) {
+					namespace = metadataJson.get("namespace").toString();
+				}
+				
+				if(objectJson.get("kind").toString().equals("Service")) {
+					List<Endpoint> endPointList = new ArrayList<Endpoint>();
+					V1Service service = api.readNamespacedService(name, namespace, null, null, null);
+					if(service.getSpec().getType().equals("LoadBalancer")) {
+						for(V1LoadBalancerIngress ip : service.getStatus().getLoadBalancer().getIngress()) {
+							Endpoint endPoint = new Endpoint();
+							List<String> ports = new ArrayList<String>();
+							endPoint.setHost(ip.getIp());
+							for(V1ServicePort port : service.getSpec().getPorts()) {
+								ports.add(String.valueOf(port.getPort()));
+							}
+							endPoint.setPorts(ports);
+							endPointList.add(endPoint);
+						}
+						outDO.setEndpoints(endPointList);
 					}
+				} else if(objectJson.get("kind").toString().equals("Secret")) {
+					V1Secret secret = api.readNamespacedSecret(name, namespace, null, null, null);
+					outDO.setCredentials(secret.getData()); //수정
 				}
 			}
-			
-//			V1Secret instanceSecret = api.readNamespacedSecret(instanceSecretName, instanceSecretNamespace, null, null, null);
-			
-			return null;
+			return outDO;
 		} catch (ApiException e) {
 			e.printStackTrace();
 			throw e;
@@ -1899,7 +1920,7 @@ public class K8sApiCaller {
 		return resultNode;
 	}
 	
-	private static JsonNode objectToJsonNode2(Object object) throws IOException {
+	private static JsonNode objectToJsonNodeForBinding(Object object) throws IOException {
 		JsonNode resultNode = mapper.valueToTree(object);
 		return resultNode;
 	}
