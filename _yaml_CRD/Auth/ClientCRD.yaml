@@ -23,9 +23,13 @@ spec:
       properties:
         clientInfo:
           type: object
-          required: [appName, originUri, redirectUri]
+          required: [appName, originUri, redirectUri, clientId, clientSecret]
           description: ClientInfo contains Client information
           properties:
+            clientId:
+              type: string
+            clientSecret:
+              type: string  
             appName:
               type: string
             originUri:

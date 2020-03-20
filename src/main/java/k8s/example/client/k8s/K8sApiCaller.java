@@ -463,7 +463,7 @@ public class K8sApiCaller {
     		
     		// Set name & label
         	V1ObjectMeta metadata = new V1ObjectMeta();
-        	metadata.setName(clientInfo.getAppName());        	
+        	metadata.setName(clientInfo.getAppName() + clientInfo.getClientId());        	
 //        	Map<String, String> label = new HashMap<>();   있어야할지 판단 안됨
 //        	label.put("client", );
         	clientCR.setMetadata(metadata);

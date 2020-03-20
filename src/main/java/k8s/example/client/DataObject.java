@@ -119,20 +119,17 @@ public class DataObject {
     
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class ClientCR {
-    	private String apiVersion;
-    	private String kind;
+    	private String apiVersion = "tmax.io/v1";
+    	private String kind = "Client";
     	private V1ObjectMeta metadata;
     	private Client clientInfo;
-    	private String status;
     	
     	public String getApiVersion() { return apiVersion; }
     	public String getKind() { return kind; }
     	public V1ObjectMeta getMetadata() { return metadata; }
     	public Client getClientInfo() { return clientInfo; }
-    	public String getStatus() { return status; }
     	
     	public void setClientInfo(Client clientInfo) { this.clientInfo = clientInfo; }
-    	public void setStatus(String status) { this.status = status; }
     	public void setMetadata(V1ObjectMeta metadata) { this.metadata = metadata; }
 			
     }

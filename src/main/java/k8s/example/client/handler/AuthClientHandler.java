@@ -58,6 +58,7 @@ public class AuthClientHandler extends GeneralHandler {
 			// Make outDO			
 			Gson gson = new GsonBuilder().setPrettyPrinting().create();
 			outMsg = gson.toJson(clientInfo).toString();
+			status = Status.OK;
 
 		} catch (ApiException e) {
 			System.out.println( "Exception message: " + e.getMessage() );
@@ -111,7 +112,7 @@ public class AuthClientHandler extends GeneralHandler {
 	@Override
     public Response other(
       String method, UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
-		System.out.println("***** OPTIONS /login");
+		System.out.println("***** OPTIONS /authClient");
 		
 		return Util.setCors(NanoHTTPD.newFixedLengthResponse(""));
     }
