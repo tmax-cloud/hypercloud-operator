@@ -22,7 +22,7 @@ public class RegistryWatcher extends Thread {
 
 	RegistryWatcher(ApiClient client, CustomObjectsApi api, String resourceVersion) throws Exception {
 		watchRegistry = Watch.createWatch(client,
-				api.listClusterCustomObjectCall("tmax.io", "v1", "registries", null, null, null, "obj=registry", null, resourceVersion, null, Boolean.TRUE, null),
+				api.listClusterCustomObjectCall("tmax.io", "v1", "registries", null, null, null, null, null, resourceVersion, null, Boolean.TRUE, null),
 				new TypeToken<Watch.Response<Registry>>() {}.getType());
 
 		this.api = api;
@@ -46,45 +46,39 @@ public class RegistryWatcher extends Thread {
 				// Logic here
 				try {
 					Registry registry = response.object;
-
+					
 					if( registry != null) {
 						latestResourceVersion = response.object.getMetadata().getResourceVersion();
-
-						System.out.println("[RegistryWatcher] == Registry == \n" + registry.toString());
-						try {
-							api.getNamespacedCustomObject(
-									Constants.CUSTOM_OBJECT_GROUP, 
-									Constants.CUSTOM_OBJECT_VERSION, 
-									registry.getMetadata().getNamespace(), 
-									Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, 
-									registry.getMetadata().getName());
-						} catch (ApiException e) {
-							System.out.println(e.getResponseBody());
-							System.out.println("ApiException Code: " + e.getCode());
-							if( e.getCode() == 404 ) {
-								try {
-									K8sApiCaller.deleteRegistry(registry);
-									System.out.println("Registry is deleted");
-								} catch (IOException e1) {
-									e1.printStackTrace();
-								}
+						String eventType = response.type.toString();
+						System.out.println("====================== Registry " + eventType + " ====================== \n" + registry.toString());
+						
+						switch(eventType) {
+						case Constants.EVENT_TYPE_ADDED : 
+							if(registry.getStatus() == null ) {
+								K8sApiCaller.initRegistry(registry.getMetadata().getName(), registry);
+								System.out.println("Creating registry");
 							}
-						}
-
-						if(registry.getStatus() == null ) {
-							K8sApiCaller.initRegistry(registry.getMetadata().getName(), registry);
-							System.out.println("Creating registry");
-						}
-						else if( registry.getStatus().getConditions() != null) {
-							for( RegistryCondition registryCondition : registry.getStatus().getConditions()) {
-								if( registryCondition.getType().equals("Phase")) {
-									if (registryCondition.getStatus().equals(RegistryStatus.REGISTRY_PHASE_CREATING)) {
-										K8sApiCaller.createRegistry(registry);
-										System.out.println("Registry is running");
+							
+							break;
+						case Constants.EVENT_TYPE_MODIFIED : 
+							if( registry.getStatus().getConditions() != null) {
+								for( RegistryCondition registryCondition : registry.getStatus().getConditions()) {
+									if( registryCondition.getType().equals("Phase")) {
+										if (registryCondition.getStatus().equals(RegistryStatus.REGISTRY_PHASE_CREATING)) {
+											K8sApiCaller.createRegistry(registry);
+											System.out.println("Registry is running");
+										}
 									}
 								}
 							}
-						}
+							
+							break;
+						case Constants.EVENT_TYPE_DELETED : 
+							K8sApiCaller.deleteRegistry(registry);
+							System.out.println("Registry is deleted");
+							
+							break;
+						}						
 					}
 				} catch (ApiException e) {
 					System.out.println("ApiException: " + e.getMessage());
