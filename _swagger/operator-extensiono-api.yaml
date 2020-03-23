@@ -1,0 +1,252 @@
+openapi: "3.0.0"
+info:
+  title: "HyperCloud Operator Extension APIs"
+  description: "This is a HyperCloud Operator Extension REST API Docs"
+  version: "4.1.0.0"
+  contact:
+    email: "ck2_3@tmax.co.kr"
+servers:
+- url: http://192.168.6.211:28677
+  description: Test Server
+
+# common parameters
+components:
+  parameters: # common parameters
+    tokenParam:
+      in: "header"
+      name: "Authorization"
+      schema:
+        type: "string"
+        default: "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJUbWF4LVByb0F1dGgtV2ViSG9vayIsImlkIjoid3ltaW4tdG1heC5jby5rciIsImV4cCI6MTU4MzEyMTQ5M30.hjvrlaLDFuSjchJKarGKbuWOuafhsuCQgBDo-pqsZvg"
+      required: true
+      description: "Master Token"
+  schemas:
+    UserLoginDO:
+      type: object
+      description: "HyperCloud4 Login DO"
+      properties:
+        id:
+          type: string
+          description: "User ID"
+        password:
+          type: string
+          description: "User Password"
+    TokenDO:
+      type: object
+      description: "HyperCloud4 Token DO"
+      properties:
+        accessToken:
+          type: string
+          description: "Access Token"
+        refreshToken:
+          type: string
+          description: "Refresh Token"
+    StatusDO:
+      type: object
+      description: "HyperCloud4 CRDs Status DO"
+      properties:
+        status:
+          type: object
+          properties:
+            status:
+              type: string
+              enum: [Success,Reject]
+            reason:
+              type: string
+paths:
+  /login:
+    post:
+      tags:
+      - "Auth"
+      summary: "Hyper Cloud4 Login Service"
+      requestBody:
+        description: "UserLoginDO"
+        required: true  
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                dto:
+                  $ref: "#/components/schemas/UserLoginDO"    
+              example:
+                {
+                  "id": "admin@tmax.co.kr",
+                  "password": "admin"
+                }
+      responses:
+        200:
+          description: Service OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  dto:
+                    $ref: "#/components/schemas/TokenDO"
+                example:
+                  {
+                    "accessToken": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+                    "refreshToken": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                  }
+  /logout:
+    post:
+      tags:
+      - "Auth"
+      summary: "Hyper Cloud4 Logout Service"
+      requestBody:
+        description: "TokenDO"
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                dto:
+                  $ref: "#/components/schemas/TokenDO"    
+              example:
+                {
+                  "accessToken": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+                }
+      responses:
+        200:
+          description: Service OK
+  /refresh:
+    post:
+      tags:
+      - "Auth"
+      summary: "Hyper Cloud4 Refresh Service"
+      requestBody:
+        description: "TokenDO"
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                dto:
+                  $ref: "#/components/schemas/TokenDO"    
+              example:
+                {
+                  "accessToken": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+                  "refreshToken": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                }
+      responses:
+        200:
+          description: Service OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  dto:
+                    $ref: "#/components/schemas/TokenDO"
+                example:
+                  {
+                    "accessToken": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+                    "refreshToken": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                  }
+  /apis/tmax.io/v1/namespaceclaims/{claim}/status:
+    patch:
+      tags:
+      - "Claim Status Patch"
+      summary: "NamespaceClaim Status Patch Service"
+      parameters:
+      - $ref: "#/components/parameters/tokenParam"
+      - in: "path"
+        name: "claim"
+        description: "Target Claim Name"
+        schema: 
+          type: "string"
+        required: true
+      requestBody:
+        description: "StatusDO"
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                dto:
+                  $ref: "#/components/schemas/StatusDO"    
+              example:
+                {
+                  "status": {
+                    "status" : "Success"
+                  }
+                }
+      responses:
+        200:
+          description: Service OK
+  /apis/tmax.io/v1/namespaces/{namespace}/resourcequotaclaims/{claim}/status:
+    patch:
+      tags:
+      - "Claim Status Patch"
+      summary: "ResourceQuotaClaim Status Patch Service"
+      parameters:
+      - $ref: "#/components/parameters/tokenParam"
+      - in: "path"
+        name: "namespace"
+        description: "Target Namespace Name"
+        schema: 
+          type: "string"
+        required: true
+      - in: "path"
+        name: "claim"
+        description: "Target Claim Name"
+        schema: 
+          type: "string"
+        required: true
+      requestBody:
+        description: "StatusDO"
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                dto:
+                  $ref: "#/components/schemas/StatusDO"    
+              example:
+                {
+                  "status": {
+                    "status" : "Success"
+                  }
+                }
+      responses:
+        200:
+          description: Service OK
+  /apis/tmax.io/v1/namespaces/{namespace}/rolebindingclaims/{claim}/status:
+    patch:
+      tags:
+      - "Claim Status Patch"
+      summary: "RoleBindingClaim Status Patch Service"
+      parameters:
+      - $ref: "#/components/parameters/tokenParam"
+      - in: "path"
+        name: "namespace"
+        description: "Target Namespace Name"
+        schema: 
+          type: "string"
+        required: true
+      - in: "path"
+        name: "claim"
+        description: "Target Claim Name"
+        schema: 
+          type: "string"
+        required: true
+      requestBody:
+        description: "StatusDO"
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                dto:
+                  $ref: "#/components/schemas/StatusDO"    
+              example:
+                {
+                  "status": {
+                    "status" : "Success"
+                  }
+                }
+      responses:
+        200:
+          description: Service OK
+# EOF
