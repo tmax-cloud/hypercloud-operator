@@ -74,5 +74,12 @@ public class Constants {
 	public static final String CLAIM_STATUS_SUCCESS = "Success";
 	public static final String CLAIM_STATUS_REJECT = "Reject";
 	public static final String CLAIM_STATUS_ERROR = "Error";
+	
+	// Metering Cron Expression
+	public static final String METERING_CRON_EXPRESSION = "0 0/1 * 1/1 * ? *";
 
+	// Mysql DB Connection
+	public static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
+	public static final String DB_URL = "jdbc:mysql://mysql-service.hypercloud4-system:3306/metering?useSSL=false";
+	public static final String USERNAME = "root";
 }

@@ -141,8 +141,7 @@ paths:
                     $ref: "#/components/schemas/TokenDO"
                 example:
                   {
-                    "accessToken": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-                    "refreshToken": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                    "accessToken": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
                   }
   /apis/tmax.io/v1/namespaceclaims/{claim}/status:
     patch:
