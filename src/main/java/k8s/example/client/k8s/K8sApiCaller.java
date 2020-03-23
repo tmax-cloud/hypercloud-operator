@@ -435,6 +435,40 @@ public class K8sApiCaller {
     	return token;
     }
     
+    public static Client getClient(Client clientInfo) throws Exception {
+        Client dbClientInfo = new Client();
+        
+        try {
+        	System.out.println("Name of Client: " + clientInfo.getAppName() + clientInfo.getClientId());
+        	
+        	Object response = customObjectApi.getClusterCustomObject(
+        			Constants.CUSTOM_OBJECT_GROUP,
+					Constants.CUSTOM_OBJECT_VERSION, 
+					Constants.CUSTOM_OBJECT_PLURAL_CLIENT, 
+					clientInfo.getAppName() + clientInfo.getClientId());
+        	
+            JsonObject respJson = (JsonObject) new JsonParser().parse((new Gson()).toJson(response));
+            JsonObject clientInfoJson = respJson.get("clientInfo").getAsJsonObject();
+            
+            dbClientInfo.setAppName( new ObjectMapper().readValue((new Gson()).toJson(clientInfoJson.get("appName")), String.class) );       
+            dbClientInfo.setClientId( new ObjectMapper().readValue((new Gson()).toJson(clientInfoJson.get("clientId")), String.class));           
+            dbClientInfo.setClientSecret( new ObjectMapper().readValue((new Gson()).toJson(clientInfoJson.get("clientSecret")), String.class) );            
+            dbClientInfo.setOriginUri( new ObjectMapper().readValue((new Gson()).toJson(clientInfoJson.get("originUri")), String.class) );
+            dbClientInfo.setRedirectUri( new ObjectMapper().readValue((new Gson()).toJson(clientInfoJson.get("redirectUri")), String.class) );
+            
+        } catch (ApiException e) {
+        	System.out.println("Response body: " + e.getResponseBody());
+        	e.printStackTrace();
+        	throw e;
+        } catch (Exception e) {
+        	System.out.println("Exception message: " + e.getMessage());
+        	e.printStackTrace();
+        	throw e;
+        }
+    	
+    	return dbClientInfo;
+    }
+    
     public static void deleteToken(String tokenName) throws Exception {
     	try {
     		V1DeleteOptions body = new V1DeleteOptions();
