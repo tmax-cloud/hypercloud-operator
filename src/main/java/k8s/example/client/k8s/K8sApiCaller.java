@@ -55,6 +55,8 @@ import io.kubernetes.client.openapi.models.V1DeleteOptions;
 import io.kubernetes.client.openapi.models.V1EnvVar;
 import io.kubernetes.client.openapi.models.V1EnvVarSource;
 import io.kubernetes.client.openapi.models.V1ExecAction;
+import io.kubernetes.client.openapi.models.V1HTTPGetAction;
+import io.kubernetes.client.openapi.models.V1HTTPHeader;
 import io.kubernetes.client.openapi.models.V1Handler;
 import io.kubernetes.client.openapi.models.V1LabelSelector;
 import io.kubernetes.client.openapi.models.V1Lifecycle;
@@ -64,7 +66,6 @@ import io.kubernetes.client.openapi.models.V1Node;
 import io.kubernetes.client.openapi.models.V1NodeAddress;
 import io.kubernetes.client.openapi.models.V1NodeList;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
-import io.kubernetes.client.openapi.models.V1OwnerReference;
 import io.kubernetes.client.openapi.models.V1PersistentVolumeClaim;
 import io.kubernetes.client.openapi.models.V1PersistentVolumeClaimSpec;
 import io.kubernetes.client.openapi.models.V1PersistentVolumeClaimVolumeSource;
@@ -72,20 +73,19 @@ import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1PodList;
 import io.kubernetes.client.openapi.models.V1PodSpec;
 import io.kubernetes.client.openapi.models.V1PodTemplateSpec;
+import io.kubernetes.client.openapi.models.V1Probe;
 import io.kubernetes.client.openapi.models.V1ReplicaSetBuilder;
 import io.kubernetes.client.openapi.models.V1ReplicaSetSpec;
 import io.kubernetes.client.openapi.models.V1ResourceQuota;
 import io.kubernetes.client.openapi.models.V1ResourceQuotaSpec;
 import io.kubernetes.client.openapi.models.V1ResourceRequirements;
 import io.kubernetes.client.openapi.models.V1RoleBinding;
-import io.kubernetes.client.openapi.models.V1RoleRef;
 import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.openapi.models.V1SecretKeySelector;
 import io.kubernetes.client.openapi.models.V1SecretVolumeSource;
 import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.V1ServicePort;
 import io.kubernetes.client.openapi.models.V1ServiceSpec;
-import io.kubernetes.client.openapi.models.V1Subject;
 import io.kubernetes.client.openapi.models.V1Volume;
 import io.kubernetes.client.openapi.models.V1VolumeMount;
 import io.kubernetes.client.util.Config;
@@ -95,19 +95,18 @@ import k8s.example.client.DataObject.ClientCR;
 import k8s.example.client.DataObject.TokenCR;
 import k8s.example.client.DataObject.User;
 import k8s.example.client.DataObject.UserCR;
-import k8s.example.client.k8s.apis.CustomResourceApi;
 import k8s.example.client.StringUtil;
 import k8s.example.client.Util;
+import k8s.example.client.k8s.apis.CustomResourceApi;
 import k8s.example.client.models.BindingInDO;
 import k8s.example.client.models.BindingOutDO;
-import k8s.example.client.models.BrokerResponse;
 import k8s.example.client.models.CommandExecOut;
 import k8s.example.client.models.Cost;
 import k8s.example.client.models.Endpoint;
 import k8s.example.client.models.GetPlanDO;
 import k8s.example.client.models.InputParametersSchema;
-import k8s.example.client.models.NamespaceClaim;
 import k8s.example.client.models.Metadata;
+import k8s.example.client.models.NamespaceClaim;
 import k8s.example.client.models.PlanMetadata;
 import k8s.example.client.models.ProvisionInDO;
 import k8s.example.client.models.Registry;
@@ -121,7 +120,6 @@ import k8s.example.client.models.ServiceMetadata;
 import k8s.example.client.models.ServiceOffering;
 import k8s.example.client.models.ServicePlan;
 import k8s.example.client.models.Services;
-import k8s.example.client.models.Template;
 import k8s.example.client.models.TemplateInstance;
 import k8s.example.client.models.TemplateInstanceSpec;
 import k8s.example.client.models.TemplateInstanceSpecTemplate;
@@ -194,8 +192,8 @@ public class K8sApiCaller {
 					Constants.CUSTOM_OBJECT_GROUP,
 					Constants.CUSTOM_OBJECT_VERSION, 
 					//					"hypercloud-system",
-					Constants.CUSTOM_OBJECT_PLURAL_USER,
-					null, null, null, "obj=registry", null, null, null, Boolean.FALSE);
+					Constants.CUSTOM_OBJECT_PLURAL_REGISTRY,
+					null, null, null, null, null, null, null, Boolean.FALSE);
 			JsonObject respJson = (JsonObject) new JsonParser().parse((new Gson()).toJson(response));
 
 			// Register Joda deserialization module because of creationTimestamp of k8s object
@@ -1278,6 +1276,54 @@ public class K8sApiCaller {
 			registryMount.setMountPath("/var/lib/registry");
 			container.addVolumeMountsItem(registryMount);
 
+			// Get loginAuth For Readiness Probe
+			String loginAuth = registry.getSpec().getLoginId() + ":" + registry.getSpec().getLoginPassword();
+			loginAuth = new String( Base64.encodeBase64( loginAuth.getBytes() ) );
+			
+			// Set Readiness Probe
+			V1Probe readinessProbe = new V1Probe();
+			V1HTTPGetAction httpGet = new V1HTTPGetAction();
+			List<V1HTTPHeader> headers = new ArrayList<V1HTTPHeader>();
+			V1HTTPHeader authHeader = new V1HTTPHeader();
+			authHeader.setName("authorization");
+			authHeader.setValue("Basic " + loginAuth);
+			headers.add(authHeader);
+			
+			httpGet.setPath("v2/_catalog");
+			httpGet.setPort(new IntOrString(registryPort));
+			httpGet.setScheme("HTTPS");
+			httpGet.setHttpHeaders(headers);
+			readinessProbe.setHttpGet(httpGet);
+			
+			readinessProbe.setFailureThreshold(10);
+			readinessProbe.setInitialDelaySeconds(5);
+			readinessProbe.setPeriodSeconds(3);
+			readinessProbe.setSuccessThreshold(1);
+			readinessProbe.setTimeoutSeconds(1);
+			container.setReadinessProbe(readinessProbe);
+
+			// Set Liveness Probe
+			V1Probe livenessProbe = new V1Probe();
+			V1HTTPGetAction httpGet2 = new V1HTTPGetAction();
+			List<V1HTTPHeader> headers2 = new ArrayList<V1HTTPHeader>();
+			V1HTTPHeader authHeader2 = new V1HTTPHeader();
+			authHeader2.setName("authorization");
+			authHeader2.setValue("Basic " + loginAuth);
+			headers2.add(authHeader2);
+
+			httpGet2.setPath("v2/_catalog");
+			httpGet2.setPort(new IntOrString(registryPort));
+			httpGet2.setScheme("HTTPS");
+			httpGet2.setHttpHeaders(headers2);
+			livenessProbe.setHttpGet(httpGet2);
+
+			livenessProbe.setFailureThreshold(10);
+			livenessProbe.setInitialDelaySeconds(5);
+			livenessProbe.setPeriodSeconds(5);
+			livenessProbe.setSuccessThreshold(1);
+			livenessProbe.setTimeoutSeconds(30);
+			container.setReadinessProbe(livenessProbe);
+
 			podSpec.addContainersItem(container);
 
 			// Secret Volume
@@ -1365,7 +1411,7 @@ public class K8sApiCaller {
 			
 			// Check if Registry Pod is Running
 			int retryCount = 0;
-			RETRY_CNT = 1000;
+			RETRY_CNT = 200;
 			V1Pod pod = null;
 			V1PodList pods = null;
 			while (++retryCount <= RETRY_CNT) {
