@@ -74,5 +74,11 @@ public class Constants {
 	public static final String CLAIM_STATUS_SUCCESS = "Success";
 	public static final String CLAIM_STATUS_REJECT = "Reject";
 	public static final String CLAIM_STATUS_ERROR = "Error";
+	
+	// LoginPage of HyperCloud4
+	public static final String LOGIN_PAGE_URI = "http://192.168.8.36/oauth/login.html";
+
+	
+	//
 
 }
