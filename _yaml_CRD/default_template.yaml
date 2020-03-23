@@ -3,6 +3,7 @@ kind: Template
 metadata:
   name: example-template
   namespace: default
+imageUrl: example.com/example.gif
 objects:
 - apiVersion: apps/v1
   kind: Deployment
@@ -25,4 +26,18 @@ objects:
           ports:
           - name: example
             containerPort: 80
- 
+plans:
+- name: example-plan
+  metadata:
+    bullets:
+    - feat 1
+    - feat 2
+    costs:
+      amount: 100
+      unit: $
+    bindable: true
+    schemas:
+      service_instance:
+        create:
+          parameters:
+            EXAMPLE_PARAM: value

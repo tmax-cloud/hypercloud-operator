@@ -32,21 +32,28 @@ spec:
           properties:
             name:
               type: string
+              description: user's name
             password:
               type: string
+              description: user's password
             passwordSalt:
               type: string
               description: do not enter
             email:
               type: string
+              description: user's email for login
             phone:
-              type: string 
+              type: string
+              description: user's phone number
             department:
               type: string
+              description: user's department
             position:
               type: string
+              description: user's position
             description:
               type: string
+              description: description
         status:
           type: string
           description: Status defines whether the user is active or blocked
