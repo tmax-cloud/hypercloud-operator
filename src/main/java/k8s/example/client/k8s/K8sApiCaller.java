@@ -104,6 +104,7 @@ import k8s.example.client.models.BrokerResponse;
 import k8s.example.client.models.CommandExecOut;
 import k8s.example.client.models.Cost;
 import k8s.example.client.models.Endpoint;
+import k8s.example.client.models.GetPlanDO;
 import k8s.example.client.models.InputParametersSchema;
 import k8s.example.client.models.NamespaceClaim;
 import k8s.example.client.models.Metadata;
@@ -1875,13 +1876,29 @@ public class K8sApiCaller {
 			templateMeta.setName(inDO.getService_id());
 			template.setMetadata(templateMeta);
 			
-			for(String key : inDO.getParameters().keySet()) {
-				TemplateParameter parameter = new TemplateParameter();
-				parameter.setName(key);
-				parameter.setValue(inDO.getParameters().get(key));
-				parameters.add(parameter);
+			if(inDO.getParameters() != null) {
+				for(String key : inDO.getParameters().keySet()) {
+					TemplateParameter parameter = new TemplateParameter();
+					parameter.setName(key);
+					parameter.setValue(inDO.getParameters().get(key));
+					parameters.add(parameter);
+				}
+				template.setParameters(parameters);
+			} else {
+				String planName = inDO.getPlan_id();
+				Object planResponse = customObjectApi.getNamespacedCustomObject("servicecatalog.k8s.io", "v1beta1", Constants.TEMPLATE_NAMESPACE, "serviceplans", planName);
+				GetPlanDO plan = mapper.readValue(gson.toJson(planResponse), GetPlanDO.class);
+				if(plan.getSpec().getInstanceCreateParameterSchema() != null) {
+					for(String key : plan.getSpec().getInstanceCreateParameterSchema().keySet()) {
+						TemplateParameter parameter = new TemplateParameter();
+						parameter.setName(key);
+						parameter.setValue(inDO.getParameters().get(key));
+						parameters.add(parameter);
+					}
+				}
+				template.setParameters(parameters);
 			}
-			template.setParameters(parameters);
+			
 			spec.setTemplate(template);
 			instance.setSpec(spec);
 			
