@@ -20,6 +20,8 @@ import fi.iki.elonen.router.RouterNanoHTTPD.GeneralHandler;
 import fi.iki.elonen.router.RouterNanoHTTPD.UriResource;
 import io.kubernetes.client.openapi.ApiException;
 import k8s.example.client.Constants;
+import k8s.example.client.ErrorCode;
+import k8s.example.client.DataObject.Client;
 import k8s.example.client.DataObject.LoginInDO;
 import k8s.example.client.DataObject.Token;
 import k8s.example.client.DataObject.UserCR;
@@ -42,10 +44,21 @@ public class LoginHandler extends GeneralHandler {
 		LoginInDO loginInDO = null;
 		String outDO = null;
 		IStatus status = null;
+		StringBuilder sb = null;
+		String clientIdRequestParameter = null;
+		String appNameRequestParameter = null;
+		
 		try {
 			// Read inDO
     		loginInDO = new ObjectMapper().readValue(body.get( "postData" ), LoginInDO.class);
     		System.out.println( "  User ID: " + loginInDO.getId() );
+    		
+    		// Get Client ID
+    		if (session.getParameters().get("clientId") != null ) clientIdRequestParameter = session.getParameters().get("clientId").get(0);
+    		if (session.getParameters().get("appName") != null ) appNameRequestParameter = session.getParameters().get("appName").get(0);
+        		
+    		System.out.println( "  Client Id: " + clientIdRequestParameter );
+    		System.out.println( "  App Name: " + appNameRequestParameter );  		   		
     		
     		// Get user info
     		String userId = loginInDO.getId().replace("@", "-");
@@ -54,7 +67,7 @@ public class LoginHandler extends GeneralHandler {
     		System.out.println("  DB password: " + user.getUserInfo().getPassword() + " / Input password: " + encryptedPassword);
     		
     		if(user.getUserInfo().getPassword().equals(encryptedPassword)) {
-    			System.out.println("  Login success");
+    			System.out.println(" Login success ");
     			
     			status = Status.OK;
     			
@@ -64,7 +77,7 @@ public class LoginHandler extends GeneralHandler {
     			Builder tokenBuilder = JWT.create().withIssuer(Constants.ISSUER)
 						.withExpiresAt(Util.getDateFromSecond(Constants.ACCESS_TOKEN_EXP_TIME))
 						.withClaim(Constants.CLAIM_USER_ID, loginInDO.getId())
-    					.withClaim(Constants.CLAIM_TOKEN_ID, tokenId) ;
+    					.withClaim(Constants.CLAIM_TOKEN_ID, tokenId);
     			String accessToken = tokenBuilder.sign(Algorithm.HMAC256(Constants.ACCESS_TOKEN_SECRET_KEY));
     			
     			tokenBuilder = JWT.create().withIssuer(Constants.ISSUER)
@@ -73,16 +86,40 @@ public class LoginHandler extends GeneralHandler {
 
     			// Save tokens in token CR
             	K8sApiCaller.saveToken(userId, tokenId, Util.Crypto.encryptSHA256(accessToken), Util.Crypto.encryptSHA256(refreshToken));
-    			
-    			// Make outDO
-    			Token loginOutDO = new Token();
-    			loginOutDO.setAccessToken(accessToken);
-    			loginOutDO.setRefreshToken(refreshToken);
-    			System.out.println("  Access token: " + accessToken);
-    			System.out.println("  Refresh token: " + refreshToken);
-    			
-    			Gson gson = new GsonBuilder().setPrettyPrinting().create();
-    			outDO = gson.toJson(loginOutDO).toString();
+            	
+            	// Get Redirect URI if Exists
+            	if ( clientIdRequestParameter != null && appNameRequestParameter != null ) {
+        			System.out.println(" Login from Client~! Return Redirect URI together ");
+            		Client clientInfo  = new Client();
+            		clientInfo.setAppName(appNameRequestParameter);
+            		clientInfo.setClientId(clientIdRequestParameter); 		
+            		Client dbClientInfo = K8sApiCaller.getClient(clientInfo);
+            		
+        			System.out.println("  App Name : " + dbClientInfo.getAppName());
+        			System.out.println("  Origin URI : " + dbClientInfo.getOriginUri());
+        			System.out.println("  Redirect URI : " + dbClientInfo.getRedirectUri());
+            		
+        			// Validate
+            		if( !clientInfo.getClientId().equalsIgnoreCase( dbClientInfo.getClientId()) ) throw new Exception( ErrorCode.CLIENT_ID_MISMATCH );
+
+            		// Make Client outDO
+            		sb = new StringBuilder();
+            		sb.append( dbClientInfo.getRedirectUri() );
+            		sb.append( "?at=" + accessToken );
+            		sb.append( "&rt=" + refreshToken );
+        			System.out.println("Redirect URI : " + sb.toString());
+        			outDO = sb.toString();
+            	} else {
+            		// Make outDO
+        			Token loginOutDO = new Token();
+        			loginOutDO.setAccessToken(accessToken);
+        			loginOutDO.setRefreshToken(refreshToken);
+        			System.out.println("  Access token: " + accessToken);
+        			System.out.println("  Refresh token: " + refreshToken);
+        			
+        			Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        			outDO = gson.toJson(loginOutDO).toString();
+            	}		   			
     		} else {
     			System.out.println("  Login fail. Wrong password.");
     			

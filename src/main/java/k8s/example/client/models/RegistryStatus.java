@@ -9,6 +9,7 @@ public class RegistryStatus {
 	public static final String REGISTRY_PHASE_FAILED = "Failed";
 
 	private List<RegistryCondition> conditions = null;
+	private String phase = null;
 
 	public List<RegistryCondition> getConditions() {
 		return conditions;
@@ -31,14 +32,21 @@ public class RegistryStatus {
 		return this;
 	}
 
+	public String getPhase() {
+		return phase;
+	}
 
+	public void setPhase(String phase) {
+		this.phase = phase;
+	}
 
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("class RegistryStatus {\n");
 		if(conditions != null ) 
 			for( RegistryCondition condition : conditions)
-				sb.append("    conditions: ").append(toIndentedString(condition.toString())).append("\n");
+				sb.append("    conditions: ").append(toIndentedString(condition)).append("\n");
+		sb.append("    phase: ").append(toIndentedString(phase)).append("\n");
 		sb.append("}");
 		return sb.toString();
 	}

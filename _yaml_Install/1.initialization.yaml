@@ -12,9 +12,9 @@ metadata:
   namespace: hypercloud4-system
 spec:
   hard:
-    limits.cpu: "2"
-    limits.memory: "10Gi"
-    requests.storage: "20Gi"
+    limits.cpu: "3"
+    limits.memory: "15Gi"
+    requests.storage: "30Gi"
 
 ---
 
@@ -463,73 +463,7 @@ spec:
           spec:
             # Equal Resource Quota Spec
             type: object
-            properties:
-              hard:
-                type: object
-                properties:
-                  limits.cpu:
-                    x-kubernetes-int-or-string: true
-                    type: number
-                  limits.memory:
-                    x-kubernetes-int-or-string: true
-                  requests.cpu:
-                    x-kubernetes-int-or-string: true
-                    type: number
-                  requests.memory:
-                    x-kubernetes-int-or-string: true
-                  requests.nvidia.com/gpu:
-                    x-kubernetes-int-or-string: true
-                    type: number
-                  requests.storage:
-                    x-kubernetes-int-or-string: true
-                  persistentvolumeclaims:
-                    type: integer
-                  <storage-class-name>.storageclass.storage.k8s.io/requests.storage:
-                    x-kubernetes-int-or-string: true
-                  <storage-class-name>.storageclass.storage.k8s.io/persistentvolumeclaims:
-                    type: integer
-                  requests.ephemeral-storage:
-                    x-kubernetes-int-or-string: true
-                  limits.ephemeral-storage:
-                    x-kubernetes-int-or-string: true
-                  count/persistentvolumeclaims:
-                    type: integer
-                  count/services:
-                    type: integer
-                  count/secrets:
-                    type: integer
-                  count/configmaps:
-                    type: integer
-                  count/replicationcontrollers:
-                    type: integer
-                  count/deployments.apps:
-                    type: integer
-                  count/replicasets.apps:
-                    type: integer
-                  count/statefulsets.apps:
-                    type: integer
-                  count/jobs.batch:
-                    type: integer
-                  count/cronjobs.batch:
-                    type: integer
-                  count/deployments.extensions:
-                    type: integer
-                  configmaps:
-                    type: integer
-                  pods:
-                    type: integer
-                  replicationcontrollers:
-                    type: integer
-                  resourcequotas:
-                    type: integer
-                  services:
-                    type: integer
-                  services.loadbalancers:
-                    type: integer
-                  services.nodeports:
-                    type: integer
-                  secrets:
-                    type: integer
+            x-kubernetes-preserve-unknown-fields: true
           status:
             type: object
             properties:
@@ -598,73 +532,7 @@ spec:
           spec:
             # Equal Resource Quota
             type: object
-            properties:
-              hard:
-                type: object
-                properties:
-                  limits.cpu:
-                    x-kubernetes-int-or-string: true
-                    type: number
-                  limits.memory:
-                    x-kubernetes-int-or-string: true
-                  requests.cpu:
-                    x-kubernetes-int-or-string: true
-                    type: number
-                  requests.memory:
-                    x-kubernetes-int-or-string: true
-                  requests.nvidia.com/gpu:
-                    x-kubernetes-int-or-string: true
-                    type: number
-                  requests.storage:
-                    x-kubernetes-int-or-string: true
-                  persistentvolumeclaims:
-                    type: integer
-                  <storage-class-name>.storageclass.storage.k8s.io/requests.storage:
-                    x-kubernetes-int-or-string: true
-                  <storage-class-name>.storageclass.storage.k8s.io/persistentvolumeclaims:
-                    type: integer
-                  requests.ephemeral-storage:
-                    x-kubernetes-int-or-string: true
-                  limits.ephemeral-storage:
-                    x-kubernetes-int-or-string: true
-                  count/persistentvolumeclaims:
-                    type: integer
-                  count/services:
-                    type: integer
-                  count/secrets:
-                    type: integer
-                  count/configmaps:
-                    type: integer
-                  count/replicationcontrollers:
-                    type: integer
-                  count/deployments.apps:
-                    type: integer
-                  count/replicasets.apps:
-                    type: integer
-                  count/statefulsets.apps:
-                    type: integer
-                  count/jobs.batch:
-                    type: integer
-                  count/cronjobs.batch:
-                    type: integer
-                  count/deployments.extensions:
-                    type: integer
-                  configmaps:
-                    type: integer
-                  pods:
-                    type: integer
-                  replicationcontrollers:
-                    type: integer
-                  resourcequotas:
-                    type: integer
-                  services:
-                    type: integer
-                  services.loadbalancers:
-                    type: integer
-                  services.nodeports:
-                    type: integer
-                  secrets:
-                    type: integer
+            x-kubernetes-preserve-unknown-fields: true
           status:
             type: object
             properties:

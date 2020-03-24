@@ -18,6 +18,8 @@ import fi.iki.elonen.router.RouterNanoHTTPD.GeneralHandler;
 import fi.iki.elonen.router.RouterNanoHTTPD.UriResource;
 import io.kubernetes.client.openapi.ApiException;
 import k8s.example.client.DataObject.Client;
+import k8s.example.client.ErrorCode;
+import k8s.example.client.StringUtil;
 import k8s.example.client.Util;
 import k8s.example.client.k8s.K8sApiCaller;
 import k8s.example.client.models.BrokerResponse;
@@ -41,6 +43,11 @@ public class AuthClientHandler extends GeneralHandler {
 		try {
 			// Read inDO
 			clientInfo = new ObjectMapper().readValue(body.get( "postData" ), Client.class);
+			
+			// Verify Input Values
+			if( StringUtil.isEmpty(clientInfo.getAppName()))	throw new Exception(ErrorCode.APP_NAME_EMPTY);
+			if( StringUtil.isEmpty(clientInfo.getOriginUri()))	throw new Exception(ErrorCode.ORIGIN_URI_EMPTY);
+			if( StringUtil.isEmpty(clientInfo.getRedirectUri()))	throw new Exception(ErrorCode.REDIRECT_URI_EMPTY);
 			
 			// Issue Client ID & Secret
 			clientInfo.setClientId(generateClientId());
