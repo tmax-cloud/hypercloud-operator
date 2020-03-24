@@ -26,7 +26,6 @@ import k8s.example.client.k8s.apis.CustomResourceApi;
 
 public class TemplateOperator extends Thread {
 	private final Watch<Object> watchInstance;
-	private ExecutorService executorService;
 	private static int latestResourceVersion = 0;
 	
 	ApiClient client = null;
@@ -40,7 +39,6 @@ public class TemplateOperator extends Thread {
 		        api.listNamespacedCustomObjectCall(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, Constants.TEMPLATE_NAMESPACE, Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE, null, null, null, null, null, String.valueOf(resourceVersion), null, Boolean.TRUE, null),
 		        new TypeToken<Watch.Response<Object>>(){}.getType()
         );
-		this.executorService = Executors.newCachedThreadPool();
 		
 		latestResourceVersion = resourceVersion;
 		this.client = client;
@@ -56,7 +54,6 @@ public class TemplateOperator extends Thread {
 					if(Thread.interrupted()) {
 						System.out.println("Interrupted!");
 						watchInstance.close();
-						executorService.shutdown();
 					}
 				} catch(Exception e) {
 					System.out.println(e.getMessage());
@@ -111,28 +108,10 @@ public class TemplateOperator extends Thread {
 	        		}
 				} catch(Exception e) {
 					System.out.println(e.getMessage());
-				} 
-        				
-//        				if(reason.equals("Running") || reason.equals("Completed") || reason.equals("Error")) {
-//							Runnable runnable = new Runnable() {
-//								@Override
-//								public void run() {
-//									try {
-//										MainWatcher.callNotifiedStatusUpdate(response.object.getMetadata().getNamespace(), productId, reason, extraQueryParam);
-//									} catch (Exception e) {
-//										e.printStackTrace();
-//									}
-//								}
-//							};
-//							
-//							executorService.execute(runnable);
-//        				}
-//	        		}
-        		}
-    		);
+				}
+        	});
 		} catch (Exception e) {
 			System.out.println("[Template Operator] Template Operator Exception: " + e.getMessage());
-			executorService.shutdown();
 		}
 	}
 	
