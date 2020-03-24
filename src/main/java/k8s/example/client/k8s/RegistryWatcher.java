@@ -73,7 +73,7 @@ public class RegistryWatcher extends Thread {
 							
 							break;
 						case Constants.EVENT_TYPE_DELETED : 
-							K8sApiCaller.deleteRegistry(registry);
+//							K8sApiCaller.deleteRegistry(registry);
 							System.out.println("Registry is deleted");
 							
 							break;

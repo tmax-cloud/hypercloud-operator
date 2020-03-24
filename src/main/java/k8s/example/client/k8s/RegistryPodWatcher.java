@@ -47,8 +47,6 @@ public class RegistryPodWatcher extends Thread {
 						latestResourceVersion = response.object.getMetadata().getResourceVersion();
 						String eventType = response.type.toString();
 						System.out.println("[RegistryPodWatcher] Registry Pod " + eventType + "\n" + pod.toString());
-						System.out.println("[RegistryPodWatcher] pod status: " + response.status.toString());
-						System.out.println("[RegistryPodWatcher] pod: " + pod.toString());
 						
 						switch(eventType) {
 						case Constants.EVENT_TYPE_ADDED : 
