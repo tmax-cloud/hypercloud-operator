@@ -28,7 +28,11 @@ spec:
           additionalProperties:
             type: string
           type: object
-        message:
+        shortDescription:
+          type: string
+        longDescription:
+          type: string
+        provider:
           type: string
         imageUrl:
           type: string

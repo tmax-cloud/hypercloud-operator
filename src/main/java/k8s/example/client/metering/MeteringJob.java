@@ -5,6 +5,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,45 +30,113 @@ import k8s.example.client.metering.util.UIDGenerator;
 public class MeteringJob implements Job{
 	
 	private Map<String,Metering> meteringData = new HashMap<>();
+	long time = System.currentTimeMillis();
+	Connection conn = null;
 	
 	@Override
 	public void execute(JobExecutionContext context) throws JobExecutionException {
 		
-
-		makeMeteringMap();
+		try {
+			conn = getConnection();
+		} catch (SQLException e) {
+			System.out.println("SQL Exception : " + e.getMessage());
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			System.out.println("Class Not Found Exection");
+			e.printStackTrace();
+		}
 		
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTimeInMillis(time);
+		System.out.println( "============= Metring TIME =============" );
+		System.out.println( "minute of hour	 : " + calendar.get(Calendar.MINUTE) );
+		System.out.println( "hour of day	 : " + calendar.get(Calendar.HOUR_OF_DAY) );
+		System.out.println( "day of month	 : " + calendar.get(Calendar.DAY_OF_MONTH) );
+		System.out.println( "day of year	 : " + calendar.get(Calendar.DAY_OF_YEAR) );
+		
+		if ( calendar.get(Calendar.MINUTE) == 0 ) {
+			// Insert to metering_hour
+			insertMeteringHour();
+		} else if ( calendar.get(Calendar.HOUR_OF_DAY) == 0 ) {
+			// Insert to metering_day
+			insertMeteringDay();
+		} else if ( calendar.get(Calendar.DAY_OF_MONTH) == 1 ) {
+			// Insert to metering_month
+		} else if ( calendar.get(Calendar.DAY_OF_YEAR) == 1 ) {
+			// Insert to metering_year
+		}
+		
+		
+		// Insert to metering (new data)
+		makeMeteringMap();
 		System.out.println( "============= Metering =============" );
 		for( String key : meteringData.keySet() ){
 			System.out.println( key + "/cpu : " + meteringData.get(key).getCpu() );
 			System.out.println( key + "/memory : " + meteringData.get(key).getMemory() );
 			System.out.println( key + "/storage : " + meteringData.get(key).getStorage() );
         }
-		
+		System.out.println( "====================================" );
 		insertMeteringData();
 		
 	}
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+	@SuppressWarnings("resource")
+	private void insertMeteringDay() {
+		try {
+			String insertQuery = "insert into metering.metering_day (" + 
+					"select id, namespace, truncate(sum(cpu),2) as cpu, sum(memory) as memory, sum(storage) as storage, " + 
+					"sum(public_ip) as public_ip, sum(private_ip) as private_ip, " + 
+					"date_format(metering_time,'%Y-%m-%d 00:00:00') as metering_time, status from metering.metering_hour " + 
+					"group by day(metering_time), namespace" + 
+					")";
+			LogPreparedStatement pstmt = new LogPreparedStatement( conn, insertQuery );
+			pstmt.execute();
+			
+			String deleteQuery = "truncate metering.metering_hour";
+			pstmt = new LogPreparedStatement( conn, deleteQuery );
+			pstmt.execute();
+			
+			pstmt.close();
+			conn.commit();
+
+		} catch (SQLException e) {
+			System.out.println("SQL Exception : " + e.getMessage());
+			e.printStackTrace();
+		}
+	}
+		
+	@SuppressWarnings("resource")
+	private void insertMeteringHour() {
+		try {
+			String insertQuery = "insert into metering.metering_hour (" + 
+					"select id, namespace, truncate(sum(cpu)/count(*),2) as cpu, truncate(sum(memory)/count(*),0) as memory, truncate(sum(storage)/count(*),0) as storage, " + 
+					"truncate(sum(public_ip)/count(*),0) as public_ip, truncate(sum(private_ip)/count(*),0) as private_ip, " + 
+					"date_format(metering_time,'%Y-%m-%d %H:00:00') as metering_time, status from metering.metering " + 
+					"group by hour(metering_time), namespace" + 
+					")";
+			LogPreparedStatement pstmt = new LogPreparedStatement( conn, insertQuery );
+			pstmt.execute();
+			
+			String deleteQuery = "truncate metering.metering";
+			pstmt = new LogPreparedStatement( conn, deleteQuery );
+			pstmt.execute();
+			
+			pstmt.close();
+			conn.commit();
+			
+		} catch (SQLException e) {
+			System.out.println("SQL Exception : " + e.getMessage());
+			e.printStackTrace();
+		}
+	}
 	
 	private void insertMeteringData() {
-		
-		long time = System.currentTimeMillis();
-		Connection conn;
 		try {
-			conn = getConnection();
 			String query = "insert into metering.metering (id,namespace,cpu,memory,storage,public_ip,private_ip,metering_time,status) "
-					+ "values (?,?,?,?,?,?,?,?,?)";
+					+ "values (?,?,truncate(?,2),?,?,?,?,?,?)";
 			LogPreparedStatement pstmt = new LogPreparedStatement( conn, query );
 			for( String key : meteringData.keySet() ){
-				pstmt.setString( 1, UIDGenerator.getInstance().generate32( conn, 8, time ) );
+				pstmt.setString( 1, UIDGenerator.getInstance().generate32( meteringData.get(key), 8, time ) );
 				pstmt.setString( 2, key );
 				pstmt.setDouble( 3, meteringData.get(key).getCpu() );
 				pstmt.setLong( 4, meteringData.get(key).getMemory() );
@@ -80,15 +149,11 @@ public class MeteringJob implements Job{
 			}
 
 			pstmt.executeBatch();
-			
 			pstmt.close();
+			conn.commit();
 			conn.close();
-			
 		} catch (SQLException e) {
 			System.out.println("SQL Exception : " + e.getMessage());
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			System.out.println("Class Not Found Exection");
 			e.printStackTrace();
 		}
 	}

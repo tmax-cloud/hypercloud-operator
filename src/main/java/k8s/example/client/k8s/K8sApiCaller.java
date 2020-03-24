@@ -1867,8 +1867,10 @@ public class K8sApiCaller {
 				
 				service.setName(template.get("metadata").get("name").asText());
 				service.setId(template.get("metadata").get("name").asText());
-				service.setDescription(template.get("metadata").get("name").asText());
+				service.setDescription(template.get("shortDescription").asText());
 				serviceMeta.setImageUrl(template.get("imageUrl").asText());
+				serviceMeta.setLongDescription(template.get("longDescription").asText());
+				serviceMeta.setProviderDisplayName(template.get("provider").asText());
 				service.setMetadata(serviceMeta);
 				
 				JsonNode objectKinds = template.get("objectKinds");
