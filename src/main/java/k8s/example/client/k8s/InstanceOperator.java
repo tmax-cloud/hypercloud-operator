@@ -6,8 +6,6 @@ import java.io.StringWriter;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
@@ -43,7 +41,6 @@ import okio.ByteString;
 
 public class InstanceOperator extends Thread {
 	private final Watch<Object> watchInstance;
-	private ExecutorService executorService;
 	private static int latestResourceVersion = 0;
 	
 	ApiClient client = null;
@@ -82,7 +79,6 @@ public class InstanceOperator extends Thread {
 		        api.listNamespacedCustomObjectCall(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, Constants.TEMPLATE_NAMESPACE, Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, null, null, null, null, null, String.valueOf(resourceVersion), null, Boolean.TRUE, null),
 		        new TypeToken<Watch.Response<Object>>(){}.getType()
         );
-		this.executorService = Executors.newCachedThreadPool();
 		
 		latestResourceVersion = resourceVersion;
 		this.client = client;
@@ -98,35 +94,36 @@ public class InstanceOperator extends Thread {
 					if(Thread.interrupted()) {
 						System.out.println("Interrupted!");
 						watchInstance.close();
-						executorService.shutdown();
 					}
 				} catch(Exception e) {
 					System.out.println(e.getMessage());
 				}
 				
 				try {
-					String statusPhrase = null;
 					JsonNode instanceObj = numberTypeConverter(objectToJsonNode(response.object));
 					System.out.println("[Instance Operator] Event Type : " + response.type.toString()); //ADDED, MODIFIED, DELETED
 					System.out.println("[Instance Operator] Object : " + instanceObj.toString());
 					
-	        		if(instanceObj.get("metadata").get("resourceVersion").asInt() > latestResourceVersion) {
-	        			latestResourceVersion = instanceObj.get("metadata").get("resourceVersion").asInt();
-	        			System.out.println("[Instance Operator] Instance Name : " + instanceObj.get("metadata").get("name"));
-	        			System.out.println("[Instance Operator] Custom LatestResourceVersion : " + latestResourceVersion);
-	        		}
+	        		latestResourceVersion = instanceObj.get("metadata").get("resourceVersion").asInt();
+	        		System.out.println("[Instance Operator] Instance Name : " + instanceObj.get("metadata").get("name"));
+	        		System.out.println("[Instance Operator] ResourceVersion : " + latestResourceVersion);
 	        		
 	        		if(response.type.toString().equals("ADDED")) {
 	        			String templateName = instanceObj.get("spec").get("template").get("metadata").get("name").asText();
-	        			System.out.println("[Instance Operator] Template Instance " + instanceObj.get("metadata").get("name") + " is ADDED");
 	        			System.out.println("[Instance Operator] Template Name : " + templateName);
 	        			
-	        			Object template = tpApi.getNamespacedCustomObject(
-	        					Constants.CUSTOM_OBJECT_GROUP, 
-	        					Constants.CUSTOM_OBJECT_VERSION, 
-	        					Constants.TEMPLATE_NAMESPACE, 
-	        					Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE, 
-	        					templateName);
+	        			Object template = null;
+	        			try {
+	        				template = tpApi.getNamespacedCustomObject(
+		        					Constants.CUSTOM_OBJECT_GROUP, 
+		        					Constants.CUSTOM_OBJECT_VERSION, 
+		        					Constants.TEMPLATE_NAMESPACE, 
+		        					Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE, 
+		        					templateName);
+	        			} catch (Exception e) {
+	        				throw new Exception("Template Not Found");
+	        			}
+	        			
 	        			System.out.println("[Instance Operator] Template : " + template.toString());
 	        			
 	        			JsonNode templateObjs = numberTypeConverter(objectToJsonNode(template).get("objects"));
@@ -194,16 +191,19 @@ public class InstanceOperator extends Thread {
 		        					try {
 		        						Object result = tpApi.createNamespacedCustomObject(apiGroup, apiVersion, namespace, kind, bodyObj, null);
 		        						System.out.println(result.toString());
-		        						statusPhrase = Constants.STATUS_RUNNING;
+		        						patchStatus(instanceObj.get("metadata").get("name").asText(), Constants.STATUS_RUNNING);
 		        					} catch (ApiException e) {
 		        						System.out.println("[Instance Operator] ApiException: " + e.getMessage());
 		        						System.out.println(e.getResponseBody());
-		        						statusPhrase = Constants.STATUS_ERROR;
+		        						patchStatus(instanceObj.get("metadata").get("name").asText(), Constants.STATUS_ERROR);
+		        						throw e;
 		        					} catch (Exception e) {
 		        						System.out.println("[Instance Operator] Exception: " + e.getMessage());
 		        						StringWriter sw = new StringWriter();
 		        						e.printStackTrace(new PrintWriter(sw));
 		        						System.out.println(sw.toString());
+		        						patchStatus(instanceObj.get("metadata").get("name").asText(), Constants.STATUS_ERROR);
+		        						throw e;
 		        					}
 		        				} else {
 		        					throw new Exception("Some non-replaced parameters or invaild values exist");
@@ -223,24 +223,8 @@ public class InstanceOperator extends Thread {
     					patch.put("value", objArr);
     					patchArray.add(patch);
     					
-    					JSONObject patchStatus = new JSONObject();
-    					JSONObject status = new JSONObject();
-    					JSONArray conditions = new JSONArray();
-    					JSONObject condition = new JSONObject();
-    					JSONArray patchStatusArray = new JSONArray();
-    					condition.put("type", "Phase");
-    					condition.put("status", statusPhrase);
-    					conditions.add(condition);
-    					status.put("conditions", conditions);
-    					patchStatus.put("op", "add");
-    					patchStatus.put("path", "/status");
-    					patchStatus.put("value", status);
-    					patchStatusArray.add(patchStatus);
-    					
     					try{
     						Object result = tpApi.patchNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, Constants.TEMPLATE_NAMESPACE, Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, instanceObj.get("metadata").get("name").asText(), patchArray);
-    						System.out.println(result.toString());
-    						result = tpApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, Constants.TEMPLATE_NAMESPACE, Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, instanceObj.get("metadata").get("name").asText(), patchStatusArray);
     						System.out.println(result.toString());
     					} catch (ApiException e) {
     						throw new Exception(e.getResponseBody());
@@ -290,29 +274,34 @@ public class InstanceOperator extends Thread {
 	        			}
 	        		}
 				} catch(Exception e) {
-					System.out.println(e.getMessage());
-				} 
-        				
-//        				if(reason.equals("Running") || reason.equals("Completed") || reason.equals("Error")) {
-//							Runnable runnable = new Runnable() {
-//								@Override
-//								public void run() {
-//									try {
-//										MainWatcher.callNotifiedStatusUpdate(response.object.getMetadata().getNamespace(), productId, reason, extraQueryParam);
-//									} catch (Exception e) {
-//										e.printStackTrace();
-//									}
-//								}
-//							};
-//							
-//							executorService.execute(runnable);
-//        				}
-//	        		}
-        		}
-    		);
+					System.out.println("[Instance Operator] Instance Operator Exception: " + e.getMessage());
+				}
+        	});
 		} catch (Exception e) {
 			System.out.println("[Instance Operator] Instance Operator Exception: " + e.getMessage());
-			executorService.shutdown();
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	private void patchStatus(String instanceName, String phrase) throws Exception {
+		JSONObject patchStatus = new JSONObject();
+		JSONObject status = new JSONObject();
+		JSONArray conditions = new JSONArray();
+		JSONObject condition = new JSONObject();
+		JSONArray patchStatusArray = new JSONArray();
+		condition.put("type", "Phase");
+		condition.put("status", phrase);
+		conditions.add(condition);
+		status.put("conditions", conditions);
+		patchStatus.put("op", "add");
+		patchStatus.put("path", "/status");
+		patchStatus.put("value", status);
+		patchStatusArray.add(patchStatus);
+		
+		try{
+			tpApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, Constants.TEMPLATE_NAMESPACE, Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, instanceName, patchStatusArray);
+		} catch (ApiException e) {
+			throw new Exception(e.getResponseBody());
 		}
 	}
 	

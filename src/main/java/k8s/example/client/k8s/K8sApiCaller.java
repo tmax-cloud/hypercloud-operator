@@ -200,8 +200,8 @@ public class K8sApiCaller {
 			mapper.registerModule(new JodaModule());
 			ArrayList<Registry> registryList = mapper.readValue((new Gson()).toJson(respJson.get("items")), new TypeReference<ArrayList<Registry>>() {});
 
-			for(Registry user : registryList) {
-				int registryResourceVersion = Integer.parseInt(user.getMetadata().getResourceVersion());
+			for(Registry registry : registryList) {
+				int registryResourceVersion = Integer.parseInt(registry.getMetadata().getResourceVersion());
 				registryLatestResourceVersion = (registryLatestResourceVersion >= registryResourceVersion) ? registryLatestResourceVersion : registryResourceVersion;
 			}
 		} catch (Exception e) {
@@ -210,7 +210,24 @@ public class K8sApiCaller {
 		}
 
 		System.out.println("Registry Latest resource version: " + registryLatestResourceVersion);
-		
+
+		// registry pod
+		int registryPodLatestResourceVersion = 0;
+
+		try {
+			
+			V1PodList registryPodList = api.listPodForAllNamespaces(null, null, null, "app=registry", null, null, null, null, Boolean.FALSE);
+			for(V1Pod pod : registryPodList.getItems()) {
+				int registryPodResourceVersion = Integer.parseInt(pod.getMetadata().getResourceVersion());
+				registryPodLatestResourceVersion = (registryPodLatestResourceVersion >= registryPodResourceVersion) ? registryPodLatestResourceVersion : registryPodResourceVersion;
+			}
+		} catch (Exception e) {
+			System.out.println("Exception: " + e.getMessage());
+			e.printStackTrace();
+		}
+
+		System.out.println("Registry Pod Latest resource version: " + registryPodLatestResourceVersion);
+
 		// Operator
 		int templateLatestResourceVersion = 0;
 		try {
@@ -292,7 +309,12 @@ public class K8sApiCaller {
 		System.out.println("Start registry watcher");
 		RegistryWatcher registryWatcher = new RegistryWatcher(k8sClient, customObjectApi, String.valueOf(registryLatestResourceVersion));
 		registryWatcher.start();
-		
+
+		// Start registry watch
+		System.out.println("Start registry pod watcher");
+		RegistryPodWatcher registryPodWatcher = new RegistryPodWatcher(k8sClient, api, String.valueOf(registryPodLatestResourceVersion));
+		registryPodWatcher.start();
+
 		// Start Operator
 		System.out.println("Start Template Operator");
 		TemplateOperator templateOperator = new TemplateOperator(k8sClient, templateApi, templateLatestResourceVersion);
@@ -332,6 +354,14 @@ public class K8sApiCaller {
 				registryWatcher.interrupt();
 				registryWatcher = new RegistryWatcher(k8sClient, customObjectApi, registryLatestResourceVersionStr);
 				registryWatcher.start();
+			}
+
+			if(!registryPodWatcher.isAlive()) {
+				String registryPodLatestResourceVersionStr = RegistryPodWatcher.getLatestResourceVersion();
+				System.out.println("Registry pod watcher is not alive. Restart registry pod watcher! (Latest resource version: " + registryPodLatestResourceVersionStr + ")");
+				registryPodWatcher.interrupt();
+				registryPodWatcher = new RegistryPodWatcher(k8sClient, api, registryPodLatestResourceVersionStr);
+				registryPodWatcher.start();
 			}
 			
 			if(!templateOperator.isAlive()) {

@@ -53,12 +53,42 @@ components:
               enum: [Success,Reject]
             reason:
               type: string
+    Client:
+      type: object
+      description: "HyperCloud4 Client DO"
+      properties:
+        appName:
+           type: string
+           description: "App Name of Client"
+        clientId:
+           type: string
+           description: "Client ID generated"
+        clientSecret:
+           type: string
+           description: "Client Secret generated"
+        originUri:
+           type: string
+           description: "Origin Uri of Client"
+        redirectUri:
+           type: string
+           description: "Redirect Uri of Client After Oauth Login"
 paths:
   /login:
     post:
       tags:
       - "Auth"
       summary: "Hyper Cloud4 Login Service"
+      parameters:
+      - in: "query"
+        name: "clientId"
+        description: "Client Id if login as Oauth Client"
+        schema:
+          type: "string"
+      - in: "query"
+        name: "appName"
+        description: "Client App Name if login as Oauth Client"
+        schema:
+          type: "string"
       requestBody:
         description: "UserLoginDO"
         required: true  
@@ -143,6 +173,74 @@ paths:
                   {
                     "accessToken": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
                   }
+  /authClient:
+    post:
+      tags:
+      - "Oauth"
+      summary: "Hyper Cloud4 Oauth Login Service"
+      requestBody:
+        description: "Oauth Client Register Service"
+        required: true  
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                dto:
+                  $ref: "#/components/schemas/Client"    
+              example:
+                {
+                  "appName": "woo-app",
+                  "originUri": "woo.co.kr",
+                  "redirectUri": "woo.co.kr"
+                }
+      responses:
+        200:
+          description: Service OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  dto:
+                    $ref: "#/components/schemas/Client"
+                example:
+                  {
+                    "appName": "woo-app",
+                    "originUri": "woo.co.kr",
+                    "redirectUri": "woo.co.kr",
+                    "clientId": "cf1102a7-ed92-4c02-b98d-3cc6e949b7cf",
+                    "clientSecret": "uMM9n7Ni2vsgQSZEHJkAm8sQdYKt4v"
+                  }
+  /loginPage:
+    post:
+      tags:
+      - "Oauth"
+      summary: "Hyper Cloud4 Oauth Login Service"
+      requestBody:
+        description: "Oauth Login Page Create Service"
+        required: true  
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                dto:
+                  $ref: "#/components/schemas/Client"    
+              example:
+                {
+                  "appName": "woo-app",
+                  "clientId": "cf1102a7-ed92-4c02-b98d-3cc6e949b7cf",
+                  "clientSecret": "uMM9n7Ni2vsgQSZEHJkAm8sQdYKt4v"
+                }
+      responses:
+        200:
+          description: Service OK
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "http://192.168.8.36/oauth/login.html?clientId=cf1102a7-ed92-4c02-b98d-3cc6e949b7cf&clientSecret=uMM9n7Ni2vsgQSZEHJkAm8sQdYKt4v"                 
   /apis/tmax.io/v1/namespaceclaims/{claim}/status:
     patch:
       tags:
