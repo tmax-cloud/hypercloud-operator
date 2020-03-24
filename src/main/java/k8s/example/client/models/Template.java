@@ -10,7 +10,9 @@ public class Template {
 	private String apiVersion = null;
 	private String kind = null;
 	private Map<String, String> labels = null;
-	private String message = null;
+	private String shortDescription = null;
+	private String longDescription = null;
+	private String provider = null;
 	private String imageUrl = null;
 	private List<String> objectKinds = null;
 	private Metadata metadata = null;
@@ -34,12 +36,6 @@ public class Template {
 	}
 	public void setLabels(Map<String, String> labels) {
 		this.labels = labels;
-	}
-	public String getMessage() {
-		return message;
-	}
-	public void setMessage(String message) {
-		this.message = message;
 	}
 	public String getImageUrl() {
 		return imageUrl;
@@ -77,10 +73,29 @@ public class Template {
 	public void setParameters(List<TemplateParameter> parameters) {
 		this.parameters = parameters;
 	}
+	public String getShortDescription() {
+		return shortDescription;
+	}
+	public void setShortDescription(String shortDescription) {
+		this.shortDescription = shortDescription;
+	}
+	public String getLongDescription() {
+		return longDescription;
+	}
+	public void setLongDescription(String longDescription) {
+		this.longDescription = longDescription;
+	}
+	public String getProvider() {
+		return provider;
+	}
+	public void setProvider(String provider) {
+		this.provider = provider;
+	}
 	@Override
 	public String toString() {
-		return "Template [apiVersion=" + apiVersion + ", kind=" + kind + ", labels=" + labels + ", message=" + message
-				+ ", imageUrl=" + imageUrl + ", objectKinds=" + objectKinds + ", metadata=" + metadata + ", objects="
-				+ objects + ", plans=" + plans + ", parameters=" + parameters + "]";
+		return "Template [apiVersion=" + apiVersion + ", kind=" + kind + ", labels=" + labels + ", shortDescription="
+				+ shortDescription + ", longDescription=" + longDescription + ", provider=" + provider + ", imageUrl="
+				+ imageUrl + ", objectKinds=" + objectKinds + ", metadata=" + metadata + ", objects=" + objects
+				+ ", plans=" + plans + ", parameters=" + parameters + "]";
 	}
 }
