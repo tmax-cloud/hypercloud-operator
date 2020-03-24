@@ -80,7 +80,16 @@ public class Constants {
 	
 	// Metering Cron Expression
 	public static final String METERING_CRON_EXPRESSION = "0 0/5 * 1/1 * ? *";
-
+	
+	// Metering Get Query Parameters
+	public static final String QUERY_PARAMETER_OFFSET = "offset";
+	public static final String QUERY_PARAMETER_LIMIT = "limit";
+	public static final String QUERY_PARAMETER_NAMESPACE = "namespace";
+	public static final String QUERY_PARAMETER_TIMEUNIT = "timeUnit";
+	public static final String QUERY_PARAMETER_STARTTIME = "startTime";
+	public static final String QUERY_PARAMETER_ENDTIME = "endTime";
+	public static final String QUERY_PARAMETER_SORT = "sort";
+	
 	// Mysql DB Connection
 	public static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
 	public static final String DB_URL = "jdbc:mysql://mysql-service.hypercloud4-system:3306/metering?useSSL=false";
