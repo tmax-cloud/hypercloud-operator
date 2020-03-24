@@ -1,6 +1,5 @@
 package k8s.example.client.k8s;
 
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 

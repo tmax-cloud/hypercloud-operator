@@ -310,7 +310,7 @@ public class K8sApiCaller {
 		RegistryWatcher registryWatcher = new RegistryWatcher(k8sClient, customObjectApi, String.valueOf(registryLatestResourceVersion));
 		registryWatcher.start();
 
-		// Start registry watch
+		// Start registry pod watch
 		System.out.println("Start registry pod watcher");
 		RegistryPodWatcher registryPodWatcher = new RegistryPodWatcher(k8sClient, api, String.valueOf(registryPodLatestResourceVersion));
 		registryPodWatcher.start();
