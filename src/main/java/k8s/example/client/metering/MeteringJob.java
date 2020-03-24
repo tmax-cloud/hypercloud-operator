@@ -88,12 +88,13 @@ public class MeteringJob implements Job{
 					"select id, namespace, truncate(sum(cpu),2) as cpu, sum(memory) as memory, sum(storage) as storage, " + 
 					"sum(public_ip) as public_ip, sum(private_ip) as private_ip, " + 
 					"date_format(metering_time,'%Y-%m-%d 00:00:00') as metering_time, status from metering.metering_hour " + 
+					"where status = 'Success' " + 
 					"group by day(metering_time), namespace" + 
 					")";
 			LogPreparedStatement pstmt = new LogPreparedStatement( conn, insertQuery );
 			pstmt.execute();
 			
-			String deleteQuery = "truncate metering.metering_hour";
+			String deleteQuery = "update metering.metering_hour set status = 'Merged' where status = 'Success'";
 			pstmt = new LogPreparedStatement( conn, deleteQuery );
 			pstmt.execute();
 			
