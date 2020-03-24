@@ -97,7 +97,7 @@ public class MeteringJob implements Job{
 			
 			pstmt.close();
 			conn.commit();
-			
+
 		} catch (SQLException e) {
 			System.out.println("SQL Exception : " + e.getMessage());
 			e.printStackTrace();
@@ -149,7 +149,8 @@ public class MeteringJob implements Job{
 
 			pstmt.executeBatch();
 			pstmt.close();
-			
+			conn.commit();
+			conn.close();
 		} catch (SQLException e) {
 			System.out.println("SQL Exception : " + e.getMessage());
 			e.printStackTrace();
