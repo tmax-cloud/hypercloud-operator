@@ -1,5 +1,5 @@
 # Registry Custom Resource
-	- Secure Reigstry 및 image pull secret 관리
+	- Secure Reigstry 및  secret 관리
 	- Registry의 metadata, SVC(Service), PVC(Persistent Volume Claim) 정보 입력
 	- hpcd-{REGISTRY_NAMESPACE}에 생성되는 Resources 
 		- SVC: hpcd-{REGISTRY_NAME}
@@ -19,3 +19,19 @@
 # 필수 요구 사항
 	- secret-watcher가 daemonset으로 동작하고 있어야 함
 		- Registry가 생성한 Secret(Registry Info)으로 Registry의 인증서를 /etc/docker/certs.d/{REGISTRY_IP}:{REGISTRY_PORT} 디렉토리에 생성
+		
+# 기능 상세
+	- Registry 기능
+		- Registry에 접근 가능한 인증서 파일을 생성하여 Secure Registry를 구축한다. 
+		- Reigstry를 사용하기 위해 Image Push가 선행되어야 한다. Image Push는 아래의 'Registry에 Image Push하기'를 참고하면된다.
+		- Secure Registry의 이미지를 사용하기 위해서는 인증서와 imagePullSecret이 있어야하는데 Registry 생성과 함께 자동으로 발급된다.
+		- 인증서는 hpcd-{REGISTRY_NAME} Secret에 관리되고 있으며 secret watcher에 의해 모든 노드에 이 인증서를 보관한다.
+		- imagePullSecret은 hpcd-registry-{REGISTRY_NAME} Secret에 관리되고 있으며 Pod 생성시 imagePullSecret 필드에 이름을 입력하여 사용한다.
+	- Registry에 Image Push하기
+		- hpcd-{REGISTRY_NAME} 이름의 Secret에서 인증서  파일(*.crt, *.cert, *.key)을 /etc/docker/certs.d/{REGISTRY_IP}:{REGISTRY_PORT} 디렉토리에 추가
+		- docker login {REGISTRY_IP}:{REGISTRY_PORT}
+			- loginId, loginPassword 입력
+		- docker tag image {REGISTRY_IP}:{REGISTRY_PORT}/image
+		- docker push {REGISTRY_IP}:{REGISTRY_PORT}/image
+	
+	
