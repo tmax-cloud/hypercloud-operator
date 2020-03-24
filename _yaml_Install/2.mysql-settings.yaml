@@ -16,7 +16,7 @@ metadata:
   namespace: hypercloud4-system
 data:
   initdb.sql: |
-    create table metering.metering (id varchar(32) not null,namespace varchar(255) not null,cpu double,memory bigint,storage bigint,public_ip int,private_ip int,metering_time timestamp,status varchar(255),primary key (id));
+    create table metering.metering (id varchar(32) not null,namespace varchar(255) not null,cpu double,memory bigint,storage bigint,public_ip int,private_ip int,metering_time timestamp not null default current_timestamp,status varchar(255),primary key (id));
     create table metering.metering_hour (id varchar(32) not null,namespace varchar(255) not null,cpu double,memory bigint,storage bigint,public_ip int,private_ip int,metering_time timestamp not null default current_timestamp,status varchar(255),primary key (id));
     create table metering.metering_day (id varchar(32) not null,namespace varchar(255) not null,cpu double,memory bigint,storage bigint,public_ip int,private_ip int,metering_time timestamp not null default current_timestamp,status varchar(255),primary key (id));
     create table metering.metering_month (id varchar(32) not null,namespace varchar(255) not null,cpu double,memory bigint,storage bigint,public_ip int,private_ip int,metering_time timestamp not null default current_timestamp,status varchar(255),primary key (id));

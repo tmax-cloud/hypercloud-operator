@@ -38,7 +38,7 @@ public class MeteringJob implements Job{
 		
 		try {
 			conn = getConnection();
-			conn.setAutoCommit(true);
+			conn.setAutoCommit(false);
 		} catch (SQLException e) {
 			System.out.println("SQL Exception : " + e.getMessage());
 			e.printStackTrace();
