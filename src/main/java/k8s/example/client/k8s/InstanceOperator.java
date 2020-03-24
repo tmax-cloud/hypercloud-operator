@@ -195,14 +195,14 @@ public class InstanceOperator extends Thread {
 		        					} catch (ApiException e) {
 		        						System.out.println("[Instance Operator] ApiException: " + e.getMessage());
 		        						System.out.println(e.getResponseBody());
-		        						patchStatus(instanceObj.get("metadata").get("name").asText(), Constants.STATUS_ERROR);
+		        						patchStatus(instanceObj.get("metadata").get("name").asText(), Constants.STATUS_ERROR, e.getResponseBody());
 		        						throw e;
 		        					} catch (Exception e) {
 		        						System.out.println("[Instance Operator] Exception: " + e.getMessage());
 		        						StringWriter sw = new StringWriter();
 		        						e.printStackTrace(new PrintWriter(sw));
 		        						System.out.println(sw.toString());
-		        						patchStatus(instanceObj.get("metadata").get("name").asText(), Constants.STATUS_ERROR);
+		        						patchStatus(instanceObj.get("metadata").get("name").asText(), Constants.STATUS_ERROR, e.getMessage());
 		        						throw e;
 		        					}
 		        				} else {
@@ -291,6 +291,30 @@ public class InstanceOperator extends Thread {
 		JSONArray patchStatusArray = new JSONArray();
 		condition.put("type", "Phase");
 		condition.put("status", phrase);
+		conditions.add(condition);
+		status.put("conditions", conditions);
+		patchStatus.put("op", "add");
+		patchStatus.put("path", "/status");
+		patchStatus.put("value", status);
+		patchStatusArray.add(patchStatus);
+		
+		try{
+			tpApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, Constants.TEMPLATE_NAMESPACE, Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, instanceName, patchStatusArray);
+		} catch (ApiException e) {
+			throw new Exception(e.getResponseBody());
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	private void patchStatus(String instanceName, String phrase, String message) throws Exception {
+		JSONObject patchStatus = new JSONObject();
+		JSONObject status = new JSONObject();
+		JSONArray conditions = new JSONArray();
+		JSONObject condition = new JSONObject();
+		JSONArray patchStatusArray = new JSONArray();
+		condition.put("type", "Phase");
+		condition.put("status", phrase);
+		condition.put("message", message);
 		conditions.add(condition);
 		status.put("conditions", conditions);
 		patchStatus.put("op", "add");
