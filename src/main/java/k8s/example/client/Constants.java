@@ -77,8 +77,12 @@ public class Constants {
 	
 	// LoginPage of HyperCloud4
 	public static final String LOGIN_PAGE_URI = "http://192.168.8.36/oauth/login.html";
-
 	
-	//
+	// Metering Cron Expression
+	public static final String METERING_CRON_EXPRESSION = "0 0/5 * 1/1 * ? *";
 
+	// Mysql DB Connection
+	public static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
+	public static final String DB_URL = "jdbc:mysql://mysql-service.hypercloud4-system:3306/metering?useSSL=false";
+	public static final String USERNAME = "root";
 }
