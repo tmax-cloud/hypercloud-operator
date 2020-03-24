@@ -75,6 +75,7 @@ public class MeteringJob implements Job{
 			System.out.println( key + "/memory : " + meteringData.get(key).getMemory() );
 			System.out.println( key + "/storage : " + meteringData.get(key).getStorage() );
         }
+		System.out.println( "====================================" );
 		insertMeteringData();
 		
 	}

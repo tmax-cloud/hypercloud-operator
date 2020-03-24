@@ -28,7 +28,7 @@ public class AuthHandler extends GeneralHandler {
 	@Override
     public Response post(
       UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
-		System.out.println("***** POST /authenticate");
+		//System.out.println("***** POST /authenticate");
 		
 		Map<String, String> body = new HashMap<String, String>();
         try {
@@ -45,7 +45,7 @@ public class AuthHandler extends GeneralHandler {
 			JsonElement element = parser.parse( body.get( "postData" ) );
 			String token = element.getAsJsonObject().get( "spec" ).getAsJsonObject().get( "token" ).getAsString();
 			
-			System.out.println( "  Token: " + token );
+			//System.out.println( "  Token: " + token );
 			if ( !token.isEmpty() && token.equals( Constants.MASTER_TOKEN )) return Util.setCors( NanoHTTPD.newFixedLengthResponse( createAuthResponse( true, Constants.MASTER_USER_ID ) ) );
 			
 			// Verify access token	
@@ -69,7 +69,7 @@ public class AuthHandler extends GeneralHandler {
 			
 			response = createAuthResponse( authResult, userId );
 		} catch (Exception e) {
-			System.out.println("Exception message: " + e.getMessage());
+			//System.out.println("Exception message: " + e.getMessage());
 			e.printStackTrace();
 			authResult = false;
 		}
