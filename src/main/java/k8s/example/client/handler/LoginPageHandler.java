@@ -1,6 +1,7 @@
 package k8s.example.client.handler;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,9 +35,11 @@ public class LoginPageHandler extends GeneralHandler {
 		}
 		
         Client clientInfo = null;
-        String originUri = session.getHeaders().get("referer");
 		String outMsg = null;
 		IStatus status = null;
+		String originUri = null;
+		if(session.getHeaders().get("referer")!=null) originUri = session.getHeaders().get("referer");
+		
 		try {
 			// Read inDO
 			clientInfo = new ObjectMapper().readValue(body.get( "postData" ), Client.class);
@@ -46,7 +49,7 @@ public class LoginPageHandler extends GeneralHandler {
 			if( StringUtil.isEmpty(clientInfo.getClientId()))	throw new Exception(ErrorCode.CLIENT_ID_EMPTY);
 			if( StringUtil.isEmpty(clientInfo.getClientSecret()))	throw new Exception(ErrorCode.CLIENT_SECRET_EMPTY);
 			
-			System.out.println( "  Origin Uri: " + originUri );
+//			System.out.println( "  Origin Uri: " + originUri );
     		System.out.println( "  Client Id: " + clientInfo.getClientId() );
     		System.out.println( "  Client Secret: " + clientInfo.getClientSecret() );
 
@@ -54,11 +57,11 @@ public class LoginPageHandler extends GeneralHandler {
     		Client dbClientInfo = K8sApiCaller.getClient(clientInfo);
     		
     		// Validate
-    		System.out.println( "  clientInfo.getClientSecret(): " + clientInfo.getClientSecret() );
-    		System.out.println( "  dbClientInfo.getClientSecret(): " + dbClientInfo.getClientSecret() );
     		if( !clientInfo.getClientId().equalsIgnoreCase( dbClientInfo.getClientId()) ) throw new Exception( ErrorCode.CLIENT_ID_MISMATCH );
     		if( !clientInfo.getClientSecret().equalsIgnoreCase( dbClientInfo.getClientSecret()) ) throw new Exception( ErrorCode.CLIENT_SECRET_MISMATCH );
-    		if( !originUri.contains(clientInfo.getOriginUri()) ) throw new Exception( ErrorCode.ORIGIN_URI_MISMATCH );
+    		if( originUri != null ) {
+        		if( !originUri.contains(clientInfo.getOriginUri()) ) throw new Exception( ErrorCode.ORIGIN_URI_MISMATCH );
+    		}
     		
 			// Make outDO					
 			StringBuilder sb = new StringBuilder();
@@ -71,13 +74,13 @@ public class LoginPageHandler extends GeneralHandler {
 
 		} catch (ApiException e) {
 			System.out.println( "Exception message: " + e.getMessage() );
-			outMsg = "LogIn page Create failed.";
+			outMsg = "Login page Create failed.";
 			status = Status.BAD_REQUEST;
 
 		} catch (Exception e) {
 			System.out.println( "Exception message: " + e.getMessage() );
 			e.printStackTrace();
-			outMsg = "LogIn page Create failed.";
+			outMsg = "Login page Create failed.";
 			status = Status.BAD_REQUEST;
 		}
 		
