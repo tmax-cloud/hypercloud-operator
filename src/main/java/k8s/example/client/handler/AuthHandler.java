@@ -74,7 +74,7 @@ public class AuthHandler extends GeneralHandler {
 			authResult = false;
 		}
 		
-		System.out.println();
+		//System.out.println();
 		return Util.setCors(NanoHTTPD.newFixedLengthResponse( response ));
 
     }

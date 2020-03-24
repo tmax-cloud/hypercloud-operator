@@ -38,6 +38,7 @@ public class MeteringJob implements Job{
 		
 		try {
 			conn = getConnection();
+			conn.setAutoCommit(false);
 		} catch (SQLException e) {
 			System.out.println("SQL Exception : " + e.getMessage());
 			e.printStackTrace();
@@ -62,8 +63,10 @@ public class MeteringJob implements Job{
 			insertMeteringDay();
 		} else if ( calendar.get(Calendar.DAY_OF_MONTH) == 1 ) {
 			// Insert to metering_month
+			insertMeteringMonth();
 		} else if ( calendar.get(Calendar.DAY_OF_YEAR) == 1 ) {
 			// Insert to metering_year
+			insertMeteringYear();
 		}
 		
 		
@@ -76,58 +79,8 @@ public class MeteringJob implements Job{
 			System.out.println( key + "/storage : " + meteringData.get(key).getStorage() );
         }
 		System.out.println( "====================================" );
+		
 		insertMeteringData();
-		
-	}
-	
-	@SuppressWarnings("resource")
-	private void insertMeteringDay() {
-		try {
-			String insertQuery = "insert into metering.metering_day (" + 
-					"select id, namespace, truncate(sum(cpu),2) as cpu, sum(memory) as memory, sum(storage) as storage, " + 
-					"sum(public_ip) as public_ip, sum(private_ip) as private_ip, " + 
-					"date_format(metering_time,'%Y-%m-%d 00:00:00') as metering_time, status from metering.metering_hour " + 
-					"group by day(metering_time), namespace" + 
-					")";
-			LogPreparedStatement pstmt = new LogPreparedStatement( conn, insertQuery );
-			pstmt.execute();
-			
-			String deleteQuery = "truncate metering.metering_hour";
-			pstmt = new LogPreparedStatement( conn, deleteQuery );
-			pstmt.execute();
-			
-			pstmt.close();
-			conn.commit();
-
-		} catch (SQLException e) {
-			System.out.println("SQL Exception : " + e.getMessage());
-			e.printStackTrace();
-		}
-	}
-		
-	@SuppressWarnings("resource")
-	private void insertMeteringHour() {
-		try {
-			String insertQuery = "insert into metering.metering_hour (" + 
-					"select id, namespace, truncate(sum(cpu)/count(*),2) as cpu, truncate(sum(memory)/count(*),0) as memory, truncate(sum(storage)/count(*),0) as storage, " + 
-					"truncate(sum(public_ip)/count(*),0) as public_ip, truncate(sum(private_ip)/count(*),0) as private_ip, " + 
-					"date_format(metering_time,'%Y-%m-%d %H:00:00') as metering_time, status from metering.metering " + 
-					"group by hour(metering_time), namespace" + 
-					")";
-			LogPreparedStatement pstmt = new LogPreparedStatement( conn, insertQuery );
-			pstmt.execute();
-			
-			String deleteQuery = "truncate metering.metering";
-			pstmt = new LogPreparedStatement( conn, deleteQuery );
-			pstmt.execute();
-			
-			pstmt.close();
-			conn.commit();
-			
-		} catch (SQLException e) {
-			System.out.println("SQL Exception : " + e.getMessage());
-			e.printStackTrace();
-		}
 	}
 	
 	private void insertMeteringData() {
@@ -152,6 +105,7 @@ public class MeteringJob implements Job{
 			pstmt.close();
 			conn.commit();
 			conn.close();
+			
 		} catch (SQLException e) {
 			System.out.println("SQL Exception : " + e.getMessage());
 			e.printStackTrace();
@@ -224,5 +178,126 @@ public class MeteringJob implements Job{
 	private Connection getConnection() throws SQLException, ClassNotFoundException {
 		Class.forName( Constants.JDBC_DRIVER );
 		return DriverManager.getConnection( Constants.DB_URL, Constants.USERNAME, System.getenv( "DB_PASSWORD" ) );
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	@SuppressWarnings("resource")
+	private void insertMeteringHour() {
+		try {
+			String insertQuery = "insert into metering.metering_hour (" + 
+					"select id, namespace, truncate(sum(cpu)/count(*),2) as cpu, truncate(sum(memory)/count(*),0) as memory, truncate(sum(storage)/count(*),0) as storage, " + 
+					"truncate(sum(public_ip)/count(*),0) as public_ip, truncate(sum(private_ip)/count(*),0) as private_ip, " + 
+					"date_format(metering_time,'%Y-%m-%d %H:00:00') as metering_time, status from metering.metering " + 
+					"group by hour(metering_time), namespace" + 
+					")";
+			LogPreparedStatement pstmt = new LogPreparedStatement( conn, insertQuery );
+			pstmt.execute();
+			
+			String deleteQuery = "truncate metering.metering";
+			pstmt = new LogPreparedStatement( conn, deleteQuery );
+			pstmt.execute();
+			
+			pstmt.close();
+			conn.commit();
+			
+		} catch (SQLException e) {
+			System.out.println("SQL Exception : " + e.getMessage());
+			e.printStackTrace();
+		}
+	}
+	
+	@SuppressWarnings("resource")
+	private void insertMeteringDay() {
+		try {
+			String insertQuery = "insert into metering.metering_day (" + 
+					"select id, namespace, truncate(sum(cpu),2) as cpu, sum(memory) as memory, sum(storage) as storage, " + 
+					"sum(public_ip) as public_ip, sum(private_ip) as private_ip, " + 
+					"date_format(metering_time,'%Y-%m-%d 00:00:00') as metering_time, status from metering.metering_hour " + 
+					"where status = 'Success' " + 
+					"group by day(metering_time), namespace" + 
+					")";
+			LogPreparedStatement pstmt = new LogPreparedStatement( conn, insertQuery );
+			pstmt.execute();
+			
+			String updateQuery = "update metering.metering_hour set status = 'Merged' where status = 'Success'";
+			pstmt = new LogPreparedStatement( conn, updateQuery );
+			pstmt.execute();
+			
+			pstmt.close();
+			conn.commit();
+
+		} catch (SQLException e) {
+			System.out.println("SQL Exception : " + e.getMessage());
+			e.printStackTrace();
+		}
+	}
+	
+	@SuppressWarnings("resource")
+	private void insertMeteringMonth() {
+		try {
+			String insertQuery = "insert into metering.metering_month (" + 
+					"select id, namespace, truncate(sum(cpu),2) as cpu, sum(memory) as memory, sum(storage) as storage, " + 
+					"sum(public_ip) as public_ip, sum(private_ip) as private_ip, " + 
+					"date_format(metering_time,'%Y-%m-01 00:00:00') as metering_time, status from metering.metering_day " + 
+					"where status = 'Success' " + 
+					"group by month(metering_time), namespace" + 
+					")";
+			LogPreparedStatement pstmt = new LogPreparedStatement( conn, insertQuery );
+			pstmt.execute();
+			
+			String updateQuery = "update metering.metering_day set status = 'Merged' where status = 'Success'";
+			pstmt = new LogPreparedStatement( conn, updateQuery );
+			pstmt.execute();
+			
+			pstmt.close();
+			conn.commit();
+
+		} catch (SQLException e) {
+			System.out.println("SQL Exception : " + e.getMessage());
+			e.printStackTrace();
+		}
+	}
+	
+	@SuppressWarnings("resource")
+	private void insertMeteringYear() {
+		try {
+			String insertQuery = "insert into metering.metering_year (" + 
+					"select id, namespace, truncate(sum(cpu),2) as cpu, sum(memory) as memory, sum(storage) as storage, " + 
+					"sum(public_ip) as public_ip, sum(private_ip) as private_ip, " + 
+					"date_format(metering_time,'%Y-01-01 00:00:00') as metering_time, status from metering.metering_month " + 
+					"where status = 'Success' " + 
+					"group by year(metering_time), namespace" + 
+					")";
+			LogPreparedStatement pstmt = new LogPreparedStatement( conn, insertQuery );
+			pstmt.execute();
+			
+			String updateQuery = "update metering.metering_month set status = 'Merged' where status = 'Success'";
+			pstmt = new LogPreparedStatement( conn, updateQuery );
+			pstmt.execute();
+			
+			pstmt.close();
+			conn.commit();
+
+		} catch (SQLException e) {
+			System.out.println("SQL Exception : " + e.getMessage());
+			e.printStackTrace();
+		}
 	}
 }
