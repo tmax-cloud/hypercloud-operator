@@ -3,6 +3,7 @@ package k8s.example.client.models;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
 
 public class Registry {
+	public static String REGISTRY_KIND = "Registry";
 	private String apiVersion = "tmax.io/v1";
 	private String kind = "Registry";
 	private V1ObjectMeta metadata = null;

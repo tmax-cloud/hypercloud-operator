@@ -66,6 +66,7 @@ import io.kubernetes.client.openapi.models.V1Node;
 import io.kubernetes.client.openapi.models.V1NodeAddress;
 import io.kubernetes.client.openapi.models.V1NodeList;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import io.kubernetes.client.openapi.models.V1OwnerReference;
 import io.kubernetes.client.openapi.models.V1PersistentVolumeClaim;
 import io.kubernetes.client.openapi.models.V1PersistentVolumeClaimSpec;
 import io.kubernetes.client.openapi.models.V1PersistentVolumeClaimVolumeSource;
@@ -310,7 +311,7 @@ public class K8sApiCaller {
 		RegistryWatcher registryWatcher = new RegistryWatcher(k8sClient, customObjectApi, String.valueOf(registryLatestResourceVersion));
 		registryWatcher.start();
 
-		// Start registry watch
+		// Start registry pod watch
 		System.out.println("Start registry pod watcher");
 		RegistryPodWatcher registryPodWatcher = new RegistryPodWatcher(k8sClient, api, String.valueOf(registryPodLatestResourceVersion));
 		registryPodWatcher.start();
@@ -755,6 +756,20 @@ public class K8sApiCaller {
 			Map<String, String> selector = new HashMap<String, String>();
 
 			lbMeta.setName(Constants.K8S_PREFIX + registryId);
+			
+			List<V1OwnerReference> ownerRefs = new ArrayList<>();
+			V1OwnerReference ownerRef = new V1OwnerReference();
+			
+			ownerRef.setApiVersion(registry.getApiVersion());
+			ownerRef.setBlockOwnerDeletion(Boolean.TRUE);
+			ownerRef.setController(Boolean.TRUE);
+			ownerRef.setKind(registry.getKind());
+			ownerRef.setName(registry.getMetadata().getName());
+			ownerRef.setUid(registry.getMetadata().getUid());
+			ownerRefs.add(ownerRef);
+			
+			lbMeta.setOwnerReferences(ownerRefs);
+			
 			lb.setMetadata(lbMeta);
 
 			V1ServicePort v1port = new V1ServicePort();
@@ -917,7 +932,9 @@ public class K8sApiCaller {
 			Map<String, String> pvcLabels = new HashMap<String, String>();
 			pvcLabels.put("app", Constants.K8S_PREFIX.substring(0, Constants.K8S_PREFIX.length() - 1));
 			pvcMeta.setLabels(pvcLabels);
-
+			
+			pvcMeta.setOwnerReferences(ownerRefs);
+			
 			// [2/5] set storage quota.
 			limit.put("storage", new Quantity(registryPVC.getStorageSize()));
 			pvcResource.setRequests(limit);
@@ -1101,10 +1118,11 @@ public class K8sApiCaller {
 			Map<String, String> labels = new HashMap<>();
 			labels.put("secret", "cert");
 			String secretName;
+			
 			try {
 				// K8SApiCall createSecret
 				System.out.println("K8SApiCall createSecret");
-				secretName = K8sApiCaller.createSecret(namespace, secrets, registryId, labels, null);
+				secretName = K8sApiCaller.createSecret(namespace, secrets, registryId, labels, null, ownerRefs);
 			}catch (ApiException e) {
 				JSONObject patchStatus = new JSONObject();
 				JSONObject status = new JSONObject();
@@ -1149,7 +1167,7 @@ public class K8sApiCaller {
 			Map<String, String> labels2 = new HashMap<>();
 			labels2.put("secret", "docker");
 			try {
-				K8sApiCaller.createSecret(namespace, secrets2, registryId, labels2, Constants.K8S_SECRET_TYPE_DOCKER_CONFIG_JSON);
+				K8sApiCaller.createSecret(namespace, secrets2, registryId, labels2, Constants.K8S_SECRET_TYPE_DOCKER_CONFIG_JSON, ownerRefs);
 			}catch (ApiException e) {
 				JSONObject patchStatus = new JSONObject();
 				JSONObject status = new JSONObject();
@@ -1195,9 +1213,12 @@ public class K8sApiCaller {
 			// 1-1. replica set name
 			rsMeta.setName(Constants.K8S_PREFIX + Constants.K8S_REGISTRY_PREFIX + registryId);
 			System.out.println("RS Name: " + rsMeta.getName());
-
+			
+			// 1-2. replica set owner ref
+			rsMeta.setOwnerReferences(ownerRefs);
+			
 			rsBuilder.withMetadata(rsMeta);
-
+			
 			// 2. spec
 			V1ReplicaSetSpec rsSpec = new V1ReplicaSetSpec();
 
@@ -1703,7 +1724,7 @@ public class K8sApiCaller {
 
 	// type1: null => Opaque
 	// type2: kubernetes.io/dockerconfigjson 
-	public static String createSecret(String namespace, Map<String, String> secrets, String secretName, Map<String, String> labels, String type) throws Throwable {
+	public static String createSecret(String namespace, Map<String, String> secrets, String secretName, Map<String, String> labels, String type, List<V1OwnerReference> ownerRefs) throws Throwable {
 		V1Secret secret = new V1Secret();
 		secret.setApiVersion("v1");
 		secret.setKind("Secret");
@@ -1715,6 +1736,9 @@ public class K8sApiCaller {
 			metadata.setName(Constants.K8S_PREFIX + secretName.toLowerCase());
 		}
 		
+		if( ownerRefs != null) {
+			metadata.setOwnerReferences(ownerRefs);
+		}
 
 		//			System.out.println("== secret map == ");
 		for( String key : secrets.keySet()) {

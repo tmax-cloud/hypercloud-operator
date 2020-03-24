@@ -1,6 +1,5 @@
 package k8s.example.client.k8s;
 
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
@@ -74,7 +73,7 @@ public class RegistryWatcher extends Thread {
 							
 							break;
 						case Constants.EVENT_TYPE_DELETED : 
-							K8sApiCaller.deleteRegistry(registry);
+//							K8sApiCaller.deleteRegistry(registry);
 							System.out.println("Registry is deleted");
 							
 							break;
