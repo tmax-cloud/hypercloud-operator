@@ -37,7 +37,7 @@ public class TemplateOperator extends Thread {
 	TemplateOperator(ApiClient client, CustomResourceApi api, int resourceVersion) throws Exception {		
 		watchInstance = Watch.createWatch(
 		        client,
-		        api.listNamespacedCustomObjectCall(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, Constants.TEMPLATE_NAMESPACE, Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE, null, null, null, null, null, null, null, Boolean.TRUE, null),
+		        api.listNamespacedCustomObjectCall(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, Constants.TEMPLATE_NAMESPACE, Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE, null, null, null, null, null, String.valueOf(resourceVersion), null, Boolean.TRUE, null),
 		        new TypeToken<Watch.Response<Object>>(){}.getType()
         );
 		this.executorService = Executors.newCachedThreadPool();
@@ -68,10 +68,8 @@ public class TemplateOperator extends Thread {
 					System.out.println("[Template Operator] Event Type : " + response.type.toString()); //ADDED, MODIFIED, DELETED
 					System.out.println("[Template Operator] Template Name : " + templateName);
 					
-	        		if(template.get("metadata").get("resourceVersion").asInt() > latestResourceVersion) {
-	        			latestResourceVersion = template.get("metadata").get("resourceVersion").asInt();
-	        			System.out.println("[Template Operator] Custom LatestResourceVersion : " + latestResourceVersion);
-	        		}
+	        		latestResourceVersion = template.get("metadata").get("resourceVersion").asInt();
+	        		System.out.println("[Template Operator] Custom LatestResourceVersion : " + latestResourceVersion);
 	        		
 	        		if(response.type.toString().equals("ADDED")) {
 	        			JsonNode templateObjs = numberTypeConverter(objectToJsonNode(template).get("objects"));

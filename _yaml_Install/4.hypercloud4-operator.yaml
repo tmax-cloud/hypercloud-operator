@@ -39,6 +39,8 @@ spec:
             secretKeyRef:
               name: mysql-secrets
               key: ROOT_PASSWORD
+        - name: TZ
+          value: Asia/Seoul        
         ports:
         - containerPort: 28677
         resources:
