@@ -49,6 +49,8 @@ spec:
               key: ROOT_PASSWORD
         - name: MYSQL_DATABASE
           value: metering
+        - name: TZ
+          value: Asia/Seoul
         resources:
           limits:
             cpu: "1"

@@ -33,6 +33,67 @@ public class MeteringJob implements Job{
 	@Override
 	public void execute(JobExecutionContext context) throws JobExecutionException {
 		
+
+		makeMeteringMap();
+		
+		System.out.println( "============= Metering =============" );
+		for( String key : meteringData.keySet() ){
+			System.out.println( key + "/cpu : " + meteringData.get(key).getCpu() );
+			System.out.println( key + "/memory : " + meteringData.get(key).getMemory() );
+			System.out.println( key + "/storage : " + meteringData.get(key).getStorage() );
+        }
+		
+		insertMeteringData();
+		
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	private void insertMeteringData() {
+		
+		long time = System.currentTimeMillis();
+		Connection conn;
+		try {
+			conn = getConnection();
+			String query = "insert into metering.metering (id,namespace,cpu,memory,storage,public_ip,private_ip,metering_time,status) "
+					+ "values (?,?,?,?,?,?,?,?,?)";
+			LogPreparedStatement pstmt = new LogPreparedStatement( conn, query );
+			for( String key : meteringData.keySet() ){
+				pstmt.setString( 1, UIDGenerator.getInstance().generate32( conn, 8, time ) );
+				pstmt.setString( 2, key );
+				pstmt.setDouble( 3, meteringData.get(key).getCpu() );
+				pstmt.setLong( 4, meteringData.get(key).getMemory() );
+				pstmt.setLong( 5, meteringData.get(key).getStorage() );
+				pstmt.setInt( 6, meteringData.get(key).getPublicIp() );
+				pstmt.setInt( 7, meteringData.get(key).getPrivateIp() );
+				pstmt.setTimestamp( 8, new Timestamp(time) );
+				pstmt.setString( 9, "Success" );
+				pstmt.addBatch();
+			}
+
+			pstmt.executeBatch();
+			
+			pstmt.close();
+			conn.close();
+			
+		} catch (SQLException e) {
+			System.out.println("SQL Exception : " + e.getMessage());
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			System.out.println("Class Not Found Exection");
+			e.printStackTrace();
+		}
+	}
+	
+	private void makeMeteringMap() {
 		MetricDataList cpu = getMeteringData("sum(kube_pod_container_resource_requests{resource=\"cpu\"})by(namespace)");
 		for ( Metric metric : cpu.getResult() ) {
 			if ( meteringData.containsKey(metric.getMetric().get("namespace"))) {
@@ -65,47 +126,6 @@ public class MeteringJob implements Job{
 				metering.setStorage(Long.parseLong(metric.getValue().get(1)));
 				meteringData.put(metric.getMetric().get("namespace"), metering);
 			}
-		}
-		
-		System.out.println( "============= Metering =============" );
-		for( String key : meteringData.keySet() ){
-			System.out.println( key + "/cpu : " + meteringData.get(key).getCpu() );
-			System.out.println( key + "/memory : " + meteringData.get(key).getMemory() );
-			System.out.println( key + "/storage : " + meteringData.get(key).getStorage() );
-        }
-		
-		long time = System.currentTimeMillis();
-		
-		Connection conn;
-		try {
-			conn = getConnection();
-			String query = "insert into metering.metering (id,namespace,cpu,memory,storage,public_ip,private_ip,metering_time,status) "
-					+ "values (?,?,?,?,?,?,?,?,?)";
-			LogPreparedStatement pstmt = new LogPreparedStatement( conn, query );
-			for( String key : meteringData.keySet() ){
-				pstmt.setString( 1, UIDGenerator.getInstance().generate32( context, 8, time ) );
-				pstmt.setString( 2, key );
-				pstmt.setDouble( 3, meteringData.get(key).getCpu() );
-				pstmt.setLong( 4, meteringData.get(key).getMemory() );
-				pstmt.setLong( 5, meteringData.get(key).getStorage() );
-				pstmt.setInt( 6, meteringData.get(key).getPublicIp() );
-				pstmt.setInt( 7, meteringData.get(key).getPrivateIp() );
-				pstmt.setTimestamp( 8, new Timestamp(time) );
-				pstmt.setString( 9, "Success" );
-				pstmt.addBatch();
-			}
-
-			pstmt.executeBatch();
-			
-			pstmt.close();
-			conn.close();
-			
-		} catch (SQLException e) {
-			System.out.println("SQL Exception : " + e.getMessage());
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			System.out.println("Class Not Found Exection");
-			e.printStackTrace();
 		}
 	}
 	
