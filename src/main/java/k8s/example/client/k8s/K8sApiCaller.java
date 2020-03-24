@@ -760,6 +760,7 @@ public class K8sApiCaller {
 			List<V1OwnerReference> ownerRefs = new ArrayList<>();
 			V1OwnerReference ownerRef = new V1OwnerReference();
 			
+			ownerRef.setApiVersion(registry.getApiVersion());
 			ownerRef.setBlockOwnerDeletion(Boolean.TRUE);
 			ownerRef.setController(Boolean.TRUE);
 			ownerRef.setKind(registry.getKind());
