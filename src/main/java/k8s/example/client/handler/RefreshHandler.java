@@ -75,7 +75,8 @@ public class RefreshHandler extends GeneralHandler {
 				// Make a new access token
 				Builder tokenBuilder = JWT.create().withIssuer(Constants.ISSUER)
 						.withExpiresAt(Util.getDateFromSecond(Constants.ACCESS_TOKEN_EXP_TIME))
-						.withClaim(Constants.CLAIM_USER_ID, userId);
+						.withClaim(Constants.CLAIM_USER_ID, userId)
+						.withClaim(Constants.CLAIM_TOKEN_ID, tokenId);
     			String newAccessToken = tokenBuilder.sign(Algorithm.HMAC256(Constants.ACCESS_TOKEN_SECRET_KEY));
     			System.out.println( "  New access token: " + newAccessToken );
     			
