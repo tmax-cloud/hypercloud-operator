@@ -1,13 +1,9 @@
 package k8s.example.client.handler;
 
-import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 import fi.iki.elonen.NanoHTTPD;
 import fi.iki.elonen.NanoHTTPD.IHTTPSession;
@@ -23,7 +19,6 @@ import k8s.example.client.ErrorCode;
 import k8s.example.client.StringUtil;
 import k8s.example.client.Util;
 import k8s.example.client.k8s.K8sApiCaller;
-import k8s.example.client.models.BrokerResponse;
 
 public class LoginPageHandler extends GeneralHandler {
 	@Override
@@ -39,6 +34,7 @@ public class LoginPageHandler extends GeneralHandler {
 		}
 		
         Client clientInfo = null;
+        String originUri = session.getHeaders().get("referer");
 		String outMsg = null;
 		IStatus status = null;
 		try {
@@ -50,6 +46,7 @@ public class LoginPageHandler extends GeneralHandler {
 			if( StringUtil.isEmpty(clientInfo.getClientId()))	throw new Exception(ErrorCode.CLIENT_ID_EMPTY);
 			if( StringUtil.isEmpty(clientInfo.getClientSecret()))	throw new Exception(ErrorCode.CLIENT_SECRET_EMPTY);
 			
+			System.out.println( "  Origin Uri: " + originUri );
     		System.out.println( "  Client Id: " + clientInfo.getClientId() );
     		System.out.println( "  Client Secret: " + clientInfo.getClientSecret() );
 
@@ -61,8 +58,8 @@ public class LoginPageHandler extends GeneralHandler {
     		System.out.println( "  dbClientInfo.getClientSecret(): " + dbClientInfo.getClientSecret() );
     		if( !clientInfo.getClientId().equalsIgnoreCase( dbClientInfo.getClientId()) ) throw new Exception( ErrorCode.CLIENT_ID_MISMATCH );
     		if( !clientInfo.getClientSecret().equalsIgnoreCase( dbClientInfo.getClientSecret()) ) throw new Exception( ErrorCode.CLIENT_SECRET_MISMATCH );
+    		if( !originUri.contains(clientInfo.getOriginUri()) ) throw new Exception( ErrorCode.ORIGIN_URI_MISMATCH );
     		
-
 			// Make outDO					
 			StringBuilder sb = new StringBuilder();
 			sb.append( Constants.LOGIN_PAGE_URI );
