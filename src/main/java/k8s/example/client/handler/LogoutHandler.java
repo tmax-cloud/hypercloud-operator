@@ -3,6 +3,8 @@ package k8s.example.client.handler;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
@@ -18,16 +20,18 @@ import fi.iki.elonen.router.RouterNanoHTTPD.GeneralHandler;
 import fi.iki.elonen.router.RouterNanoHTTPD.UriResource;
 import io.kubernetes.client.openapi.ApiException;
 import k8s.example.client.Constants;
+import k8s.example.client.Main;
 import k8s.example.client.DataObject.Token;
 import k8s.example.client.DataObject.TokenCR;
 import k8s.example.client.Util;
 import k8s.example.client.k8s.K8sApiCaller;
 
 public class LogoutHandler extends GeneralHandler {
+    private Logger logger = Main.logger;
 	@Override
     public Response post(
       UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
-		System.out.println("***** POST /logout");
+		logger.info("***** POST /logout");
 		
 		Map<String, String> body = new HashMap<String, String>();
         try {
@@ -43,7 +47,7 @@ public class LogoutHandler extends GeneralHandler {
 			// Read inDO
 			logoutInDO = new ObjectMapper().readValue(body.get( "postData" ), Token.class);
 			String accessToken = logoutInDO.getAccessToken();
-    		System.out.println( "  Token: " + accessToken );
+    		logger.info( "  Token: " + accessToken );
     		
     		// Verify access token	
 			JWTVerifier verifier = JWT.require(Algorithm.HMAC256(Constants.ACCESS_TOKEN_SECRET_KEY)).build();
@@ -52,45 +56,45 @@ public class LogoutHandler extends GeneralHandler {
 			String issuer = jwt.getIssuer();
 			String userId = jwt.getClaims().get(Constants.CLAIM_USER_ID).asString();
 			String tokenId = jwt.getClaims().get(Constants.CLAIM_TOKEN_ID).asString();
-			System.out.println( "  Issuer: " + issuer );
-			System.out.println( "  User ID: " + userId );
-			System.out.println( "  Token ID: " + tokenId );
+			logger.info( "  Issuer: " + issuer );
+			logger.info( "  User ID: " + userId );
+			logger.info( "  Token ID: " + tokenId );
 			
 			if(verifyAccessToken(accessToken, userId, tokenId, issuer)) {
 				status = Status.OK;
 				
 				String tokenName = userId.replace("@", "-") + "-" + tokenId;
-				System.out.println( "  Logout success." );
+				logger.info( "  Logout success." );
 				K8sApiCaller.deleteToken(tokenName);
 				outDO = "Logout success.";
 			} else {
-				System.out.println( "  Token is not valid" );
+				logger.info( "  Token is not valid" );
 				status = Status.UNAUTHORIZED;
 				outDO = "Logout fail. Token is not valid.";
 			}
 		} catch (ApiException e) {
-			System.out.println( "Exception message: " + e.getMessage() );
+			logger.info( "Exception message: " + e.getMessage() );
 			
 			if (e.getResponseBody().contains("NotFound")) {
-				System.out.println( "  Logout fail. Token not exist." );
+				logger.info( "  Logout fail. Token not exist." );
 				status = Status.UNAUTHORIZED;
 				outDO = "Logout failed. Token not exist.";
 			} else {
-				System.out.println( "Response body: " + e.getResponseBody() );
+				logger.info( "Response body: " + e.getResponseBody() );
 				e.printStackTrace();
 				
 				status = Status.UNAUTHORIZED;
 				outDO = "Logout failed. Exception occurs.";
 			}
 		} catch (Exception e) {
-			System.out.println( "Exception message: " + e.getMessage() );
+			logger.info( "Exception message: " + e.getMessage() );
 			e.printStackTrace();
 			
 			status = Status.UNAUTHORIZED;
 			outDO = "Logout failed. Exception occurs.";
 		}
 		
-		System.out.println();
+//		logger.info();
 		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO));
 
 	}
@@ -113,7 +117,7 @@ public class LogoutHandler extends GeneralHandler {
 	@Override
     public Response other(
       String method, UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
-		System.out.println("***** OPTIONS /logout");
+		logger.info("***** OPTIONS /logout");
 		
 		return Util.setCors(NanoHTTPD.newFixedLengthResponse(""));
     }

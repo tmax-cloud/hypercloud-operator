@@ -3,6 +3,8 @@ package k8s.example.client.handler;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
@@ -17,6 +19,7 @@ import fi.iki.elonen.NanoHTTPD.Response;
 import fi.iki.elonen.router.RouterNanoHTTPD.GeneralHandler;
 import fi.iki.elonen.router.RouterNanoHTTPD.UriResource;
 import k8s.example.client.Constants;
+import k8s.example.client.Main;
 import k8s.example.client.DataObject.TokenCR;
 import k8s.example.client.DataObject.TokenReview;
 import k8s.example.client.DataObject.TokenReviewStatus;
@@ -25,10 +28,11 @@ import k8s.example.client.Util;
 import k8s.example.client.k8s.K8sApiCaller;
 
 public class AuthHandler extends GeneralHandler {
+    private Logger logger = Main.logger;
 	@Override
     public Response post(
       UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
-		//System.out.println("***** POST /authenticate");
+		//logger.info("***** POST /authenticate");
 		
 		Map<String, String> body = new HashMap<String, String>();
         try {
@@ -45,7 +49,7 @@ public class AuthHandler extends GeneralHandler {
 			JsonElement element = parser.parse( body.get( "postData" ) );
 			String token = element.getAsJsonObject().get( "spec" ).getAsJsonObject().get( "token" ).getAsString();
 			
-			//System.out.println( "  Token: " + token );
+			//logger.info( "  Token: " + token );
 			if ( !token.isEmpty() && token.equals( Constants.MASTER_TOKEN )) return Util.setCors( NanoHTTPD.newFixedLengthResponse( createAuthResponse( true, Constants.MASTER_USER_ID ) ) );
 			
 			// Verify access token	
@@ -55,26 +59,26 @@ public class AuthHandler extends GeneralHandler {
 			String issuer = jwt.getIssuer();
 			String userId = jwt.getClaims().get(Constants.CLAIM_USER_ID).asString();
 			String tokenId = jwt.getClaims().get(Constants.CLAIM_TOKEN_ID).asString();
-			System.out.println( "  Issuer: " + issuer );
-			System.out.println( "  User ID: " + userId );
-			System.out.println( "  Token ID: " + tokenId );
+			logger.info( "  Issuer: " + issuer );
+			logger.info( "  User ID: " + userId );
+			logger.info( "  Token ID: " + tokenId );
 			
 			if(verifyAccessToken(token, userId, tokenId, issuer)) {
-				System.out.println( "  Authentication success" );
+				logger.info( "  Authentication success" );
 				authResult = true;
 			} else {
-				System.out.println( "  Authentication fail" );
+				logger.info( "  Authentication fail" );
 				authResult = false;
 			}
 			
 			response = createAuthResponse( authResult, userId );
 		} catch (Exception e) {
-			//System.out.println("Exception message: " + e.getMessage());
+			//logger.info("Exception message: " + e.getMessage());
 			e.printStackTrace();
 			authResult = false;
 		}
 		
-		//System.out.println();
+		//logger.info();
 		return Util.setCors(NanoHTTPD.newFixedLengthResponse( response ));
 
     }
@@ -150,7 +154,7 @@ public class AuthHandler extends GeneralHandler {
 		Gson gson = new Gson();
 		String response = gson.toJson( tr );
 		
-		System.out.println( "  Response: " + response );
+		logger.info( "  Response: " + response );
 		
 		return response;
 	}

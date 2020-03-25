@@ -3,6 +3,8 @@ package k8s.example.client.k8s;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+import org.slf4j.Logger;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -14,12 +16,15 @@ import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CustomObjectsApi;
 import io.kubernetes.client.util.Watch;
 import k8s.example.client.Constants;
+import k8s.example.client.Main;
 import k8s.example.client.models.NamespaceClaim;
 
 public class NamespaceClaimController extends Thread {
 	private final Watch<NamespaceClaim> nscController;
 	private static int latestResourceVersion = 0;
 	private CustomObjectsApi api = null;
+	
+    private Logger logger = Main.logger;
 
 	NamespaceClaimController(ApiClient client, CustomObjectsApi api, int resourceVersion) throws Exception {
 		nscController = Watch.createWatch(client,
@@ -35,11 +40,11 @@ public class NamespaceClaimController extends Thread {
 			nscController.forEach(response -> {
 				try {
 					if (Thread.interrupted()) {
-						System.out.println("Interrupted!");
+						logger.info("Interrupted!");
 						nscController.close();
 					}
 				} catch (Exception e) {
-					System.out.println(e.getMessage());
+					logger.info(e.getMessage());
 				}
 				
 				
@@ -51,8 +56,8 @@ public class NamespaceClaimController extends Thread {
 					if( claim != null) {
 						latestResourceVersion = Integer.parseInt( response.object.getMetadata().getResourceVersion() );
 						String eventType = response.type.toString(); //ADDED, MODIFIED, DELETED
-						System.out.println("[NamespaceClaim Controller] Event Type : " + eventType );
-						System.out.println("[NamespaceClaim Controller] == NamespcaeClaim == \n" + claim.toString());
+						logger.info("[NamespaceClaim Controller] Event Type : " + eventType );
+						logger.info("[NamespaceClaim Controller] == NamespcaeClaim == \n" + claim.toString());
 						claimName = claim.getMetadata().getName();
 						
 						switch( eventType ) {
@@ -76,15 +81,15 @@ public class NamespaceClaimController extends Thread {
 					}
 					
 				} catch (Exception e) {
-					System.out.println("Exception: " + e.getMessage());
+					logger.info("Exception: " + e.getMessage());
 					StringWriter sw = new StringWriter();
 					e.printStackTrace(new PrintWriter(sw));
-					System.out.println(sw.toString());
+					logger.info(sw.toString());
 					try {
 						replaceNscStatus( claimName, Constants.CLAIM_STATUS_ERROR, e.getMessage() );
 					} catch (ApiException e1) {
 						e1.printStackTrace();
-						System.out.println("Namespace Claim Controller Exception : Change Status 'Error' Fail ");
+						logger.info("Namespace Claim Controller Exception : Change Status 'Error' Fail ");
 					}
 				} catch (Throwable e) {
 					// TODO Auto-generated catch block
@@ -92,10 +97,10 @@ public class NamespaceClaimController extends Thread {
 				}
 			});
 		} catch (Exception e) {
-			System.out.println("Namespace Claim Controller Exception: " + e.getMessage());
+			logger.info("Namespace Claim Controller Exception: " + e.getMessage());
 			StringWriter sw = new StringWriter();
 			e.printStackTrace(new PrintWriter(sw));
-			System.out.println(sw.toString());
+			logger.info(sw.toString());
 		}
 	}
 
@@ -111,7 +116,7 @@ public class NamespaceClaimController extends Thread {
 		patchStatus.add("value", statusObject);
 		patchStatusArray.add( patchStatus );
 		
-		System.out.println( "Patch Status Object : " + patchStatusArray );
+		logger.info( "Patch Status Object : " + patchStatusArray );
 		/*[
 		  "op" : "replace",
 		  "path" : "/status",
@@ -127,8 +132,8 @@ public class NamespaceClaimController extends Thread {
 					name, 
 					patchStatusArray );
 		} catch (ApiException e) {
-			System.out.println(e.getResponseBody());
-			System.out.println("ApiException Code: " + e.getCode());
+			logger.info(e.getResponseBody());
+			logger.info("ApiException Code: " + e.getCode());
 			throw e;
 		}
 	}
@@ -143,18 +148,18 @@ public class NamespaceClaimController extends Thread {
 					Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, 
 					name );
 		} catch (ApiException e) {
-			System.out.println(e.getResponseBody());
-			System.out.println("ApiException Code: " + e.getCode());
+			logger.info(e.getResponseBody());
+			logger.info("ApiException Code: " + e.getCode());
 			throw e;
 		}
 
 		String objectStr = new Gson().toJson( claimJson );
-		System.out.println( objectStr );
+		logger.info( objectStr );
 		
 		JsonParser parser = new JsonParser();
 		String status = parser.parse( objectStr ).getAsJsonObject().get( "status" ).getAsJsonObject().get( "status" ).getAsString();
 		
-		System.out.println( "Status : " + status );
+		logger.info( "Status : " + status );
 
 		return status;
 	}

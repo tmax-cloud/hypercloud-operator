@@ -38,11 +38,11 @@ public class RegistryWatcher extends Thread {
 			watchRegistry.forEach(response -> {
 				try {
 					if (Thread.interrupted()) {
-						System.out.println("Interrupted!");
+						logger.info("Interrupted!");
 						watchRegistry.close();
 					}
 				} catch (Exception e) {
-					System.out.println(e.getMessage());
+					logger.info(e.getMessage());
 				}
 				
 				
@@ -53,13 +53,13 @@ public class RegistryWatcher extends Thread {
 					if( registry != null) {
 						latestResourceVersion = response.object.getMetadata().getResourceVersion();
 						String eventType = response.type.toString();
-						System.out.println("====================== Registry " + eventType + " ====================== \n" + registry.toString());
+						logger.info("====================== Registry " + eventType + " ====================== \n" + registry.toString());
 						
 						switch(eventType) {
 						case Constants.EVENT_TYPE_ADDED : 
 							if(registry.getStatus() == null ) {
 								K8sApiCaller.initRegistry(registry.getMetadata().getName(), registry);
-								System.out.println("Creating registry");
+								logger.info("Creating registry");
 							}
 							
 							break;
@@ -69,7 +69,7 @@ public class RegistryWatcher extends Thread {
 									if( registryCondition.getType().equals("Phase")) {
 										if (registryCondition.getStatus().equals(RegistryStatus.REGISTRY_PHASE_CREATING)) {
 											K8sApiCaller.createRegistry(registry);
-											System.out.println("Registry is running");
+											logger.info("Registry is running");
 											logger.info("Registry is running");
 										}
 									}
@@ -79,29 +79,29 @@ public class RegistryWatcher extends Thread {
 							break;
 						case Constants.EVENT_TYPE_DELETED : 
 //							K8sApiCaller.deleteRegistry(registry);
-							System.out.println("Registry is deleted");
+							logger.info("Registry is deleted");
 							
 							break;
 						}						
 					}
 				} catch (ApiException e) {
-					System.out.println("ApiException: " + e.getMessage());
-					System.out.println(e.getResponseBody());
+					logger.info("ApiException: " + e.getMessage());
+					logger.info(e.getResponseBody());
 				} catch (Exception e) {
-					System.out.println("Exception: " + e.getMessage());
+					logger.info("Exception: " + e.getMessage());
 					StringWriter sw = new StringWriter();
 					e.printStackTrace(new PrintWriter(sw));
-					System.out.println(sw.toString());
+					logger.info(sw.toString());
 				} catch (Throwable e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			});
 		} catch (Exception e) {
-			System.out.println("Registry Watcher Exception: " + e.getMessage());
+			logger.info("Registry Watcher Exception: " + e.getMessage());
 			StringWriter sw = new StringWriter();
 			e.printStackTrace(new PrintWriter(sw));
-			System.out.println(sw.toString());
+			logger.info(sw.toString());
 		}
 	}
 

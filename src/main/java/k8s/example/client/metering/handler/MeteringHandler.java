@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTCreator.Builder;
 import com.auth0.jwt.algorithms.Algorithm;
@@ -30,6 +32,7 @@ import fi.iki.elonen.router.RouterNanoHTTPD.UriResource;
 import io.kubernetes.client.openapi.ApiException;
 import k8s.example.client.Constants;
 import k8s.example.client.ErrorCode;
+import k8s.example.client.Main;
 import k8s.example.client.StringUtil;
 import k8s.example.client.DataObject.Client;
 import k8s.example.client.DataObject.LoginInDO;
@@ -42,10 +45,12 @@ import k8s.example.client.metering.models.Metering;
 import k8s.example.client.metering.util.SimpleUtil;
 
 public class MeteringHandler extends GeneralHandler {
+    private Logger logger = Main.logger;
+    
 	@Override
     public Response get(
       UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
-		System.out.println("***** GET /metering");
+		logger.info("***** GET /metering");
 		
 		// Get Query Parameter
 		String offset = SimpleUtil.getQueryParameter( session.getParameters(), Constants.QUERY_PARAMETER_OFFSET );
@@ -95,19 +100,19 @@ public class MeteringHandler extends GeneralHandler {
 		try {
 			metering = getMeteringData( sb.toString() );
 		} catch (SQLException e) {
-			System.out.println("SQL Exception : " + e.getMessage());
+			logger.info("SQL Exception : " + e.getMessage());
 			e.printStackTrace();
 			return Util.setCors(NanoHTTPD.newFixedLengthResponse(Status.EXPECTATION_FAILED, NanoHTTPD.MIME_HTML, "SQL Exception"));
 		} catch (ClassNotFoundException e) {
-			System.out.println("Class Not Found Exection");
+			logger.info("Class Not Found Exection");
 			e.printStackTrace();
 			return Util.setCors(NanoHTTPD.newFixedLengthResponse(Status.EXPECTATION_FAILED, NanoHTTPD.MIME_HTML, "Class Not Found Exection"));
 		}
 
 		Gson gson = new GsonBuilder().setPrettyPrinting().create();
 		String outDO = gson.toJson(metering).toString();
-		System.out.println( "=== Metering ===" );
-		System.out.println( outDO );
+		logger.info( "=== Metering ===" );
+		logger.info( outDO );
 		
 		return Util.setCors(NanoHTTPD.newFixedLengthResponse(Status.OK, NanoHTTPD.MIME_HTML, outDO));
     }
@@ -115,7 +120,7 @@ public class MeteringHandler extends GeneralHandler {
 	@Override
     public Response other(
       String method, UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
-		System.out.println("***** OPTIONS /metering");
+		logger.info("***** OPTIONS /metering");
 		
 		return Util.setCors(NanoHTTPD.newFixedLengthResponse(""));
     }
@@ -123,8 +128,8 @@ public class MeteringHandler extends GeneralHandler {
 	private List< Metering > getMeteringData( String query ) throws SQLException, ClassNotFoundException {
 		Connection conn = getConnection();
 		LogPreparedStatement pstmt = new LogPreparedStatement( conn, query );
-		System.out.println( "=== Qeury ===" );
-		System.out.println( query );
+		logger.info( "=== Qeury ===" );
+		logger.info( query );
 		ResultSet rs = pstmt.executeQuery();
 		
 		List< Metering > meteringList = new ArrayList<>();

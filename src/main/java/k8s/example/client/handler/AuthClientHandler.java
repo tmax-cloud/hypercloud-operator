@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -19,16 +21,18 @@ import fi.iki.elonen.router.RouterNanoHTTPD.UriResource;
 import io.kubernetes.client.openapi.ApiException;
 import k8s.example.client.DataObject.Client;
 import k8s.example.client.ErrorCode;
+import k8s.example.client.Main;
 import k8s.example.client.StringUtil;
 import k8s.example.client.Util;
 import k8s.example.client.k8s.K8sApiCaller;
 import k8s.example.client.models.BrokerResponse;
 
 public class AuthClientHandler extends GeneralHandler {
+    private Logger logger = Main.logger;
 	@Override
     public Response post(
       UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
-		System.out.println("***** POST /authClient");
+		logger.info("***** POST /authClient");
 		
 		Map<String, String> body = new HashMap<String, String>();
         try {
@@ -53,11 +57,11 @@ public class AuthClientHandler extends GeneralHandler {
 			clientInfo.setClientId(generateClientId());
 			clientInfo.setClientSecret(generateClientSecret());
 			
-    		System.out.println( "  Client Id: " + clientInfo.getClientId() );
-    		System.out.println( "  Client Secret: " + clientInfo.getClientSecret() );
-    		System.out.println( "  AppName: " + clientInfo.getAppName() );
-    		System.out.println( "  Origin URI: " + clientInfo.getOriginUri() );
-    		System.out.println( "  Redirect URI: " + clientInfo.getRedirectUri() );
+    		logger.info( "  Client Id: " + clientInfo.getClientId() );
+    		logger.info( "  Client Secret: " + clientInfo.getClientSecret() );
+    		logger.info( "  AppName: " + clientInfo.getAppName() );
+    		logger.info( "  Origin URI: " + clientInfo.getOriginUri() );
+    		logger.info( "  Redirect URI: " + clientInfo.getRedirectUri() );
 
 			// Save clients in ClientCR
         	K8sApiCaller.saveClient(clientInfo);
@@ -68,31 +72,30 @@ public class AuthClientHandler extends GeneralHandler {
 			status = Status.OK;
 
 		} catch (ApiException e) {
-			System.out.println( "Exception message: " + e.getMessage() );
+			logger.info( "Exception message: " + e.getMessage() );
 			outMsg = "Client Register failed.";
 			status = Status.BAD_REQUEST;
 
 		} catch (Exception e) {
-			System.out.println( "Exception message: " + e.getMessage() );
+			logger.info( "Exception message: " + e.getMessage() );
 			e.printStackTrace();
 			outMsg = "Client Register failed.";
 			status = Status.BAD_REQUEST;
 		}
-		
-		System.out.println();
+//		logger.info();
 		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outMsg));
     }
 	
 	@Override
     public Response delete(
       UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
-		System.out.println("***** DELETE /v2/service_instances/:instance_id/service_bindings/:binding_id");
+		logger.info("***** DELETE /v2/service_instances/:instance_id/service_bindings/:binding_id");
 		
 		String serviceClassName = session.getParameters().get("service_id").get(0);
 		String instanceId = urlParams.get("instance_id");
 		String bindingId = urlParams.get("binding_id");
-		System.out.println("Instance ID: " + instanceId);
-		System.out.println("Binding ID: " + bindingId);
+		logger.info("Instance ID: " + instanceId);
+		logger.info("Binding ID: " + bindingId);
 		
 		BrokerResponse response = new BrokerResponse();
 		String outDO = null;
@@ -102,24 +105,24 @@ public class AuthClientHandler extends GeneralHandler {
 			response.setOperation("");
 			status = Status.OK;
 		} catch (Exception e) {
-			System.out.println( "  Failed to unbind instance of service class \"" + serviceClassName + "\"");
-			System.out.println( "Exception message: " + e.getMessage() );
+			logger.info( "  Failed to unbind instance of service class \"" + serviceClassName + "\"");
+			logger.info( "Exception message: " + e.getMessage() );
 			e.printStackTrace();
 			status = Status.BAD_REQUEST;
 		}
 		
 		Gson gson = new GsonBuilder().setPrettyPrinting().create();
 		outDO = gson.toJson(response).toString();
-		System.out.println("Response : " + outDO);
+		logger.info("Response : " + outDO);
 		
-		System.out.println();
+//		logger.info();
 		return NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO);
     }
 	
 	@Override
     public Response other(
       String method, UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
-		System.out.println("***** OPTIONS /authClient");
+		logger.info("***** OPTIONS /authClient");
 		
 		return Util.setCors(NanoHTTPD.newFixedLengthResponse(""));
     }

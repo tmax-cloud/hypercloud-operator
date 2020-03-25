@@ -12,6 +12,7 @@ import java.util.Map;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.slf4j.Logger;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonParser;
@@ -21,6 +22,7 @@ import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 
 import k8s.example.client.Constants;
+import k8s.example.client.Main;
 import k8s.example.client.k8s.util.LogPreparedStatement;
 import k8s.example.client.metering.models.Metering;
 import k8s.example.client.metering.models.Metric;
@@ -32,6 +34,7 @@ public class MeteringJob implements Job{
 	private Map<String,Metering> meteringData = new HashMap<>();
 	long time = System.currentTimeMillis();
 	Connection conn = null;
+    private Logger logger = Main.logger;
 	
 	@Override
 	public void execute(JobExecutionContext context) throws JobExecutionException {
@@ -40,20 +43,20 @@ public class MeteringJob implements Job{
 			conn = getConnection();
 			conn.setAutoCommit(false);
 		} catch (SQLException e) {
-			System.out.println("SQL Exception : " + e.getMessage());
+			logger.info("SQL Exception : " + e.getMessage());
 			e.printStackTrace();
 		} catch (ClassNotFoundException e) {
-			System.out.println("Class Not Found Exection");
+			logger.info("Class Not Found Exection");
 			e.printStackTrace();
 		}
 		
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTimeInMillis(time);
-		System.out.println( "============= Metering Time =============" );
-		System.out.println( "minute of hour	 : " + calendar.get(Calendar.MINUTE) );
-		System.out.println( "hour of day	 : " + calendar.get(Calendar.HOUR_OF_DAY) );
-		System.out.println( "day of month	 : " + calendar.get(Calendar.DAY_OF_MONTH) );
-		System.out.println( "day of year	 : " + calendar.get(Calendar.DAY_OF_YEAR) );
+		logger.info( "============= Metering Time =============" );
+		logger.info( "minute of hour	 : " + calendar.get(Calendar.MINUTE) );
+		logger.info( "hour of day	 : " + calendar.get(Calendar.HOUR_OF_DAY) );
+		logger.info( "day of month	 : " + calendar.get(Calendar.DAY_OF_MONTH) );
+		logger.info( "day of year	 : " + calendar.get(Calendar.DAY_OF_YEAR) );
 		
 		if ( calendar.get(Calendar.MINUTE) == 0 ) {
 			// Insert to metering_hour
@@ -72,13 +75,13 @@ public class MeteringJob implements Job{
 		
 		// Insert to metering (new data)
 		makeMeteringMap();
-		System.out.println( "============= Metering Data =============" );
+		logger.info( "============= Metering Data =============" );
 		for( String key : meteringData.keySet() ){
-			System.out.println( key + "/cpu : " + meteringData.get(key).getCpu() );
-			System.out.println( key + "/memory : " + meteringData.get(key).getMemory() );
-			System.out.println( key + "/storage : " + meteringData.get(key).getStorage() );
+			logger.info( key + "/cpu : " + meteringData.get(key).getCpu() );
+			logger.info( key + "/memory : " + meteringData.get(key).getMemory() );
+			logger.info( key + "/storage : " + meteringData.get(key).getStorage() );
         }
-		System.out.println( "=========================================" );
+		logger.info( "=========================================" );
 		
 		insertMeteringData();
 	}
@@ -107,7 +110,7 @@ public class MeteringJob implements Job{
 			conn.close();
 			
 		} catch (SQLException e) {
-			System.out.println("SQL Exception : " + e.getMessage());
+			logger.info("SQL Exception : " + e.getMessage());
 			e.printStackTrace();
 		}
 	}
@@ -163,14 +166,14 @@ public class MeteringJob implements Job{
 
 			Response response = client.newCall(request).execute(); 
 			String message = response.body().string();
-			//System.out.println(message);
+			//logger.info(message);
 
 			JsonParser parser = new JsonParser();
 			String metricData = parser.parse( message ).getAsJsonObject().get("data").toString();
 			metricObject = new Gson().fromJson(metricData, MetricDataList.class);
 			
 		} catch (Exception e){
-			System.out.println("Exception : " + e.getMessage());
+			logger.info("Exception : " + e.getMessage());
 		}
 		return metricObject;
 	}
@@ -218,7 +221,7 @@ public class MeteringJob implements Job{
 			conn.commit();
 			
 		} catch (SQLException e) {
-			System.out.println("SQL Exception : " + e.getMessage());
+			logger.info("SQL Exception : " + e.getMessage());
 			e.printStackTrace();
 		}
 	}
@@ -244,7 +247,7 @@ public class MeteringJob implements Job{
 			conn.commit();
 
 		} catch (SQLException e) {
-			System.out.println("SQL Exception : " + e.getMessage());
+			logger.info("SQL Exception : " + e.getMessage());
 			e.printStackTrace();
 		}
 	}
@@ -270,7 +273,7 @@ public class MeteringJob implements Job{
 			conn.commit();
 
 		} catch (SQLException e) {
-			System.out.println("SQL Exception : " + e.getMessage());
+			logger.info("SQL Exception : " + e.getMessage());
 			e.printStackTrace();
 		}
 	}
@@ -296,7 +299,7 @@ public class MeteringJob implements Job{
 			conn.commit();
 
 		} catch (SQLException e) {
-			System.out.println("SQL Exception : " + e.getMessage());
+			logger.info("SQL Exception : " + e.getMessage());
 			e.printStackTrace();
 		}
 	}

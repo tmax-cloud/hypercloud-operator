@@ -3,6 +3,8 @@ package k8s.example.client.k8s;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+import org.slf4j.Logger;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -14,6 +16,7 @@ import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CustomObjectsApi;
 import io.kubernetes.client.util.Watch;
 import k8s.example.client.Constants;
+import k8s.example.client.Main;
 import k8s.example.client.models.NamespaceClaim;
 import k8s.example.client.models.RoleBindingClaim;
 
@@ -21,6 +24,7 @@ public class RoleBindingClaimController extends Thread {
 	private final Watch<RoleBindingClaim> rbcController;
 	private static int latestResourceVersion = 0;
 	private CustomObjectsApi api = null;
+    private Logger logger = Main.logger;
 
 	RoleBindingClaimController(ApiClient client, CustomObjectsApi api, int resourceVersion) throws Exception {
 		rbcController = Watch.createWatch(client,
@@ -36,11 +40,11 @@ public class RoleBindingClaimController extends Thread {
 			rbcController.forEach(response -> {
 				try {
 					if (Thread.interrupted()) {
-						System.out.println("Interrupted!");
+						logger.info("Interrupted!");
 						rbcController.close();
 					}
 				} catch (Exception e) {
-					System.out.println(e.getMessage());
+					logger.info(e.getMessage());
 				}
 				
 				
@@ -53,8 +57,8 @@ public class RoleBindingClaimController extends Thread {
 					if( claim != null) {
 						latestResourceVersion = Integer.parseInt( response.object.getMetadata().getResourceVersion() );
 						String eventType = response.type.toString(); //ADDED, MODIFIED, DELETED
-						System.out.println("[RoleBindingClaim Controller] Event Type : " + eventType );
-						System.out.println("[RoleBindingClaim Controller] == ResourceQuotaClaim == \n" + claim.toString());
+						logger.info("[RoleBindingClaim Controller] Event Type : " + eventType );
+						logger.info("[RoleBindingClaim Controller] == ResourceQuotaClaim == \n" + claim.toString());
 						claimName = claim.getMetadata().getName();
 						claimNamespace = claim.getMetadata().getNamespace();
 						switch( eventType ) {
@@ -78,15 +82,15 @@ public class RoleBindingClaimController extends Thread {
 					}
 					
 				} catch (Exception e) {
-					System.out.println("Exception: " + e.getMessage());
+					logger.info("Exception: " + e.getMessage());
 					StringWriter sw = new StringWriter();
 					e.printStackTrace(new PrintWriter(sw));
-					System.out.println(sw.toString());
+					logger.info(sw.toString());
 					try {
 						replaceRbcStatus( claimName, Constants.CLAIM_STATUS_ERROR, e.getMessage(), claimNamespace );
 					} catch (ApiException e1) {
 						e1.printStackTrace();
-						System.out.println("Resource Quota Claim Controller Exception : Change Status 'Error' Fail ");
+						logger.info("Resource Quota Claim Controller Exception : Change Status 'Error' Fail ");
 					}
 				} catch (Throwable e) {
 					// TODO Auto-generated catch block
@@ -94,10 +98,10 @@ public class RoleBindingClaimController extends Thread {
 				}
 			});
 		} catch (Exception e) {
-			System.out.println("Resource Quota Claim Controller Exception: " + e.getMessage());
+			logger.info("Resource Quota Claim Controller Exception: " + e.getMessage());
 			StringWriter sw = new StringWriter();
 			e.printStackTrace(new PrintWriter(sw));
-			System.out.println(sw.toString());
+			logger.info(sw.toString());
 		}
 	}
 
@@ -113,7 +117,7 @@ public class RoleBindingClaimController extends Thread {
 		patchStatus.add("value", statusObject);
 		patchStatusArray.add( patchStatus );
 		
-		System.out.println( "Patch Status Object : " + patchStatusArray );
+		logger.info( "Patch Status Object : " + patchStatusArray );
 		/*[
 		  "op" : "replace",
 		  "path" : "/status",
@@ -130,8 +134,8 @@ public class RoleBindingClaimController extends Thread {
 					name, 
 					patchStatusArray );
 		} catch (ApiException e) {
-			System.out.println(e.getResponseBody());
-			System.out.println("ApiException Code: " + e.getCode());
+			logger.info(e.getResponseBody());
+			logger.info("ApiException Code: " + e.getCode());
 			throw e;
 		}
 	}
@@ -147,18 +151,18 @@ public class RoleBindingClaimController extends Thread {
 					Constants.CUSTOM_OBJECT_PLURAL_ROLEBINDINGCLAIM,  
 					name );
 		} catch (ApiException e) {
-			System.out.println(e.getResponseBody());
-			System.out.println("ApiException Code: " + e.getCode());
+			logger.info(e.getResponseBody());
+			logger.info("ApiException Code: " + e.getCode());
 			throw e;
 		}
 
 		String objectStr = new Gson().toJson( claimJson );
-		System.out.println( objectStr );
+		logger.info( objectStr );
 		
 		JsonParser parser = new JsonParser();
 		String status = parser.parse( objectStr ).getAsJsonObject().get( "status" ).getAsJsonObject().get( "status" ).getAsString();
 		
-		System.out.println( "Status : " + status );
+		logger.info( "Status : " + status );
 
 		return status;
 	}

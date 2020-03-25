@@ -3,17 +3,21 @@ package k8s.example.client.k8s;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+import org.slf4j.Logger;
+
 import com.google.gson.reflect.TypeToken;
 
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CustomObjectsApi;
 import io.kubernetes.client.util.Watch;
+import k8s.example.client.Main;
 import k8s.example.client.DataObject.UserCR;
 
 public class UserWatcher extends Thread {
 	private final Watch<UserCR> watchUser;
 	private static String latestResourceVersion = "0";
+    private Logger logger = Main.logger;
 
 	UserWatcher(ApiClient client, CustomObjectsApi api, String resourceVersion) throws Exception {
 		watchUser = Watch.createWatch(client,
@@ -30,38 +34,38 @@ public class UserWatcher extends Thread {
 			watchUser.forEach(response -> {
 				try {
 					if (Thread.interrupted()) {
-						System.out.println("Interrupted!");
+						logger.info("Interrupted!");
 						watchUser.close();
 					}
 				} catch (Exception e) {
-					System.out.println(e.getMessage());
+					logger.info(e.getMessage());
 				}
 				
 				latestResourceVersion = response.object.getMetadata().getResourceVersion();
 				
 				// Logic here
 				try {
-					System.out.println("[UserWatcher] Encrypt password of " + response.object.getUserInfo().getEmail());
+					logger.info("[UserWatcher] Encrypt password of " + response.object.getUserInfo().getEmail());
 
 					K8sApiCaller.encryptUserPassword(
 							response.object.getUserInfo().getEmail().replace("@", "-"), 
 							response.object.getUserInfo().getPassword(),
 							response.object);
 				} catch (ApiException e) {
-					System.out.println("ApiException: " + e.getMessage());
-					System.out.println(e.getResponseBody());
+					logger.info("ApiException: " + e.getMessage());
+					logger.info(e.getResponseBody());
 				} catch (Exception e) {
-					System.out.println("Exception: " + e.getMessage());
+					logger.info("Exception: " + e.getMessage());
 					StringWriter sw = new StringWriter();
 					e.printStackTrace(new PrintWriter(sw));
-					System.out.println(sw.toString());
+					logger.info(sw.toString());
 				}
 			});
 		} catch (Exception e) {
-			System.out.println("User Watcher Exception: " + e.getMessage());
+			logger.info("User Watcher Exception: " + e.getMessage());
 			StringWriter sw = new StringWriter();
 			e.printStackTrace(new PrintWriter(sw));
-			System.out.println(sw.toString());
+			logger.info(sw.toString());
 		}
 	}
 

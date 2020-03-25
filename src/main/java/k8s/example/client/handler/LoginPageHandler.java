@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.slf4j.Logger;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import fi.iki.elonen.NanoHTTPD;
@@ -17,15 +19,17 @@ import io.kubernetes.client.openapi.ApiException;
 import k8s.example.client.Constants;
 import k8s.example.client.DataObject.Client;
 import k8s.example.client.ErrorCode;
+import k8s.example.client.Main;
 import k8s.example.client.StringUtil;
 import k8s.example.client.Util;
 import k8s.example.client.k8s.K8sApiCaller;
 
 public class LoginPageHandler extends GeneralHandler {
+    private Logger logger = Main.logger;
 	@Override
     public Response post(
       UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
-		System.out.println("***** POST /loginPage");
+		logger.info("***** POST /loginPage");
 		
 		Map<String, String> body = new HashMap<String, String>();
         try {
@@ -49,9 +53,9 @@ public class LoginPageHandler extends GeneralHandler {
 			if( StringUtil.isEmpty(clientInfo.getClientId()))	throw new Exception(ErrorCode.CLIENT_ID_EMPTY);
 			if( StringUtil.isEmpty(clientInfo.getClientSecret()))	throw new Exception(ErrorCode.CLIENT_SECRET_EMPTY);
 			
-//			System.out.println( "  Origin Uri: " + originUri );
-    		System.out.println( "  Client Id: " + clientInfo.getClientId() );
-    		System.out.println( "  Client Secret: " + clientInfo.getClientSecret() );
+//			logger.info( "  Origin Uri: " + originUri );
+    		logger.info( "  Client Id: " + clientInfo.getClientId() );
+    		logger.info( "  Client Secret: " + clientInfo.getClientSecret() );
 
 			// Get clients info from K8S 		
     		Client dbClientInfo = K8sApiCaller.getClient(clientInfo);
@@ -68,30 +72,30 @@ public class LoginPageHandler extends GeneralHandler {
 			sb.append( Constants.LOGIN_PAGE_URI );
 			sb.append( "?clientId=" + clientInfo.getClientId() );
 			sb.append( "&clientSecret=" + clientInfo.getClientSecret() );
-    		System.out.println( "Login Page URI : " + sb.toString() );
+    		logger.info( "Login Page URI : " + sb.toString() );
 			status = Status.OK;
 			outMsg = sb.toString();			
 
 		} catch (ApiException e) {
-			System.out.println( "Exception message: " + e.getMessage() );
+			logger.info( "Exception message: " + e.getMessage() );
 			outMsg = "Login page Create failed.";
 			status = Status.BAD_REQUEST;
 
 		} catch (Exception e) {
-			System.out.println( "Exception message: " + e.getMessage() );
+			logger.info( "Exception message: " + e.getMessage() );
 			e.printStackTrace();
 			outMsg = "Login page Create failed.";
 			status = Status.BAD_REQUEST;
 		}
 		
-		System.out.println();
+//		logger.info();
 		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outMsg));
     }
 	
 	@Override
     public Response other(
       String method, UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
-		System.out.println("***** OPTIONS /authClient");
+		logger.info("***** OPTIONS /authClient");
 		
 		return Util.setCors(NanoHTTPD.newFixedLengthResponse(""));
     }
