@@ -39,6 +39,21 @@ spec:
             secretKeyRef:
               name: mysql-secrets
               key: ROOT_PASSWORD
+        - name: RETENTION_HOUR
+          valueFrom:
+            configMapKeyRef:
+              name: mysql-initdb-config
+              key: retention.hour
+        - name: RETENTION_DAY
+          valueFrom:
+            configMapKeyRef:
+              name: mysql-initdb-config
+              key: retention.day
+        - name: RETENTION_MONTH
+          valueFrom:
+            configMapKeyRef:
+              name: mysql-initdb-config
+              key: retention.month
         - name: TZ
           value: Asia/Seoul        
         ports:
