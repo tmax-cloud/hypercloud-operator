@@ -49,7 +49,7 @@ public class MeteringJob implements Job{
 		
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTimeInMillis(time);
-		System.out.println( "============= Metring TIME =============" );
+		System.out.println( "============= Metering Time =============" );
 		System.out.println( "minute of hour	 : " + calendar.get(Calendar.MINUTE) );
 		System.out.println( "hour of day	 : " + calendar.get(Calendar.HOUR_OF_DAY) );
 		System.out.println( "day of month	 : " + calendar.get(Calendar.DAY_OF_MONTH) );
@@ -72,13 +72,13 @@ public class MeteringJob implements Job{
 		
 		// Insert to metering (new data)
 		makeMeteringMap();
-		System.out.println( "============= Metering =============" );
+		System.out.println( "============= Metering Data =============" );
 		for( String key : meteringData.keySet() ){
 			System.out.println( key + "/cpu : " + meteringData.get(key).getCpu() );
 			System.out.println( key + "/memory : " + meteringData.get(key).getMemory() );
 			System.out.println( key + "/storage : " + meteringData.get(key).getStorage() );
         }
-		System.out.println( "====================================" );
+		System.out.println( "=========================================" );
 		
 		insertMeteringData();
 	}

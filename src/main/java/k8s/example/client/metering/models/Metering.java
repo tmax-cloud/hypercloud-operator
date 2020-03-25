@@ -1,12 +1,27 @@
 package k8s.example.client.metering.models;
 
 public class Metering {
+	String id;
+	public String getId() {
+		return id;
+	}
+	public void setId(String id) {
+		this.id = id;
+	}
 	String namespace;
 	double cpu = 0;
 	long memory = 0;
 	long storage = 0;
 	int publicIp = 0;
 	int privateIp = 0;
+	long meteringTime = 0;
+	
+	public long getMeteringTime() {
+		return meteringTime;
+	}
+	public void setMeteringTime(long meteringTime) {
+		this.meteringTime = meteringTime;
+	}
 	public String getNamespace() {
 		return namespace;
 	}
