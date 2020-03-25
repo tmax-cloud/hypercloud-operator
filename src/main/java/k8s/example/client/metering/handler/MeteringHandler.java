@@ -8,38 +8,24 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import org.slf4j.Logger;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.JWTCreator.Builder;
-import com.auth0.jwt.algorithms.Algorithm;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import fi.iki.elonen.NanoHTTPD;
 import fi.iki.elonen.NanoHTTPD.IHTTPSession;
 import fi.iki.elonen.NanoHTTPD.Response;
-import fi.iki.elonen.NanoHTTPD.Response.IStatus;
 import fi.iki.elonen.NanoHTTPD.Response.Status;
 import fi.iki.elonen.router.RouterNanoHTTPD.GeneralHandler;
 import fi.iki.elonen.router.RouterNanoHTTPD.UriResource;
-import io.kubernetes.client.openapi.ApiException;
 import k8s.example.client.Constants;
-import k8s.example.client.ErrorCode;
 import k8s.example.client.Main;
 import k8s.example.client.StringUtil;
-import k8s.example.client.DataObject.Client;
-import k8s.example.client.DataObject.LoginInDO;
-import k8s.example.client.DataObject.Token;
-import k8s.example.client.DataObject.UserCR;
 import k8s.example.client.Util;
-import k8s.example.client.k8s.K8sApiCaller;
 import k8s.example.client.k8s.util.LogPreparedStatement;
 import k8s.example.client.metering.models.Metering;
 import k8s.example.client.metering.util.SimpleUtil;
@@ -141,6 +127,7 @@ public class MeteringHandler extends GeneralHandler {
 			metering.setCpu( rs.getDouble( "cpu" ) );
 			metering.setMemory( rs.getLong( "memory" ) );
 			metering.setStorage( rs.getLong( "storage" ) );
+			metering.setGpu( rs.getDouble( "gpu" ) );
 			metering.setPublicIp( rs.getInt( "public_ip" ) );
 			metering.setPrivateIp( rs.getInt( "private_ip" ) );
 			if ( rs.getTimestamp( "metering_time" ) != null) {
@@ -187,11 +174,17 @@ public class MeteringHandler extends GeneralHandler {
 			sb.append("select * from metering.metering_day");
 			break;
 		case "month" : 
+			calStart.set(Calendar.HOUR_OF_DAY, 0);
+			calEnd.set(Calendar.HOUR_OF_DAY, 0);
 			calStart.set(Calendar.DAY_OF_MONTH, 1);
 			calEnd.set(Calendar.DAY_OF_MONTH, 1);
 			sb.append("select * from metering.metering_month");
 			break;
 		case "year" : 
+			calStart.set(Calendar.HOUR_OF_DAY, 0);
+			calEnd.set(Calendar.HOUR_OF_DAY, 0);
+			calStart.set(Calendar.DAY_OF_MONTH, 1);
+			calEnd.set(Calendar.DAY_OF_MONTH, 1);
 			calStart.set(Calendar.MONTH, 0);
 			calEnd.set(Calendar.MONTH, 0);
 			sb.append("select * from metering.metering_year");

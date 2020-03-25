@@ -12,10 +12,16 @@ public class Metering {
 	double cpu = 0;
 	long memory = 0;
 	long storage = 0;
+	double gpu = 0;
 	int publicIp = 0;
 	int privateIp = 0;
 	long meteringTime = 0;
-	
+	public double getGpu() {
+		return gpu;
+	}
+	public void setGpu(double gpu) {
+		this.gpu = gpu;
+	}
 	public long getMeteringTime() {
 		return meteringTime;
 	}

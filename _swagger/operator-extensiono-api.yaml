@@ -403,7 +403,7 @@ paths:
         description: "For Sorting"
         schema:
           type: "string"
-          enum: [namespace,cpu,memory,storage,private_ip,public_ip,metering_time,-namespace,-cpu,-memory,-storage,-private_ip,-public_ip,-metering_time]
+          enum: [namespace,cpu,memory,storage,gpu,private_ip,public_ip,metering_time,-namespace,-cpu,-memory,-storage,-gpu,-private_ip,-public_ip,-metering_time]
         required: false
       responses:
         200:
@@ -420,6 +420,7 @@ paths:
                       "cpu": 0.6,
                       "memory": 629145600,
                       "storage": 0,
+                      "gpu" : 0,
                       "publicIp": 0,
                       "privateIp": 0,
                       "meteringTime": 1585098000000
@@ -430,6 +431,7 @@ paths:
                       "cpu": 3.3,
                       "memory": 10737418240,
                       "storage": 161061273600,
+                      "gpu" : 0,
                       "publicIp": 0,
                       "privateIp": 0,
                       "meteringTime": 1585098000000

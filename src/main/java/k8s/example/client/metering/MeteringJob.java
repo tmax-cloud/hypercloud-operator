@@ -81,15 +81,16 @@ public class MeteringJob implements Job{
 			logger.info( key + "/memory : " + meteringData.get(key).getMemory() );
 			logger.info( key + "/storage : " + meteringData.get(key).getStorage() );
         }
-		logger.info( "=========================================" );
 		
 		insertMeteringData();
+		
+		deleteMeteringData();
 	}
 	
 	private void insertMeteringData() {
 		try {
-			String query = "insert into metering.metering (id,namespace,cpu,memory,storage,public_ip,private_ip,metering_time,status) "
-					+ "values (?,?,truncate(?,2),?,?,?,?,?,?)";
+			String query = "insert into metering.metering (id,namespace,cpu,memory,storage,gpu,public_ip,private_ip,metering_time,status) "
+					+ "values (?,?,truncate(?,2),?,?,truncate(?,2),?,?,?,?)";
 			LogPreparedStatement pstmt = new LogPreparedStatement( conn, query );
 			for( String key : meteringData.keySet() ){
 				pstmt.setString( 1, UIDGenerator.getInstance().generate32( meteringData.get(key), 8, time ) );
@@ -97,10 +98,11 @@ public class MeteringJob implements Job{
 				pstmt.setDouble( 3, meteringData.get(key).getCpu() );
 				pstmt.setLong( 4, meteringData.get(key).getMemory() );
 				pstmt.setLong( 5, meteringData.get(key).getStorage() );
-				pstmt.setInt( 6, meteringData.get(key).getPublicIp() );
-				pstmt.setInt( 7, meteringData.get(key).getPrivateIp() );
-				pstmt.setTimestamp( 8, new Timestamp(time) );
-				pstmt.setString( 9, "Success" );
+				pstmt.setDouble( 6, meteringData.get(key).getGpu() );
+				pstmt.setInt( 7, meteringData.get(key).getPublicIp() );
+				pstmt.setInt( 8, meteringData.get(key).getPrivateIp() );
+				pstmt.setTimestamp( 9, new Timestamp(time) );
+				pstmt.setString( 10, "Success" );
 				pstmt.addBatch();
 			}
 
@@ -178,6 +180,15 @@ public class MeteringJob implements Job{
 		return metricObject;
 	}
 
+	private void deleteMeteringData() {
+		logger.info( "============ Retention Time =============" );
+		logger.info( "Retention Time - Hour  : " + System.getenv( "RETENTION_HOUR" ) );
+		logger.info( "Retention Time - Day   : " + System.getenv( "RETENTION_DAY" ) );
+		logger.info( "Retention Time - Month : " + System.getenv( "RETENTION_MONTH" ) );
+		logger.info( "=========================================" );
+	}
+	
+	
 	private Connection getConnection() throws SQLException, ClassNotFoundException {
 		Class.forName( Constants.JDBC_DRIVER );
 		return DriverManager.getConnection( Constants.DB_URL, Constants.USERNAME, System.getenv( "DB_PASSWORD" ) );
@@ -206,7 +217,7 @@ public class MeteringJob implements Job{
 		try {
 			String insertQuery = "insert into metering.metering_hour (" + 
 					"select id, namespace, truncate(sum(cpu)/count(*),2) as cpu, truncate(sum(memory)/count(*),0) as memory, truncate(sum(storage)/count(*),0) as storage, " + 
-					"truncate(sum(public_ip)/count(*),0) as public_ip, truncate(sum(private_ip)/count(*),0) as private_ip, " + 
+					"truncate(sum(gpu)/count(*),2) as gpu, truncate(sum(public_ip)/count(*),0) as public_ip, truncate(sum(private_ip)/count(*),0) as private_ip, " + 
 					"date_format(metering_time,'%Y-%m-%d %H:00:00') as metering_time, status from metering.metering " + 
 					"group by hour(metering_time), namespace" + 
 					")";
@@ -231,7 +242,7 @@ public class MeteringJob implements Job{
 		try {
 			String insertQuery = "insert into metering.metering_day (" + 
 					"select id, namespace, truncate(sum(cpu),2) as cpu, sum(memory) as memory, sum(storage) as storage, " + 
-					"sum(public_ip) as public_ip, sum(private_ip) as private_ip, " + 
+					"truncate(sum(gpu),2) as gpu, sum(public_ip) as public_ip, sum(private_ip) as private_ip, " + 
 					"date_format(metering_time,'%Y-%m-%d 00:00:00') as metering_time, status from metering.metering_hour " + 
 					"where status = 'Success' " + 
 					"group by day(metering_time), namespace" + 
@@ -257,7 +268,7 @@ public class MeteringJob implements Job{
 		try {
 			String insertQuery = "insert into metering.metering_month (" + 
 					"select id, namespace, truncate(sum(cpu),2) as cpu, sum(memory) as memory, sum(storage) as storage, " + 
-					"sum(public_ip) as public_ip, sum(private_ip) as private_ip, " + 
+					"truncate(sum(gpu),2) as gpu, sum(public_ip) as public_ip, sum(private_ip) as private_ip, " + 
 					"date_format(metering_time,'%Y-%m-01 00:00:00') as metering_time, status from metering.metering_day " + 
 					"where status = 'Success' " + 
 					"group by month(metering_time), namespace" + 
@@ -283,7 +294,7 @@ public class MeteringJob implements Job{
 		try {
 			String insertQuery = "insert into metering.metering_year (" + 
 					"select id, namespace, truncate(sum(cpu),2) as cpu, sum(memory) as memory, sum(storage) as storage, " + 
-					"sum(public_ip) as public_ip, sum(private_ip) as private_ip, " + 
+					"truncate(sum(gpu),2) as gpu, sum(public_ip) as public_ip, sum(private_ip) as private_ip, " + 
 					"date_format(metering_time,'%Y-01-01 00:00:00') as metering_time, status from metering.metering_month " + 
 					"where status = 'Success' " + 
 					"group by year(metering_time), namespace" + 
