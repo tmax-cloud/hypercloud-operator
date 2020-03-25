@@ -2,6 +2,8 @@ package k8s.example.client.handler;
 
 import java.util.Map;
 
+import org.slf4j.Logger;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -13,16 +15,18 @@ import fi.iki.elonen.NanoHTTPD.Response.Status;
 import fi.iki.elonen.router.RouterNanoHTTPD.GeneralHandler;
 import fi.iki.elonen.router.RouterNanoHTTPD.UriResource;
 import io.kubernetes.client.openapi.ApiException;
+import k8s.example.client.Main;
 import k8s.example.client.Util;
 import k8s.example.client.k8s.K8sApiCaller;
 import k8s.example.client.models.Services;
 
 public class CatalogHandler extends GeneralHandler {
+    private Logger logger = Main.logger;
 	@Override
     public Response get(
       UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
 		
-		System.out.println("***** GET /v2/catalog");
+		logger.info("***** GET /v2/catalog");
 		
 		Services catalog = null;
 		String outDO = null;
@@ -32,17 +36,17 @@ public class CatalogHandler extends GeneralHandler {
 			catalog = K8sApiCaller.getCatalog();
 			status = Status.OK;
 		} catch (ApiException e) {
-			System.out.println( "  Get Catalog fail" );
-			System.out.println( "Exception message: " + e.getMessage() );
+			logger.info( "  Get Catalog fail" );
+			logger.info( "Exception message: " + e.getMessage() );
 			e.printStackTrace();
 			status = Status.NOT_FOUND;
 		}
 		
 		Gson gson = new GsonBuilder().setPrettyPrinting().create();
 		outDO = gson.toJson(catalog).toString();
-		System.out.println("Catalog : " + outDO);
+		logger.info("Catalog : " + outDO);
 		
-		System.out.println();
+		//logger.info();
 		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO));
 	}
 }

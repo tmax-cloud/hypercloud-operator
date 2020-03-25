@@ -52,7 +52,7 @@ spec:
                   enum: [ClusterIP, NodePort, LoadBalancer]
             persistentVolumeClaim:
               type: object
-              required: [storageSize]
+              required: [storageSize, storageClassName]
               properties:
                 accessModes:
                   type: array
@@ -64,7 +64,7 @@ spec:
                   description: "enter the desired storage size (ex: 10Gi)"
                 storageClassName:
                   type: string
-                  description: "(default: csi-cephfs-sc)"
+                  description: "enter storage class name available (ex: csi-cephfs-sc)"
         status:
           type: object
           properties:

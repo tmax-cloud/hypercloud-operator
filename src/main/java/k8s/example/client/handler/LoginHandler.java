@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTCreator.Builder;
 import com.auth0.jwt.algorithms.Algorithm;
@@ -21,6 +23,7 @@ import fi.iki.elonen.router.RouterNanoHTTPD.UriResource;
 import io.kubernetes.client.openapi.ApiException;
 import k8s.example.client.Constants;
 import k8s.example.client.ErrorCode;
+import k8s.example.client.Main;
 import k8s.example.client.DataObject.Client;
 import k8s.example.client.DataObject.LoginInDO;
 import k8s.example.client.DataObject.Token;
@@ -29,10 +32,11 @@ import k8s.example.client.Util;
 import k8s.example.client.k8s.K8sApiCaller;
 
 public class LoginHandler extends GeneralHandler {
+    private Logger logger = Main.logger;
 	@Override
     public Response post(
       UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
-		System.out.println("***** POST /login");
+		logger.info("***** POST /login");
 		
 		Map<String, String> body = new HashMap<String, String>();
         try {
@@ -51,23 +55,23 @@ public class LoginHandler extends GeneralHandler {
 		try {
 			// Read inDO
     		loginInDO = new ObjectMapper().readValue(body.get( "postData" ), LoginInDO.class);
-    		System.out.println( "  User ID: " + loginInDO.getId() );
+    		logger.info( "  User ID: " + loginInDO.getId() );
     		
     		// Get Client ID
     		if (session.getParameters().get("clientId") != null ) clientIdRequestParameter = session.getParameters().get("clientId").get(0);
     		if (session.getParameters().get("appName") != null ) appNameRequestParameter = session.getParameters().get("appName").get(0);
         		
-    		System.out.println( "  Client Id: " + clientIdRequestParameter );
-    		System.out.println( "  App Name: " + appNameRequestParameter );  		   		
+    		logger.info( "  Client Id: " + clientIdRequestParameter );
+    		logger.info( "  App Name: " + appNameRequestParameter );  		   		
     		
     		// Get user info
     		String userId = loginInDO.getId().replace("@", "-");
     		UserCR user = K8sApiCaller.getUser(userId);
     		String encryptedPassword = Util.Crypto.encryptSHA256(loginInDO.getPassword() + loginInDO.getId() + user.getUserInfo().getPasswordSalt());
-    		System.out.println("  DB password: " + user.getUserInfo().getPassword() + " / Input password: " + encryptedPassword);
+    		logger.info("  DB password: " + user.getUserInfo().getPassword() + " / Input password: " + encryptedPassword);
     		
     		if(user.getUserInfo().getPassword().equals(encryptedPassword)) {
-    			System.out.println(" Login success ");
+    			logger.info(" Login success ");
     			
     			status = Status.OK;
     			
@@ -78,6 +82,14 @@ public class LoginHandler extends GeneralHandler {
 						.withExpiresAt(Util.getDateFromSecond(Constants.ACCESS_TOKEN_EXP_TIME))
 						.withClaim(Constants.CLAIM_USER_ID, loginInDO.getId())
     					.withClaim(Constants.CLAIM_TOKEN_ID, tokenId);
+    			
+    			// TODO
+    			if ( loginInDO.getId().equals( Constants.MASTER_USER_ID ) ) {
+    				tokenBuilder.withClaim( Constants.CLAIM_ROLE, Constants.ROLE_ADMIN );
+    			} else {
+    				tokenBuilder.withClaim( Constants.CLAIM_ROLE, Constants.ROLE_USER );
+    			}
+    			
     			String accessToken = tokenBuilder.sign(Algorithm.HMAC256(Constants.ACCESS_TOKEN_SECRET_KEY));
     			
     			tokenBuilder = JWT.create().withIssuer(Constants.ISSUER)
@@ -89,15 +101,15 @@ public class LoginHandler extends GeneralHandler {
             	
             	// Get Redirect URI if Exists
             	if ( clientIdRequestParameter != null && appNameRequestParameter != null ) {
-        			System.out.println(" Login from Client~! Return Redirect URI together ");
+        			logger.info(" Login from Client~! Return Redirect URI together ");
             		Client clientInfo  = new Client();
             		clientInfo.setAppName(appNameRequestParameter);
             		clientInfo.setClientId(clientIdRequestParameter); 		
             		Client dbClientInfo = K8sApiCaller.getClient(clientInfo);
             		
-        			System.out.println("  App Name : " + dbClientInfo.getAppName());
-        			System.out.println("  Origin URI : " + dbClientInfo.getOriginUri());
-        			System.out.println("  Redirect URI : " + dbClientInfo.getRedirectUri());
+        			logger.info("  App Name : " + dbClientInfo.getAppName());
+        			logger.info("  Origin URI : " + dbClientInfo.getOriginUri());
+        			logger.info("  Redirect URI : " + dbClientInfo.getRedirectUri());
             		
         			// Validate
             		if( !clientInfo.getClientId().equalsIgnoreCase( dbClientInfo.getClientId()) ) throw new Exception( ErrorCode.CLIENT_ID_MISMATCH );
@@ -107,55 +119,55 @@ public class LoginHandler extends GeneralHandler {
             		sb.append( dbClientInfo.getRedirectUri() );
             		sb.append( "?at=" + accessToken );
             		sb.append( "&rt=" + refreshToken );
-        			System.out.println("Redirect URI : " + sb.toString());
+        			logger.info("Redirect URI : " + sb.toString());
         			outDO = sb.toString();
             	} else {
             		// Make outDO
         			Token loginOutDO = new Token();
         			loginOutDO.setAccessToken(accessToken);
         			loginOutDO.setRefreshToken(refreshToken);
-        			System.out.println("  Access token: " + accessToken);
-        			System.out.println("  Refresh token: " + refreshToken);
+        			logger.info("  Access token: " + accessToken);
+        			logger.info("  Refresh token: " + refreshToken);
         			
         			Gson gson = new GsonBuilder().setPrettyPrinting().create();
         			outDO = gson.toJson(loginOutDO).toString();
             	}		   			
     		} else {
-    			System.out.println("  Login fail. Wrong password.");
+    			logger.info("  Login fail. Wrong password.");
     			
     			status = Status.UNAUTHORIZED;
     			outDO = "Login failed. Wrong password.";
     		}
 		} catch (ApiException e) {
-			System.out.println( "Exception message: " + e.getMessage() );
+			logger.info( "Exception message: " + e.getMessage() );
 			
 			if (e.getResponseBody().contains("NotFound")) {
-				System.out.println( "  Login fail. User not exist." );
+				logger.info( "  Login fail. User not exist." );
 				status = Status.UNAUTHORIZED;
 				outDO = "Login failed. User not exist.";
 			} else {
-				System.out.println( "Response body: " + e.getResponseBody() );
+				logger.info( "Response body: " + e.getResponseBody() );
 				e.printStackTrace();
 				
 				status = Status.UNAUTHORIZED;
 				outDO = "Login failed. Exception occurs.";
 			}
 		} catch (Exception e) {
-			System.out.println( "Exception message: " + e.getMessage() );
+			logger.info( "Exception message: " + e.getMessage() );
 			e.printStackTrace();
 			
 			status = Status.UNAUTHORIZED;
 			outDO = "Login failed. Exception occurs.";
 		}
 		
-		System.out.println();
+//		logger.info();
 		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO));
     }
 	
 	@Override
     public Response other(
       String method, UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
-		System.out.println("***** OPTIONS /login");
+		logger.info("***** OPTIONS /login");
 		
 		return Util.setCors(NanoHTTPD.newFixedLengthResponse(""));
     }

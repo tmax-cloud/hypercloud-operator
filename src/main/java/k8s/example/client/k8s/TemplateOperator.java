@@ -8,6 +8,7 @@ import java.util.concurrent.Executors;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.slf4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,11 +23,13 @@ import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.util.Watch;
 import k8s.example.client.Constants;
+import k8s.example.client.Main;
 import k8s.example.client.k8s.apis.CustomResourceApi;
 
 public class TemplateOperator extends Thread {
 	private final Watch<Object> watchInstance;
 	private static int latestResourceVersion = 0;
+    private Logger logger = Main.logger;
 	
 	ApiClient client = null;
 	CustomResourceApi tpApi = null;
@@ -52,21 +55,21 @@ public class TemplateOperator extends Thread {
 			watchInstance.forEach(response -> {
 				try {
 					if(Thread.interrupted()) {
-						System.out.println("Interrupted!");
+						logger.info("Interrupted!");
 						watchInstance.close();
 					}
 				} catch(Exception e) {
-					System.out.println(e.getMessage());
+					logger.info(e.getMessage());
 				}
 				
 				try {
 					JsonNode template = numberTypeConverter(objectToJsonNode(response.object));
 					String templateName = template.get("metadata").get("name").asText();
-					System.out.println("[Template Operator] Event Type : " + response.type.toString()); //ADDED, MODIFIED, DELETED
-					System.out.println("[Template Operator] Template Name : " + templateName);
+					logger.info("[Template Operator] Event Type : " + response.type.toString()); //ADDED, MODIFIED, DELETED
+					logger.info("[Template Operator] Template Name : " + templateName);
 					
 	        		latestResourceVersion = template.get("metadata").get("resourceVersion").asInt();
-	        		System.out.println("[Template Operator] Custom LatestResourceVersion : " + latestResourceVersion);
+	        		logger.info("[Template Operator] Custom LatestResourceVersion : " + latestResourceVersion);
 	        		
 	        		if(response.type.toString().equals("ADDED")) {
 	        			JsonNode templateObjs = numberTypeConverter(objectToJsonNode(template).get("objects"));
@@ -83,7 +86,7 @@ public class TemplateOperator extends Thread {
 		        			}
 	        			}
 	        			
-    					System.out.println("[Template Operator] Object to be patched to objectKinds: " + kindArr.toString());
+    					logger.info("[Template Operator] Object to be patched to objectKinds: " + kindArr.toString());
     					
     					JSONObject patch = new JSONObject();
     					JSONArray patchArray = new JSONArray();
@@ -100,18 +103,18 @@ public class TemplateOperator extends Thread {
     								Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE, 
     								templateName, 
     								patchArray);
-    						System.out.println(result.toString());
+    						logger.info(result.toString());
     					} catch (ApiException e) {
     						throw new Exception(e.getResponseBody());
     					}
     					
 	        		}
 				} catch(Exception e) {
-					System.out.println(e.getMessage());
+					logger.info(e.getMessage());
 				}
         	});
 		} catch (Exception e) {
-			System.out.println("[Template Operator] Template Operator Exception: " + e.getMessage());
+			logger.info("[Template Operator] Template Operator Exception: " + e.getMessage());
 		}
 	}
 	

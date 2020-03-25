@@ -381,7 +381,7 @@ spec:
       properties:
         spec:
           type: object
-          required: [image, loginId, loginPassword, storageSize]
+          required: [image, loginId, loginPassword, service, persistentVolumeClaim]
           description: registry information
           properties:
             image:
@@ -392,19 +392,61 @@ spec:
                type: string
             loginPassword:
                type: string
-            storageSize:
-              type: string
+            service:
+              type: object
+              required: [type]
+              properties:
+                port:
+                  type: integer
+                  description: "external port (default: 443)"
+                nodeIP:
+                  type: string
+                  description: "if service type is NodePort, set NodeIP to assign to the registry"
+                nodePort:
+                  type: integer
+                  description: "if service type is NodePort, you can set 30000~32767"
+                type:
+                  type: string
+                  enum: [ClusterIP, NodePort, LoadBalancer]
+            persistentVolumeClaim:
+              type: object
+              required: [storageSize, storageClassName]
+              properties:
+                accessModes:
+                  type: array
+                  items:
+                    type: string
+                    enum: [ReadWriteOnce, ReadWriteMany]
+                storageSize:
+                  type: string
+                  description: "enter the desired storage size (ex: 10Gi)"
+                storageClassName:
+                  type: string
+                  description: "enter storage class name available (ex: csi-cephfs-sc)"
         status:
           type: object
-          required: [phase]
           properties:
-             message:
-               type: string
+             conditions:
+               type: array
+               items:
+                 type: object
+                 required: [type]
+                 properties:
+                   lastTrasnsitionTime:
+                     format: date-time
+                     type: string
+                   message:
+                     type: string
+                   reason:
+                     type: string
+                   status:
+                     type: string
+                   type:
+                     type: string
              phase:
                type: string
-               enum: [Creating, Running, Failed]
-             reason:
-               type: string
+  subresources:
+    status: {}
   additionalPrinterColumns:
   - name: Image
     type: string
@@ -413,7 +455,7 @@ spec:
   - name: Capacity
     type: string
     description: Registry PVC Size
-    JSONPath: .spec.storageSize
+    JSONPath: .spec.persistentVolumeClaim.storageSize
   - name: Status
     type: string
     description: Registry Status
@@ -421,6 +463,7 @@ spec:
   - name: Age
     type: date
     JSONPath: .metadata.creationTimestamp
+
 
 ---
 

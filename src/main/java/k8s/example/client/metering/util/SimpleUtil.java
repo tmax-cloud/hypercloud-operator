@@ -1,5 +1,6 @@
 package k8s.example.client.metering.util;
 
+import java.util.List;
 import java.util.Map;
 
 public class SimpleUtil {
@@ -89,17 +90,17 @@ public class SimpleUtil {
         }
     }
     
-    public static String getQueryParameter( Map< String, String[] > queryMap, String key ){
+    public static String getQueryParameter( Map< String, List<String> > queryMap, String key ){
 		if( key == null )
 			return null;
 		
 		if( queryMap.containsKey( key ) )
-			return queryMap.get( key )[0];
+			return queryMap.get( key ).get(0);
 		
 		return null;
 	}
     
-    public static String[] getQueryParameterArray( Map< String, String[] > queryMap, String key ){
+    public static List<String> getQueryParameterArray( Map< String, List<String> > queryMap, String key ){
  		if( key == null )
  			return null;
  		

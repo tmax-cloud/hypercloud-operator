@@ -20,6 +20,24 @@ components:
         default: "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJUbWF4LVByb0F1dGgtV2ViSG9vayIsImlkIjoid3ltaW4tdG1heC5jby5rciIsImV4cCI6MTU4MzEyMTQ5M30.hjvrlaLDFuSjchJKarGKbuWOuafhsuCQgBDo-pqsZvg"
       required: true
       description: "Master Token"
+    offsetParam:
+      in: "query"
+      name: "offset"
+      required: false
+      schema:
+        type: "string"
+        minimum: 0
+        default: 0
+      description: "The number of items to skip before starting to collect the result set"
+    limitParam:
+      in: "query"
+      name: "limit"
+      required: false
+      schema:
+        type: "string"
+        minimum: 1
+        default: 20
+      description: "The number of items to return"
   schemas:
     UserLoginDO:
       type: object
@@ -346,4 +364,75 @@ paths:
       responses:
         200:
           description: Service OK
+  /metering:
+    get:
+      tags:
+      - "Metering"
+      summary: "Metering Data Get Service"
+      parameters:
+      - $ref: "#/components/parameters/tokenParam"
+      - $ref: "#/components/parameters/offsetParam"
+      - $ref: "#/components/parameters/limitParam"
+      - in: "query"
+        name: "namespace"
+        schema:
+          type: "string"
+        required: false
+        description: "Search by namespace"
+      - in: "query"
+        name: "timeUnit"
+        schema:
+          type: "string"
+          enum: [hour,day,month,year]
+        required: false
+        description: "hour/day/month/year"
+      - in: "query"
+        name: "startTime"
+        description: "Time Range Search"
+        schema:
+          type: "number"
+        required: false
+      - in: "query"
+        name: "endTime"
+        description: "Time Range Search"
+        schema:
+          type: "number"
+        required: false
+      - in: "query"
+        name: "sort"
+        description: "For Sorting"
+        schema:
+          type: "string"
+          enum: [namespace,cpu,memory,storage,private_ip,public_ip,metering_time,-namespace,-cpu,-memory,-storage,-private_ip,-public_ip,-metering_time]
+        required: false
+      responses:
+        200:
+          description: Service OK
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  [
+                    {
+                      "id": "6B280E02",
+                      "namespace": "metallb-system",
+                      "cpu": 0.6,
+                      "memory": 629145600,
+                      "storage": 0,
+                      "publicIp": 0,
+                      "privateIp": 0,
+                      "meteringTime": 1585098000000
+                    },
+                    {
+                      "id": "6B28E700",
+                      "namespace": "hypercloud-system",
+                      "cpu": 3.3,
+                      "memory": 10737418240,
+                      "storage": 161061273600,
+                      "publicIp": 0,
+                      "privateIp": 0,
+                      "meteringTime": 1585098000000
+                    }
+                  ]
 # EOF

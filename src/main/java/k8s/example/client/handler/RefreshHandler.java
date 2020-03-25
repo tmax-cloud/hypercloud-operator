@@ -3,6 +3,8 @@ package k8s.example.client.handler;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTCreator.Builder;
 import com.auth0.jwt.JWTVerifier;
@@ -20,16 +22,18 @@ import fi.iki.elonen.NanoHTTPD.Response.Status;
 import fi.iki.elonen.router.RouterNanoHTTPD.GeneralHandler;
 import fi.iki.elonen.router.RouterNanoHTTPD.UriResource;
 import k8s.example.client.Constants;
+import k8s.example.client.Main;
 import k8s.example.client.DataObject.Token;
 import k8s.example.client.DataObject.TokenCR;
 import k8s.example.client.Util;
 import k8s.example.client.k8s.K8sApiCaller;
 
 public class RefreshHandler extends GeneralHandler {
+    private Logger logger = Main.logger;
 	@Override
     public Response post(
       UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
-		System.out.println("***** POST /refresh");
+		logger.info("***** POST /refresh");
 		
 		Map<String, String> body = new HashMap<String, String>();
         try {
@@ -45,15 +49,15 @@ public class RefreshHandler extends GeneralHandler {
 		try {
 			// Read inDO
 			refreshInDO = new ObjectMapper().readValue(body.get( "postData" ), Token.class);
-			System.out.println( "  Access token: " + refreshInDO.getAccessToken() );
-    		System.out.println( "  Refresh token: " + refreshInDO.getRefreshToken() );
+			logger.info( "  Access token: " + refreshInDO.getAccessToken() );
+    		logger.info( "  Refresh token: " + refreshInDO.getRefreshToken() );
     		
     		// Get token name
     		DecodedJWT jwt = JWT.decode(refreshInDO.getAccessToken());
     		String userId = jwt.getClaim(Constants.CLAIM_USER_ID).asString();
     		String tokenId = jwt.getClaim(Constants.CLAIM_TOKEN_ID).asString();
-    		System.out.println( "  User ID: " + userId );
-    		System.out.println( "  Token ID: " + tokenId );
+    		logger.info( "  User ID: " + userId );
+    		logger.info( "  Token ID: " + tokenId );
     		String tokenName = userId.replace("@", "-") + "-" + tokenId;
     		
 			// Verify refresh token	
@@ -61,15 +65,15 @@ public class RefreshHandler extends GeneralHandler {
 			try {
 				jwt = verifier.verify(refreshInDO.getRefreshToken());
 			} catch (Exception e) {
-				System.out.println( "Exception message: " + e.getMessage() );
+				logger.info( "Exception message: " + e.getMessage() );
 				K8sApiCaller.deleteToken(tokenName);
 			}
 
 			String issuer = jwt.getIssuer();
-			System.out.println( "  Issuer: " + issuer );
+			logger.info( "  Issuer: " + issuer );
 			
 			if(verifyRefreshToken(refreshInDO.getAccessToken(), refreshInDO.getRefreshToken(), tokenName, issuer)) {
-				System.out.println( "  Refresh success" );	
+				logger.info( "  Refresh success" );	
 				status = Status.OK;
 				
 				// Make a new access token
@@ -77,8 +81,16 @@ public class RefreshHandler extends GeneralHandler {
 						.withExpiresAt(Util.getDateFromSecond(Constants.ACCESS_TOKEN_EXP_TIME))
 						.withClaim(Constants.CLAIM_USER_ID, userId)
 						.withClaim(Constants.CLAIM_TOKEN_ID, tokenId);
+				
+				// TODO
+    			if ( userId.equals( Constants.MASTER_USER_ID ) ) {
+    				tokenBuilder.withClaim( Constants.CLAIM_ROLE, Constants.ROLE_ADMIN );
+    			} else {
+    				tokenBuilder.withClaim( Constants.CLAIM_ROLE, Constants.ROLE_USER );
+    			}
+    			
     			String newAccessToken = tokenBuilder.sign(Algorithm.HMAC256(Constants.ACCESS_TOKEN_SECRET_KEY));
-    			System.out.println( "  New access token: " + newAccessToken );
+    			logger.info( "  New access token: " + newAccessToken );
     			
     			// Make outDO
     			refreshOutDO = new Token();
@@ -89,18 +101,18 @@ public class RefreshHandler extends GeneralHandler {
     			// Update access token
     			K8sApiCaller.updateAccessToken(tokenName, Util.Crypto.encryptSHA256(newAccessToken));
 			} else {
-				System.out.println( "  Refresh fail" );
+				logger.info( "  Refresh fail" );
 				status = Status.UNAUTHORIZED;
 			}
 		} catch (Exception e) {
-			System.out.println( "  Refresh fail" );
-			System.out.println( "Exception message: " + e.getMessage() );
+			logger.info( "  Refresh fail" );
+			logger.info( "Exception message: " + e.getMessage() );
 			e.printStackTrace();
 			
 			status = Status.UNAUTHORIZED;
 		}
 		
-		System.out.println();
+//		logger.info();
 		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO));
 	}
 	
@@ -123,7 +135,7 @@ public class RefreshHandler extends GeneralHandler {
 	@Override
     public Response other(
       String method, UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
-		System.out.println("***** OPTIONS /refresh");
+		logger.info("***** OPTIONS /refresh");
 		
 		return Util.setCors(NanoHTTPD.newFixedLengthResponse(""));
     }

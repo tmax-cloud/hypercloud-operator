@@ -7,6 +7,8 @@ import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -19,16 +21,18 @@ import fi.iki.elonen.NanoHTTPD.Response.IStatus;
 import fi.iki.elonen.NanoHTTPD.Response.Status;
 import fi.iki.elonen.router.RouterNanoHTTPD.GeneralHandler;
 import fi.iki.elonen.router.RouterNanoHTTPD.UriResource;
+import k8s.example.client.Main;
 import k8s.example.client.Util;
 import k8s.example.client.k8s.K8sApiCaller;
 import k8s.example.client.models.BrokerResponse;
 import k8s.example.client.models.ProvisionInDO;
 
 public class ServiceInstanceHandler extends GeneralHandler {
+    private Logger logger = Main.logger;
 	@Override
     public Response put(
       UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
-		System.out.println("***** PUT /v2/service_instances/:instance_id");
+		logger.info("***** PUT /v2/service_instances/:instance_id");
 		
 		Object response = null;
 		Map<String, String> body = new HashMap<String, String>();
@@ -40,7 +44,7 @@ public class ServiceInstanceHandler extends GeneralHandler {
 		}
 		
 		String instanceId = urlParams.get("instance_id");
-		System.out.println("Instance ID: " + instanceId);
+		logger.info("Instance ID: " + instanceId);
 		
         ProvisionInDO inDO = null;
         String outDO = null;
@@ -48,39 +52,39 @@ public class ServiceInstanceHandler extends GeneralHandler {
 		
 		try {
 			String bodyStr = readFile(body.get("content"), Integer.valueOf(session.getHeaders().get("content-length")));
-			System.out.println("Body: " + bodyStr);
+			logger.info("Body: " + bodyStr);
 			
 			inDO = new ObjectMapper().readValue(bodyStr, ProvisionInDO.class);
-			System.out.println("Service ID: " + inDO.getService_id());
-			System.out.println("Service Plan ID: " + inDO.getPlan_id());
-			System.out.println("Context: " + inDO.getContext().toString());
+			logger.info("Service ID: " + inDO.getService_id());
+			logger.info("Service Plan ID: " + inDO.getPlan_id());
+			logger.info("Context: " + inDO.getContext().toString());
 			
 			response = K8sApiCaller.createTemplateInstance(instanceId, inDO);
 			status = Status.OK;
 		} catch (Exception e) {
-			System.out.println( "  Failed to provision instance of service class \"" + inDO.getService_id() + "\"");
-			System.out.println( "Exception message: " + e.getMessage() );
+			logger.info( "  Failed to provision instance of service class \"" + inDO.getService_id() + "\"");
+			logger.info( "Exception message: " + e.getMessage() );
 			e.printStackTrace();
 			status = Status.BAD_REQUEST;
 		}
 		
 		Gson gson = new GsonBuilder().setPrettyPrinting().create();
 		outDO = gson.toJson(response).toString();
-		System.out.println("Response : " + outDO);
+		logger.info("Response : " + outDO);
 		
-		System.out.println();
+//		logger.info();
 		return NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO);
     }
 	
 	@Override
     public Response delete(
       UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
-		System.out.println("***** DELETE /v2/service_instances/:instance_id");
+		logger.info("***** DELETE /v2/service_instances/:instance_id");
 		
 		String serviceClassName = session.getParameters().get("service_id").get(0);
 		String instanceId = urlParams.get("instance_id");
-		System.out.println("Service Class Name: " + serviceClassName);
-		System.out.println("Instance ID: " + instanceId);
+		logger.info("Service Class Name: " + serviceClassName);
+		logger.info("Instance ID: " + instanceId);
 		
 		Object response = null;
 		String outDO = null;
@@ -90,13 +94,13 @@ public class ServiceInstanceHandler extends GeneralHandler {
 			response = K8sApiCaller.deleteTemplateInstance(instanceId);
 			status = Status.OK;
 		} catch (Exception e) {
-			System.out.println( "  Failed to delete instance of service class \"" + serviceClassName + "\"");
-			System.out.println( "Exception message: " + e.getMessage() );
+			logger.info( "  Failed to delete instance of service class \"" + serviceClassName + "\"");
+			logger.info( "Exception message: " + e.getMessage() );
 			e.printStackTrace();
 			status = Status.BAD_REQUEST;
 		}
 		
-		System.out.println();
+//		logger.info();
 		return NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO);
     }
 	

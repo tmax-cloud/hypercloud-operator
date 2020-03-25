@@ -2,6 +2,8 @@ package k8s.example.client;
 
 import java.io.IOException;
 
+import org.slf4j.Logger;
+
 import fi.iki.elonen.NanoHTTPD;
 import fi.iki.elonen.router.RouterNanoHTTPD;
 import k8s.example.client.handler.AuthClientHandler;
@@ -13,13 +15,16 @@ import k8s.example.client.handler.LogoutHandler;
 import k8s.example.client.handler.RefreshHandler;
 import k8s.example.client.handler.ServiceBindingHandler;
 import k8s.example.client.handler.ServiceInstanceHandler;
+import k8s.example.client.metering.handler.MeteringHandler;
 
 public class WebHookServer extends RouterNanoHTTPD {
+    private Logger logger = Main.logger;
+    
     public WebHookServer() throws IOException {
         super(28677);
         addMappings();
         start(NanoHTTPD.SOCKET_READ_TIMEOUT, false);
-        System.out.println("Nano HTTPD is running!!");
+        logger.info("Nano HTTPD is running!!");
     }
   
     @Override
@@ -33,5 +38,6 @@ public class WebHookServer extends RouterNanoHTTPD {
     	addRoute("/v2/service_instances/:instance_id", ServiceInstanceHandler.class);
     	addRoute("/authClient", AuthClientHandler.class);
     	addRoute("/loginPage", LoginPageHandler.class);
+    	addRoute("/metering", MeteringHandler.class);
     }
 }

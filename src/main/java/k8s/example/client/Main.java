@@ -8,23 +8,26 @@ import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.TriggerBuilder;
 import org.quartz.impl.StdSchedulerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import k8s.example.client.k8s.K8sApiCaller;
 import k8s.example.client.metering.MeteringJob;
 
 public class Main {
+	public static Logger logger = LoggerFactory.getLogger("K8SOperator");
 	public static void main(String[] args) {
 		try {
 			// Start webhook server
-			System.out.println("[Main] Start webhook server");
+			logger.info("[Main] Start webhook server");
 			new WebHookServer();
 			
 			// Start Metering
-			System.out.println("[Main] Start Metring");
+			logger.info("[Main] Start Metring");
 			startMeteringTimer();
 			
 			// Start Controllers
-			System.out.println("[Main] Init & start K8S watchers");
+			logger.info("[Main] Init & start K8S watchers");
 			K8sApiCaller.initK8SClient();
 			K8sApiCaller.startWatcher(); // Infinite loop
 		} catch (Exception e) {
