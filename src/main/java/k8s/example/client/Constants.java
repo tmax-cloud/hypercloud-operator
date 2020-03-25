@@ -46,9 +46,9 @@ public class Constants {
 
 	// OpenSSL Cert File Name
 	public static final String GEN_CERT_SCRIPT_FILE = "genCert.sh";
-	public static final String CERT_KEY_FILE = "tmax.key";
-	public static final String CERT_CRT_FILE = "tmax.crt";
-	public static final String CERT_CERT_FILE = "tmax.cert";
+	public static final String CERT_KEY_FILE = "localhub.key";
+	public static final String CERT_CRT_FILE = "localhub.crt";
+	public static final String CERT_CERT_FILE = "localhub.cert";
 	public static final String DOCKER_DIR = "/etc/docker";
 	public static final String DOCKER_CERT_DIR = "/etc/docker/certs.d";
 	
