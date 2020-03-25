@@ -81,7 +81,6 @@ public class MeteringJob implements Job{
 			logger.info( key + "/memory : " + meteringData.get(key).getMemory() );
 			logger.info( key + "/storage : " + meteringData.get(key).getStorage() );
         }
-		logger.info( "=========================================" );
 		
 		insertMeteringData();
 		
@@ -182,9 +181,11 @@ public class MeteringJob implements Job{
 	}
 
 	private void deleteMeteringData() {
+		logger.info( "============ Retention Time =============" );
 		logger.info( "Retention Time - Hour  : " + System.getenv( "RETENTION_HOUR" ) );
 		logger.info( "Retention Time - Day   : " + System.getenv( "RETENTION_DAY" ) );
 		logger.info( "Retention Time - Month : " + System.getenv( "RETENTION_MONTH" ) );
+		logger.info( "=========================================" );
 	}
 	
 	
