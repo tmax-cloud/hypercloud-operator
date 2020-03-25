@@ -216,7 +216,7 @@ public class K8sApiCaller {
 
 		logger.info("Registry Latest resource version: " + registryLatestResourceVersion);
 
-		// registry pod
+/*		// registry pod
 		int registryPodLatestResourceVersion = 0;
 
 		try {
@@ -232,7 +232,7 @@ public class K8sApiCaller {
 		}
 
 		logger.info("Registry Pod Latest resource version: " + registryPodLatestResourceVersion);
-
+*/
 		// Operator
 		int templateLatestResourceVersion = 0;
 		try {
@@ -315,11 +315,11 @@ public class K8sApiCaller {
 		RegistryWatcher registryWatcher = new RegistryWatcher(k8sClient, customObjectApi, String.valueOf(registryLatestResourceVersion));
 		registryWatcher.start();
 
-		// Start registry pod watch
+/*		// Start registry pod watch
 		logger.info("Start registry pod watcher");
 		RegistryPodWatcher registryPodWatcher = new RegistryPodWatcher(k8sClient, api, String.valueOf(registryPodLatestResourceVersion));
 		registryPodWatcher.start();
-
+*/
 		// Start Operator
 		logger.info("Start Template Operator");
 		TemplateOperator templateOperator = new TemplateOperator(k8sClient, templateApi, templateLatestResourceVersion);
@@ -361,6 +361,7 @@ public class K8sApiCaller {
 				registryWatcher.start();
 			}
 
+			/*
 			if(!registryPodWatcher.isAlive()) {
 				String registryPodLatestResourceVersionStr = RegistryPodWatcher.getLatestResourceVersion();
 				logger.info("Registry pod watcher is not alive. Restart registry pod watcher! (Latest resource version: " + registryPodLatestResourceVersionStr + ")");
@@ -368,6 +369,7 @@ public class K8sApiCaller {
 				registryPodWatcher = new RegistryPodWatcher(k8sClient, api, registryPodLatestResourceVersionStr);
 				registryPodWatcher.start();
 			}
+			*/
 			
 			if(!templateOperator.isAlive()) {
 				templateLatestResourceVersion = TemplateOperator.getLatestResourceVersion();
@@ -928,7 +930,8 @@ public class K8sApiCaller {
 			List<String> accessModes = new ArrayList<>();
 			
 			RegistryPVC registryPVC = registry.getSpec().getPersistentVolumeClaim();
-			String storageClassName = StringUtil.isEmpty(registryPVC.getStorageClassName()) ? RegistryPVC.STORAGE_CLASS_DEFAULT : registryPVC.getStorageClassName();
+//			String storageClassName = StringUtil.isEmpty(registryPVC.getStorageClassName()) ? RegistryPVC.STORAGE_CLASS_DEFAULT : registryPVC.getStorageClassName();
+			String storageClassName = registryPVC.getStorageClassName();
 			
 			
 			pvcMeta.setName(Constants.K8S_PREFIX + registryId);
