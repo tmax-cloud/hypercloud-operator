@@ -82,6 +82,14 @@ public class LoginHandler extends GeneralHandler {
 						.withExpiresAt(Util.getDateFromSecond(Constants.ACCESS_TOKEN_EXP_TIME))
 						.withClaim(Constants.CLAIM_USER_ID, loginInDO.getId())
     					.withClaim(Constants.CLAIM_TOKEN_ID, tokenId);
+    			
+    			// TODO
+    			if ( loginInDO.getId().equals( Constants.MASTER_USER_ID ) ) {
+    				tokenBuilder.withClaim( Constants.CLAIM_ROLE, Constants.ROLE_ADMIN );
+    			} else {
+    				tokenBuilder.withClaim( Constants.CLAIM_ROLE, Constants.ROLE_USER );
+    			}
+    			
     			String accessToken = tokenBuilder.sign(Algorithm.HMAC256(Constants.ACCESS_TOKEN_SECRET_KEY));
     			
     			tokenBuilder = JWT.create().withIssuer(Constants.ISSUER)

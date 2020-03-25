@@ -81,6 +81,14 @@ public class RefreshHandler extends GeneralHandler {
 						.withExpiresAt(Util.getDateFromSecond(Constants.ACCESS_TOKEN_EXP_TIME))
 						.withClaim(Constants.CLAIM_USER_ID, userId)
 						.withClaim(Constants.CLAIM_TOKEN_ID, tokenId);
+				
+				// TODO
+    			if ( userId.equals( Constants.MASTER_USER_ID ) ) {
+    				tokenBuilder.withClaim( Constants.CLAIM_ROLE, Constants.ROLE_ADMIN );
+    			} else {
+    				tokenBuilder.withClaim( Constants.CLAIM_ROLE, Constants.ROLE_USER );
+    			}
+    			
     			String newAccessToken = tokenBuilder.sign(Algorithm.HMAC256(Constants.ACCESS_TOKEN_SECRET_KEY));
     			logger.info( "  New access token: " + newAccessToken );
     			

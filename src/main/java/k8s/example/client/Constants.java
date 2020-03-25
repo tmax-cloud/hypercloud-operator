@@ -30,7 +30,11 @@ public class Constants {
 	
 	public static final String CLAIM_USER_ID = "id";
 	public static final String CLAIM_TOKEN_ID = "tokenId";
+	public static final String CLAIM_ROLE = "role";
 	
+	public static final String ROLE_ADMIN = "cluster-admin";
+	public static final String ROLE_OWNER = "namespace-owner";
+	public static final String ROLE_USER = "namespace-user";
 
 	public static final String K8S_PREFIX = "hpcd-";
 	public static final String K8S_REGISTRY_PREFIX = "registry-";
