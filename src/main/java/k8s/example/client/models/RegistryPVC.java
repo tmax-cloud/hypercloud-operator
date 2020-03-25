@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RegistryPVC {
-	public static final String STORAGE_CLASS_DEFAULT = "csi-cephfs-sc";
+//	public static final String STORAGE_CLASS_DEFAULT = "csi-cephfs-sc";
 	public static final String ACCESS_MODE_DEFAULT = "ReadWriteMany";
 	private List<String> accessModes = null;
 	private String storageSize = null;
