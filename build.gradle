@@ -48,11 +48,12 @@ task doBuild {
 	dependsOn "makeJar"
 	dependsOn "copyDependencies"
 	dependsOn "copyStartShell"
+	dependsOn "copyK8sOperatorHome"
 }
 
 task makeJar(type: Jar) {
     archiveName "hypercloud4-operator.jar"
-    destinationDir = file("build/hypercloud4-operator")
+    destinationDir = file("build/hypercloud4-operator/lib")
 
     from(sourceSets.main.output.classesDirs) {
         include("**")
@@ -64,11 +65,16 @@ task makeJar(type: Jar) {
 }
 
 task copyDependencies(type: Copy) {
-	into "build/hypercloud4-operator"
+	into "build/hypercloud4-operator/lib"
 	from configurations.compile
 }
 
 task copyStartShell(type: Copy) {
 	into "build"
 	from "start.sh"
+}
+
+task copyK8sOperatorHome(type: Copy) {
+	from '_operator'
+	into 'build/hypercloud4-operator'
 }

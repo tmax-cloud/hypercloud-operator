@@ -1,5 +1,6 @@
 #!/bin/sh
 
-nohup /usr/bin/java -jar /home/tmax/hypercloud4-operator/hypercloud4-operator.jar >> /home/tmax/hypercloud4-operator/stdout.log &
+export K8S_HOME=/home/tmax/hypercloud4-operator
+nohup /usr/bin/java -jar -Dlogback.configurationFile=${K8S_HOME}/logback.xml ${K8S_HOME}/lib/hypercloud4-operator.jar >> ${K8S_HOME}/stdout.log &
 
 tail -f /dev/null

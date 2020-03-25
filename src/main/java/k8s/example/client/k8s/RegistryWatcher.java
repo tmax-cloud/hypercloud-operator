@@ -3,6 +3,8 @@ package k8s.example.client.k8s;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+import org.slf4j.Logger;
+
 import com.google.gson.reflect.TypeToken;
 
 import io.kubernetes.client.openapi.ApiClient;
@@ -10,6 +12,7 @@ import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CustomObjectsApi;
 import io.kubernetes.client.util.Watch;
 import k8s.example.client.Constants;
+import k8s.example.client.Main;
 import k8s.example.client.models.Registry;
 import k8s.example.client.models.RegistryCondition;
 import k8s.example.client.models.RegistryStatus;
@@ -18,7 +21,8 @@ public class RegistryWatcher extends Thread {
 	private final Watch<Registry> watchRegistry;
 	private static String latestResourceVersion = "0";
 	private CustomObjectsApi api = null;
-
+    private Logger logger = Main.logger;
+	
 	RegistryWatcher(ApiClient client, CustomObjectsApi api, String resourceVersion) throws Exception {
 		watchRegistry = Watch.createWatch(client,
 				api.listClusterCustomObjectCall("tmax.io", "v1", "registries", null, null, null, null, null, resourceVersion, null, Boolean.TRUE, null),
@@ -66,6 +70,7 @@ public class RegistryWatcher extends Thread {
 										if (registryCondition.getStatus().equals(RegistryStatus.REGISTRY_PHASE_CREATING)) {
 											K8sApiCaller.createRegistry(registry);
 											System.out.println("Registry is running");
+											logger.info("Registry is running");
 										}
 									}
 								}
