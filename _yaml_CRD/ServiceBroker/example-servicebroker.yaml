@@ -1,0 +1,7 @@
+apiVersion: servicecatalog.k8s.io/v1beta1
+kind: ServiceBroker
+metadata:
+  name: hyperbroker4
+  namespace: hypercloud-system
+spec:
+  url: http://192.168.6.159:28677
