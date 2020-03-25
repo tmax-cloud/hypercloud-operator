@@ -13,8 +13,11 @@
 		- Registry가 사용할 SVC, PVC, RS 생성중인 상태 
 	- Status: Running
 		- Registry의 Replicaset 내 Pod가 Running인 상태
-	- Status: Failed
+	- Status: NotReady
+		- Registry의 Replicaset 내 Pod가 Running인 상태이지만 컨테이너가 Ready가 되지 않은 상태
+	- Status: Error
 		- Registry의 리소스(svc, pvc, rs) 생성에 실패한 상태
+		- Registry Pod가 종료되었거나 에러인 경우
 	
 # 필수 요구 사항
 	- secret-watcher가 daemonset으로 동작하고 있어야 함

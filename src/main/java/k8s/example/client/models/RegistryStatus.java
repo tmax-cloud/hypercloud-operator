@@ -6,7 +6,8 @@ import java.util.List;
 public class RegistryStatus {
 	public static final String REGISTRY_PHASE_CREATING = "Creating";
 	public static final String REGISTRY_PHASE_RUNNING = "Running";
-	public static final String REGISTRY_PHASE_FAILED = "Failed";
+	public static final String REGISTRY_PHASE_NOT_READY = "NotReady";
+	public static final String REGISTRY_PHASE_ERROR = "Error";
 
 	private List<RegistryCondition> conditions = null;
 	private String phase = null;
