@@ -2034,10 +2034,10 @@ public class K8sApiCaller {
 		
 		try {
 			Object response = customObjectApi.getNamespacedCustomObject(
-					Constants.CUSTOM_OBJECT_GROUP, 
-					Constants.CUSTOM_OBJECT_VERSION, 
-					Constants.TEMPLATE_NAMESPACE, 
-					Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, 
+					Constants.CUSTOM_OBJECT_GROUP,
+					Constants.CUSTOM_OBJECT_VERSION,
+					Constants.TEMPLATE_NAMESPACE,
+					Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE,
 					instanceId);
 			
 			TemplateInstance templateInstance = mapper.readValue(gson.toJson(response), TemplateInstance.class);
