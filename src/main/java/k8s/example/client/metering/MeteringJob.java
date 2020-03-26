@@ -185,7 +185,9 @@ public class MeteringJob implements Job{
 		logger.info( "Retention Time - Hour  : " + System.getenv( "RETENTION_HOUR" ) );
 		logger.info( "Retention Time - Day   : " + System.getenv( "RETENTION_DAY" ) );
 		logger.info( "Retention Time - Month : " + System.getenv( "RETENTION_MONTH" ) );
-		logger.info( "=========================================" );		//TODO : ≈¬∞«æ∆ ¿œ«ÿ∂Û	}
+		logger.info( "=========================================" );	
+		//TODO :  ÏùºÌï¥Îùº ÌÉúÍ±¥ÏïÑ
+		}
 	
 	
 	private Connection getConnection() throws SQLException, ClassNotFoundException {
