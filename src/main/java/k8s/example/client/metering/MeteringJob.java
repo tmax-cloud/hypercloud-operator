@@ -185,6 +185,7 @@ public class MeteringJob implements Job{
 		logger.info( "Retention Time - Hour  : " + System.getenv( "RETENTION_HOUR" ) );
 		logger.info( "Retention Time - Day   : " + System.getenv( "RETENTION_DAY" ) );
 		logger.info( "Retention Time - Month : " + System.getenv( "RETENTION_MONTH" ) );
+		//TODO : 태건아 일해라
 	}
 	
 	
