@@ -70,7 +70,6 @@ public class RegistryWatcher extends Thread {
 										if (registryCondition.getStatus().equals(RegistryStatus.REGISTRY_PHASE_CREATING)) {
 											K8sApiCaller.createRegistry(registry);
 											logger.info("Registry is running");
-											logger.info("Registry is running");
 										}
 									}
 								}

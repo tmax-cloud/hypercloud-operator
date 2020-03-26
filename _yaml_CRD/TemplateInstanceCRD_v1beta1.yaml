@@ -148,8 +148,3 @@ spec:
                 type: array
   subresources:
     status: {}
-  
-
-            
-
-  

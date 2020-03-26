@@ -14,7 +14,6 @@ import io.kubernetes.client.util.Watch;
 import k8s.example.client.Constants;
 import k8s.example.client.Main;
 
-@Deprecated
 public class RegistryPodWatcher extends Thread {
 	private final Watch<V1Pod> watchRegistryPod;
 	private static String latestResourceVersion = "0";
@@ -52,7 +51,11 @@ public class RegistryPodWatcher extends Thread {
 					if( pod != null) {
 						latestResourceVersion = response.object.getMetadata().getResourceVersion();
 						String eventType = response.type.toString();
-						logger.info("[RegistryPodWatcher] Registry Pod " + eventType + "\n" + pod.toString());
+						logger.info("[RegistryPodWatcher] Registry Pod " + eventType + "\n"
+//						+ pod.toString()
+						);
+
+						K8sApiCaller.updateRegistryStatus(pod);
 						
 						switch(eventType) {
 						case Constants.EVENT_TYPE_ADDED : 
