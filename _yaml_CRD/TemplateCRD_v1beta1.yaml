@@ -73,7 +73,7 @@ spec:
               required:
                 type: boolean
               value:
-                type: string
+                x-kubernetes-int-or-string: true
             required:
             - name
             type: object
