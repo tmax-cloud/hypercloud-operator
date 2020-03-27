@@ -83,6 +83,12 @@ public class ServiceInstanceHandler extends GeneralHandler {
 		
 		String serviceClassName = session.getParameters().get("service_id").get(0);
 		String instanceId = urlParams.get("instance_id");
+		for ( String key : session.getParameters().keySet() ) {
+			logger.info("Delete Service input key : " + key);
+			for ( String value : session.getParameters().get(key) ) {
+				logger.info("Delete Service input value : " + value);
+			}
+		}
 		logger.info("Service Class Name: " + serviceClassName);
 		logger.info("Instance ID: " + instanceId);
 		

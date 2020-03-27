@@ -36,6 +36,8 @@ spec:
           type: string
         imageUrl:
           type: string
+        recommend:
+          type: boolean
         tags:
           type: array
           items:

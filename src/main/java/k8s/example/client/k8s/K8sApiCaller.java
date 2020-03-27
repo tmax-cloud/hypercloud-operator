@@ -2274,10 +2274,10 @@ public class K8sApiCaller {
 		try {
     		V1DeleteOptions body = new V1DeleteOptions();
     		
-        	response = customObjectApi.deleteClusterCustomObject(
+        	response = customObjectApi.deleteNamespacedCustomObject(
         			Constants.CUSTOM_OBJECT_GROUP,
 					Constants.CUSTOM_OBJECT_VERSION,
-					//Constants.TEMPLATE_NAMESPACE,
+					Constants.DEFAULT_NAMESPACE,
 					Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE,
 					instanceId, 
 					body, 0, null, null);
