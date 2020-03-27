@@ -115,10 +115,18 @@ public class InstanceOperator extends Thread {
 	        		
 	        		if(response.type.toString().equals("ADDED")) {
 	        			String templateName = instanceObj.get("spec").get("template").get("metadata").get("name").asText();
-	        			String templateNamespace = instanceObj.get("metadata").get("namespace").asText();
 	        			
 	        			logger.info("[Instance Operator] Template Name : " + templateName);
-	        			
+					
+						String templateNamespace = instanceObj.get("metadata").get("namespace").asText();
+	        			if ( instanceObj.get("metadata").get("ownerReferences") != null ) {
+	        				for(JsonNode owner : instanceObj.get("metadata").get("ownerReferences")) {
+	        					if (owner.get("kind") != null && owner.get("kind").asText().equals(Constants.SERVICE_INSTANCE_KIND)) {
+	        						templateNamespace = Constants.DEFAULT_NAMESPACE;
+	        					}
+							}
+	        			}
+	        			logger.info("[Instance Operator] Template Namespace : " + templateNamespace);
 	        			Object template = null;
 	        			try {
 	        				template = tpApi.getNamespacedCustomObject(
