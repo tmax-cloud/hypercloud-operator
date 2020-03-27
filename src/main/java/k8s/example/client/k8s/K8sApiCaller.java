@@ -238,10 +238,9 @@ public class K8sApiCaller {
 		// Operator
 		int templateLatestResourceVersion = 0;
 		try {
-			Object result = templateApi.listNamespacedCustomObject(
+			Object result = templateApi.listClusterCustomObject(
 					Constants.CUSTOM_OBJECT_GROUP, 
 					Constants.CUSTOM_OBJECT_VERSION,
-					Constants.TEMPLATE_NAMESPACE, 
 					Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE, 
 					null, null, null, null, null, null, null, Boolean.FALSE);
 			
@@ -270,10 +269,9 @@ public class K8sApiCaller {
 		
 		int instanceLatestResourceVersion = 0;
 		try {
-			Object result = templateApi.listNamespacedCustomObject(
+			Object result = templateApi.listClusterCustomObject(
 					Constants.CUSTOM_OBJECT_GROUP, 
 					Constants.CUSTOM_OBJECT_VERSION, 
-					Constants.TEMPLATE_NAMESPACE, 
 					Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, 
 					null, null, null, null, null, null, null, Boolean.FALSE);
 			
@@ -2072,11 +2070,13 @@ public class K8sApiCaller {
 		Object templates = customObjectApi.listNamespacedCustomObject(
 				Constants.CUSTOM_OBJECT_GROUP, 
 				Constants.CUSTOM_OBJECT_VERSION, 
-				Constants.TEMPLATE_NAMESPACE, 
+				Constants.DEFAULT_NAMESPACE,
 				Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE, 
 				null, null, null, null, null, null, null, false);
 		
 		JsonNode templateList = numberTypeConverter(objectToJsonNode(templates).get("items"));
+		logger.info("Catalog Debug 1");
+
 		if(templateList.isArray()) {
 			for(JsonNode template : templateList) {
 				ServiceOffering service = new ServiceOffering();
@@ -2085,12 +2085,43 @@ public class K8sApiCaller {
 				
 				service.setName(template.get("metadata").get("name").asText());
 				service.setId(template.get("metadata").get("name").asText());
-				service.setDescription(template.get("shortDescription").asText());
-				serviceMeta.setImageUrl(template.get("imageUrl").asText());
-				serviceMeta.setLongDescription(template.get("longDescription").asText());
-				serviceMeta.setProviderDisplayName(template.get("provider").asText());
-				service.setMetadata(serviceMeta);
 				
+				if ( template.get("shortDescription") == null ) {
+					service.setDescription(template.get("metadata").get("name").asText()); 
+				} else {
+					service.setDescription(template.get("shortDescription").asText());
+				}
+				if ( template.get("imageUrl") == null ) {
+					serviceMeta.setImageUrl("none"); 
+				} else {
+					serviceMeta.setImageUrl(template.get("imageUrl").asText());
+				}
+				if ( template.get("longDescription") == null ) {
+					serviceMeta.setLongDescription(template.get("metadata").get("name").asText()); 
+				} else {
+					serviceMeta.setLongDescription(template.get("longDescription").asText());
+				}
+				if ( template.get("provider") == null ) {
+					serviceMeta.setProviderDisplayName(template.get("metadata").get("name").asText()); 
+				} else {
+					serviceMeta.setProviderDisplayName(template.get("provider").asText());
+				}
+				
+				if ( template.get("recommend") != null ) {
+					serviceMeta.setRecommend( template.get("recommend").asBoolean() );
+				} else {
+					serviceMeta.setRecommend( false );
+				}
+				
+				List<String> tags = new ArrayList<String>();
+				for(JsonNode tag : template.get("tags")) {
+					tags.add(tag.asText());
+				}
+				service.setTags(tags);
+				
+				
+				service.setMetadata(serviceMeta);
+				logger.info("Catalog Debug 2");
 				JsonNode objectKinds = template.get("objectKinds");
 				if(objectKinds.isArray()) {
 					List<String> kinds = null;
@@ -2108,43 +2139,58 @@ public class K8sApiCaller {
 				
 				service.setBindings_retrievable(false);
 				service.setInstances_retrievable(false);
-				
-				JsonNode plans = template.get("plans");
-				if(plans.isArray()) {
-					for(JsonNode plan : plans) {
-						ServicePlan servicePlan = new ServicePlan();
-						PlanMetadata planMeta = new PlanMetadata();
-						List<String> bullets = new ArrayList<String>();
-						Cost planCost = new Cost();
-						Schemas planSchema = new Schemas();
-						ServiceInstanceSchema instanceSchema = new ServiceInstanceSchema();
-						InputParametersSchema create = new InputParametersSchema();
-						Map<String, String> parameters = null;
-						
-						servicePlan.setId(plan.get("name").asText());
-						servicePlan.setName(plan.get("name").asText());
-						servicePlan.setDescription(plan.get("description").asText());
-						servicePlan.setBindable(plan.get("bindable").asBoolean());
-						
-						for(JsonNode bullet : plan.get("metadata").get("bullets")) {
-							bullets.add(bullet.asText());
+				logger.info("Catalog Debug 3");
+				try {
+					JsonNode plans = template.get("plans");
+					if(plans.isArray()) {
+						for(JsonNode plan : plans) {
+							try {
+								ServicePlan servicePlan = new ServicePlan();
+								PlanMetadata planMeta = new PlanMetadata();
+								List<String> bullets = new ArrayList<String>();
+								Cost planCost = new Cost();
+								Schemas planSchema = new Schemas();
+								ServiceInstanceSchema instanceSchema = new ServiceInstanceSchema();
+								InputParametersSchema create = new InputParametersSchema();
+								Map<String, String> parameters = null;
+								
+								servicePlan.setId(plan.get("name").asText());
+								servicePlan.setName(plan.get("name").asText());
+								servicePlan.setDescription(plan.get("description").asText());
+								servicePlan.setBindable(plan.get("bindable").asBoolean());
+								logger.info("Catalog Debug 4");
+								
+								try {
+									for(JsonNode bullet : plan.get("metadata").get("bullets")) {
+										bullets.add(bullet.asText());
+									}
+									planMeta.setBullets(bullets);
+									
+									planCost.setAmount(plan.get("metadata").get("costs").get("amount").asText());
+									planCost.setUnit(plan.get("metadata").get("costs").get("unit").asText());
+									planMeta.setCosts(planCost);
+									servicePlan.setMetadata(planMeta);
+									
+									parameters = mapper.convertValue(plan.get("schemas").get("service_instance").get("create").get("parameters"), new TypeReference<Map<String, String>>(){});
+									create.setParameters(parameters);
+								} catch ( Exception e ) {
+									logger.info("This Plan is Error1");
+								}
+								
+								instanceSchema.setCreate(create);
+								planSchema.setService_instance(instanceSchema);
+								servicePlan.setSchemas(planSchema);
+								planList.add(servicePlan);
+							} catch( Exception e) {
+								logger.info("This Plan is Error2");
+							}
 						}
-						planMeta.setBullets(bullets);
-						
-						planCost.setAmount(plan.get("metadata").get("costs").get("amount").asText());
-						planCost.setUnit(plan.get("metadata").get("costs").get("unit").asText());
-						planMeta.setCosts(planCost);
-						servicePlan.setMetadata(planMeta);
-						
-						parameters = mapper.convertValue(plan.get("schemas").get("service_instance").get("create").get("parameters"), new TypeReference<Map<String, String>>(){});
-						create.setParameters(parameters);
-						instanceSchema.setCreate(create);
-						planSchema.setService_instance(instanceSchema);
-						servicePlan.setSchemas(planSchema);
-						planList.add(servicePlan);
 					}
+				} catch( Exception e) {
+					logger.info("This Plan is Empty");
 				}
-				
+
+				logger.info("Catalog Debug 5");
 				service.setPlans(planList);
 				serviceList.add(service);
 			}
@@ -2162,11 +2208,13 @@ public class K8sApiCaller {
 		TemplateInstanceSpecTemplate template = new TemplateInstanceSpecTemplate();
 		List<TemplateParameter> parameters = new ArrayList<TemplateParameter>();
 		
+		logger.info("Service Instance Namespace : " + inDO.getContext().getNamespace());
+		
 		try {
 			instance.setApiVersion(Constants.CUSTOM_OBJECT_GROUP + "/" + Constants.CUSTOM_OBJECT_VERSION);
 			instance.setKind(Constants.CUSTOM_OBJECT_KIND_TEMPLATE_INSTANCE);
 			instanceMeta.setName(instanceId);
-			instanceMeta.setNamespace(Constants.TEMPLATE_NAMESPACE);
+			instanceMeta.setNamespace(inDO.getContext().getNamespace());
 			instance.setMetadata(instanceMeta);
 			
 			templateMeta.setName(inDO.getService_id());
@@ -2182,7 +2230,7 @@ public class K8sApiCaller {
 				template.setParameters(parameters);
 			} else {
 				String planName = inDO.getPlan_id();
-				Object planResponse = customObjectApi.getNamespacedCustomObject("servicecatalog.k8s.io", "v1beta1", Constants.TEMPLATE_NAMESPACE, "serviceplans", planName);
+				Object planResponse = customObjectApi.getNamespacedCustomObject("servicecatalog.k8s.io", "v1beta1", inDO.getContext().getNamespace(), "serviceplans", planName);
 				GetPlanDO plan = mapper.readValue(gson.toJson(planResponse), GetPlanDO.class);
 				if(plan.getSpec().getInstanceCreateParameterSchema() != null) {
 					for(String key : plan.getSpec().getInstanceCreateParameterSchema().keySet()) {
@@ -2204,7 +2252,7 @@ public class K8sApiCaller {
 	    	response = customObjectApi.createNamespacedCustomObject(
 	    			Constants.CUSTOM_OBJECT_GROUP,
 					Constants.CUSTOM_OBJECT_VERSION, 
-					Constants.TEMPLATE_NAMESPACE,
+					inDO.getContext().getNamespace(),
 					Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE,
 					bodyObj, null);
 		} catch(ApiException e) {
@@ -2226,10 +2274,10 @@ public class K8sApiCaller {
 		try {
     		V1DeleteOptions body = new V1DeleteOptions();
     		
-        	response = customObjectApi.deleteNamespacedCustomObject(
+        	response = customObjectApi.deleteClusterCustomObject(
         			Constants.CUSTOM_OBJECT_GROUP,
 					Constants.CUSTOM_OBJECT_VERSION,
-					Constants.TEMPLATE_NAMESPACE,
+					//Constants.TEMPLATE_NAMESPACE,
 					Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE,
 					instanceId, 
 					body, 0, null, null);
@@ -2249,12 +2297,12 @@ public class K8sApiCaller {
 	public static BindingOutDO insertBindingSecret(String instanceId, String bindingId, BindingInDO inDO) throws Exception {
 		BindingOutDO outDO = new BindingOutDO();
 		Map<String, Object> secretMap = new HashMap<String, Object>();
-		
+		logger.info(" Binding Namespace : " + inDO.getContext().getNamespace());
 		try {
 			Object response = customObjectApi.getNamespacedCustomObject(
 					Constants.CUSTOM_OBJECT_GROUP,
 					Constants.CUSTOM_OBJECT_VERSION,
-					Constants.TEMPLATE_NAMESPACE, 
+					inDO.getContext().getNamespace(), 
 					Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, 
 					instanceId);
 			

@@ -39,7 +39,7 @@ public class TemplateOperator extends Thread {
 	TemplateOperator(ApiClient client, CustomResourceApi api, int resourceVersion) throws Exception {		
 		watchInstance = Watch.createWatch(
 		        client,
-		        api.listNamespacedCustomObjectCall(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, Constants.TEMPLATE_NAMESPACE, Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE, null, null, null, null, null, String.valueOf(resourceVersion), null, Boolean.TRUE, null),
+		        api.listClusterCustomObjectCall(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE, null, null, null, null, null, String.valueOf(resourceVersion), null, Boolean.TRUE, null),
 		        new TypeToken<Watch.Response<Object>>(){}.getType()
         );
 		
@@ -65,9 +65,12 @@ public class TemplateOperator extends Thread {
 				try {
 					JsonNode template = numberTypeConverter(objectToJsonNode(response.object));
 					String templateName = template.get("metadata").get("name").asText();
+					String namespace = template.get("metadata").get("namespace").asText();
+
 					logger.info("[Template Operator] Event Type : " + response.type.toString()); //ADDED, MODIFIED, DELETED
 					logger.info("[Template Operator] Template Name : " + templateName);
-					
+					logger.info("[Template Operator] Template Namespace : " + namespace);
+
 	        		latestResourceVersion = template.get("metadata").get("resourceVersion").asInt();
 	        		logger.info("[Template Operator] Custom LatestResourceVersion : " + latestResourceVersion);
 	        		
@@ -99,7 +102,7 @@ public class TemplateOperator extends Thread {
     						Object result = tpApi.patchNamespacedCustomObject(
     								Constants.CUSTOM_OBJECT_GROUP, 
     								Constants.CUSTOM_OBJECT_VERSION, 
-    								Constants.TEMPLATE_NAMESPACE, 
+    								namespace, 
     								Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE, 
     								templateName, 
     								patchArray);

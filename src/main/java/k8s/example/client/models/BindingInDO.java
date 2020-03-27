@@ -4,17 +4,17 @@ import java.util.Map;
 
 public class BindingInDO {
 
-	private Object context = null;
+	private Context context = null;
 	private String service_id = null;
 	private String plan_id = null;
 	private String app_guid = null;
 	private BindResource bind_resource = null;
 	private Map<String, String> parameters = null;
-	
-	public Object getContext() {
+
+	public Context getContext() {
 		return context;
 	}
-	public void setContext(Object context) {
+	public void setContext(Context context) {
 		this.context = context;
 	}
 	public String getService_id() {

@@ -8,7 +8,16 @@ public class ServiceMetadata {
 	private String providerDisplayName = null;
 	private String documentationUrl = null;
 	private String supportUrl = null;
+	private boolean recommend = false;
 	
+	public boolean isRecommend() {
+		return recommend;
+	}
+
+	public void setRecommend(boolean recommend) {
+		this.recommend = recommend;
+	}
+
 	public String getDisplayName() {
 		return displayName;
 	}
