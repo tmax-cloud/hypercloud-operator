@@ -25,6 +25,7 @@ import k8s.example.client.Constants;
 import k8s.example.client.ErrorCode;
 import k8s.example.client.Main;
 import k8s.example.client.DataObject.Client;
+import k8s.example.client.DataObject.CommonOutDO;
 import k8s.example.client.DataObject.LoginInDO;
 import k8s.example.client.DataObject.Token;
 import k8s.example.client.DataObject.UserCR;
@@ -136,7 +137,7 @@ public class LoginHandler extends GeneralHandler {
     			logger.info("  Login fail. Wrong password.");
     			
     			status = Status.UNAUTHORIZED;
-    			outDO = "Login failed. Wrong password.";
+    			outDO = Constants.LOGIN_FAILED;
     		}
 		} catch (ApiException e) {
 			logger.info( "Exception message: " + e.getMessage() );
@@ -144,22 +145,29 @@ public class LoginHandler extends GeneralHandler {
 			if (e.getResponseBody().contains("NotFound")) {
 				logger.info( "  Login fail. User not exist." );
 				status = Status.UNAUTHORIZED;
-				outDO = "Login failed. User not exist.";
+				outDO = Constants.LOGIN_FAILED;
 			} else {
 				logger.info( "Response body: " + e.getResponseBody() );
 				e.printStackTrace();
 				
 				status = Status.UNAUTHORIZED;
-				outDO = "Login failed. Exception occurs.";
+				outDO = Constants.LOGIN_FAILED;
 			}
 		} catch (Exception e) {
 			logger.info( "Exception message: " + e.getMessage() );
 			e.printStackTrace();
 			
 			status = Status.UNAUTHORIZED;
-			outDO = "Login failed. Exception occurs.";
+			outDO = Constants.LOGIN_FAILED;
 		}
 		
+		if (status.equals(Status.UNAUTHORIZED)) {
+			CommonOutDO out = new CommonOutDO();
+			out.setMsg(outDO);
+			Gson gson = new GsonBuilder().setPrettyPrinting().create();
+			outDO = gson.toJson(out).toString();
+		}	
+
 //		logger.info();
 		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO));
     }
