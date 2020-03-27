@@ -6,7 +6,7 @@ public class ProvisionInDO {
 
 	private String service_id = null;
 	private String plan_id = null;
-	private Object context = null;
+	private Context context = null;
 	private String organization_guid = null;
 	private String space_guid = null;
 	private Map<String, String> parameters = null;
@@ -24,10 +24,11 @@ public class ProvisionInDO {
 	public void setPlan_id(String plan_id) {
 		this.plan_id = plan_id;
 	}
-	public Object getContext() {
+
+	public Context getContext() {
 		return context;
 	}
-	public void setContext(Object context) {
+	public void setContext(Context context) {
 		this.context = context;
 	}
 	public String getOrganization_guid() {

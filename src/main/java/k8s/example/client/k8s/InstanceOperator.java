@@ -79,7 +79,7 @@ public class InstanceOperator extends Thread {
 		
 		watchInstance = Watch.createWatch(
 		        client,
-		        api.listNamespacedCustomObjectCall(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, Constants.TEMPLATE_NAMESPACE, Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, null, null, null, null, null, String.valueOf(resourceVersion), null, Boolean.TRUE, null),
+		        api.listClusterCustomObjectCall(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, null, null, null, null, null, String.valueOf(resourceVersion), null, Boolean.TRUE, null),
 		        new TypeToken<Watch.Response<Object>>(){}.getType()
         );
 		
@@ -108,11 +108,15 @@ public class InstanceOperator extends Thread {
 					logger.info("[Instance Operator] Object : " + instanceObj.toString());
 					
 	        		latestResourceVersion = instanceObj.get("metadata").get("resourceVersion").asInt();
-	        		logger.info("[Instance Operator] Instance Name : " + instanceObj.get("metadata").get("name"));
+	        		String instanceNamespace = instanceObj.get("metadata").get("namespace").asText();
+	        		logger.info("[Instance Operator] Instance Name : " + instanceObj.get("metadata").get("name").asText());
+	        		logger.info("[Instance Operator] Instance Namespace : " + instanceObj.get("metadata").get("namespace").asText());
 	        		logger.info("[Instance Operator] ResourceVersion : " + latestResourceVersion);
 	        		
 	        		if(response.type.toString().equals("ADDED")) {
 	        			String templateName = instanceObj.get("spec").get("template").get("metadata").get("name").asText();
+	        			String templateNamespace = instanceObj.get("spec").get("template").get("metadata").get("namespace").asText();
+	        			
 	        			logger.info("[Instance Operator] Template Name : " + templateName);
 	        			
 	        			Object template = null;
@@ -120,7 +124,7 @@ public class InstanceOperator extends Thread {
 	        				template = tpApi.getNamespacedCustomObject(
 		        					Constants.CUSTOM_OBJECT_GROUP, 
 		        					Constants.CUSTOM_OBJECT_VERSION, 
-		        					Constants.TEMPLATE_NAMESPACE, 
+		        					templateNamespace, 
 		        					Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE, 
 		        					templateName);
 	        			} catch (Exception e) {
@@ -194,18 +198,18 @@ public class InstanceOperator extends Thread {
 		        					try {
 		        						Object result = tpApi.createNamespacedCustomObject(apiGroup, apiVersion, namespace, kind, bodyObj, null);
 		        						logger.info(result.toString());
-		        						patchStatus(instanceObj.get("metadata").get("name").asText(), Constants.STATUS_RUNNING);
+		        						patchStatus(instanceObj.get("metadata").get("name").asText(), Constants.STATUS_RUNNING, instanceNamespace);
 		        					} catch (ApiException e) {
 		        						logger.info("[Instance Operator] ApiException: " + e.getMessage());
 		        						logger.info(e.getResponseBody());
-		        						patchStatus(instanceObj.get("metadata").get("name").asText(), Constants.STATUS_ERROR, e.getResponseBody());
+		        						patchStatus(instanceObj.get("metadata").get("name").asText(), Constants.STATUS_ERROR, e.getResponseBody(), instanceNamespace);
 		        						throw e;
 		        					} catch (Exception e) {
 		        						logger.info("[Instance Operator] Exception: " + e.getMessage());
 		        						StringWriter sw = new StringWriter();
 		        						e.printStackTrace(new PrintWriter(sw));
 		        						logger.info(sw.toString());
-		        						patchStatus(instanceObj.get("metadata").get("name").asText(), Constants.STATUS_ERROR, e.getMessage());
+		        						patchStatus(instanceObj.get("metadata").get("name").asText(), Constants.STATUS_ERROR, e.getMessage(), instanceNamespace);
 		        						throw e;
 		        					}
 		        				} else {
@@ -227,7 +231,7 @@ public class InstanceOperator extends Thread {
     					patchArray.add(patch);
     					
     					try{
-    						Object result = tpApi.patchNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, Constants.TEMPLATE_NAMESPACE, Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, instanceObj.get("metadata").get("name").asText(), patchArray);
+    						Object result = tpApi.patchNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, instanceNamespace, Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, instanceObj.get("metadata").get("name").asText(), patchArray);
     						logger.info(result.toString());
     					} catch (ApiException e) {
     						throw new Exception(e.getResponseBody());
@@ -286,7 +290,7 @@ public class InstanceOperator extends Thread {
 	}
 	
 	@SuppressWarnings("unchecked")
-	private void patchStatus(String instanceName, String phrase) throws Exception {
+	private void patchStatus(String instanceName, String phrase, String namespace) throws Exception {
 		JSONObject patchStatus = new JSONObject();
 		JSONObject status = new JSONObject();
 		JSONArray conditions = new JSONArray();
@@ -302,14 +306,14 @@ public class InstanceOperator extends Thread {
 		patchStatusArray.add(patchStatus);
 		
 		try{
-			tpApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, Constants.TEMPLATE_NAMESPACE, Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, instanceName, patchStatusArray);
+			tpApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, instanceName, patchStatusArray);
 		} catch (ApiException e) {
 			throw new Exception(e.getResponseBody());
 		}
 	}
 	
 	@SuppressWarnings("unchecked")
-	private void patchStatus(String instanceName, String phrase, String message) throws Exception {
+	private void patchStatus(String instanceName, String phrase, String message, String namespace) throws Exception {
 		JSONObject patchStatus = new JSONObject();
 		JSONObject status = new JSONObject();
 		JSONArray conditions = new JSONArray();
@@ -326,7 +330,7 @@ public class InstanceOperator extends Thread {
 		patchStatusArray.add(patchStatus);
 		
 		try{
-			tpApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, Constants.TEMPLATE_NAMESPACE, Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, instanceName, patchStatusArray);
+			tpApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, instanceName, patchStatusArray);
 		} catch (ApiException e) {
 			throw new Exception(e.getResponseBody());
 		}

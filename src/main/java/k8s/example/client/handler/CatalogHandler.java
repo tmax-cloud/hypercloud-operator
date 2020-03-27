@@ -40,6 +40,17 @@ public class CatalogHandler extends GeneralHandler {
 			logger.info( "Exception message: " + e.getMessage() );
 			e.printStackTrace();
 			status = Status.NOT_FOUND;
+		} catch (Exception e) {
+			logger.info( "  Get Catalog fail" );
+			logger.info( "Exception message: " + e.getMessage() );
+			logger.info( "Exception message: " + e.getStackTrace().toString() );
+			logger.info( "Exception message: " + e.toString() );
+
+
+			
+			e.printStackTrace();
+			status = Status.NOT_FOUND;
+			throw e;
 		}
 		
 		Gson gson = new GsonBuilder().setPrettyPrinting().create();
