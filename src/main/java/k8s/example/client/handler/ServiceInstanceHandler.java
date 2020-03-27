@@ -4,7 +4,9 @@ import java.io.FileInputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -21,6 +23,7 @@ import fi.iki.elonen.NanoHTTPD.Response.IStatus;
 import fi.iki.elonen.NanoHTTPD.Response.Status;
 import fi.iki.elonen.router.RouterNanoHTTPD.GeneralHandler;
 import fi.iki.elonen.router.RouterNanoHTTPD.UriResource;
+import io.kubernetes.client.openapi.models.V1OwnerReference;
 import k8s.example.client.Main;
 import k8s.example.client.Util;
 import k8s.example.client.k8s.K8sApiCaller;
@@ -59,7 +62,23 @@ public class ServiceInstanceHandler extends GeneralHandler {
 			logger.info("Service Plan ID: " + inDO.getPlan_id());
 			logger.info("Context: " + inDO.getContext().toString());
 			
-			response = K8sApiCaller.createTemplateInstance(instanceId, inDO);
+			/**
+			 * 			List<V1OwnerReference> ownerRefs = new ArrayList<>();
+						V1OwnerReference ownerRef = new V1OwnerReference();
+						
+						ownerRef.setApiVersion(registry.getApiVersion());
+						ownerRef.setBlockOwnerDeletion(Boolean.TRUE);
+						ownerRef.setController(Boolean.TRUE);
+						ownerRef.setKind(registry.getKind());
+						ownerRef.setName(registry.getMetadata().getName());
+						ownerRef.setUid(registry.getMetadata().getUid());
+						ownerRefs.add(ownerRef);
+						
+						lbMeta.setOwnerReferences(ownerRefs);
+			 */
+			String uid = K8sApiCaller.getUid( inDO.getContext().getNamespace(), inDO.getContext().getInstance_name() );
+			
+			response = K8sApiCaller.createTemplateInstance(instanceId, inDO, inDO.getContext().getInstance_name(), uid);
 			status = Status.OK;
 		} catch (Exception e) {
 			logger.info( "  Failed to provision instance of service class \"" + inDO.getService_id() + "\"");
@@ -96,7 +115,7 @@ public class ServiceInstanceHandler extends GeneralHandler {
 		String outDO = null;
 		IStatus status = null;
 		
-		try {
+		/*try {
 			response = K8sApiCaller.deleteTemplateInstance(instanceId);
 			status = Status.OK;
 		} catch (Exception e) {
@@ -104,7 +123,7 @@ public class ServiceInstanceHandler extends GeneralHandler {
 			logger.info( "Exception message: " + e.getMessage() );
 			e.printStackTrace();
 			status = Status.BAD_REQUEST;
-		}
+		}*/
 		
 //		logger.info();
 		return NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO);

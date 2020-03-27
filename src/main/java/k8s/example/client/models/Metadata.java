@@ -1,7 +1,10 @@
 package k8s.example.client.models;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import io.kubernetes.client.openapi.models.V1OwnerReference;
 
 public class Metadata {
 	private Map<String, String> annotations = null;
@@ -16,7 +19,7 @@ public class Metadata {
 	private Object managedFields = null;
 	private String name = null;
 	private String namespace = null;
-	private Object ownerReferences = null;
+	private List<V1OwnerReference> ownerReferences = null;
 	private String resourceVersion = null;
 	private String selfLink = null;
 	private String uid = null;
@@ -93,11 +96,15 @@ public class Metadata {
 	public void setNamespace(String namespace) {
 		this.namespace = namespace;
 	}
-	public Object getOwnerReferences() {
+	public List<V1OwnerReference> getOwnerReferences() {
 		return ownerReferences;
 	}
-	public void setOwnerReferences(Object ownerReferences) {
+	public void setOwnerReferences(List<V1OwnerReference> ownerReferences) {
 		this.ownerReferences = ownerReferences;
+	}
+	public void addOwnerReferences(V1OwnerReference ownerReference) {
+		if (this.ownerReferences==null) this.ownerReferences = new ArrayList<>();
+		this.ownerReferences.add(ownerReference);
 	}
 	public String getResourceVersion() {
 		return resourceVersion;

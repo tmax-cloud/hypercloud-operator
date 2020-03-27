@@ -82,8 +82,12 @@ public class TemplateOperator extends Thread {
 	        				for(JsonNode object : templateObjs) {
 	        					String kind = object.get("kind").asText();
 	        					if(kind.equals("Service")) {
-	        						String type = object.get("spec").get("type").asText();
-	        						kind += " (" + type + ")";
+	        						if ( object.get("spec").get("type") == null) {
+		        						kind += " (ClusterIp)";
+	        						} else {
+	        							String type = object.get("spec").get("type").asText();
+		        						kind += " (" + type + ")";
+	        						}
 	        					}
 	        					kindArr.add(kind);
 		        			}

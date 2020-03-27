@@ -115,7 +115,7 @@ public class InstanceOperator extends Thread {
 	        		
 	        		if(response.type.toString().equals("ADDED")) {
 	        			String templateName = instanceObj.get("spec").get("template").get("metadata").get("name").asText();
-	        			String templateNamespace = instanceObj.get("spec").get("template").get("metadata").get("namespace").asText();
+	        			String templateNamespace = instanceObj.get("metadata").get("namespace").asText();
 	        			
 	        			logger.info("[Instance Operator] Template Name : " + templateName);
 	        			
