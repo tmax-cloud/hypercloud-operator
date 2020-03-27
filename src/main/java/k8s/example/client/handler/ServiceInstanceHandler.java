@@ -115,15 +115,15 @@ public class ServiceInstanceHandler extends GeneralHandler {
 		String outDO = null;
 		IStatus status = null;
 		
-		/*try {
-			response = K8sApiCaller.deleteTemplateInstance(instanceId);
+		try {
+			//response = K8sApiCaller.deleteTemplateInstance(instanceId);
 			status = Status.OK;
 		} catch (Exception e) {
 			logger.info( "  Failed to delete instance of service class \"" + serviceClassName + "\"");
 			logger.info( "Exception message: " + e.getMessage() );
 			e.printStackTrace();
 			status = Status.BAD_REQUEST;
-		}*/
+		}
 		
 //		logger.info();
 		return NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO);
