@@ -4,9 +4,11 @@ import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.Calendar;
 
+import k8s.example.client.Util;
+
 public class Test {
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception {
 		System.out.println(System.currentTimeMillis());
 		System.out.println(new Timestamp(System.currentTimeMillis()));
 		
@@ -22,6 +24,9 @@ public class Test {
 
 		System.out.println(cal.getTime().getTime());
 	    System.out.println(new Timestamp(cal.getTime().getTime()));
+	    
+	    
+	    System.out.println(Util.Crypto.encryptSHA256("tmax@23" + "cloud@tmax.co.kr" + "618a8891-fcda-4cc7-9757-036d43a6403b"));
 
 	}
 
