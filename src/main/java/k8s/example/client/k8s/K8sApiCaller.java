@@ -2199,7 +2199,7 @@ public class K8sApiCaller {
 		return catalog;
 	}
 	
-	public static Object createTemplateInstance(String instanceId, ProvisionInDO inDO) throws Exception {
+	public static Object createTemplateInstance(String instanceId, ProvisionInDO inDO, String instanceName, String instanceUid) throws Exception {
 		Object response = null;
 		TemplateInstance instance = new TemplateInstance();
 		Metadata instanceMeta = new Metadata();
@@ -2207,6 +2207,18 @@ public class K8sApiCaller {
 		TemplateInstanceSpec spec = new TemplateInstanceSpec();
 		TemplateInstanceSpecTemplate template = new TemplateInstanceSpecTemplate();
 		List<TemplateParameter> parameters = new ArrayList<TemplateParameter>();
+		
+		List<V1OwnerReference> ownerRefs = new ArrayList<>();
+		V1OwnerReference ownerRef = new V1OwnerReference();
+		
+		ownerRef.setApiVersion(Constants.SERVICE_INSTANCE_API_VERSION);
+		ownerRef.setBlockOwnerDeletion(Boolean.TRUE);
+		ownerRef.setController(Boolean.TRUE);
+		ownerRef.setKind(Constants.SERVICE_INSTANCE_KIND);
+		ownerRef.setName(instanceName);
+		ownerRef.setUid(instanceUid);
+		ownerRefs.add(ownerRef);
+		instanceMeta.setOwnerReferences(ownerRefs);
 		
 		logger.info("Service Instance Namespace : " + inDO.getContext().getNamespace());
 		
@@ -2597,4 +2609,33 @@ public class K8sApiCaller {
 	 * END method for Namespace Claim Controller by seonho_choi
 	 * DO-NOT-DELETE
 	 */
+	
+	/**
+	 * START method for Namespace Claim Controller by seonho_choi
+	 * DO-NOT-DELETE
+	 */
+	public static String getUid( String namespace, String name ) {
+		String uid = "";
+		try {
+			Object result = customObjectApi.getNamespacedCustomObject(
+					Constants.SERVICE_INSTANCE_API_GROUP, 
+					Constants.SERVICE_INSTANCE_API_VERSION, 
+					namespace, 
+					Constants.SERVICE_INSTANCE_PLURAL, 
+					name );
+			
+			String jsonString = gson.toJson(result);
+			logger.info( jsonString );
+			JsonParser parser = new JsonParser();
+			uid = parser.parse( jsonString ).getAsJsonObject().get( "metadata" ).getAsJsonObject().get( "uid" ).getAsString();
+		} catch (ApiException e) {
+			logger.info("Response body: " + e.getResponseBody());
+        	e.printStackTrace();
+		} catch (Exception e) {
+			logger.info("Exception: " + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		}
+		return uid;
+	}
 }

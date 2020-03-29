@@ -185,6 +185,12 @@ spec:
           type: string
         imageUrl:
           type: string
+        recommend:
+          type: boolean
+        tags:
+          type: array
+          items:
+            type: string
         objectKinds:
           type: array
           items:
