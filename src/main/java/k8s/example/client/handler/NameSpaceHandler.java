@@ -30,21 +30,19 @@ import k8s.example.client.k8s.K8sApiCaller;
 public class NameSpaceHandler extends GeneralHandler {
     private Logger logger = Main.logger;
 	@Override
-    public Response post(
+    public Response get(
       UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
 		logger.info("***** GET /nameSpace");
 		
-		String outMsg = null;
 		IStatus status = null;
-		String originUri = null;
 		String accessToken = null;
 		V1NamespaceList nsList = null;
 		String outDO = null; 
-		
+
 		try {
 			// Read AccessToken from Header
-			if(session.getHeaders().get("Authorization") != null) {
-				accessToken = session.getHeaders().get("Authorization");
+			if(!session.getHeaders().get("authorization").isEmpty()) {
+				accessToken = session.getHeaders().get("authorization");
 			} else {
 				status = Status.BAD_REQUEST;
 				throw new Exception(ErrorCode.TOKEN_EMPTY);
@@ -82,6 +80,7 @@ public class NameSpaceHandler extends GeneralHandler {
 			logger.info( "Exception message: " + e.getMessage() );
 			outDO = "Get NameSpace List failed.";
 			status = Status.BAD_REQUEST;
+			e.printStackTrace();
 
 		} catch (Exception e) {
 			logger.info( "Exception message: " + e.getMessage() );
@@ -90,7 +89,6 @@ public class NameSpaceHandler extends GeneralHandler {
 			status = Status.BAD_REQUEST;
 		}
 		
-//		logger.info();
 		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO));
     }
 	

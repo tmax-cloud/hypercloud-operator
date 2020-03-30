@@ -17,6 +17,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.apache.commons.codec.binary.Base64;
 import org.json.simple.JSONArray;
@@ -2658,16 +2659,20 @@ public class K8sApiCaller {
 		try {
 			crbList = rbacApi.listClusterRoleBinding("true", false, null, null, null, 1000 , null, 60, false);
 			for (V1ClusterRoleBinding item : crbList.getItems()) {
+
 				List<V1Subject> subjects = item.getSubjects();
 				V1RoleRef roleRef = item.getRoleRef();
-				for( V1Subject subject : subjects ) {
-					if ( subject.getKind().equalsIgnoreCase("User")) {
-						if( subject.getName().equalsIgnoreCase(userId)) {
-							if (clusterRoleList == null ) clusterRoleList = new ArrayList<>();
-							clusterRoleList.add(roleRef.getName());   // get ClusterRole name
+				if (subjects != null) {
+					for( V1Subject subject : subjects ) {
+
+						if ( subject.getKind().equalsIgnoreCase("User")) {
+							if( subject.getName().equalsIgnoreCase(userId)) {
+								if (clusterRoleList == null ) clusterRoleList = new ArrayList<>();
+								clusterRoleList.add(roleRef.getName());   // get ClusterRole name
+							}
 						}
-					}
-				}	
+					}	
+				}			
 			}
 			
 			//2. Check if ClusterRole has NameSpace GET rule 
@@ -2677,40 +2682,38 @@ public class K8sApiCaller {
 					List<V1PolicyRule> rules = clusterRole.getRules();
 					if ( rules != null) {
 						for ( V1PolicyRule rule : rules ) {
-							if (rule.getResources().contains("'*'") || rule.getResources().contains("namespaces")) {
+							if (rule.getResources().contains("*") || rule.getResources().contains("namespaces")) {
 								if (rule.getVerbs().contains("list")){
 									clusterRoleFlag = true;
 								}
 							}
 						}
-					}
-					
+					}	
 				}
 			}
+			
 			// Get All NameSpace
 			if (clusterRoleFlag) {
 				nsList = api.listNamespace("true", false, null, null, null, 100 , null, 60, false);				
 			} else {
-				nsList = api.listNamespace("true", false, null, null, null, 100 , null, 60, false);				
+				V1NamespaceList nsListK8S = api.listNamespace("true", false, null, null, null, 100 , null, 60, false);	
+				
 				//3. List of RoleBinding
-				for ( V1Namespace ns : nsList.getItems()) {
+				for ( V1Namespace ns : nsListK8S.getItems()) {
 					V1RoleBindingList rbList = rbacApi.listNamespacedRoleBinding(ns.getMetadata().getName(), "true", false, null, null, null, 100, null, 60, false);
-					
 					for (V1RoleBinding item : rbList.getItems()) {
 						List<V1Subject> subjects = item.getSubjects();
 						V1RoleRef roleRef = item.getRoleRef();
-						
 						for( V1Subject subject : subjects ) {
 							if ( subject.getKind().equalsIgnoreCase("User")) {
 								
 								//4. Check if Role has NameSpace GET rule 
 								if( subject.getName().equalsIgnoreCase(userId)) {  // Found Matching Role
 									V1Role role = rbacApi.readNamespacedRole(roleRef.getName(), ns.getMetadata().getName(), "true");
-									List<V1PolicyRule> rules = role.getRules();
-									
+									List<V1PolicyRule> rules = role.getRules();							
 									if ( rules != null) {
 										for ( V1PolicyRule rule : rules ) {
-											if (rule.getResources().contains("'*'") || rule.getResources().contains("namespaces")) {
+											if (rule.getResources().contains("*") || rule.getResources().contains("namespaces")) {
 												if (rule.getVerbs().contains("list")){
 													if(nsNameList == null) nsNameList = new ArrayList<>();
 													nsNameList.add(ns.getMetadata().getName());
@@ -2722,14 +2725,10 @@ public class K8sApiCaller {
 							}
 						}				
 					}
-				} 		
-				
+				} 					
 				if (nsNameList!=null) {
-					
-					
-					//TODO : nsNameList 중복있을시 제거 재환이 코드 참고하자
-					
-					
+					// Stream distinct (중복제거)
+					nsNameList = nsNameList.stream().distinct().collect(Collectors.toList());				
 					
 					for (String nsName : nsNameList) {
 						if(nsList == null) nsList = new V1NamespaceList();
@@ -2737,15 +2736,14 @@ public class K8sApiCaller {
 					}
 				}
 				
-			}
-			
-		} catch (ApiException e) {
-			e.printStackTrace();
+			}			
+		} catch (ApiException e) {			
+			logger.info(e.getResponseBody());
 			throw e;
+		}		
+		for (V1Namespace ns : nsList.getItems()) {
+			logger.info(" [ Accessible NameSpace ] : " + ns.getMetadata().getName() );		
 		}
-		
-		
-			
 		return nsList;
 	}
 }
