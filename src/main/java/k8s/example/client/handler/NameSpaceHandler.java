@@ -1,6 +1,7 @@
 package k8s.example.client.handler;
 
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 
@@ -38,7 +39,16 @@ public class NameSpaceHandler extends GeneralHandler {
 		String accessToken = null;
 		V1NamespaceList nsList = null;
 		String outDO = null; 
-
+		String limit = null;
+		if(session.getParameters()!=null) {
+			if( session.getParameters().get("limit")!= null) {
+				if (session.getParameters().get("limit").get(0)!=null) {
+					limit = session.getParameters().get("limit").get(0);
+					logger.info("limit : " + limit );
+				}
+			}
+		}
+		
 		try {
 			// Read AccessToken from Header
 			if(!session.getHeaders().get("authorization").isEmpty()) {
@@ -63,6 +73,9 @@ public class NameSpaceHandler extends GeneralHandler {
 			if(verifyAccessToken(accessToken, userId, tokenId, issuer)) {		
 				logger.info( "  Token Validated " );
 				nsList = K8sApiCaller.getAccessibleNS(userId);
+				
+				// Limit 
+				nsList.setItems( nsList.getItems().stream().limit(Integer.parseInt(limit)).collect(Collectors.toList()));		
 				status = Status.OK;
 
 			} else {
