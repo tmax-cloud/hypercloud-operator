@@ -167,7 +167,7 @@ public class LoginHandler extends GeneralHandler {
 			out.setMsg(outDO);
 			Gson gson = new GsonBuilder().setPrettyPrinting().create();
 			outDO = gson.toJson(out).toString();
-		} else if ( status.equals(Status.UNAUTHORIZED) && outDO.equals(Constants.LOGIN_FAILED)) { //ui요청
+		} else if ( status.equals(Status.OK) && outDO.equals(Constants.LOGIN_FAILED)) { //ui요청
 			CommonOutDO out = new CommonOutDO();
 			out.setMsg(outDO);
 			Gson gson = new GsonBuilder().setPrettyPrinting().create();

@@ -2685,18 +2685,19 @@ public class K8sApiCaller {
 					List<V1PolicyRule> rules = clusterRole.getRules();
 					if ( rules != null) {
 						for ( V1PolicyRule rule : rules ) {
-							if (rule.getResources().contains("*") || rule.getResources().contains("namespaces")) {
-								logger.info("333");
-
-								if (rule.getVerbs().contains("list")){
-									clusterRoleFlag = true;
+							if (rule.getResources()!= null) {
+								if (rule.getResources().contains("*") || rule.getResources().contains("namespaces")) {
+									logger.info("clusterRoleName : " + clusterRoleName );
+									if (rule.getVerbs().contains("list") || rule.getVerbs().contains("*")){
+										clusterRoleFlag = true;
+									}
 								}
 							}
 						}
 					}	
 				}
 			}
-			
+			logger.info("clusterRoleflag : "  + clusterRoleFlag);
 			// Get All NameSpace
 			if (clusterRoleFlag) {
 				nsList = api.listNamespace("true", false, null, null, null, 100 , null, 60, false);				
@@ -2704,33 +2705,36 @@ public class K8sApiCaller {
 				V1NamespaceList nsListK8S = api.listNamespace("true", false, null, null, null, 100 , null, 60, false);	
 				
 				//3. List of RoleBinding
-				for ( V1Namespace ns : nsListK8S.getItems()) {
-					V1RoleBindingList rbList = rbacApi.listNamespacedRoleBinding(ns.getMetadata().getName(), "true", false, null, null, null, 100, null, 60, false);
-					for (V1RoleBinding item : rbList.getItems()) {
-						List<V1Subject> subjects = item.getSubjects();
-						V1RoleRef roleRef = item.getRoleRef();
-						for( V1Subject subject : subjects ) {
-							if ( subject.getKind().equalsIgnoreCase("User")) {
-								
-								//4. Check if Role has NameSpace GET rule 
-								if( subject.getName().equalsIgnoreCase(userId)) {  // Found Matching Role
-									V1Role role = rbacApi.readNamespacedRole(roleRef.getName(), ns.getMetadata().getName(), "true");
-									List<V1PolicyRule> rules = role.getRules();							
-									if ( rules != null) {
-										for ( V1PolicyRule rule : rules ) {
-											if (rule.getResources().contains("*") || rule.getResources().contains("namespaces")) {
-												if (rule.getVerbs().contains("list")){
-													if(nsNameList == null) nsNameList = new ArrayList<>();
-													nsNameList.add(ns.getMetadata().getName());
+				if ( nsListK8S.getItems()!=null ) {
+					for ( V1Namespace ns : nsListK8S.getItems()) {
+						V1RoleBindingList rbList = rbacApi.listNamespacedRoleBinding(ns.getMetadata().getName(), "true", false, null, null, null, 100, null, 60, false);
+						for (V1RoleBinding item : rbList.getItems()) {
+							List<V1Subject> subjects = item.getSubjects();
+							V1RoleRef roleRef = item.getRoleRef();
+							for( V1Subject subject : subjects ) {
+								if ( subject.getKind().equalsIgnoreCase("User")) {
+									
+									//4. Check if Role has NameSpace GET rule 
+									if( subject.getName().equalsIgnoreCase(userId)) {  // Found Matching Role
+										V1Role role = rbacApi.readNamespacedRole(roleRef.getName(), ns.getMetadata().getName(), "true");
+										List<V1PolicyRule> rules = role.getRules();							
+										if ( rules != null) {
+											for ( V1PolicyRule rule : rules ) {
+												if (rule.getResources().contains("*") || rule.getResources().contains("namespaces")) {
+													if (rule.getVerbs().contains("list") || rule.getVerbs().contains("*")){
+														if(nsNameList == null) nsNameList = new ArrayList<>();
+														nsNameList.add(ns.getMetadata().getName());
+													}
 												}
 											}
 										}
 									}
 								}
-							}
-						}				
-					}
-				} 					
+							}				
+						}
+					} 	
+				}
+								
 				if (nsNameList!=null) {
 					// Stream distinct (중복제거)
 					nsNameList = nsNameList.stream().distinct().collect(Collectors.toList());				
