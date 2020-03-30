@@ -2659,8 +2659,6 @@ public class K8sApiCaller {
 		try {
 			crbList = rbacApi.listClusterRoleBinding("true", false, null, null, null, 1000 , null, 60, false);
 			for (V1ClusterRoleBinding item : crbList.getItems()) {
-				logger.info("111");
-
 				List<V1Subject> subjects = item.getSubjects();
 				V1RoleRef roleRef = item.getRoleRef();
 				if (subjects != null) {
@@ -2680,8 +2678,6 @@ public class K8sApiCaller {
 			if (clusterRoleList != null) {
 				for ( String clusterRoleName : clusterRoleList ) {
 					V1ClusterRole clusterRole = rbacApi.readClusterRole(clusterRoleName, "true");
-					logger.info("222");
-
 					List<V1PolicyRule> rules = clusterRole.getRules();
 					if ( rules != null) {
 						for ( V1PolicyRule rule : rules ) {
@@ -2722,10 +2718,14 @@ public class K8sApiCaller {
 										List<V1PolicyRule> rules = role.getRules();							
 										if ( rules != null) {
 											for ( V1PolicyRule rule : rules ) {
-												if (rule.getResources().contains("*") || rule.getResources().contains("namespaces")) {
-													if (rule.getVerbs().contains("list") || rule.getVerbs().contains("*")){
-														if(nsNameList == null) nsNameList = new ArrayList<>();
-														nsNameList.add(ns.getMetadata().getName());
+												if (rule.getResources()!= null) {
+													if (rule.getResources().contains("*") || rule.getResources().contains("namespaces")) {
+														if( rule.getVerbs()!=null) {
+															if (rule.getVerbs().contains("list") || rule.getVerbs().contains("*")){
+																if(nsNameList == null) nsNameList = new ArrayList<>();
+																nsNameList.add(ns.getMetadata().getName());
+															}
+														}	
 													}
 												}
 											}
