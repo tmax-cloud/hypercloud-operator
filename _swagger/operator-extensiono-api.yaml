@@ -437,4 +437,85 @@ paths:
                       "meteringTime": 1585098000000
                     }
                   ]
+  /nameSpace:
+    get:
+      tags:
+      - "Namespace"
+      summary: "NameSpace List Get Service by User"
+      parameters:
+      - $ref: "#/components/parameters/tokenParam"
+      - $ref: "#/components/parameters/offsetParam"
+      - $ref: "#/components/parameters/limitParam"
+      responses:
+        200:
+          description: Service OK
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  {
+  "items": [
+    {
+      "apiVersion": "v1",
+      "kind": "Namespace",
+      "metadata": {
+        "creationTimestamp": {
+          "iMillis": 1579593227000,
+          "iChronology": {
+            "iBase": {
+              "iBase": {
+                "iBase": {
+                  "iMinDaysInFirstWeek": 4
+                }
+              }
+            }
+          }
+        },
+        "name": "test-ns",
+        "resourceVersion": "25728383",
+        "selfLink": "/api/v1/namespaces/test-ns",
+        "uid": "385dbd2a-66a1-43d2-97dd-e53509f81337"
+      },
+      "spec": {
+        "finalizers": [
+          "kubernetes"
+        ]
+      },
+      "status": {
+        "phase": "Active"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Namespace",
+      "metadata": {
+        "creationTimestamp": {
+          "iMillis": 1585534904000,
+          "iChronology": {
+            "iBase": {
+              "iBase": {
+                "iBase": {
+                  "iMinDaysInFirstWeek": 4
+                }
+              }
+            }
+          }
+        },
+        "name": "test-system",
+        "resourceVersion": "51672924",
+        "selfLink": "/api/v1/namespaces/test-system",
+        "uid": "e45baf2c-abef-4677-b371-27053003b8a0"
+      },
+      "spec": {
+        "finalizers": [
+          "kubernetes"
+        ]
+      },
+      "status": {
+        "phase": "Active"
+      }
+    }
+  ]
+}            
 # EOF
