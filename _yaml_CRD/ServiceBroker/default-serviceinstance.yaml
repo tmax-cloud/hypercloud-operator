@@ -8,8 +8,8 @@ metadata:
   annotations:
     example: annotation
 spec:
-  serviceClassName: example-template
-  servicePlanName: example-plan
+  clusterServiceClassName: example-template
+  clusterServicePlanName: example-plan
   parameters:
     PARAM1: value1
     PARAM2: value2
