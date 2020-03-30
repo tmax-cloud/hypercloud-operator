@@ -2688,9 +2688,11 @@ public class K8sApiCaller {
 							if (rule.getResources()!= null) {
 								if (rule.getResources().contains("*") || rule.getResources().contains("namespaces")) {
 									logger.info("clusterRoleName : " + clusterRoleName );
-									if (rule.getVerbs().contains("list") || rule.getVerbs().contains("*")){
-										clusterRoleFlag = true;
-									}
+									if( rule.getVerbs()!=null) {
+										if (rule.getVerbs().contains("list") || rule.getVerbs().contains("*")){
+											clusterRoleFlag = true;
+										}
+									}	
 								}
 							}
 						}
