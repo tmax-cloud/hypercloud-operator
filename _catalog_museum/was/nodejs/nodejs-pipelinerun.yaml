@@ -1,0 +1,23 @@
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineRun
+metadata:
+  name: nodejs-cicd-pipeline-run-1
+  namespace: default
+spec:
+  serviceAccountName: tutorial-service
+  pipelineRef:
+    name: nodejs-cicd-pipeline
+  resources:
+  - name: source-repo
+    resourceRef:
+      name: nodejs-sample-git
+  - name: image
+    resourceRef:
+      name: nodejs-sample-image
+  params:
+  - name: app-name
+    value: nodejs-sample-app
+  - name: replica
+    value: "1"
+  - name: port
+    value: "8080"

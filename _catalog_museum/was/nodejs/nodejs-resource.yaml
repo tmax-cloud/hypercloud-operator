@@ -1,0 +1,23 @@
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: nodejs-sample-git
+  namespace: default
+spec:
+  type: git
+  params:
+  - name: revision
+    value: master
+  - name: url
+    value: https://github.com/nodeshift-starters/nodejs-rest-http
+---
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: nodejs-sample-image
+  namespace: default
+spec:
+  type: image
+  params:
+  - name: url
+    value: 192.168.6.110:5000/nodejs-sample:latest

@@ -1,0 +1,23 @@
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineRun
+metadata:
+  name: wildfly-cicd-pipeline-run-1
+  namespace: default
+spec:
+  serviceAccountName: tutorial-service
+  pipelineRef:
+    name: wildfly-cicd-pipeline
+  resources:
+  - name: source-repo
+    resourceRef:
+      name: wildfly-sample-git
+  - name: image
+    resourceRef:
+      name: wildfly-sample-image
+  params:
+  - name: app-name
+    value: wildfly-sample-app
+  - name: replica
+    value: "1"
+  - name: port
+    value: "8080"

@@ -1,6 +1,26 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.0.4 start -------------------->
+
+## HyperCloudServer_4.1.0.4 (2020년 03월 30일 월 오전 10:25:55)
+
+### Added
+
+### Changed
+  - [mod] service broker -> cluster service broker 로 변경 by seonho_choi
+  - [mod] template instance ownerRef -> service instance 추가 by seonho_choi
+  - [mod] login 실패시 에러메시지 포맷 변경 by taegeon_woo
+  - [mod] service broker 의 namespace 고정 해제 by seonho_choi
+  - [mod] publicIp 조회 가능하게 변경 by taegeon_woo
+  - [mod] template, template instance crd definition 수정. parameter.value data type 이 number 도 가능하도록 함 by seonho_choi
+
+### Fixed
+
+### Etc
+
+<!--------------------- v4.1.0.4 end --------------------->
+
 <!-------------------- v4.1.0.3 start -------------------->
 
 ## HyperCloudServer_4.1.0.3 (2020년 03월 26일 목 오후 12:09:21)
