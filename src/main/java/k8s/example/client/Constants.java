@@ -90,6 +90,7 @@ public class Constants {
 	
 	// LoginPage of HyperCloud4
 	public static final String LOGIN_PAGE_URI = "http://192.168.8.36/oauth/login.html";
+	public static final String LOGIN_FAILED = "Wrong ID or Password";
 	
 	// Metering Cron Expression
 	public static final String METERING_CRON_EXPRESSION = "0 0/5 * 1/1 * ? *"; // sec, mins, hrs, dom(day of month), month, dow(day of week)

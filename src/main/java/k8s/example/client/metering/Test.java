@@ -4,24 +4,28 @@ import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.Calendar;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.JWTVerifier;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.interfaces.DecodedJWT;
+
+import k8s.example.client.Constants;
+import k8s.example.client.Util;
+
 public class Test {
 
-	public static void main(String[] args) {
-		System.out.println(System.currentTimeMillis());
-		System.out.println(new Timestamp(System.currentTimeMillis()));
+	public static void main(String[] args) throws Exception {
+		// Verify access token	
+		String accessToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiY2x1c3Rlci1hZG1pbiIsInRva2VuSWQiOiJjM2NiNWM4Ny0wYjRkLTQyZGItYjg2OC0wZGY1NTlmOGRkYmEiLCJpc3MiOiJUbWF4LVByb0F1dGgtV2ViSG9vayIsImlkIjoiYWRtaW5AdG1heC5jby5rciIsImV4cCI6MTU4NTQ4NTY2NX0.QJcSq9TfyR-v28fDPJ3ZOfqv9jrt1bta6K1Bt797puQ";
+		JWTVerifier verifier = JWT.require(Algorithm.HMAC256(Constants.ACCESS_TOKEN_SECRET_KEY)).build();
+		DecodedJWT jwt = verifier.verify(accessToken);
 		
-	    Date d = new Date(System.currentTimeMillis());
-	    Calendar cal = Calendar.getInstance();
-	    cal.setTime(d);
-	    cal.set(Calendar.MONTH, 0);
-	    cal.set(Calendar.DAY_OF_MONTH, 1);
-	    cal.set(Calendar.HOUR_OF_DAY, 0);
-	    cal.set(Calendar.MINUTE, 0);
-	    cal.set(Calendar.SECOND, 0);
-	    cal.set(Calendar.MILLISECOND, 0);
-
-		System.out.println(cal.getTime().getTime());
-	    System.out.println(new Timestamp(cal.getTime().getTime()));
+		String issuer = jwt.getIssuer();
+		String userId = jwt.getClaims().get(Constants.CLAIM_USER_ID).asString();
+		String tokenId = jwt.getClaims().get(Constants.CLAIM_TOKEN_ID).asString();
+		System.out.println( "  Issuer: " + issuer );
+		System.out.println( "  User ID: " + userId );
+		System.out.println( "  Token ID: " + tokenId );
 
 	}
 

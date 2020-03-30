@@ -50,6 +50,9 @@ import io.kubernetes.client.openapi.apis.AppsV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.apis.CustomObjectsApi;
 import io.kubernetes.client.openapi.apis.RbacAuthorizationV1Api;
+import io.kubernetes.client.openapi.models.V1ClusterRole;
+import io.kubernetes.client.openapi.models.V1ClusterRoleBinding;
+import io.kubernetes.client.openapi.models.V1ClusterRoleBindingList;
 import io.kubernetes.client.openapi.models.V1Container;
 import io.kubernetes.client.openapi.models.V1ContainerPort;
 import io.kubernetes.client.openapi.models.V1ContainerStatus;
@@ -64,6 +67,7 @@ import io.kubernetes.client.openapi.models.V1LabelSelector;
 import io.kubernetes.client.openapi.models.V1Lifecycle;
 import io.kubernetes.client.openapi.models.V1LoadBalancerIngress;
 import io.kubernetes.client.openapi.models.V1Namespace;
+import io.kubernetes.client.openapi.models.V1NamespaceList;
 import io.kubernetes.client.openapi.models.V1Node;
 import io.kubernetes.client.openapi.models.V1NodeAddress;
 import io.kubernetes.client.openapi.models.V1NodeList;
@@ -76,21 +80,28 @@ import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1PodList;
 import io.kubernetes.client.openapi.models.V1PodSpec;
 import io.kubernetes.client.openapi.models.V1PodTemplateSpec;
+import io.kubernetes.client.openapi.models.V1PolicyRule;
 import io.kubernetes.client.openapi.models.V1Probe;
 import io.kubernetes.client.openapi.models.V1ReplicaSetBuilder;
 import io.kubernetes.client.openapi.models.V1ReplicaSetSpec;
 import io.kubernetes.client.openapi.models.V1ResourceQuota;
 import io.kubernetes.client.openapi.models.V1ResourceQuotaSpec;
 import io.kubernetes.client.openapi.models.V1ResourceRequirements;
+import io.kubernetes.client.openapi.models.V1Role;
 import io.kubernetes.client.openapi.models.V1RoleBinding;
+import io.kubernetes.client.openapi.models.V1RoleBindingList;
+import io.kubernetes.client.openapi.models.V1RoleRef;
 import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.openapi.models.V1SecretKeySelector;
 import io.kubernetes.client.openapi.models.V1SecretVolumeSource;
 import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.V1ServicePort;
 import io.kubernetes.client.openapi.models.V1ServiceSpec;
+import io.kubernetes.client.openapi.models.V1Subject;
 import io.kubernetes.client.openapi.models.V1Volume;
 import io.kubernetes.client.openapi.models.V1VolumeMount;
+import io.kubernetes.client.proto.V1alpha1Rbac;
+import io.kubernetes.client.proto.V1beta1Rbac;
 import io.kubernetes.client.util.Config;
 import k8s.example.client.Constants;
 import k8s.example.client.DataObject.Client;
@@ -159,9 +170,7 @@ public class K8sApiCaller {
 	public static void startWatcher() throws Exception {    	
 		// Get latest resource version
 		logger.info("Get latest resource version");
-
 		int userLatestResourceVersion = 0;
-
 		try {
 			Object response = customObjectApi.listClusterCustomObject(
 					Constants.CUSTOM_OBJECT_GROUP,
@@ -2637,5 +2646,106 @@ public class K8sApiCaller {
 			throw e;
 		}
 		return uid;
+	}
+
+	public static V1NamespaceList getAccessibleNS(String userId) throws ApiException {
+		V1NamespaceList nsList = null;
+		List <String> nsNameList = null;
+		//1. List of ClusterRoleBinding 
+		V1ClusterRoleBindingList crbList = null;
+		List < String > clusterRoleList = null;
+		boolean clusterRoleFlag = false;
+		try {
+			crbList = rbacApi.listClusterRoleBinding("true", false, null, null, null, 1000 , null, 60, false);
+			for (V1ClusterRoleBinding item : crbList.getItems()) {
+				List<V1Subject> subjects = item.getSubjects();
+				V1RoleRef roleRef = item.getRoleRef();
+				for( V1Subject subject : subjects ) {
+					if ( subject.getKind().equalsIgnoreCase("User")) {
+						if( subject.getName().equalsIgnoreCase(userId)) {
+							if (clusterRoleList == null ) clusterRoleList = new ArrayList<>();
+							clusterRoleList.add(roleRef.getName());   // get ClusterRole name
+						}
+					}
+				}	
+			}
+			
+			//2. Check if ClusterRole has NameSpace GET rule 
+			if (clusterRoleList != null) {
+				for ( String clusterRoleName : clusterRoleList ) {
+					V1ClusterRole clusterRole = rbacApi.readClusterRole(clusterRoleName, "true");
+					List<V1PolicyRule> rules = clusterRole.getRules();
+					if ( rules != null) {
+						for ( V1PolicyRule rule : rules ) {
+							if (rule.getResources().contains("'*'") || rule.getResources().contains("namespaces")) {
+								if (rule.getVerbs().contains("list")){
+									clusterRoleFlag = true;
+								}
+							}
+						}
+					}
+					
+				}
+			}
+			// Get All NameSpace
+			if (clusterRoleFlag) {
+				nsList = api.listNamespace("true", false, null, null, null, 100 , null, 60, false);				
+			} else {
+				nsList = api.listNamespace("true", false, null, null, null, 100 , null, 60, false);				
+				//3. List of RoleBinding
+				for ( V1Namespace ns : nsList.getItems()) {
+					V1RoleBindingList rbList = rbacApi.listNamespacedRoleBinding(ns.getMetadata().getName(), "true", false, null, null, null, 100, null, 60, false);
+					
+					for (V1RoleBinding item : rbList.getItems()) {
+						List<V1Subject> subjects = item.getSubjects();
+						V1RoleRef roleRef = item.getRoleRef();
+						
+						for( V1Subject subject : subjects ) {
+							if ( subject.getKind().equalsIgnoreCase("User")) {
+								
+								//4. Check if Role has NameSpace GET rule 
+								if( subject.getName().equalsIgnoreCase(userId)) {  // Found Matching Role
+									V1Role role = rbacApi.readNamespacedRole(roleRef.getName(), ns.getMetadata().getName(), "true");
+									List<V1PolicyRule> rules = role.getRules();
+									
+									if ( rules != null) {
+										for ( V1PolicyRule rule : rules ) {
+											if (rule.getResources().contains("'*'") || rule.getResources().contains("namespaces")) {
+												if (rule.getVerbs().contains("list")){
+													if(nsNameList == null) nsNameList = new ArrayList<>();
+													nsNameList.add(ns.getMetadata().getName());
+												}
+											}
+										}
+									}
+								}
+							}
+						}				
+					}
+				} 		
+				
+				if (nsNameList!=null) {
+					
+					
+					//TODO : nsNameList 중복있을시 제거 재환이 코드 참고하자
+					
+					
+					
+					for (String nsName : nsNameList) {
+						if(nsList == null) nsList = new V1NamespaceList();
+						nsList.addItemsItem( api.readNamespace(nsName, "true", false, false) );
+					}
+				}
+				
+			}
+			
+		} catch (ApiException e) {
+			e.printStackTrace();
+			throw e;
+		}
+		
+		
+			
+		return nsList;
 	}
 }
