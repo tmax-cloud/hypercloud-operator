@@ -84,22 +84,22 @@ public class LoginHandler extends GeneralHandler {
 						.withClaim(Constants.CLAIM_USER_ID, loginInDO.getId())
     					.withClaim(Constants.CLAIM_TOKEN_ID, tokenId);
     			
-    			// TODO
-    			if ( loginInDO.getId().equals( Constants.MASTER_USER_ID ) ) {
+    			if ( K8sApiCaller.verifyAdmin(loginInDO.getId()) ) {
+    				logger.info("ADMIN!!!");
     				tokenBuilder.withClaim( Constants.CLAIM_ROLE, Constants.ROLE_ADMIN );
     			} else {
+    				logger.info("USER!!!");
     				tokenBuilder.withClaim( Constants.CLAIM_ROLE, Constants.ROLE_USER );
     			}
     			
     			String accessToken = tokenBuilder.sign(Algorithm.HMAC256(Constants.ACCESS_TOKEN_SECRET_KEY));
-    			
     			tokenBuilder = JWT.create().withIssuer(Constants.ISSUER)
     					.withExpiresAt(Util.getDateFromSecond(Constants.REFRESH_TOKEN_EXP_TIME));
     			String refreshToken = tokenBuilder.sign(Algorithm.HMAC256(Constants.REFRESH_TOKEN_SECRET_KEY));
 
     			// Save tokens in token CR
             	K8sApiCaller.saveToken(userId, tokenId, Util.Crypto.encryptSHA256(accessToken), Util.Crypto.encryptSHA256(refreshToken));
-            	
+
             	// Get Redirect URI if Exists
             	if ( clientIdRequestParameter != null && appNameRequestParameter != null ) {
         			logger.info(" Login from Client~! Return Redirect URI together ");
@@ -140,6 +140,7 @@ public class LoginHandler extends GeneralHandler {
     			outDO = Constants.LOGIN_FAILED;
     		}
 		} catch (ApiException e) {
+			logger.info( "Exception message: " + e.getResponseBody() );
 			logger.info( "Exception message: " + e.getMessage() );
 			
 			if (e.getResponseBody().contains("NotFound")) {
@@ -172,6 +173,7 @@ public class LoginHandler extends GeneralHandler {
 		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO));
     }
 	
+
 	@Override
     public Response other(
       String method, UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {

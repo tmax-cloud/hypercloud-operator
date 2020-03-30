@@ -2746,4 +2746,39 @@ public class K8sApiCaller {
 		}
 		return nsList;
 	}
+
+	public static boolean verifyAdmin(String userId) throws ApiException {
+		V1ClusterRoleBindingList crbList = null;
+		boolean isAdmin = false;
+		try {
+			crbList = rbacApi.listClusterRoleBinding("true", false, null, null, null, 1000 , null, 60, false);
+			for (V1ClusterRoleBinding item : crbList.getItems()) {
+				List<V1Subject> subjects = item.getSubjects();
+				V1RoleRef roleRef = item.getRoleRef();
+				if (subjects != null) {
+					for( V1Subject subject : subjects ) {
+						if ( subject.getKind().equalsIgnoreCase("User")) {
+							if( subject.getName().equalsIgnoreCase(userId)) {
+								V1ClusterRole clusterRole = rbacApi.readClusterRole(roleRef.getName(), "true");
+								List<V1PolicyRule> rules = clusterRole.getRules();
+								if ( rules != null) {
+									for ( V1PolicyRule rule : rules ) {									
+										if ( rule.getApiGroups().contains("*") && rule.getResources().contains("*") && rule.getVerbs().contains("*") ) {  // check admin rule 
+											isAdmin = true;
+										}
+									}
+								}
+							}
+						}
+					}	
+				}			
+			}
+		}catch (ApiException e) {			
+			logger.info(e.getResponseBody());
+			throw e;
+		} catch(Exception e2) {
+			logger.info(e2.getStackTrace().toString());
+		}
+		return isAdmin;		
+	}
 }
