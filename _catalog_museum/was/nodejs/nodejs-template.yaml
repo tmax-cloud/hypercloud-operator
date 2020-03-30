@@ -1,0 +1,101 @@
+apiVersion: tmax.io/v1
+kind: Template
+metadata:
+  name: nodejs-cicd-template
+imageUrl: https://upload.wikimedia.org/wikipedia/commons/d/d9/Node.js_logo.svg
+provider: tmax
+recommend: false
+shortDescription: nodejs-cicd
+longDescription: nodejs-cicd-template
+tags:
+- was
+- nodejs
+plans:
+- bindable: false
+  description: nodejs
+  name: nodejs-plan1
+objectKinds:
+- Pipeline
+- Condition
+objects:
+- apiVersion: tekton.dev/v1alpha1
+  kind: Pipeline
+  metadata:
+    name: ${PIPELINE_NAME}
+    namespace: ${NAMESPACE}
+  spec:
+    resources:
+    - name: source-repo
+      type: git
+    - name: image
+      type: image
+    params:
+    - name: app-name
+      type: string
+      description: Application name
+    - name: replica
+      type: string
+      description: Number of replica
+      default: "1"
+    - name: port
+      type: string
+      description: Application port
+      default: "8080"
+    tasks:
+    - name: build-source
+      taskRef:
+        name: s2i
+        kind: ClusterTask
+      params:
+      - name: BUILDER_IMAGE
+        value: 192.168.6.110:5000/s2i-nodejs:8
+      resources:
+        inputs:
+        - name: source
+          resource: source-repo
+        outputs:
+        - name: image
+          resource: image
+    - name: deploy
+      conditions:
+      - conditionRef: ${PIPELINE_NAME}-condition
+        resources:
+        - name: scanned-image
+          resource: image
+          from:
+          - build-source
+      taskRef:
+        name: generate-and-deploy-using-kubectl
+        kind: ClusterTask
+      resources:
+        inputs:
+        - name: image
+          resource: image
+          from:
+          - build-source
+      params:
+      - name: app-name
+        value: $(params.app-name)
+      - name: replica
+        value: $(params.replica)
+      - name: port
+        value: $(params.port)
+- apiVersion: tekton.dev/v1alpha1
+  kind: Condition
+  metadata:
+    name: ${PIPELINE_NAME}-condition
+    namespace: ${NAMESPACE}
+  spec:
+    resources:
+    - name: scanned-image
+      type: image
+    check:
+      image: 192.168.6.110:5000/klar:v2.4.0
+      env:
+      - name: CLAIR_ADDR
+        value: http://172.22.11.2:30060
+      - name: CLAIR_THRESHOLD
+        value: '1000'
+      - name: REGISTRY_INSECURE
+        value: 'TRUE'
+      script: '/klar $(resources.scanned-image.url)'

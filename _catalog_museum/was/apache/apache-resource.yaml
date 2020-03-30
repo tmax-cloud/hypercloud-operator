@@ -1,0 +1,23 @@
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: apache-sample-git
+  namespace: default
+spec:
+  type: git
+  params:
+  - name: revision
+    value: master
+  - name: url
+    value: https://github.com/microsoft/project-html-website
+---
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: apache-sample-image
+  namespace: default
+spec:
+  type: image
+  params:
+  - name: url
+    value: 192.168.6.110:5000/apache-sample:latest

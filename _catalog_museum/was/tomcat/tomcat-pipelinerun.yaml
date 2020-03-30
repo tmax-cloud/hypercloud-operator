@@ -1,0 +1,23 @@
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineRun
+metadata:
+  name: tomcat-cicd-pipeline-run-1
+  namespace: default
+spec:
+  serviceAccountName: tutorial-service
+  pipelineRef:
+    name: tomcat-cicd-pipeline
+  resources:
+  - name: source-repo
+    resourceRef:
+      name: tomcat-sample-git
+  - name: image
+    resourceRef:
+      name: tomcat-sample-image
+  params:
+  - name: app-name
+    value: tomcat-sample-app
+  - name: replica
+    value: "1"
+  - name: port
+    value: "8080"

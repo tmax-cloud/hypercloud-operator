@@ -1,0 +1,40 @@
+apiVersion: tmax.io/v1
+kind: TemplateInstance
+metadata:
+  name: mongodb-template-instance
+  namespace: hypercloud4-system
+spec:
+  template:
+    metadata:
+      name: mongodb-template
+    parameters:
+    - name: APP_NAME
+      displayName: AppName
+      description: An App Name
+      required: true
+      value: mongodb-sample-app
+    - name: NAMESPACE
+      displayName: Namespace
+      description: A Namespace Name
+      required: true
+      value: default
+    - displayName: DBStorage
+      name: DB_STORAGE
+      required: true
+      value: "20Gi"
+    - name: MONGODB_USER
+      displayName: MongoDBUser
+      required: true
+      value: root
+    - name: MONGODB_PASSWORD
+      displayName: MongoDBPassword
+      required: true
+      value: root
+    - name: MONGODB_DATABASE
+      displayName: MongoDBDatabase
+      required: true
+      value: root
+    - name: MONGODB_ADMIN_PASSWORD
+      displayName: MongoDBAdminPassword
+      required: true
+      value: root
