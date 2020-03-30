@@ -2,7 +2,6 @@ apiVersion: tmax.io/v1
 kind: Template
 metadata:
   name: redis-template
-  namespace: hypercloud4-system
 shortDescription: redis-deployment
 imageUrl: https://upload.wikimedia.org/wikipedia/en/6/6b/Redis_Logo.svg
 longDescription: redis-deployment

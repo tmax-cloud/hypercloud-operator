@@ -2,7 +2,6 @@ apiVersion: tmax.io/v1
 kind: Template
 metadata:
   name: mariadb-template
-  namespace: hypercloud4-system
 shortDescription: mariadb-deployment
 imageUrl: https://upload.wikimedia.org/wikipedia/commons/c/c9/MariaDB_Logo.png
 longDescription: mariadb-deployment

@@ -2,7 +2,6 @@ apiVersion: tmax.io/v1
 kind: Template
 metadata:
   name: mongodb-template
-  namespace: hypercloud4-system
 shortDescription: mongodb-deployment
 imageUrl: https://upload.wikimedia.org/wikipedia/en/4/45/MongoDB-Logo.svg
 longDescription: mongodb-deployment

@@ -2,7 +2,6 @@ apiVersion: tmax.io/v1
 kind: Template
 metadata:
   name: postgresql-template
-  namespace: hypercloud4-system
 shortDescription: postgresql-deployment
 imageUrl: https://upload.wikimedia.org/wikipedia/commons/2/29/Postgresql_elephant.svg
 longDescription: postgresql-deployment

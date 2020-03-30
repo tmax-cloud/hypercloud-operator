@@ -2,7 +2,6 @@ apiVersion: tmax.io/v1
 kind: Template
 metadata:
   name: mysql-template
-  namespace: hypercloud4-system
 shortDescription: mysql-deployment
 imageUrl: https://upload.wikimedia.org/wikipedia/en/6/62/MySQL.svg
 longDescription: mysql-deployment
