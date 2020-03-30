@@ -14,9 +14,6 @@ plans:
 - bindable: false
   description: tomcat
   name: tomcat-plan1
-objectKinds:
-- Pipeline
-- Condition
 objects:
 - apiVersion: tekton.dev/v1alpha1
   kind: Pipeline

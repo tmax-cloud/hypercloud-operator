@@ -9,11 +9,6 @@ provider: tmax
 tags:
 - db
 - redis
-objectKinds:
-- Service (ClusterIp)
-- PersistentVolumeClaim
-- Secret
-- Deployment
 objects:
 - apiVersion: v1
   kind: Service
@@ -107,7 +102,7 @@ plans:
       amount: 100
       unit: $
   free: false
-  bindable: false
+  bindable: true
   plan_updateable: false
   schemas:
     service_instance:
@@ -127,7 +122,7 @@ plans:
       amount: 500
       unit: $
   free: false
-  bindable: false
+  bindable: true
   plan_updateable: false
   schemas:
     service_instance:

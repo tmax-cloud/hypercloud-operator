@@ -14,9 +14,6 @@ plans:
 - bindable: false
   description: nodejs
   name: nodejs-plan1
-objectKinds:
-- Pipeline
-- Condition
 objects:
 - apiVersion: tekton.dev/v1alpha1
   kind: Pipeline
