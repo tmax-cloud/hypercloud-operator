@@ -136,7 +136,7 @@ public class LoginHandler extends GeneralHandler {
     		} else {
     			logger.info("  Login fail. Wrong password.");
     			
-    			status = Status.UNAUTHORIZED;
+    			status = Status.OK; //ui요청
     			outDO = Constants.LOGIN_FAILED;
     		}
 		} catch (ApiException e) {
@@ -145,7 +145,7 @@ public class LoginHandler extends GeneralHandler {
 			
 			if (e.getResponseBody().contains("NotFound")) {
 				logger.info( "  Login fail. User not exist." );
-				status = Status.UNAUTHORIZED;
+				status = Status.OK; //ui요청
 				outDO = Constants.LOGIN_FAILED;
 			} else {
 				logger.info( "Response body: " + e.getResponseBody() );
@@ -167,8 +167,13 @@ public class LoginHandler extends GeneralHandler {
 			out.setMsg(outDO);
 			Gson gson = new GsonBuilder().setPrettyPrinting().create();
 			outDO = gson.toJson(out).toString();
-		}	
-
+		} else if ( status.equals(Status.UNAUTHORIZED) && outDO.equals(Constants.LOGIN_FAILED)) { //ui요청
+			CommonOutDO out = new CommonOutDO();
+			out.setMsg(outDO);
+			Gson gson = new GsonBuilder().setPrettyPrinting().create();
+			outDO = gson.toJson(out).toString();
+		}
+ 
 //		logger.info();
 		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO));
     }

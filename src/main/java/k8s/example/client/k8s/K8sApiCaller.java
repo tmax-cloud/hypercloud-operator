@@ -2659,6 +2659,7 @@ public class K8sApiCaller {
 		try {
 			crbList = rbacApi.listClusterRoleBinding("true", false, null, null, null, 1000 , null, 60, false);
 			for (V1ClusterRoleBinding item : crbList.getItems()) {
+				logger.info("111");
 
 				List<V1Subject> subjects = item.getSubjects();
 				V1RoleRef roleRef = item.getRoleRef();
@@ -2679,10 +2680,14 @@ public class K8sApiCaller {
 			if (clusterRoleList != null) {
 				for ( String clusterRoleName : clusterRoleList ) {
 					V1ClusterRole clusterRole = rbacApi.readClusterRole(clusterRoleName, "true");
+					logger.info("222");
+
 					List<V1PolicyRule> rules = clusterRole.getRules();
 					if ( rules != null) {
 						for ( V1PolicyRule rule : rules ) {
 							if (rule.getResources().contains("*") || rule.getResources().contains("namespaces")) {
+								logger.info("333");
+
 								if (rule.getVerbs().contains("list")){
 									clusterRoleFlag = true;
 								}
