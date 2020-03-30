@@ -4,8 +4,8 @@ metadata:
   name: nginx-instance
   namespace: hypercloud-system
 spec:
-  serviceClassName: nginx-template
-  servicePlanName: example-plan1
+  clusterServiceClassName: nginx-template
+  clusterServicePlanName: example-plan1
   parameters:
     NAME: nginx
     IMAGE: nginx:1

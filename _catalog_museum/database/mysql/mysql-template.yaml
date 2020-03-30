@@ -1,0 +1,143 @@
+apiVersion: tmax.io/v1
+kind: Template
+metadata:
+  name: mysql-template
+shortDescription: mysql-deployment
+imageUrl: https://upload.wikimedia.org/wikipedia/en/6/62/MySQL.svg
+longDescription: mysql-deployment
+provider: tmax
+tags:
+- db
+- mysql
+objects:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: ${APP_NAME}-service
+    namespace: ${NAMESPACE}
+    labels:
+      app: ${APP_NAME}
+  spec:
+    ports:
+    - port: 3306
+    selector:
+      app: ${APP_NAME}
+      tier: mysql
+    clusterIP: None
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: ${APP_NAME}-pvc
+    namespace: ${NAMESPACE}
+    labels:
+      app: ${APP_NAME}
+  spec:
+    #storageClassName: manual
+    storageClassName: csi-cephfs-sc
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: ${DB_STORAGE}
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    name: ${APP_NAME}-secret
+    namespace: ${NAMESPACE}
+  type: Opaque
+  stringData:
+    user: ${MYSQL_USER}
+    password: ${MYSQL_PASSWORD}
+    database: ${MYSQL_DATABASE}
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: ${APP_NAME}-mysql
+    namespace: ${NAMESPACE}
+    labels:
+      app: ${APP_NAME}
+  spec:
+    selector:
+      matchLabels:
+        app: ${APP_NAME}
+        tier: mysql
+    strategy:
+      type: Recreate
+    template:
+      metadata:
+        labels:
+          app: ${APP_NAME}
+          tier: mysql
+      spec:
+        containers:
+        - image: 192.168.6.110:5000/centos/mysql:5.7
+          name: mysql
+          env:
+          - name: MYSQL_USER
+            valueFrom:
+              secretKeyRef:
+                name: ${APP_NAME}-secret
+                key: user
+          - name: MYSQL_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: ${APP_NAME}-secret
+                key: password
+          - name: MYSQL_DATABASE
+            valueFrom:
+              secretKeyRef:
+                name: ${APP_NAME}-secret
+                key: database
+          ports:
+          - containerPort: 3306
+            name: mysql
+          volumeMounts:
+          - name: mysql-persistent-storage
+            mountPath: /var/lib/mysql/data
+        volumes:
+        - name: mysql-persistent-storage
+          persistentVolumeClaim:
+            claimName: ${APP_NAME}-pvc
+plans:
+- name: mysql-plan1
+  description: mysql
+  metadata:
+    bullets:
+    - 'Storage Capacity: 5Gi'
+    costs:
+      amount: 100
+      unit: $
+  free: false
+  bindable: true
+  plan_updateable: false
+  schemas:
+    service_instance:
+      create:
+        parameters:
+          APP_NAME: mysql-deploy
+          NAMESPACE: default
+          DB_STORAGE: 5Gi
+          MYSQL_USER: root1
+          MYSQL_PASSWORD: tmax@23
+          MYSQL_DATABASE: root1
+- name: mysql-plan2
+  description: mysql
+  metadata:
+    bullets:
+    - 'Storage Capacity: 30Gi'
+    costs:
+      amount: 500
+      unit: $
+  free: false
+  bindable: true
+  plan_updateable: false
+  schemas:
+    service_instance:
+      create:
+        parameters:
+          APP_NAME: mysql-deploy
+          NAMESPACE: default
+          DB_STORAGE: 30Gi
+          MYSQL_USER: root1
+          MYSQL_PASSWORD: tmax@23
+          MYSQL_DATABASE: root1

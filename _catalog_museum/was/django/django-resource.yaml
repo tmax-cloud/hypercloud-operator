@@ -1,0 +1,23 @@
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: django-sample-git
+  namespace: default
+spec:
+  type: git
+  params:
+  - name: revision
+    value: master
+  - name: url
+    value: https://github.com/cqbqdd11519/django-realworld-example-app
+---
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: django-sample-image
+  namespace: default
+spec:
+  type: image
+  params:
+  - name: url
+    value: 192.168.6.110:5000/django-sample:latest
