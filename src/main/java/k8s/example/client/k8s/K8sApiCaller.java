@@ -2205,6 +2205,7 @@ public class K8sApiCaller {
 									} else {
 										servicePlan.setBindable(plan.get("bindable").asBoolean());
 									}
+									defaultPlaneId++;
 									
 									logger.info("Catalog Debug 4");
 									try {
