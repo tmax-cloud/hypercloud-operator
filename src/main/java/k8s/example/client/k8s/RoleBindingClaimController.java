@@ -21,9 +21,10 @@ import k8s.example.client.models.NamespaceClaim;
 import k8s.example.client.models.RoleBindingClaim;
 
 public class RoleBindingClaimController extends Thread {
-	private final Watch<RoleBindingClaim> rbcController;
+	private Watch<RoleBindingClaim> rbcController;
 	private static int latestResourceVersion = 0;
 	private CustomObjectsApi api = null;
+	ApiClient client = null;
     private Logger logger = Main.logger;
 
 	RoleBindingClaimController(ApiClient client, CustomObjectsApi api, int resourceVersion) throws Exception {
@@ -31,72 +32,79 @@ public class RoleBindingClaimController extends Thread {
 				api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_ROLEBINDINGCLAIM, null, null, null, null, null, Integer.toString( resourceVersion ), null, Boolean.TRUE, null),
 				new TypeToken<Watch.Response<RoleBindingClaim>>() {}.getType());
 		this.api = api;
+		this.client = client;
 		latestResourceVersion = resourceVersion;
 	}
 	
 	@Override
 	public void run() {
 		try {
-			rbcController.forEach(response -> {
-				try {
-					if (Thread.interrupted()) {
-						logger.info("Interrupted!");
-						rbcController.close();
-					}
-				} catch (Exception e) {
-					logger.info(e.getMessage());
-				}
-				
-				
-				// Logic here
-				String claimName = "unknown";
-				String claimNamespace = "unknown";
-				try {
-					RoleBindingClaim claim = response.object;
-
-					if( claim != null) {
-						latestResourceVersion = Integer.parseInt( response.object.getMetadata().getResourceVersion() );
-						String eventType = response.type.toString(); //ADDED, MODIFIED, DELETED
-						logger.info("[RoleBindingClaim Controller] Event Type : " + eventType );
-						logger.info("[RoleBindingClaim Controller] == ResourceQuotaClaim == \n" + claim.toString());
-						claimName = claim.getMetadata().getName();
-						claimNamespace = claim.getMetadata().getNamespace();
-						switch( eventType ) {
-							case Constants.EVENT_TYPE_ADDED : 
-								// Patch Status to Awaiting
-								replaceRbcStatus( claim.getMetadata().getName(), Constants.CLAIM_STATUS_AWAITING, "wait for admin permission", claimNamespace );
-								break;
-							case Constants.EVENT_TYPE_MODIFIED : 
-								String status = getClaimStatus( claim.getMetadata().getName(), claimNamespace );
-								if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && !K8sApiCaller.roleBindingAlreadyExist( claimName, claimNamespace ) ) {
-									K8sApiCaller.createRoleBinding( claim );
-									replaceRbcStatus( claim.getMetadata().getName(), Constants.CLAIM_STATUS_SUCCESS, "rolebinding create success.", claimNamespace );
-								} else if ( ( status.equals( Constants.CLAIM_STATUS_AWAITING ) || status.equals( Constants.CLAIM_STATUS_REJECT ) ) && K8sApiCaller.roleBindingAlreadyExist( claimName, claimNamespace ) ) {
-									replaceRbcStatus( claim.getMetadata().getName(), Constants.CLAIM_STATUS_SUCCESS, "rolebinding create success.", claimNamespace );
-								}
-								break;
-							case Constants.EVENT_TYPE_DELETED : 
-								// Nothing to do
-								break;
+			while(true) {
+				rbcController.forEach(response -> {
+					try {
+						if (Thread.interrupted()) {
+							logger.info("Interrupted!");
+							rbcController.close();
 						}
+					} catch (Exception e) {
+						logger.info(e.getMessage());
 					}
 					
-				} catch (Exception e) {
-					logger.info("Exception: " + e.getMessage());
-					StringWriter sw = new StringWriter();
-					e.printStackTrace(new PrintWriter(sw));
-					logger.info(sw.toString());
+					
+					// Logic here
+					String claimName = "unknown";
+					String claimNamespace = "unknown";
 					try {
-						replaceRbcStatus( claimName, Constants.CLAIM_STATUS_ERROR, e.getMessage(), claimNamespace );
-					} catch (ApiException e1) {
-						e1.printStackTrace();
-						logger.info("Resource Quota Claim Controller Exception : Change Status 'Error' Fail ");
+						RoleBindingClaim claim = response.object;
+
+						if( claim != null) {
+							latestResourceVersion = Integer.parseInt( response.object.getMetadata().getResourceVersion() );
+							String eventType = response.type.toString(); //ADDED, MODIFIED, DELETED
+							logger.info("[RoleBindingClaim Controller] Event Type : " + eventType );
+							logger.info("[RoleBindingClaim Controller] == ResourceQuotaClaim == \n" + claim.toString());
+							claimName = claim.getMetadata().getName();
+							claimNamespace = claim.getMetadata().getNamespace();
+							switch( eventType ) {
+								case Constants.EVENT_TYPE_ADDED : 
+									// Patch Status to Awaiting
+									replaceRbcStatus( claim.getMetadata().getName(), Constants.CLAIM_STATUS_AWAITING, "wait for admin permission", claimNamespace );
+									break;
+								case Constants.EVENT_TYPE_MODIFIED : 
+									String status = getClaimStatus( claim.getMetadata().getName(), claimNamespace );
+									if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && !K8sApiCaller.roleBindingAlreadyExist( claimName, claimNamespace ) ) {
+										K8sApiCaller.createRoleBinding( claim );
+										replaceRbcStatus( claim.getMetadata().getName(), Constants.CLAIM_STATUS_SUCCESS, "rolebinding create success.", claimNamespace );
+									} else if ( ( status.equals( Constants.CLAIM_STATUS_AWAITING ) || status.equals( Constants.CLAIM_STATUS_REJECT ) ) && K8sApiCaller.roleBindingAlreadyExist( claimName, claimNamespace ) ) {
+										replaceRbcStatus( claim.getMetadata().getName(), Constants.CLAIM_STATUS_SUCCESS, "rolebinding create success.", claimNamespace );
+									}
+									break;
+								case Constants.EVENT_TYPE_DELETED : 
+									// Nothing to do
+									break;
+							}
+						}
+						
+					} catch (Exception e) {
+						logger.info("Exception: " + e.getMessage());
+						StringWriter sw = new StringWriter();
+						e.printStackTrace(new PrintWriter(sw));
+						logger.info(sw.toString());
+						try {
+							replaceRbcStatus( claimName, Constants.CLAIM_STATUS_ERROR, e.getMessage(), claimNamespace );
+						} catch (ApiException e1) {
+							e1.printStackTrace();
+							logger.info("Resource Quota Claim Controller Exception : Change Status 'Error' Fail ");
+						}
+					} catch (Throwable e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
 					}
-				} catch (Throwable e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			});
+				});
+				logger.info("=============== RBC 'For Each' END ===============");
+				rbcController = Watch.createWatch(client,
+						api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_ROLEBINDINGCLAIM, null, null, null, null, null, Integer.toString( latestResourceVersion ), null, Boolean.TRUE, null),
+						new TypeToken<Watch.Response<RoleBindingClaim>>() {}.getType());
+			}
 		} catch (Exception e) {
 			logger.info("Resource Quota Claim Controller Exception: " + e.getMessage());
 			StringWriter sw = new StringWriter();

@@ -27,7 +27,7 @@ import k8s.example.client.Main;
 import k8s.example.client.k8s.apis.CustomResourceApi;
 
 public class TemplateOperator extends Thread {
-	private final Watch<Object> watchInstance;
+	private Watch<Object> watchInstance;
 	private static int latestResourceVersion = 0;
     private Logger logger = Main.logger;
 	
@@ -52,74 +52,81 @@ public class TemplateOperator extends Thread {
 	@Override
 	public void run() {
 		try {
-			watchInstance.forEach(response -> {
-				try {
-					if(Thread.interrupted()) {
-						logger.info("Interrupted!");
-						watchInstance.close();
+			while(true) {
+				watchInstance.forEach(response -> {
+					try {
+						if(Thread.interrupted()) {
+							logger.info("Interrupted!");
+							watchInstance.close();
+						}
+					} catch(Exception e) {
+						logger.info(e.getMessage());
 					}
-				} catch(Exception e) {
-					logger.info(e.getMessage());
-				}
-				
-				try {
-					JsonNode template = numberTypeConverter(objectToJsonNode(response.object));
-					String templateName = template.get("metadata").get("name").asText();
-					String namespace = template.get("metadata").get("namespace").asText();
+					
+					try {
+						JsonNode template = numberTypeConverter(objectToJsonNode(response.object));
+						String templateName = template.get("metadata").get("name").asText();
+						String namespace = template.get("metadata").get("namespace").asText();
 
-					logger.info("[Template Operator] Event Type : " + response.type.toString()); //ADDED, MODIFIED, DELETED
-					logger.info("[Template Operator] Template Name : " + templateName);
-					logger.info("[Template Operator] Template Namespace : " + namespace);
+						logger.info("[Template Operator] Event Type : " + response.type.toString()); //ADDED, MODIFIED, DELETED
+						logger.info("[Template Operator] Template Name : " + templateName);
+						logger.info("[Template Operator] Template Namespace : " + namespace);
 
-	        		latestResourceVersion = template.get("metadata").get("resourceVersion").asInt();
-	        		logger.info("[Template Operator] Custom LatestResourceVersion : " + latestResourceVersion);
-	        		
-	        		if(response.type.toString().equals("ADDED")) {
-	        			JsonNode templateObjs = numberTypeConverter(objectToJsonNode(template).get("objects"));
-	        			JSONArray kindArr = new JSONArray();
-    					
-	        			if(templateObjs.isArray()) {
-	        				for(JsonNode object : templateObjs) {
-	        					String kind = object.get("kind").asText();
-	        					if(kind.equals("Service")) {
-	        						if ( object.get("spec").get("type") == null) {
-		        						kind += " (ClusterIp)";
-	        						} else {
-	        							String type = object.get("spec").get("type").asText();
-		        						kind += " (" + type + ")";
-	        						}
-	        					}
-	        					kindArr.add(kind);
+		        		latestResourceVersion = template.get("metadata").get("resourceVersion").asInt();
+		        		logger.info("[Template Operator] Custom LatestResourceVersion : " + latestResourceVersion);
+		        		
+		        		if(response.type.toString().equals("ADDED")) {
+		        			JsonNode templateObjs = numberTypeConverter(objectToJsonNode(template).get("objects"));
+		        			JSONArray kindArr = new JSONArray();
+	    					
+		        			if(templateObjs.isArray()) {
+		        				for(JsonNode object : templateObjs) {
+		        					String kind = object.get("kind").asText();
+		        					if(kind.equals("Service")) {
+		        						if ( object.get("spec").get("type") == null) {
+			        						kind += " (ClusterIp)";
+		        						} else {
+		        							String type = object.get("spec").get("type").asText();
+			        						kind += " (" + type + ")";
+		        						}
+		        					}
+		        					kindArr.add(kind);
+			        			}
 		        			}
-	        			}
-	        			
-    					logger.info("[Template Operator] Object to be patched to objectKinds: " + kindArr.toString());
-    					
-    					JSONObject patch = new JSONObject();
-    					JSONArray patchArray = new JSONArray();
-    					patch.put("op", "add");
-    					patch.put("path", "/objectKinds");
-    					patch.put("value", kindArr);
-    					patchArray.add(patch);
-    					
-    					try{
-    						Object result = tpApi.patchNamespacedCustomObject(
-    								Constants.CUSTOM_OBJECT_GROUP, 
-    								Constants.CUSTOM_OBJECT_VERSION, 
-    								namespace, 
-    								Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE, 
-    								templateName, 
-    								patchArray);
-    						logger.info(result.toString());
-    					} catch (ApiException e) {
-    						throw new Exception(e.getResponseBody());
-    					}
-    					
-	        		}
-				} catch(Exception e) {
-					logger.info(e.getMessage());
-				}
-        	});
+		        			
+	    					logger.info("[Template Operator] Object to be patched to objectKinds: " + kindArr.toString());
+	    					
+	    					JSONObject patch = new JSONObject();
+	    					JSONArray patchArray = new JSONArray();
+	    					patch.put("op", "add");
+	    					patch.put("path", "/objectKinds");
+	    					patch.put("value", kindArr);
+	    					patchArray.add(patch);
+	    					
+	    					try{
+	    						Object result = tpApi.patchNamespacedCustomObject(
+	    								Constants.CUSTOM_OBJECT_GROUP, 
+	    								Constants.CUSTOM_OBJECT_VERSION, 
+	    								namespace, 
+	    								Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE, 
+	    								templateName, 
+	    								patchArray);
+	    						logger.info(result.toString());
+	    					} catch (ApiException e) {
+	    						throw new Exception(e.getResponseBody());
+	    					}
+	    					
+		        		}
+					} catch(Exception e) {
+						logger.info(e.getMessage());
+					}
+	        	});
+				logger.info("=============== Template 'For Each' END ===============");
+				watchInstance = Watch.createWatch(
+				        client,
+				        tpApi.listClusterCustomObjectCall(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE, null, null, null, null, null, String.valueOf(latestResourceVersion), null, Boolean.TRUE, null),
+				        new TypeToken<Watch.Response<Object>>(){}.getType());
+			}
 		} catch (Exception e) {
 			logger.info("[Template Operator] Template Operator Exception: " + e.getMessage());
 		}
