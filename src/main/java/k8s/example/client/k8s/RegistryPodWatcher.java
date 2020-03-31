@@ -82,6 +82,7 @@ public class RegistryPodWatcher extends Thread {
 					e.printStackTrace();
 				}
 			});
+			logger.info("@@@@@@@@@@@@@@@@@@@@ Registry Pod 'For Each' END @@@@@@@@@@@@@@@@@@@@");
 		} catch (Exception e) {
 			logger.info("Registry Watcher Exception: " + e.getMessage());
 			StringWriter sw = new StringWriter();

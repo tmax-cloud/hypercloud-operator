@@ -15,8 +15,10 @@ import k8s.example.client.Main;
 import k8s.example.client.DataObject.UserCR;
 
 public class UserWatcher extends Thread {
-	private final Watch<UserCR> watchUser;
+	private Watch<UserCR> watchUser;
 	private static String latestResourceVersion = "0";
+	private ApiClient client;
+	private CustomObjectsApi api;
     private Logger logger = Main.logger;
 
 	UserWatcher(ApiClient client, CustomObjectsApi api, String resourceVersion) throws Exception {
@@ -24,43 +26,50 @@ public class UserWatcher extends Thread {
 				//api.listClusterCustomObjectCall("tmax.io", "v1", "users", null, null, null, "encrypted=f", null, resourceVersion, null, Boolean.TRUE, null),
 				api.listClusterCustomObjectCall("tmax.io", "v1", "users", null, null, null, "encrypted=f", null, null, null, Boolean.TRUE, null),
 				new TypeToken<Watch.Response<UserCR>>() {}.getType());
-
-		latestResourceVersion = resourceVersion;
+		this.client = client;
+		this.api = api;
+		this.latestResourceVersion = resourceVersion;
 	}
 	
 	@Override
 	public void run() {
 		try {
-			watchUser.forEach(response -> {
-				try {
-					if (Thread.interrupted()) {
-						logger.info("Interrupted!");
-						watchUser.close();
+			while(true) {
+				watchUser.forEach(response -> {
+					try {
+						if (Thread.interrupted()) {
+							logger.info("Interrupted!");
+							watchUser.close();
+						}
+					} catch (Exception e) {
+						logger.info(e.getMessage());
 					}
-				} catch (Exception e) {
-					logger.info(e.getMessage());
-				}
-				
-				latestResourceVersion = response.object.getMetadata().getResourceVersion();
-				
-				// Logic here
-				try {
-					logger.info("[UserWatcher] Encrypt password of " + response.object.getUserInfo().getEmail());
+					
+					latestResourceVersion = response.object.getMetadata().getResourceVersion();
+					
+					// Logic here
+					try {
+						logger.info("[UserWatcher] Encrypt password of " + response.object.getUserInfo().getEmail());
 
-					K8sApiCaller.encryptUserPassword(
-							response.object.getUserInfo().getEmail().replace("@", "-"), 
-							response.object.getUserInfo().getPassword(),
-							response.object);
-				} catch (ApiException e) {
-					logger.info("ApiException: " + e.getMessage());
-					logger.info(e.getResponseBody());
-				} catch (Exception e) {
-					logger.info("Exception: " + e.getMessage());
-					StringWriter sw = new StringWriter();
-					e.printStackTrace(new PrintWriter(sw));
-					logger.info(sw.toString());
-				}
-			});
+						K8sApiCaller.encryptUserPassword(
+								response.object.getUserInfo().getEmail().replace("@", "-"), 
+								response.object.getUserInfo().getPassword(),
+								response.object);
+					} catch (ApiException e) {
+						logger.info("ApiException: " + e.getMessage());
+						logger.info(e.getResponseBody());
+					} catch (Exception e) {
+						logger.info("Exception: " + e.getMessage());
+						StringWriter sw = new StringWriter();
+						e.printStackTrace(new PrintWriter(sw));
+						logger.info(sw.toString());
+					}
+				});
+				logger.info("=============== User 'For Each' END ===============");
+				watchUser = Watch.createWatch(client,
+						api.listClusterCustomObjectCall("tmax.io", "v1", "users", null, null, null, "encrypted=f", null, null, null, Boolean.TRUE, null),
+						new TypeToken<Watch.Response<UserCR>>() {}.getType());
+			}
 		} catch (Exception e) {
 			logger.info("User Watcher Exception: " + e.getMessage());
 			StringWriter sw = new StringWriter();
