@@ -108,4 +108,10 @@ public class Constants {
 	public static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
 	public static final String DB_URL = "jdbc:mysql://mysql-service.hypercloud4-system:3306/metering?useSSL=false";
 	public static final String USERNAME = "root";
+	
+	// Default Service Classes Values
+	public static final String DEFAULT_IMAGE_URL = "https://folo.co.kr/img/gm_noimage.png";
+	public static final String DEFAULT_PROVIDER = "tmax";
+	public static final String DEFAULT_TAGS = "etc";
+
 }

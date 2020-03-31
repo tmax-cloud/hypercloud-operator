@@ -2117,7 +2117,7 @@ public class K8sApiCaller {
 					service.setDescription(template.get("shortDescription").asText());
 				}
 				if ( template.get("imageUrl") == null ) {
-					serviceMeta.setImageUrl("none"); 
+					serviceMeta.setImageUrl( Constants.DEFAULT_IMAGE_URL ); 
 				} else {
 					serviceMeta.setImageUrl(template.get("imageUrl").asText());
 				}
@@ -2127,11 +2127,10 @@ public class K8sApiCaller {
 					serviceMeta.setLongDescription(template.get("longDescription").asText());
 				}
 				if ( template.get("provider") == null ) {
-					serviceMeta.setProviderDisplayName(template.get("metadata").get("name").asText()); 
+					serviceMeta.setProviderDisplayName(Constants.DEFAULT_PROVIDER); 
 				} else {
 					serviceMeta.setProviderDisplayName(template.get("provider").asText());
 				}
-				
 				if ( template.get("recommend") != null ) {
 					serviceMeta.setRecommend( template.get("recommend").asBoolean() );
 				} else {
@@ -2139,82 +2138,106 @@ public class K8sApiCaller {
 				}
 				
 				List<String> tags = new ArrayList<String>();
-				for(JsonNode tag : template.get("tags")) {
-					tags.add(tag.asText());
+				if ( template.get("tags") != null ) {
+					for(JsonNode tag : template.get("tags")) {
+						tags.add(tag.asText());
+					}
+				} else {
+					tags.add( Constants.DEFAULT_TAGS );
 				}
 				service.setTags(tags);
-				
-				
 				service.setMetadata(serviceMeta);
-				logger.info("Catalog Debug 2");
-				JsonNode objectKinds = template.get("objectKinds");
-				if(objectKinds.isArray()) {
-					List<String> kinds = null;
-					ObjectReader reader = mapper.readerFor(new TypeReference<List<String>>() {});
-					try {
-						kinds = reader.readValue(objectKinds);
-					} catch (IOException e) {
-						logger.info(e.getMessage());;
-					}
-					
-					if(kinds.contains("Secret") || kinds.contains("Service (LoadBalancer)")) {
-						service.setBindable(true);
-					}
-				}
 				
+				
+				logger.info("Catalog Debug 2");
+				if ( template.get("objectKinds") != null ) {
+					JsonNode objectKinds = template.get("objectKinds");
+					if(objectKinds.isArray()) {
+						List<String> kinds = null;
+						ObjectReader reader = mapper.readerFor(new TypeReference<List<String>>() {});
+						try {
+							kinds = reader.readValue(objectKinds);
+						} catch (IOException e) {
+							logger.info(e.getMessage());;
+						}
+						
+						if(kinds.contains("Secret") || kinds.contains("Service (LoadBalancer)")) {
+							service.setBindable(true);
+						}
+					}
+				} else {
+					service.setBindable(false);
+				}
 				service.setBindings_retrievable(false);
 				service.setInstances_retrievable(false);
+				
 				logger.info("Catalog Debug 3");
 				try {
-					JsonNode plans = template.get("plans");
-					if(plans.isArray()) {
-						for(JsonNode plan : plans) {
-							try {
-								ServicePlan servicePlan = new ServicePlan();
-								PlanMetadata planMeta = new PlanMetadata();
-								List<String> bullets = new ArrayList<String>();
-								Cost planCost = new Cost();
-								Schemas planSchema = new Schemas();
-								ServiceInstanceSchema instanceSchema = new ServiceInstanceSchema();
-								InputParametersSchema create = new InputParametersSchema();
-								Map<String, String> parameters = null;
-								
-								servicePlan.setId(plan.get("name").asText());
-								servicePlan.setName(plan.get("name").asText());
-								servicePlan.setDescription(plan.get("description").asText());
-								servicePlan.setBindable(plan.get("bindable").asBoolean());
-								logger.info("Catalog Debug 4");
-								
+					if ( template.get("plans") != null ) {
+						JsonNode plans = template.get("plans");
+						if(plans.isArray()) {
+							int defaultPlaneId = 1;
+							for(JsonNode plan : plans) {
 								try {
-									for(JsonNode bullet : plan.get("metadata").get("bullets")) {
-										bullets.add(bullet.asText());
+									ServicePlan servicePlan = new ServicePlan();
+									PlanMetadata planMeta = new PlanMetadata();
+									List<String> bullets = new ArrayList<String>();
+									Cost planCost = new Cost();
+									Schemas planSchema = new Schemas();
+									ServiceInstanceSchema instanceSchema = new ServiceInstanceSchema();
+									InputParametersSchema create = new InputParametersSchema();
+									Map<String, String> parameters = null;
+									
+									if ( plan.get("name") == null ) {
+										servicePlan.setId(template.get("metadata").get("name").asText() + "-plan" + defaultPlaneId);
+										servicePlan.setName(template.get("metadata").get("name").asText() + "-plan" + defaultPlaneId);
+									} else {
+										servicePlan.setId(plan.get("name").asText());
+										servicePlan.setName(plan.get("name").asText());
 									}
-									planMeta.setBullets(bullets);
+									if ( plan.get("description") == null ) {
+										servicePlan.setDescription(template.get("metadata").get("name").asText() + "-plan" + defaultPlaneId);
+									} else {
+										servicePlan.setDescription(plan.get("description").asText());
+									}
+									if ( plan.get("bindable") == null ) {
+										servicePlan.setBindable(false);
+									} else {
+										servicePlan.setBindable(plan.get("bindable").asBoolean());
+									}
+									defaultPlaneId++;
 									
-									planCost.setAmount(plan.get("metadata").get("costs").get("amount").asText());
-									planCost.setUnit(plan.get("metadata").get("costs").get("unit").asText());
-									planMeta.setCosts(planCost);
-									servicePlan.setMetadata(planMeta);
+									logger.info("Catalog Debug 4");
+									try {
+										for(JsonNode bullet : plan.get("metadata").get("bullets")) {
+											bullets.add(bullet.asText());
+										}
+										planMeta.setBullets(bullets);
+										
+										planCost.setAmount(plan.get("metadata").get("costs").get("amount").asText());
+										planCost.setUnit(plan.get("metadata").get("costs").get("unit").asText());
+										planMeta.setCosts(planCost);
+										servicePlan.setMetadata(planMeta);
+										
+										parameters = mapper.convertValue(plan.get("schemas").get("service_instance").get("create").get("parameters"), new TypeReference<Map<String, String>>(){});
+										create.setParameters(parameters);
+									} catch ( Exception e ) {
+										logger.info("This Plan is Error1");
+									}
 									
-									parameters = mapper.convertValue(plan.get("schemas").get("service_instance").get("create").get("parameters"), new TypeReference<Map<String, String>>(){});
-									create.setParameters(parameters);
-								} catch ( Exception e ) {
-									logger.info("This Plan is Error1");
+									instanceSchema.setCreate(create);
+									planSchema.setService_instance(instanceSchema);
+									servicePlan.setSchemas(planSchema);
+									planList.add(servicePlan);
+								} catch( Exception e) {
+									logger.info("This Plan is Error2");
 								}
-								
-								instanceSchema.setCreate(create);
-								planSchema.setService_instance(instanceSchema);
-								servicePlan.setSchemas(planSchema);
-								planList.add(servicePlan);
-							} catch( Exception e) {
-								logger.info("This Plan is Error2");
 							}
 						}
 					}
 				} catch( Exception e) {
 					logger.info("This Plan is Empty");
 				}
-
 				logger.info("Catalog Debug 5");
 				service.setPlans(planList);
 				serviceList.add(service);
