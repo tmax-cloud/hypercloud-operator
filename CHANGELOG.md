@@ -1,6 +1,30 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.0.5 start -------------------->
+
+## HyperCloudServer_4.1.0.5 (2020년 03월 31일 화 오후  3:58:27)
+
+### Added
+
+### Changed
+  - [mod] Registry registry-login-url annotation 추가 by sukhee_yun
+  - [mod] Template Resource Definition 수정 by seonho_choi
+  - [mod] Template Service Broker Catalog API 예외 처리 및 방어 로직 추가 by seonho_choi
+  - [mod] controller thread down time 최소화 by seonho_choi
+  - [mod] master token 변경, namespaceGet 마스터 토큰으로 되게끔 허용 by taegeon_woo
+  - [mod] NameSpaceHandler.java limit 추가 by taegeon_woo
+  - [mod] 로그인시 아이디 비번 틀릴시 200ok 와 에러메시지 출력하도록 수정 by taegeon_woo
+  - [mod] 로그인시 권한 검사를 통해 admin 판별 하는 로직 추가 by taegeon_woo
+  - [mod] user별 NameSpace list 조회 서비스 구현 완료 by taegeon_woo
+
+### Fixed
+  - [ims][221320] refreshToken 시 시간 변경 가능하도록 변경 by taegeon_woo
+
+### Etc
+
+<!--------------------- v4.1.0.5 end --------------------->
+
 <!-------------------- v4.1.0.4 start -------------------->
 
 ## HyperCloudServer_4.1.0.4 (2020년 03월 30일 월 오전 10:25:55)
