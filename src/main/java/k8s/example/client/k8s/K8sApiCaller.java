@@ -56,7 +56,6 @@ import io.kubernetes.client.openapi.models.V1ClusterRoleBinding;
 import io.kubernetes.client.openapi.models.V1ClusterRoleBindingList;
 import io.kubernetes.client.openapi.models.V1Container;
 import io.kubernetes.client.openapi.models.V1ContainerPort;
-import io.kubernetes.client.openapi.models.V1ContainerStatus;
 import io.kubernetes.client.openapi.models.V1DeleteOptions;
 import io.kubernetes.client.openapi.models.V1EnvVar;
 import io.kubernetes.client.openapi.models.V1EnvVarSource;
@@ -101,8 +100,6 @@ import io.kubernetes.client.openapi.models.V1ServiceSpec;
 import io.kubernetes.client.openapi.models.V1Subject;
 import io.kubernetes.client.openapi.models.V1Volume;
 import io.kubernetes.client.openapi.models.V1VolumeMount;
-import io.kubernetes.client.proto.V1alpha1Rbac;
-import io.kubernetes.client.proto.V1beta1Rbac;
 import io.kubernetes.client.util.Config;
 import k8s.example.client.Constants;
 import k8s.example.client.DataObject.Client;
@@ -114,6 +111,7 @@ import k8s.example.client.Main;
 import k8s.example.client.StringUtil;
 import k8s.example.client.Util;
 import k8s.example.client.k8s.apis.CustomResourceApi;
+import k8s.example.client.metering.util.UIDGenerator;
 import k8s.example.client.models.BindingInDO;
 import k8s.example.client.models.BindingOutDO;
 import k8s.example.client.models.CommandExecOut;
@@ -731,6 +729,9 @@ public class K8sApiCaller {
 	@SuppressWarnings("unchecked")
 	public static void createRegistry(Registry registry) throws Throwable {
 		try {
+			long time = System.currentTimeMillis();
+			String randomUID = UIDGenerator.getInstance().generate32( registry, 8, time );
+			
 			String namespace = registry.getMetadata().getNamespace();
 			String registryId = registry.getMetadata().getName();
 			RegistryService regService = registry.getSpec().getService();
