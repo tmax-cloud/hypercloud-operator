@@ -974,14 +974,14 @@ public class K8sApiCaller {
 			pvcSpec.setResources(pvcResource);
 
 			pvcSpec.setStorageClassName(storageClassName);
-			if(registryPVC.getAccessModes() == null || registryPVC.getAccessModes().size() == 0) {
-				accessModes.add(RegistryPVC.ACCESS_MODE_DEFAULT);
-			}
-			else {
+//			if(registryPVC.getAccessModes() == null || registryPVC.getAccessModes().size() == 0) {
+//				accessModes.add(RegistryPVC.ACCESS_MODE_DEFAULT);
+//			}
+//			else {
 				for(String mode : registryPVC.getAccessModes()) {
 					accessModes.add(mode);
 				}
-			}
+//			}
 			pvcSpec.setAccessModes(accessModes);
 
 			pvc.setMetadata(pvcMeta);

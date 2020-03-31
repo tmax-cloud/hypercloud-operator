@@ -79,6 +79,8 @@ public class RegistryWatcher extends Thread {
 													K8sApiCaller.addRegistryAnnotation(registry);
 													logger.info("Update registry-login-url annotation");
 												}
+												
+												
 											}
 										}
 									}
