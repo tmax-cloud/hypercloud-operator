@@ -40,12 +40,12 @@ public class NameSpaceHandler extends GeneralHandler {
 		V1NamespaceList nsList = null;
 		String outDO = null; 
 		String limit = null;
+		
+		// if limit exists
 		if(session.getParameters()!=null) {
 			if( session.getParameters().get("limit")!= null) {
-				if (session.getParameters().get("limit").get(0)!=null) {
-					limit = session.getParameters().get("limit").get(0);
-					logger.info("limit : " + limit );
-				}
+				limit = session.getParameters().get("limit").get(0);
+				logger.info("limit : " + limit );			
 			}
 		}
 		
@@ -73,11 +73,13 @@ public class NameSpaceHandler extends GeneralHandler {
 			if(verifyAccessToken(accessToken, userId, tokenId, issuer)) {		
 				logger.info( "  Token Validated " );
 				nsList = K8sApiCaller.getAccessibleNS(userId);
-				
-				// Limit 
-				nsList.setItems( nsList.getItems().stream().limit(Integer.parseInt(limit)).collect(Collectors.toList()));		
 				status = Status.OK;
 
+				// Limit 
+				if( limit != null ) {
+					nsList.setItems( nsList.getItems().stream().limit(Integer.parseInt(limit)).collect(Collectors.toList()));		
+				}
+				
 			} else {
 				logger.info( "  Token is not valid" );
 				status = Status.UNAUTHORIZED;
@@ -116,6 +118,9 @@ public class NameSpaceHandler extends GeneralHandler {
 	private boolean verifyAccessToken (String accessToken, String userId, String tokenId, String issuer) throws Exception {
 		boolean result = false;		
 	
+		// for master token
+		if(accessToken.equalsIgnoreCase(Constants.MASTER_TOKEN)) return true;
+		
 		String tokenName = userId.replace("@", "-") + "-" + tokenId;
 		TokenCR token = K8sApiCaller.getToken(tokenName);
 		
@@ -123,7 +128,7 @@ public class NameSpaceHandler extends GeneralHandler {
 		
 		if(issuer.equals(Constants.ISSUER) &&
 				accessToken.equals(token.getAccessToken()))
-			result = true;
+			result = true;		
 		
 		return result;
 	}

@@ -1,7 +1,7 @@
 # Registry Custom Resource
 	- Secure Reigstry 및  secret 관리
 	- Registry의 metadata, SVC(Service), PVC(Persistent Volume Claim) 정보 입력
-	- hpcd-{REGISTRY_NAMESPACE}에 생성되는 Resources 
+	- {REGISTRY_NAMESPACE}에 생성되는 Resources 
 		- SVC: hpcd-{REGISTRY_NAME}
 		- PVC: hpcd-{REGISTRY_NAME}
 		- Secret(Registry Info, type: Opaque): hpcd-{REGISTRY_NAME}
