@@ -74,6 +74,12 @@ public class RegistryWatcher extends Thread {
 												K8sApiCaller.createRegistry(registry);
 												logger.info("Registry is running");
 											}
+											else if (registryCondition.getStatus().equals(RegistryStatus.REGISTRY_PHASE_RUNNING)) {
+												if( registry.getMetadata().getAnnotations().get(Registry.REGISTRY_LOGIN_URL) == null) {
+													K8sApiCaller.addRegistryAnnotation(registry);
+													logger.info("Update registry-login-url annotation");
+												}
+											}
 										}
 									}
 								}

@@ -739,6 +739,7 @@ public class K8sApiCaller {
 			logger.info(e.getResponseBody());
 		}
 	}
+	
 
 	@SuppressWarnings("unchecked")
 	public static void createRegistry(Registry registry) throws Throwable {
@@ -1657,6 +1658,31 @@ public class K8sApiCaller {
 			throw e;
 		}
 
+	}
+
+	@SuppressWarnings("unchecked")
+	public static void addRegistryAnnotation(Registry registry) throws Throwable {
+		String namespace = registry.getMetadata().getNamespace();
+		String registryId = registry.getMetadata().getName();
+		String registryIpPort = "";
+		
+		V1Secret secretRet = api.readNamespacedSecret(Constants.K8S_PREFIX + registryId, namespace, null, null, null);
+
+		Map<String, byte[]> secretMap = secretRet.getData();
+		registryIpPort = new String(secretMap.get("REGISTRY_IP_PORT"));
+		logger.info("REGISTRY_IP_PORT = " + registryIpPort);
+		
+		// ------ Patch Registry
+		Map<String, String> annotations = registry.getMetadata().getAnnotations();
+		annotations.put(Constants.CUSTOM_OBJECT_GROUP + "/registry-login-url", "https://" + registryIpPort);
+		registry.getMetadata().setAnnotations(annotations);
+
+		customObjectApi.replaceNamespacedCustomObject(
+				Constants.CUSTOM_OBJECT_GROUP,
+				Constants.CUSTOM_OBJECT_VERSION,
+				namespace,
+				Constants.CUSTOM_OBJECT_PLURAL_REGISTRY,
+				registryId, registry);
 	}
 	
 	public static void updateRegistryStatus(V1Pod pod) throws Throwable {
