@@ -2260,6 +2260,13 @@ public class K8sApiCaller {
 								}
 							}
 						}
+					} else {
+						ServicePlan servicePlan = new ServicePlan();
+						servicePlan.setId(template.get("metadata").get("name").asText() + "-plan-default");
+						servicePlan.setName(template.get("metadata").get("name").asText() + "-plan-default");
+						servicePlan.setDescription(template.get("metadata").get("name").asText() + "-plan-default");
+						servicePlan.setBindable(false);
+						planList.add(servicePlan);
 					}
 				} catch( Exception e) {
 					logger.info("This Plan is Empty");
