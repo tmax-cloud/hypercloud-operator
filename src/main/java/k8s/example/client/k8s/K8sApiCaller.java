@@ -56,7 +56,6 @@ import io.kubernetes.client.openapi.models.V1ClusterRoleBinding;
 import io.kubernetes.client.openapi.models.V1ClusterRoleBindingList;
 import io.kubernetes.client.openapi.models.V1Container;
 import io.kubernetes.client.openapi.models.V1ContainerPort;
-import io.kubernetes.client.openapi.models.V1ContainerStatus;
 import io.kubernetes.client.openapi.models.V1DeleteOptions;
 import io.kubernetes.client.openapi.models.V1EnvVar;
 import io.kubernetes.client.openapi.models.V1EnvVarSource;
@@ -101,8 +100,6 @@ import io.kubernetes.client.openapi.models.V1ServiceSpec;
 import io.kubernetes.client.openapi.models.V1Subject;
 import io.kubernetes.client.openapi.models.V1Volume;
 import io.kubernetes.client.openapi.models.V1VolumeMount;
-import io.kubernetes.client.proto.V1alpha1Rbac;
-import io.kubernetes.client.proto.V1beta1Rbac;
 import io.kubernetes.client.util.Config;
 import k8s.example.client.Constants;
 import k8s.example.client.DataObject.Client;
@@ -114,6 +111,7 @@ import k8s.example.client.Main;
 import k8s.example.client.StringUtil;
 import k8s.example.client.Util;
 import k8s.example.client.k8s.apis.CustomResourceApi;
+import k8s.example.client.metering.util.UIDGenerator;
 import k8s.example.client.models.BindingInDO;
 import k8s.example.client.models.BindingOutDO;
 import k8s.example.client.models.CommandExecOut;
@@ -355,72 +353,86 @@ public class K8sApiCaller {
 		rbcOperator.start();
 
 		while(true) {
-			if(!userWatcher.isAlive()) {
-				String userLatestResourceVersionStr = UserWatcher.getLatestResourceVersion();
-				logger.info("User watcher is not alive. Restart user watcher! (Latest resource version: " + userLatestResourceVersionStr + ")");
-				userWatcher.interrupt();
-				userWatcher = new UserWatcher(k8sClient, customObjectApi, userLatestResourceVersionStr);
-				userWatcher.start();
+			try {
+				if(!userWatcher.isAlive()) {
+					String userLatestResourceVersionStr = UserWatcher.getLatestResourceVersion();
+					logger.info("User watcher is not alive. Restart user watcher! (Latest resource version: " + userLatestResourceVersionStr + ")");
+					userWatcher.interrupt();
+					userWatcher = new UserWatcher(k8sClient, customObjectApi, userLatestResourceVersionStr);
+					/*Thread.UncaughtExceptionHandler h = new Thread.UncaughtExceptionHandler() {
+						@Override
+						public void uncaughtException(Thread t, Throwable e) {
+							logger.info( "@@@@@@@@@@@@@@@@@@@@ Uncaught Exception User @@@@@@@@@@@@@@@@@@@@" );
+							logger.info( "" + e );
+						}
+					}; 
+					userWatcher.setUncaughtExceptionHandler(h);*/
+					userWatcher.start();
+				}
+	
+				if(!registryWatcher.isAlive()) {
+					String registryLatestResourceVersionStr = RegistryWatcher.getLatestResourceVersion();
+					logger.info("Registry watcher is not alive. Restart registry watcher! (Latest resource version: " + registryLatestResourceVersionStr + ")");
+					registryWatcher.interrupt();
+					registryWatcher = new RegistryWatcher(k8sClient, customObjectApi, registryLatestResourceVersionStr);
+					registryWatcher.start();
+				}
+	
+				
+				if(!registryPodWatcher.isAlive()) {
+					String registryPodLatestResourceVersionStr = RegistryPodWatcher.getLatestResourceVersion();
+					logger.info("Registry pod watcher is not alive. Restart registry pod watcher! (Latest resource version: " + registryPodLatestResourceVersionStr + ")");
+					registryPodWatcher.interrupt();
+					registryPodWatcher = new RegistryPodWatcher(k8sClient, api, registryPodLatestResourceVersionStr);
+					registryPodWatcher.start();
+				}
+				
+				
+				if(!templateOperator.isAlive()) {
+					templateLatestResourceVersion = TemplateOperator.getLatestResourceVersion();
+					logger.info(("Template Operator is not Alive. Restart Operator! (Latest Resource Version: " + templateLatestResourceVersion + ")"));
+					templateOperator.interrupt();
+					templateOperator = new TemplateOperator(k8sClient, templateApi, templateLatestResourceVersion);
+					templateOperator.start();
+				}
+				
+				if(!instanceOperator.isAlive()) {
+					instanceLatestResourceVersion = InstanceOperator.getLatestResourceVersion();
+					logger.info(("Instance Operator is not Alive. Restart Operator! (Latest Resource Version: " + instanceLatestResourceVersion + ")"));
+					instanceOperator.interrupt();
+					instanceOperator = new InstanceOperator(k8sClient, templateApi, instanceLatestResourceVersion);
+					instanceOperator.start();
+				}
+				
+				if(!nscOperator.isAlive()) {
+					nscLatestResourceVersion = NamespaceClaimController.getLatestResourceVersion();
+					logger.info(("Namespace Claim Controller is not Alive. Restart Controller! (Latest Resource Version: " + nscLatestResourceVersion + ")"));
+					nscOperator.interrupt();
+					nscOperator = new NamespaceClaimController(k8sClient, customObjectApi, nscLatestResourceVersion);
+					nscOperator.start();
+				}
+				
+				if(!rqcOperator.isAlive()) {
+					rqcLatestResourceVersion = ResourceQuotaClaimController.getLatestResourceVersion();
+					logger.info(("ResourceQuota Claim Controller is not Alive. Restart Controller! (Latest Resource Version: " + rqcLatestResourceVersion + ")"));
+					rqcOperator.interrupt();
+					rqcOperator = new ResourceQuotaClaimController(k8sClient, customObjectApi, rqcLatestResourceVersion);
+					rqcOperator.start();
+				}
+				
+				if(!rbcOperator.isAlive()) {
+					rbcLatestResourceVersion = RoleBindingClaimController.getLatestResourceVersion();
+					logger.info(("RoleBinding Claim Controller is not Alive. Restart Controller! (Latest Resource Version: " + rbcLatestResourceVersion + ")"));
+					rbcOperator.interrupt();
+					rbcOperator = new RoleBindingClaimController(k8sClient, customObjectApi, rbcLatestResourceVersion);
+					rbcOperator.start();
+				}
+			}catch( Exception e ) {
+				StringWriter sw = new StringWriter();
+				e.printStackTrace(new PrintWriter(sw));
+				logger.info(sw.toString());
 			}
-
-			if(!registryWatcher.isAlive()) {
-				String registryLatestResourceVersionStr = RegistryWatcher.getLatestResourceVersion();
-				logger.info("Registry watcher is not alive. Restart registry watcher! (Latest resource version: " + registryLatestResourceVersionStr + ")");
-				registryWatcher.interrupt();
-				registryWatcher = new RegistryWatcher(k8sClient, customObjectApi, registryLatestResourceVersionStr);
-				registryWatcher.start();
-			}
-
 			
-			if(!registryPodWatcher.isAlive()) {
-				String registryPodLatestResourceVersionStr = RegistryPodWatcher.getLatestResourceVersion();
-				logger.info("Registry pod watcher is not alive. Restart registry pod watcher! (Latest resource version: " + registryPodLatestResourceVersionStr + ")");
-				registryPodWatcher.interrupt();
-				registryPodWatcher = new RegistryPodWatcher(k8sClient, api, registryPodLatestResourceVersionStr);
-				registryPodWatcher.start();
-			}
-			
-			
-			if(!templateOperator.isAlive()) {
-				templateLatestResourceVersion = TemplateOperator.getLatestResourceVersion();
-				logger.info(("Template Operator is not Alive. Restart Operator! (Latest Resource Version: " + templateLatestResourceVersion + ")"));
-				templateOperator.interrupt();
-				templateOperator = new TemplateOperator(k8sClient, templateApi, templateLatestResourceVersion);
-				templateOperator.start();
-			}
-			
-			if(!instanceOperator.isAlive()) {
-				instanceLatestResourceVersion = InstanceOperator.getLatestResourceVersion();
-				logger.info(("Instance Operator is not Alive. Restart Operator! (Latest Resource Version: " + instanceLatestResourceVersion + ")"));
-				instanceOperator.interrupt();
-				instanceOperator = new InstanceOperator(k8sClient, templateApi, instanceLatestResourceVersion);
-				instanceOperator.start();
-			}
-			
-			if(!nscOperator.isAlive()) {
-				nscLatestResourceVersion = NamespaceClaimController.getLatestResourceVersion();
-				logger.info(("Namespace Claim Controller is not Alive. Restart Controller! (Latest Resource Version: " + nscLatestResourceVersion + ")"));
-				nscOperator.interrupt();
-				nscOperator = new NamespaceClaimController(k8sClient, customObjectApi, nscLatestResourceVersion);
-				nscOperator.start();
-			}
-			
-			if(!rqcOperator.isAlive()) {
-				rqcLatestResourceVersion = ResourceQuotaClaimController.getLatestResourceVersion();
-				logger.info(("ResourceQuota Claim Controller is not Alive. Restart Controller! (Latest Resource Version: " + rqcLatestResourceVersion + ")"));
-				rqcOperator.interrupt();
-				rqcOperator = new ResourceQuotaClaimController(k8sClient, customObjectApi, rqcLatestResourceVersion);
-				rqcOperator.start();
-			}
-			
-			if(!rbcOperator.isAlive()) {
-				rbcLatestResourceVersion = RoleBindingClaimController.getLatestResourceVersion();
-				logger.info(("RoleBinding Claim Controller is not Alive. Restart Controller! (Latest Resource Version: " + rbcLatestResourceVersion + ")"));
-				rbcOperator.interrupt();
-				rbcOperator = new RoleBindingClaimController(k8sClient, customObjectApi, rbcLatestResourceVersion);
-				rbcOperator.start();
-			}
-
 			Thread.sleep(10000); // Period: 10 sec
     	}
     }
@@ -731,6 +743,9 @@ public class K8sApiCaller {
 	@SuppressWarnings("unchecked")
 	public static void createRegistry(Registry registry) throws Throwable {
 		try {
+			long time = System.currentTimeMillis();
+			String randomUID = UIDGenerator.getInstance().generate32( registry, 8, time );
+			
 			String namespace = registry.getMetadata().getNamespace();
 			String registryId = registry.getMetadata().getName();
 			RegistryService regService = registry.getSpec().getService();

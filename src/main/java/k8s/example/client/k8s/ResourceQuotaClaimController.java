@@ -20,9 +20,10 @@ import k8s.example.client.Main;
 import k8s.example.client.models.NamespaceClaim;
 
 public class ResourceQuotaClaimController extends Thread {
-	private final Watch<NamespaceClaim> rqcController;
+	private Watch<NamespaceClaim> rqcController;
 	private static int latestResourceVersion = 0;
 	private CustomObjectsApi api = null;
+	ApiClient client = null;
     private Logger logger = Main.logger;
 
 	ResourceQuotaClaimController(ApiClient client, CustomObjectsApi api, int resourceVersion) throws Exception {
@@ -30,73 +31,80 @@ public class ResourceQuotaClaimController extends Thread {
 				api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_RESOURCEQUOTACLAIM, null, null, null, null, null, Integer.toString( resourceVersion ), null, Boolean.TRUE, null),
 				new TypeToken<Watch.Response<NamespaceClaim>>() {}.getType());
 		this.api = api;
+		this.client = client;
 		latestResourceVersion = resourceVersion;
 	}
 	
 	@Override
 	public void run() {
 		try {
-			rqcController.forEach(response -> {
-				try {
-					if (Thread.interrupted()) {
-						logger.info("Interrupted!");
-						rqcController.close();
-					}
-				} catch (Exception e) {
-					logger.info(e.getMessage());
-				}
-				
-				
-				// Logic here
-				String claimName = "unknown";
-				String claimNamespace = "unknown";
-				try {
-					NamespaceClaim claim = response.object;
-
-					if( claim != null) {
-						latestResourceVersion = Integer.parseInt( response.object.getMetadata().getResourceVersion() );
-						String eventType = response.type.toString(); //ADDED, MODIFIED, DELETED
-						logger.info("[ResourceQuotaClaim Controller] Event Type : " + eventType );
-						logger.info("[ResourceQuotaClaim Controller] == ResourceQuotaClaim == \n" + claim.toString());
-						claimName = claim.getMetadata().getName();
-						claimNamespace = claim.getMetadata().getNamespace();
-						switch( eventType ) {
-							case Constants.EVENT_TYPE_ADDED : 
-								// Patch Status to Awaiting
-								replaceRqcStatus( claim.getMetadata().getName(), Constants.CLAIM_STATUS_AWAITING, "wait for admin permission", claimNamespace );
-								break;
-							case Constants.EVENT_TYPE_MODIFIED : 
-								String status = getClaimStatus( claim.getMetadata().getName(), claimNamespace );
-								if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && K8sApiCaller.resourcequotaAlreadyExist( claimNamespace ) ) {
-									K8sApiCaller.updateResourceQuota( claim );
-									replaceRqcStatus( claim.getMetadata().getName(), Constants.CLAIM_STATUS_SUCCESS, "resource quota update success.", claimNamespace );
-								} else if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && !K8sApiCaller.resourcequotaAlreadyExist( claimNamespace ) ) {
-									K8sApiCaller.createResourceQuota( claim );
-									replaceRqcStatus( claim.getMetadata().getName(), Constants.CLAIM_STATUS_SUCCESS, "resource quota create success.", claimNamespace );
-								}
-								break;
-							case Constants.EVENT_TYPE_DELETED : 
-								// Nothing to do
-								break;
+			while(true) {
+				rqcController.forEach(response -> {
+					try {
+						if (Thread.interrupted()) {
+							logger.info("Interrupted!");
+							rqcController.close();
 						}
+					} catch (Exception e) {
+						logger.info(e.getMessage());
 					}
 					
-				} catch (Exception e) {
-					logger.info("Exception: " + e.getMessage());
-					StringWriter sw = new StringWriter();
-					e.printStackTrace(new PrintWriter(sw));
-					logger.info(sw.toString());
+					
+					// Logic here
+					String claimName = "unknown";
+					String claimNamespace = "unknown";
 					try {
-						replaceRqcStatus( claimName, Constants.CLAIM_STATUS_ERROR, e.getMessage(), claimNamespace );
-					} catch (ApiException e1) {
-						e1.printStackTrace();
-						logger.info("Resource Quota Claim Controller Exception : Change Status 'Error' Fail ");
+						NamespaceClaim claim = response.object;
+
+						if( claim != null) {
+							latestResourceVersion = Integer.parseInt( response.object.getMetadata().getResourceVersion() );
+							String eventType = response.type.toString(); //ADDED, MODIFIED, DELETED
+							logger.info("[ResourceQuotaClaim Controller] Event Type : " + eventType );
+							logger.info("[ResourceQuotaClaim Controller] == ResourceQuotaClaim == \n" + claim.toString());
+							claimName = claim.getMetadata().getName();
+							claimNamespace = claim.getMetadata().getNamespace();
+							switch( eventType ) {
+								case Constants.EVENT_TYPE_ADDED : 
+									// Patch Status to Awaiting
+									replaceRqcStatus( claim.getMetadata().getName(), Constants.CLAIM_STATUS_AWAITING, "wait for admin permission", claimNamespace );
+									break;
+								case Constants.EVENT_TYPE_MODIFIED : 
+									String status = getClaimStatus( claim.getMetadata().getName(), claimNamespace );
+									if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && K8sApiCaller.resourcequotaAlreadyExist( claimNamespace ) ) {
+										K8sApiCaller.updateResourceQuota( claim );
+										replaceRqcStatus( claim.getMetadata().getName(), Constants.CLAIM_STATUS_SUCCESS, "resource quota update success.", claimNamespace );
+									} else if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && !K8sApiCaller.resourcequotaAlreadyExist( claimNamespace ) ) {
+										K8sApiCaller.createResourceQuota( claim );
+										replaceRqcStatus( claim.getMetadata().getName(), Constants.CLAIM_STATUS_SUCCESS, "resource quota create success.", claimNamespace );
+									}
+									break;
+								case Constants.EVENT_TYPE_DELETED : 
+									// Nothing to do
+									break;
+							}
+						}
+						
+					} catch (Exception e) {
+						logger.info("Exception: " + e.getMessage());
+						StringWriter sw = new StringWriter();
+						e.printStackTrace(new PrintWriter(sw));
+						logger.info(sw.toString());
+						try {
+							replaceRqcStatus( claimName, Constants.CLAIM_STATUS_ERROR, e.getMessage(), claimNamespace );
+						} catch (ApiException e1) {
+							e1.printStackTrace();
+							logger.info("Resource Quota Claim Controller Exception : Change Status 'Error' Fail ");
+						}
+					} catch (Throwable e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
 					}
-				} catch (Throwable e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			});
+				});
+				logger.info("=============== RQC 'For Each' END ===============");
+				rqcController = Watch.createWatch(client,
+						api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_RESOURCEQUOTACLAIM, null, null, null, null, null, Integer.toString( latestResourceVersion ), null, Boolean.TRUE, null),
+						new TypeToken<Watch.Response<NamespaceClaim>>() {}.getType());
+			}
 		} catch (Exception e) {
 			logger.info("Resource Quota Claim Controller Exception: " + e.getMessage());
 			StringWriter sw = new StringWriter();
