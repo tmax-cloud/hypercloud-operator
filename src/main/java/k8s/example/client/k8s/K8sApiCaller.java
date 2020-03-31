@@ -446,7 +446,6 @@ public class K8sApiCaller {
 					Constants.CUSTOM_OBJECT_VERSION, 
 					Constants.CUSTOM_OBJECT_PLURAL_USER, 
 					userName);
-        	
             JsonObject respJson = (JsonObject) new JsonParser().parse((new Gson()).toJson(response));
             User userInfo = new ObjectMapper().readValue((new Gson()).toJson(respJson.get("userInfo")), User.class);
             user.setUserInfo(userInfo);
@@ -462,6 +461,33 @@ public class K8sApiCaller {
         }
     	
     	return user;
+    }
+    
+    public static List < UserCR > listUser() throws Exception {
+    	List < UserCR > userList = null;
+        
+        try {
+        	Object response = customObjectApi.listClusterCustomObject(
+					Constants.CUSTOM_OBJECT_GROUP,
+					Constants.CUSTOM_OBJECT_VERSION, 
+					Constants.CUSTOM_OBJECT_PLURAL_USER,
+					null, null, null, null, null, null, null, Boolean.FALSE);
+        	
+			JsonObject respJson = (JsonObject) new JsonParser().parse((new Gson()).toJson(response));
+        	mapper.registerModule(new JodaModule());
+			userList = mapper.readValue((new Gson()).toJson(respJson.get("items")), new TypeReference<ArrayList<UserCR>>() {});
+
+        } catch (ApiException e) {
+        	logger.info("Response body: " + e.getResponseBody());
+        	e.printStackTrace();
+        	throw e;
+        } catch (Exception e) {
+        	logger.info("Exception message: " + e.getMessage());
+        	e.printStackTrace();
+        	throw e;
+        }
+    	
+    	return userList;
     }
     
     public static TokenCR getToken(String tokenName) throws Exception {
@@ -2862,5 +2888,40 @@ public class K8sApiCaller {
 			logger.info(e2.getStackTrace().toString());
 		}
 		return isAdmin;		
+	}
+
+	public static void createUser(User userInDO) throws Exception {
+		try {
+			UserCR userCR = new UserCR();
+    		
+    		// Set name & label
+        	V1ObjectMeta metadata = new V1ObjectMeta();
+        	metadata.setName(userInDO.getId());        	
+//        	Map<String, String> label = new HashMap<>();   있어야할지 판단 안됨
+//        	label.put("user", );
+        	userCR.setMetadata(metadata);
+        	
+        	// Set userInfo
+    		userCR.setUserInfo(userInDO);
+       	
+        	// Make body
+        	JSONParser parser = new JSONParser();        	
+        	JSONObject bodyObj = (JSONObject) parser.parse(new Gson().toJson(userCR));
+        	
+        	customObjectApi.createClusterCustomObject(
+        			Constants.CUSTOM_OBJECT_GROUP,
+					Constants.CUSTOM_OBJECT_VERSION, 
+					Constants.CUSTOM_OBJECT_PLURAL_USER,
+					bodyObj, null);
+        } catch (ApiException e) {
+        	logger.info("Response body: " + e.getResponseBody());
+        	e.printStackTrace();
+        	throw e;
+        } catch (Exception e) {
+        	logger.info("Exception message: " + e.getMessage());
+        	e.printStackTrace();
+        	throw e;
+        }
+		
 	}
 }

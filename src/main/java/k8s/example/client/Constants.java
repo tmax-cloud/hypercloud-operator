@@ -113,5 +113,13 @@ public class Constants {
 	public static final String DEFAULT_IMAGE_URL = "https://folo.co.kr/img/gm_noimage.png";
 	public static final String DEFAULT_PROVIDER = "tmax";
 	public static final String DEFAULT_TAGS = "etc";
+	
+	// Oauth //TODO configmap으로 만들던지, 환경변수 읽어오는것으로 수정하자
+	public static final String OAUTH_URL = "";
+	public static final String SERVICE_NAME_OAUTH_USER_LIST = "proauth/oauth/usersList";
+	public static final String SERVICE_NAME_OAUTH_USER_CREATE = "proauth/oauth/users";
+	public static final String SERVICE_NAME_OAUTH_USER_DELETE = "proauth/oauth/users/";
+	public static final String SERVICE_NAME_OAUTH_USER_UPDATE = "proauth/oauth/users/";
+
 
 }
