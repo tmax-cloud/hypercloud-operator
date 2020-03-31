@@ -38,12 +38,15 @@ public class DataObject {
     public static class Token {
     	private String accessToken;
     	private String refreshToken;
+    	private int atExpireTime;
     	
     	public String getAccessToken() { return accessToken; }    	
     	public String getRefreshToken() { return refreshToken; }
+    	public int getAtExpireTime() { return atExpireTime; }
     	
     	public void setAccessToken(String accessToken) { this.accessToken = accessToken; }    	
     	public void setRefreshToken(String refreshToken) { this.refreshToken = refreshToken; }
+    	public void setAtExpireTime(int atExpireTime) { this.atExpireTime = atExpireTime; }
     }
     
     @JsonIgnoreProperties(ignoreUnknown = true)
