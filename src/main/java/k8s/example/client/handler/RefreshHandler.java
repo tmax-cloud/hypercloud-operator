@@ -46,6 +46,7 @@ public class RefreshHandler extends GeneralHandler {
 		Token refreshOutDO = null;
 		String outDO = null;
 		IStatus status = null;
+		int atExpireTimeSec = 0;
 		try {
 			// Read inDO
 			refreshInDO = new ObjectMapper().readValue(body.get( "postData" ), Token.class);
@@ -77,8 +78,11 @@ public class RefreshHandler extends GeneralHandler {
 				status = Status.OK;
 				
 				// Make a new access token
+				atExpireTimeSec = (refreshInDO.getAtExpireTime() == 0)?  Constants.ACCESS_TOKEN_EXP_TIME : refreshInDO.getAtExpireTime() * 60;
+				logger.info( "  AT Expire Time : " +  atExpireTimeSec/60  + " min");	
+				
 				Builder tokenBuilder = JWT.create().withIssuer(Constants.ISSUER)
-						.withExpiresAt(Util.getDateFromSecond(Constants.ACCESS_TOKEN_EXP_TIME))
+						.withExpiresAt(Util.getDateFromSecond(atExpireTimeSec))
 						.withClaim(Constants.CLAIM_USER_ID, userId)
 						.withClaim(Constants.CLAIM_TOKEN_ID, tokenId);
 				
@@ -95,6 +99,7 @@ public class RefreshHandler extends GeneralHandler {
     			// Make outDO
     			refreshOutDO = new Token();
     			refreshOutDO.setAccessToken(newAccessToken);
+    			refreshOutDO.setAtExpireTime(refreshInDO.getAtExpireTime());
     			Gson gson = new GsonBuilder().setPrettyPrinting().create();
     			outDO = gson.toJson(refreshOutDO).toString();
     			
@@ -123,6 +128,12 @@ public class RefreshHandler extends GeneralHandler {
 		
 		accessToken = Util.Crypto.encryptSHA256(accessToken);
 		refreshToken = Util.Crypto.encryptSHA256(refreshToken);
+		
+		logger.info("  In AccessToken : " + accessToken);
+		logger.info("  DB AccessToken : " + token.getAccessToken());
+		
+		logger.info("  In RefreshToken : " + refreshToken);
+		logger.info("  DB RefreshToken : " + token.getRefreshToken());
 		
 		if(issuer.equals(Constants.ISSUER) &&
 				accessToken.equals(token.getAccessToken()) &&
