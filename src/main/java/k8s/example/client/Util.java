@@ -1,11 +1,15 @@
 package k8s.example.client;
 
+import java.io.IOException;
 import java.security.MessageDigest;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 
-import fi.iki.elonen.NanoHTTPD;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.fge.jsonpatch.diff.JsonDiff;
+
 import fi.iki.elonen.NanoHTTPD.Response;
 
 public class Util {	
@@ -45,5 +49,17 @@ public class Util {
         resp.addHeader("Access-Control-Allow-Headers", "Referer");
         resp.addHeader("Access-Control-Allow-Headers", "User-Agent");
 		return resp;
+    }
+    
+    public static JsonNode jsonDiff(String beforeJson, String afterJson) throws Exception{
+    	try {
+    		ObjectMapper jackson = new ObjectMapper(); 
+    		JsonNode beforeNode = jackson.readTree(beforeJson); 
+    		JsonNode afterNode = jackson.readTree(afterJson); 
+    		return JsonDiff.asJson(beforeNode, afterNode);
+    	}catch(Exception e) {
+    		
+    		throw e;
+    	}
     }
 }
