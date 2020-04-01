@@ -63,12 +63,14 @@ public class DataObject {
     	public User getUserInfo() { return userInfo; }
     	public String getStatus() { return status; }
     	
+    	public void setMetadata(V1ObjectMeta metadata) { this.metadata = metadata; }
     	public void setUserInfo(User userInfo) { this.userInfo = userInfo; }
     	public void setStatus(String status) { this.status = status; }
     }
     
     public static class User {
     	private String name;
+    	private String id;    	
     	private String password;
     	private String passwordSalt;
     	private String email;
@@ -77,6 +79,7 @@ public class DataObject {
     	private String position;
     	private String description;
     	
+    	public String getId() { return id; }
     	public String getName() { return name; }
     	public String getPassword() { return password; }
     	public String getPasswordSalt() { return passwordSalt; }
@@ -86,6 +89,7 @@ public class DataObject {
     	public String getPosition() { return position; }
     	public String getDescription() { return description; }
     	
+    	public void setId(String id) { this.id = id; }
     	public void setName(String name) { this.name = name; }
     	public void setPassword(String password) { this.password = password; }
     	public void setPasswordSalt(String passwordSalt) { this.passwordSalt = passwordSalt; }

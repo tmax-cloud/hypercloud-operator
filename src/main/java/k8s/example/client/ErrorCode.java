@@ -10,4 +10,13 @@ public class ErrorCode {
 	public static final String CLIENT_SECRET_MISMATCH = "Client Secret is mismatched";
 	public static final String ORIGIN_URI_MISMATCH = "Origin URI is mismatched";
 	public static final String TOKEN_EMPTY = "Token is Empty";
+	
+	
+	// USER
+	public static final String USER_ID_EMPTY = "User ID is empty";
+	public static final String USER_ID_DUPLICATED = "User ID is Duplicated";
+	public static final String USER_MAIL_DUPLICATED = "User Mail is Duplicated";
+	public static final String USER_PASSWORD_EMPTY = "User Password is empty";
+	public static final String USER_MAIL_EMPTY = "User Mail is empty";
+
 }
