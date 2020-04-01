@@ -1,5 +1,9 @@
 package k8s.example.client.metering;
 
+import java.util.Enumeration;
+import java.util.Map.Entry;
+import java.util.Properties;
+
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.JWTCreator.Builder;
@@ -24,15 +28,31 @@ public class Test {
 //		System.out.println( "  User ID: " + userId );
 //		System.out.println( "  Token ID: " + tokenId );
 		
-		Builder tokenBuilder = JWT.create().withIssuer(Constants.ISSUER)
-				.withExpiresAt(Util.getDateFromSecond(157680000)).withClaim(Constants.CLAIM_TOKEN_ID, "woo@tmax.co.kr")
-				.withClaim(Constants.CLAIM_USER_ID,  "admin@tmax.co.kr").withClaim( Constants.CLAIM_ROLE, Constants.ROLE_ADMIN );
+//		Builder tokenBuilder = JWT.create().withIssuer(Constants.ISSUER)
+//				.withExpiresAt(Util.getDateFromSecond(157680000)).withClaim(Constants.CLAIM_TOKEN_ID, "woo@tmax.co.kr")
+//				.withClaim(Constants.CLAIM_USER_ID,  "admin@tmax.co.kr").withClaim( Constants.CLAIM_ROLE, Constants.ROLE_ADMIN );
+//		
+//		System.out.println(tokenBuilder.sign(Algorithm.HMAC256(Constants.ACCESS_TOKEN_SECRET_KEY)));
+
+
+//		Properties prop = System.getProperties();
+//        String key;
+//        for (Enumeration e = prop.propertyNames() ; e.hasMoreElements() ;) {
+//         key = (String)e.nextElement();
+//         System.out.println(key + "=" + prop.get(key));
+//        }
+
+
+		Properties properties = System.getProperties();
+
+		for(Entry entry : properties.entrySet()) {
+
+		System.out.println(entry.getKey()+"="+entry.getValue());
+
+		}
+
 		
-		System.out.println(tokenBuilder.sign(Algorithm.HMAC256(Constants.ACCESS_TOKEN_SECRET_KEY)));
-
-
 		
-
 	}
 
 }
