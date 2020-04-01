@@ -1,19 +1,16 @@
 package k8s.example.client.metering;
 
-import java.util.Enumeration;
-import java.util.Map.Entry;
-import java.util.Properties;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.JWTVerifier;
-import com.auth0.jwt.JWTCreator.Builder;
-import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.interfaces.DecodedJWT;
-
+import io.kubernetes.client.openapi.apis.CustomObjectsApi;
 import k8s.example.client.Constants;
-import k8s.example.client.Util;
+import k8s.example.client.DataObject.User;
 
 public class Test {
+	public static CustomObjectsApi customObjectApi = new CustomObjectsApi();
 
 	public static void main(String[] args) throws Exception {
 //		// Verify access token	
@@ -43,14 +40,14 @@ public class Test {
 //        }
 
 
-		Properties properties = System.getProperties();
-
-		for(Entry entry : properties.entrySet()) {
-
-		System.out.println(entry.getKey()+"="+entry.getValue());
-
-		}
-
+		Object response = customObjectApi.getClusterCustomObject(
+    			Constants.CUSTOM_OBJECT_GROUP,
+				Constants.CUSTOM_OBJECT_VERSION, 
+				Constants.CUSTOM_OBJECT_PLURAL_USER, 
+				"test-tmax.co.kr");
+		JsonObject respJson = (JsonObject) new JsonParser().parse((new Gson()).toJson(response));
+		System.out.println(respJson.toString());
+        User userInfo = new ObjectMapper().readValue((new Gson()).toJson(respJson.get("userInfo")), User.class);
 		
 		
 	}

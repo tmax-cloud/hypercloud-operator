@@ -25,37 +25,46 @@ public class OAuthApiCaller {
     static OkHttpClient client = new OkHttpClient();
 
 	private static String setAuthURL( String serviceName )  {
-		return Constants.OAUTH_URL + "/" + serviceName;
+		return Constants.OAUTH_URL + serviceName;
 	}
 	
-	public static void init() throws Exception {
-		
-//		if ( loginSuccess( "admin@tmax.co.kr", "admin" ) ) {
-//			updateAdminPW();
-//		}
-	}
+//	public static void init() throws Exception {
+//		
+////		if ( loginSuccess( "admin@tmax.co.kr", "admin" ) ) {
+////			updateAdminPW();
+////		}
+//	}
 	
 	public static JsonArray ListUser() throws IOException {
 		logger.info( "[OAuth] User List Get Service Start" );
 		
-		//GET 서비스
+		//GET svc
 		Request request = new Request.Builder().url(setAuthURL( Constants.SERVICE_NAME_OAUTH_USER_LIST )).build();
+		logger.info( "111" );
+
 	    Response response = client.newCall(request).execute();
+		logger.info( "222" );
 
 	    String result = response.body().toString();
+		logger.info( "333" );
 
 	    Gson gson = new Gson();
 	    JsonObject userList = (JsonObject) gson.fromJson(result, Object.class);
-	    JsonElement dto = userList.get("dto");  //FIXME
-	    return (JsonArray) dto.getAsJsonObject().get("user"); 
+	    return (JsonArray) userList.get("user"); 
 	}
 
-	public static JsonObject createUser( User userinDO ) throws IOException {
+	public static JsonObject createUser( User userInDO ) throws IOException {
 		logger.info( "[OAuth] User Create Service Start" );
 	
+		JsonObject createUserInDO = new JsonObject();		
+		createUserInDO.addProperty("user_id", userInDO.getId());
+		createUserInDO.addProperty("password", userInDO.getPassword());
+		
 		Gson gson = new Gson();
-	    String json = gson.toJson(userinDO);
-		Request request = new Request.Builder().url(setAuthURL( Constants.SERVICE_NAME_OAUTH_USER_CREATE ))
+	    String json = gson.toJson(createUserInDO);
+		
+	    //POST svc
+	    Request request = new Request.Builder().url(setAuthURL( Constants.SERVICE_NAME_OAUTH_USER_CREATE ))
 	            .post(RequestBody.create(MediaType.parse("application/json"), json)).build();
 	    
 		Response response = client.newCall(request).execute();
@@ -63,6 +72,27 @@ public class OAuthApiCaller {
 
 	    JsonObject userCreateOut = (JsonObject) gson.fromJson(result, Object.class);
 	    return userCreateOut; 
+	}
+	
+	public static JsonObject AuthenticateCreate( User userInDO ) throws IOException {
+		logger.info( "[OAuth] Login Service Start" );
+	
+		JsonObject loginInDO = new JsonObject();		
+		loginInDO.addProperty("user_id", userInDO.getId());
+		loginInDO.addProperty("password", userInDO.getPassword());
+		
+		Gson gson = new Gson();
+	    String json = gson.toJson(loginInDO);
+		
+	    //POST svc
+	    Request request = new Request.Builder().url(setAuthURL( Constants.SERVICE_NAME_OAUTH_AUTHENTICATE_CREATE ))
+	            .post(RequestBody.create(MediaType.parse("application/json"), json)).build();
+	    
+		Response response = client.newCall(request).execute();
+		String result = response.body().string();
+
+	    JsonObject authenticateCreateOut = (JsonObject) gson.fromJson(result, Object.class);
+	    return authenticateCreateOut; 
 	}
 	
 //	public static ContextDataObject makeUserCreateInDO( UserDO userInDO ) throws ProObjectException {

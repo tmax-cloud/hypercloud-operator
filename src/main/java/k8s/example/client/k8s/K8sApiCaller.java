@@ -464,16 +464,20 @@ public class K8sApiCaller {
     }
     
     public static List < UserCR > listUser() throws Exception {
-    	List < UserCR > userList = null;
-        
+    	List < UserCR > userList = null;     
         try {
+        	logger.info("123123");
+
         	Object response = customObjectApi.listClusterCustomObject(
 					Constants.CUSTOM_OBJECT_GROUP,
 					Constants.CUSTOM_OBJECT_VERSION, 
 					Constants.CUSTOM_OBJECT_PLURAL_USER,
 					null, null, null, null, null, null, null, Boolean.FALSE);
-        	
+        	logger.info("321321");
+
 			JsonObject respJson = (JsonObject) new JsonParser().parse((new Gson()).toJson(response));
+        	logger.info("3211414321");
+
         	mapper.registerModule(new JodaModule());
 			userList = mapper.readValue((new Gson()).toJson(respJson.get("items")), new TypeReference<ArrayList<UserCR>>() {});
 
@@ -2712,6 +2716,79 @@ public class K8sApiCaller {
 			throw e;
 		}
 	}
+	
+	public static void createClusterRoleForNewUser ( User userInDO ) throws ApiException {
+		logger.info( "[K8S ApiCaller] Create Temporary ClusterRole for New User Start" );
+
+		V1ClusterRole clusterRole = new V1ClusterRole();
+		V1ObjectMeta clusterRoleMeta = new V1ObjectMeta();
+		clusterRoleMeta.setName( userInDO.getId() );
+		clusterRole.setMetadata( clusterRoleMeta );
+		List<V1PolicyRule> rules = new ArrayList<>();
+		
+		V1PolicyRule rule = new V1PolicyRule();
+		// User Rule
+		rule.addApiGroupsItem(Constants.CUSTOM_OBJECT_GROUP);
+		rule.addResourcesItem("users");
+		rule.addResourceNamesItem(userInDO.getId());    
+		rule.addVerbsItem("*"); 
+		rules.add(rule);
+		
+		// Cluster Rule
+		rule = new V1PolicyRule();
+		rule.addApiGroupsItem(Constants.RBAC_API_GROUP);
+		rule.addResourcesItem("clusterroles");
+		rule.addResourceNamesItem(userInDO.getId());    
+		rule.addVerbsItem("*"); 
+		rules.add(rule);
+		
+		// ClusterRoleBinding Rule
+		rule = new V1PolicyRule();
+		rule.addApiGroupsItem(Constants.RBAC_API_GROUP);
+		rule.addResourcesItem("clusterrolebindings");
+		rule.addResourceNamesItem(userInDO.getId());    
+		rule.addVerbsItem("*"); 
+		rules.add(rule);
+		
+		clusterRole.setRules(rules);
+		
+		try {
+			rbacApi.createClusterRole( clusterRole, null, null, null);
+		} catch (ApiException e) {
+			logger.info( e.getResponseBody() );
+			throw e;
+		}
+	}
+	
+	public static void createClusterRoleBindingForNewUser ( User userInDO ) throws ApiException {
+		logger.info( "[K8S ApiCaller] Create Temporary ClusterRoleBinding for New User Start" );
+
+		V1ClusterRoleBinding clusterRoleBinding = new V1ClusterRoleBinding();
+		V1ObjectMeta clusterRoleBindingMeta = new V1ObjectMeta();
+		clusterRoleBindingMeta.setName( userInDO.getId() );
+		clusterRoleBinding.setMetadata( clusterRoleBindingMeta );
+		
+		// RoleRef
+		V1RoleRef roleRef = new V1RoleRef();
+		roleRef.setApiGroup(Constants.RBAC_API_GROUP);
+		roleRef.setKind("ClusterRole");
+		roleRef.setName(userInDO.getId());
+		clusterRoleBinding.setRoleRef(roleRef);
+
+		// subject
+		V1Subject subject = new V1Subject();
+		subject.setApiGroup(Constants.RBAC_API_GROUP);
+		subject.setKind("User");
+		subject.setName(userInDO.getId());
+		clusterRoleBinding.addSubjectsItem(subject);
+	
+		try {
+			rbacApi.createClusterRoleBinding( clusterRoleBinding, null, null, null);
+		} catch (ApiException e) {
+			logger.info( e.getResponseBody() );
+			throw e;
+		}
+	}
 	/**
 	 * END method for Namespace Claim Controller by seonho_choi
 	 * DO-NOT-DELETE
@@ -2927,6 +3004,11 @@ public class K8sApiCaller {
         	
         	// Set userInfo
     		userCR.setUserInfo(userInDO);
+    		
+    		// Truncate PW
+    		userCR.getUserInfo().setPassword(null);
+    		
+    		userCR.setStatus("blocked");
        	
         	// Make body
         	JSONParser parser = new JSONParser();        	

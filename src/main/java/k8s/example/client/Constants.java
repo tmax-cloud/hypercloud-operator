@@ -25,6 +25,7 @@ public class Constants {
 	public static final String SERVICE_INSTANCE_PLURAL = "serviceinstances";
 	public static final String SERVICE_INSTANCE_KIND = "ServiceInstance";
 
+	public static final String RBAC_API_GROUP = "rbac.authorization.k8s.io";
 
 
 	
@@ -115,11 +116,12 @@ public class Constants {
 	public static final String DEFAULT_TAGS = "etc";
 	
 	// Oauth //TODO configmap으로 만들던지, 환경변수 읽어오는것으로 수정하자
-	public static final String OAUTH_URL = "";
+	public static final String OAUTH_URL = "http://proauth-server-service.proauth-system:8080/";
 	public static final String SERVICE_NAME_OAUTH_USER_LIST = "proauth/oauth/usersList";
 	public static final String SERVICE_NAME_OAUTH_USER_CREATE = "proauth/oauth/users";
 	public static final String SERVICE_NAME_OAUTH_USER_DELETE = "proauth/oauth/users/";
 	public static final String SERVICE_NAME_OAUTH_USER_UPDATE = "proauth/oauth/users/";
+	public static final String SERVICE_NAME_OAUTH_AUTHENTICATE_CREATE = "proauth/oauth/authenticate";
 
 
 }

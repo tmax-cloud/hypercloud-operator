@@ -3,13 +3,20 @@ package k8s.example.client.handler;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
+import java.util.Properties;
+
+import javax.mail.Authenticator;
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.PasswordAuthentication;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
 
 import org.slf4j.Logger;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.JWTCreator.Builder;
-import com.auth0.jwt.algorithms.Algorithm;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -26,19 +33,20 @@ import fi.iki.elonen.router.RouterNanoHTTPD.GeneralHandler;
 import fi.iki.elonen.router.RouterNanoHTTPD.UriResource;
 import io.kubernetes.client.openapi.ApiException;
 import k8s.example.client.Constants;
-import k8s.example.client.ErrorCode;
-import k8s.example.client.Main;
-import k8s.example.client.DataObject.Client;
 import k8s.example.client.DataObject.CommonOutDO;
-import k8s.example.client.DataObject.LoginInDO;
-import k8s.example.client.DataObject.Token;
 import k8s.example.client.DataObject.User;
 import k8s.example.client.DataObject.UserCR;
+import k8s.example.client.ErrorCode;
+import k8s.example.client.Main;
 import k8s.example.client.Util;
 import k8s.example.client.k8s.K8sApiCaller;
 import k8s.example.client.k8s.OAuthApiCaller;
 
 public class UserHandler extends GeneralHandler {
+	private final String HOST = "mail.tmax.co.kr";
+	private final int PORT = 25;
+//	private final String USERNAME = "taegeon_woo";
+	private final String SEND_EMAIL = "taegeon_woo@tmax.co.kr";
     private Logger logger = Main.logger;
 	@Override
     public Response post(
@@ -56,7 +64,6 @@ public class UserHandler extends GeneralHandler {
 		User userInDO = null;
 		String outDO = null;
 		IStatus status = null;
-		StringBuilder sb = null;
 		
 		try {
 			// Read inDO
@@ -80,7 +87,8 @@ public class UserHandler extends GeneralHandler {
         			if ( user.getEmail().equalsIgnoreCase(userInDO.getEmail())) throw new Exception(ErrorCode.USER_MAIL_DUPLICATED);
         		}
     		}
-    		
+    		logger.info( " 0000" );
+
     		JsonArray userAuthList = OAuthApiCaller.ListUser();
     		if ( userAuthList != null ) {
     			for (JsonElement userAuth : userAuthList) {
@@ -89,13 +97,23 @@ public class UserHandler extends GeneralHandler {
     		}
     		
     		// UserCRD Create
-    		K8sApiCaller.createUser(userInDO);
+    		K8sApiCaller.createUser(userInDO);  		
     		
+    		// Create Role & RoleBinding
+    		K8sApiCaller.createClusterRoleForNewUser(userInDO);  		
+    		K8sApiCaller.createClusterRoleBindingForNewUser(userInDO);  		
+
     		// Call UserCreate to ProAuth
     		OAuthApiCaller.createUser(userInDO);
     		
+    		// Login to ProAuth & Get Token
+    		JsonObject loginOut = OAuthApiCaller.AuthenticateCreate(userInDO);
+//    		String refreshToken = loginOut.get("refresh_token").toString();
+    		String accessToken = loginOut.get("token").toString();
+    		
     		// Send E-mail to User
-    		//TODO
+    		sendMail(userInDO, accessToken);
+    		
     		
     		
 		} catch (ApiException e) {
@@ -137,6 +155,40 @@ public class UserHandler extends GeneralHandler {
 		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO));
     }
 	
+
+	private void sendMail( User userInDO, String accessToken ) throws AddressException, MessagingException {	
+		String subject = "메일테스트";	
+		Properties props = System.getProperties();
+		
+		props.put( "mail.transport.protocol", "smtp" );
+		props.put( "mail.smtp.host", HOST );
+		props.put( "mail.smtp.port", PORT );
+		props.put( "mail.smtp.ssl.trust", HOST );
+		props.put( "mail.smtp.auth", "true" );
+		props.put( "mail.smtp.starttls.enable", "true" );
+		props.put("mail.smtp.ssl.protocols", "TLSv1.2");
+		
+		Session session = Session.getDefaultInstance( props, new Authenticator() {
+			String un = "taegeon_woo";
+			String pw = "tg540315!";
+			protected PasswordAuthentication getPasswordAuthentication() {
+				return new PasswordAuthentication( un, pw );
+			}
+		});		
+		session.setDebug( true );
+
+		Message mimeMessage = new MimeMessage(session);
+		mimeMessage.setFrom( new InternetAddress( SEND_EMAIL ) );
+		mimeMessage.setRecipient( Message.RecipientType.TO, new InternetAddress( SEND_EMAIL ) );
+
+		mimeMessage.setSubject( subject );
+		
+		String body = accessToken;
+
+		mimeMessage.setText( body );
+		Transport.send( mimeMessage );		
+	}
+
 
 	@Override
     public Response other(
