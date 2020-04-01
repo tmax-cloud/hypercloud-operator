@@ -1443,7 +1443,7 @@ public class K8sApiCaller {
 			livenessProbe.setPeriodSeconds(5);
 			livenessProbe.setSuccessThreshold(1);
 			livenessProbe.setTimeoutSeconds(30);
-			container.setReadinessProbe(livenessProbe);
+			container.setLivenessProbe(livenessProbe);
 
 			podSpec.addContainersItem(container);
 
@@ -1543,11 +1543,12 @@ public class K8sApiCaller {
 		{"op":"add","path":"/kind2","value":"Registry"}
 	 * 
 	 */
-	public static void updateRegistry(Registry registry, JsonNode diff) throws Throwable {
+	public static void updateRegistrySubResources(Registry registry, JsonNode diff) throws Throwable {
 		String namespace = registry.getMetadata().getNamespace();
 		String registryId = registry.getMetadata().getName();
 		Set<String> updateSubResources = new HashSet<>();
 		boolean restartPodRequired = false;
+		boolean renewLoginAuthRequired = false;
 		JsonArray jArrayPatchReplicaSet = new JsonArray();
 		JsonArray jArrayPatchSecret = new JsonArray();
 		
@@ -1573,6 +1574,7 @@ public class K8sApiCaller {
 			}
 			if(path.equals("/spec/loginId")) {
 				restartPodRequired = true;
+				renewLoginAuthRequired = true;
 				String dataStr = registry.getSpec().getLoginId();
 				byte[] encodeData = Base64.encodeBase64(dataStr.getBytes());
 				
@@ -1583,12 +1585,15 @@ public class K8sApiCaller {
 
 				jArrayPatchSecret.add(replJson);
 				
+				if(!updateSubResources.contains("ReplicaSet")) 
+					updateSubResources.add("ReplicaSet");
 				if(!updateSubResources.contains("Secret")) 
 					updateSubResources.add("Secret");
 				
 			}
 			if(path.equals("/spec/loginPassword")) {
 				restartPodRequired = true;
+				renewLoginAuthRequired = true;
 				String dataStr = registry.getSpec().getLoginPassword();
 				byte[] encodeData = Base64.encodeBase64(dataStr.getBytes());
 				JsonObject replJson = new JsonObject();
@@ -1598,10 +1603,30 @@ public class K8sApiCaller {
 
 				jArrayPatchSecret.add(replJson);
 				
+				if(!updateSubResources.contains("ReplicaSet")) 
+					updateSubResources.add("ReplicaSet");
 				if(!updateSubResources.contains("Secret")) 
 					updateSubResources.add("Secret");
 			}
 			
+			if( renewLoginAuthRequired ) {
+				String loginAuth = registry.getSpec().getLoginId() + ":" + registry.getSpec().getLoginPassword();
+				loginAuth = new String( Base64.encodeBase64( loginAuth.getBytes() ) );
+				
+				JsonObject replJson = new JsonObject();
+				replJson.addProperty("op", "replace");
+				replJson.addProperty("path", "/spec/template/spec/containers/0/readinessProbe/httpGet/httpHeaders/0/value");
+				replJson.addProperty("value", "Basic " + loginAuth);
+				
+				jArrayPatchReplicaSet.add(replJson);
+				
+				JsonObject replJson2 = new JsonObject();
+				replJson2.addProperty("op", "replace");
+				replJson2.addProperty("path", "/spec/template/spec/containers/0/livenessProbe/httpGet/httpHeaders/0/value");
+				replJson2.addProperty("value", "Basic " + loginAuth);
+				
+				jArrayPatchReplicaSet.add(replJson2);
+			}
 		}
 		
 		for(String res : updateSubResources) {
@@ -1635,7 +1660,6 @@ public class K8sApiCaller {
 				
 			}catch(ApiException e) {
 				logger.info(e.getResponseBody());
-				throw e;
 			}
 		}
 	}
@@ -1671,24 +1695,21 @@ public class K8sApiCaller {
 		
 	}
 	
+	
+	
 	@SuppressWarnings("unchecked")
 	public static void updateRegistryAnnotationLastCR(Registry registry) throws Throwable {
 		String namespace = registry.getMetadata().getNamespace();
 		String registryId = registry.getMetadata().getName();
-		String registryIpPort = "";
-		
-		V1Secret secretRet = api.readNamespacedSecret(Constants.K8S_PREFIX + registryId, namespace, null, null, null);
-
-		Map<String, byte[]> secretMap = secretRet.getData();
-		registryIpPort = new String(secretMap.get("REGISTRY_IP_PORT"));
-		logger.info("REGISTRY_IP_PORT = " + registryIpPort);
 		
 		// ------ Patch Registry
 		Map<String, String> annotations
 		= registry.getMetadata().getAnnotations() == null
-			? new HashMap<>() : registry.getMetadata().getAnnotations();
-			
-		annotations.put(Constants.LAST_CUSTOM_RESOURCE, ((Object) registry).toString());
+		? new HashMap<>() : registry.getMetadata().getAnnotations();
+
+		JsonObject json = (JsonObject) Util.toJson(registry);
+		
+		annotations.put(Constants.LAST_CUSTOM_RESOURCE, json.toString());
 		registry.getMetadata().setAnnotations(annotations);
 
 		customObjectApi.replaceNamespacedCustomObject(
@@ -1714,10 +1735,12 @@ public class K8sApiCaller {
 		// ------ Patch Registry
 		Map<String, String> annotations
 		= registry.getMetadata().getAnnotations() == null
-			? new HashMap<>() : registry.getMetadata().getAnnotations();
-			
-		annotations.put(Constants.LAST_CUSTOM_RESOURCE, ((Object) registry).toString());
-		annotations.put(Constants.CUSTOM_OBJECT_GROUP + "/registry-login-url", "https://" + registryIpPort);
+		? new HashMap<>() : registry.getMetadata().getAnnotations();
+
+		JsonObject json = (JsonObject) Util.toJson(registry);
+
+		annotations.put(Constants.LAST_CUSTOM_RESOURCE, json.toString());
+		annotations.put(Constants.CUSTOM_OBJECT_GROUP + "/" + Registry.REGISTRY_LOGIN_URL, "https://" + registryIpPort);
 		registry.getMetadata().setAnnotations(annotations);
 
 		customObjectApi.replaceNamespacedCustomObject(

@@ -60,7 +60,7 @@ public class RegistryWatcher extends Thread {
 						if( registry != null) {
 							latestResourceVersion = response.object.getMetadata().getResourceVersion();
 							String eventType = response.type.toString();
-							logger.info("====================== Registry " + eventType + " ====================== \n" + registry.toString());
+							logger.info("====================== Registry " + eventType + " ====================== \n");
 							
 							switch(eventType) {
 							case Constants.EVENT_TYPE_ADDED : 
@@ -83,33 +83,39 @@ public class RegistryWatcher extends Thread {
 									break;
 								}
 								
+								boolean next = true;
 								if( registry.getStatus().getConditions() != null) {
 									for( RegistryCondition registryCondition : registry.getStatus().getConditions()) {
 										if( registryCondition.getType().equals("Phase")) {
 											if (registryCondition.getStatus().equals(RegistryStatus.REGISTRY_PHASE_CREATING)) {
 												K8sApiCaller.createRegistry(registry);
 												logger.info("Registry is running");
+												next = false;
 												break;
 											}
 											else if (registryCondition.getStatus().equals(RegistryStatus.REGISTRY_PHASE_RUNNING)) {
-												if( registry.getMetadata().getAnnotations().get(Registry.REGISTRY_LOGIN_URL) == null) {
+												if( registry.getMetadata().getAnnotations().get(Constants.CUSTOM_OBJECT_GROUP + "/" + Registry.REGISTRY_LOGIN_URL) == null) {
 													K8sApiCaller.addRegistryAnnotation(registry);
 													logger.info("Update registry-login-url annotation");
+													next = false;
 													break;
 												}
-												
 											}
 										}
 									}
 								}
 								
-								logger.info("afterJson = " + ((Object)registry).toString());
-								JsonNode diff = Util.jsonDiff(beforeJson, ((Object)registry).toString());
-								
-								if(diff.size() > 0 ) {
-									K8sApiCaller.updateRegistry(registry, diff);
-									break;
+								if( next ) {
+									logger.info("afterJson = " + Util.toJson(registry).toString());
+									JsonNode diff = Util.jsonDiff(beforeJson, Util.toJson(registry).toString());
+									logger.info("diff: " + diff.toString());
+									
+									if(diff.size() > 0 ) {
+										K8sApiCaller.updateRegistryAnnotationLastCR(registry);
+										K8sApiCaller.updateRegistrySubResources(registry, diff);
+									}
 								}
+//								
 								
 								break;
 							case Constants.EVENT_TYPE_DELETED : 

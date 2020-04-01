@@ -1,6 +1,5 @@
 package k8s.example.client;
 
-import java.io.IOException;
 import java.security.MessageDigest;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -9,6 +8,10 @@ import java.util.Date;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jsonpatch.diff.JsonDiff;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import fi.iki.elonen.NanoHTTPD.Response;
 
@@ -62,4 +65,20 @@ public class Util {
     		throw e;
     	}
     }
+    
+    public static JsonElement toJson(Object o) {
+		JsonObject json = (JsonObject) new JsonParser().parse(new Gson().toJson(o));
+		json.remove("status");
+		JsonObject metadata = json.getAsJsonObject("metadata");
+		if( metadata != null ) {
+			metadata.remove("annotations");
+			metadata.remove("creationTimestamp");
+			metadata.remove("generation");
+			metadata.remove("resourceVersion");
+			metadata.remove("selfLink");
+			metadata.remove("uid");
+		}
+		
+		return json;
+	}
 }
