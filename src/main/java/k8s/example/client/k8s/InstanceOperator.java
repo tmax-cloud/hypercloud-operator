@@ -192,7 +192,7 @@ public class InstanceOperator extends Thread {
 			        				//logger.info("[Instance Operator] @@@@@@@@@@@@@@@@@ Split Template Object[1] : " + splitStr[1]);
 			        				//logger.info("[Instance Operator] Template Object : " + objStr);
 
-			        				JsonNode replacedObject = numberTypeConverter(mapper.readTree(objStr));
+			        				JsonNode replacedObject = numberTypeConverter(mapper.readTree(objSb.toString()));
 			        				logger.info("[Instance Operator] Replaced Template Object : " + replacedObject);
 			        				
 			        				if(!objStr.contains("${")) {
