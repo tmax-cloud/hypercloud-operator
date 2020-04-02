@@ -4,6 +4,7 @@ public class Constants {
 	public static final String ISSUER = "Tmax-ProAuth-WebHook";
 	public static final String ACCESS_TOKEN_SECRET_KEY = "Access-Token-Secret-Key";
 	public static final String REFRESH_TOKEN_SECRET_KEY = "Refresh-Token-Secret-Key";
+	
 	//public static final String TEMPLATE_NAMESPACE = "hypercloud4-system";
 	public static final String DEFAULT_NAMESPACE = "default";
 
@@ -88,6 +89,9 @@ public class Constants {
 	public static final String CLAIM_STATUS_SUCCESS = "Success";
 	public static final String CLAIM_STATUS_REJECT = "Reject";
 	public static final String CLAIM_STATUS_ERROR = "Error";
+	
+	// Custom Resource Annoatation To Know Modified Fields
+	public static final String LAST_CUSTOM_RESOURCE = CUSTOM_OBJECT_GROUP + "/last-custom-resource";
 	
 	// LoginPage of HyperCloud4
 	public static final String LOGIN_PAGE_URI = "http://192.168.8.36/oauth/login.html";

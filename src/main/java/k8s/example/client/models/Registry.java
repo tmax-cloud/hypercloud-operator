@@ -1,5 +1,8 @@
 package k8s.example.client.models;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
 
 public class Registry {
@@ -48,7 +51,6 @@ public class Registry {
 		this.status = status;
 	}
 
-	
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("class Registry {\n");
