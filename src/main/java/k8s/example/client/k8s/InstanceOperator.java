@@ -171,7 +171,7 @@ public class InstanceOperator extends Thread {
 				        				}
 				        			}
 
-			        				String[] splitStr = objStr.split("\"metadata\":\\{");
+			        				/*String[] splitStr = objStr.split("\"metadata\":\\{");
 			        				StringBuilder sb = new StringBuilder();
 			        				sb.append("\"ownerReferences\": [{\"apiVersion\": \"v1\",\"blockOwnerDeletion\": true,\"controller\": true,\"kind\": \"TemplateInstance\",");
 			        				sb.append("\"name\": \"");
@@ -179,7 +179,7 @@ public class InstanceOperator extends Thread {
 			        				sb.append("\",\"uid\": \"");
 			        				sb.append(instanceObj.get("metadata").get("uid").asText());
 			        				sb.append("\"}],");
-			        				objStr = splitStr[0] + "\"metadata\":{" + sb.toString() + splitStr[1];
+			        				objStr = splitStr[0] + "\"metadata\":{" + sb.toString() + splitStr[1];*/
 			        				//logger.info("[Instance Operator] @@@@@@@@@@@@@@@@@ Split Template Object[0] : " + splitStr[0]);
 			        				//logger.info("[Instance Operator] @@@@@@@@@@@@@@@@@ Split Template Object[1] : " + splitStr[1]);
 			        				//logger.info("[Instance Operator] Template Object : " + objStr);
@@ -264,7 +264,7 @@ public class InstanceOperator extends Thread {
 		        			logger.info("[Instance Operator] Template Instance " + instanceObj.get("metadata").get("name") + " is DELETED");
 		        			JsonNode instanceObjs = instanceObj.get("spec").get("template").get("objects");
 		        			
-		        			/*if(instanceObjs.isArray()) {
+		        			if(instanceObjs.isArray()) {
 		        				for(JsonNode object : instanceObjs) {
 		        					String apiGroup = null;
 		        					String apiVersion = null;
@@ -300,7 +300,7 @@ public class InstanceOperator extends Thread {
 		        						throw new Exception(e.getResponseBody());
 		        					}
 		        				}
-		        			}*/
+		        			}
 		        		}
 					} catch(Exception e) {
 						logger.info("[Instance Operator] Instance Operator Exception: " + e.getMessage());
