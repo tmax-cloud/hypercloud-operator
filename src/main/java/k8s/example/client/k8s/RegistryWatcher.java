@@ -5,6 +5,9 @@ import java.io.StringWriter;
 
 import org.slf4j.Logger;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.fge.jsonpatch.diff.JsonDiff;
 import com.google.gson.reflect.TypeToken;
 
 import io.kubernetes.client.openapi.ApiClient;
@@ -13,6 +16,7 @@ import io.kubernetes.client.openapi.apis.CustomObjectsApi;
 import io.kubernetes.client.util.Watch;
 import k8s.example.client.Constants;
 import k8s.example.client.Main;
+import k8s.example.client.Util;
 import k8s.example.client.models.Registry;
 import k8s.example.client.models.RegistryCondition;
 import k8s.example.client.models.RegistryStatus;
@@ -56,7 +60,7 @@ public class RegistryWatcher extends Thread {
 						if( registry != null) {
 							latestResourceVersion = response.object.getMetadata().getResourceVersion();
 							String eventType = response.type.toString();
-							logger.info("====================== Registry " + eventType + " ====================== \n" + registry.toString());
+							logger.info("====================== Registry " + eventType + " ====================== \n");
 							
 							switch(eventType) {
 							case Constants.EVENT_TYPE_ADDED : 
@@ -66,25 +70,52 @@ public class RegistryWatcher extends Thread {
 								}
 								
 								break;
-							case Constants.EVENT_TYPE_MODIFIED : 
+							case Constants.EVENT_TYPE_MODIFIED :
+								if (registry.getMetadata().getAnnotations() == null) {
+									K8sApiCaller.updateRegistryAnnotationLastCR(registry);
+									break;
+								}
+								
+								String beforeJson = registry.getMetadata().getAnnotations().get(Constants.LAST_CUSTOM_RESOURCE);
+								logger.info("beforeJson = " + beforeJson);
+								if( beforeJson == null) {
+									K8sApiCaller.updateRegistryAnnotationLastCR(registry);
+									break;
+								}
+								
+								boolean next = true;
 								if( registry.getStatus().getConditions() != null) {
 									for( RegistryCondition registryCondition : registry.getStatus().getConditions()) {
 										if( registryCondition.getType().equals("Phase")) {
 											if (registryCondition.getStatus().equals(RegistryStatus.REGISTRY_PHASE_CREATING)) {
 												K8sApiCaller.createRegistry(registry);
 												logger.info("Registry is running");
+												next = false;
+												break;
 											}
 											else if (registryCondition.getStatus().equals(RegistryStatus.REGISTRY_PHASE_RUNNING)) {
-												if( registry.getMetadata().getAnnotations().get(Registry.REGISTRY_LOGIN_URL) == null) {
+												if( registry.getMetadata().getAnnotations().get(Constants.CUSTOM_OBJECT_GROUP + "/" + Registry.REGISTRY_LOGIN_URL) == null) {
 													K8sApiCaller.addRegistryAnnotation(registry);
 													logger.info("Update registry-login-url annotation");
+													next = false;
+													break;
 												}
-												
-												
 											}
 										}
 									}
 								}
+								
+								if( next ) {
+									logger.info("afterJson = " + Util.toJson(registry).toString());
+									JsonNode diff = Util.jsonDiff(beforeJson, Util.toJson(registry).toString());
+									logger.info("diff: " + diff.toString());
+									
+									if(diff.size() > 0 ) {
+										K8sApiCaller.updateRegistryAnnotationLastCR(registry);
+										K8sApiCaller.updateRegistrySubResources(registry, diff);
+									}
+								}
+//								
 								
 								break;
 							case Constants.EVENT_TYPE_DELETED : 

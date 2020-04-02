@@ -5,7 +5,14 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 
-import fi.iki.elonen.NanoHTTPD;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.fge.jsonpatch.diff.JsonDiff;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
 import fi.iki.elonen.NanoHTTPD.Response;
 
 public class Util {	
@@ -46,4 +53,32 @@ public class Util {
         resp.addHeader("Access-Control-Allow-Headers", "User-Agent");
 		return resp;
     }
+    
+    public static JsonNode jsonDiff(String beforeJson, String afterJson) throws Exception{
+    	try {
+    		ObjectMapper jackson = new ObjectMapper(); 
+    		JsonNode beforeNode = jackson.readTree(beforeJson); 
+    		JsonNode afterNode = jackson.readTree(afterJson); 
+    		return JsonDiff.asJson(beforeNode, afterNode);
+    	}catch(Exception e) {
+    		
+    		throw e;
+    	}
+    }
+    
+    public static JsonElement toJson(Object o) {
+		JsonObject json = (JsonObject) new JsonParser().parse(new Gson().toJson(o));
+		json.remove("status");
+		JsonObject metadata = json.getAsJsonObject("metadata");
+		if( metadata != null ) {
+			metadata.remove("annotations");
+			metadata.remove("creationTimestamp");
+			metadata.remove("generation");
+			metadata.remove("resourceVersion");
+			metadata.remove("selfLink");
+			metadata.remove("uid");
+		}
+		
+		return json;
+	}
 }

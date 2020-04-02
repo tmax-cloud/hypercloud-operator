@@ -13,9 +13,11 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -38,6 +40,7 @@ import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.io.ByteStreams;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -82,6 +85,7 @@ import io.kubernetes.client.openapi.models.V1PodSpec;
 import io.kubernetes.client.openapi.models.V1PodTemplateSpec;
 import io.kubernetes.client.openapi.models.V1PolicyRule;
 import io.kubernetes.client.openapi.models.V1Probe;
+import io.kubernetes.client.openapi.models.V1ReplicaSet;
 import io.kubernetes.client.openapi.models.V1ReplicaSetBuilder;
 import io.kubernetes.client.openapi.models.V1ReplicaSetSpec;
 import io.kubernetes.client.openapi.models.V1ResourceQuota;
@@ -706,7 +710,6 @@ public class K8sApiCaller {
 		JSONArray conditions = new JSONArray();
 		JSONObject condition = new JSONObject();
 		JSONArray patchStatusArray = new JSONArray();
-		
 		
 		condition.put("type", "Phase");
 		condition.put("status", RegistryStatus.REGISTRY_PHASE_CREATING);
@@ -1466,7 +1469,7 @@ public class K8sApiCaller {
 			livenessProbe.setPeriodSeconds(5);
 			livenessProbe.setSuccessThreshold(1);
 			livenessProbe.setTimeoutSeconds(30);
-			container.setReadinessProbe(livenessProbe);
+			container.setLivenessProbe(livenessProbe);
 
 			podSpec.addContainersItem(container);
 
@@ -1552,132 +1555,6 @@ public class K8sApiCaller {
 				
 				throw e;
 			}
-//			
-//			// Check if Registry Pod is Running
-//			int retryCount = 0;
-//			RETRY_CNT = 200;
-//			V1Pod pod = null;
-//			V1PodList pods = null;
-//			while (++retryCount <= RETRY_CNT) {
-//				logger.info("Pod is not Running... Retry Count [" + retryCount + "/" + RETRY_CNT + "]");
-//				try {
-//					pods = api.listNamespacedPod(namespace, null, null, null, null,
-//							"apps=" + rsMeta.getName(), null, null, null, false);
-//				} catch (ApiException e) {
-//					logger.info("Create Replicaset Failed");
-//					logger.info(e.getResponseBody());
-//					
-//					JSONObject patchStatus = new JSONObject();
-//					JSONObject status = new JSONObject();
-//					JSONArray conditions = new JSONArray();
-//					JSONObject condition = new JSONObject();
-//					JSONArray patchStatusArray = new JSONArray();
-//					
-//					condition.put("type", "Phase");
-//					condition.put("status", RegistryStatus.REGISTRY_PHASE_ERROR);
-//					condition.put("message", "Creating a registry is failed");
-//					condition.put("reason", e.getResponseBody());
-//					conditions.add(condition);
-//					status.put("conditions", conditions);
-//					status.put("phase", RegistryStatus.REGISTRY_PHASE_ERROR);
-//
-//					patchStatus.put("op", "replace");
-//					patchStatus.put("path", "/status");
-//					patchStatus.put("value", status);
-//					patchStatusArray.add(patchStatus);
-//					
-//					try{
-//						Object result = customObjectApi.patchNamespacedCustomObjectStatus(
-//								Constants.CUSTOM_OBJECT_GROUP, 
-//								Constants.CUSTOM_OBJECT_VERSION, 
-//								namespace, 
-//								Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, 
-//								registry.getMetadata().getName(), patchStatusArray);
-//						logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
-//					} catch (ApiException e2) {
-//						throw new Exception(e2.getResponseBody());
-//					}
-//					
-//					throw e;
-//				}
-//
-//				if (pods.getItems() != null && !pods.getItems().isEmpty()) {
-//					pod = pods.getItems().get(0);
-//					if (pod.getStatus().getPhase().equals("Running")) {
-//						logger.info("Pod is Running !!!!!!");
-//						logger.info("Pod Name: " + pod.getMetadata().getName());
-//						break;
-//					}
-//				}
-//
-//				Thread.sleep(500);
-//			}
-//
-//			if (retryCount > RETRY_CNT) {
-//				logger.info("Pod Running is Fail");
-//				logger.info("Create Replicaset Failed");
-//				JSONObject patchStatus = new JSONObject();
-//				JSONObject status = new JSONObject();
-//				JSONArray conditions = new JSONArray();
-//				JSONObject condition = new JSONObject();
-//				JSONArray patchStatusArray = new JSONArray();
-//				
-//				condition.put("type", "Phase");
-//				condition.put("status", RegistryStatus.REGISTRY_PHASE_ERROR);
-//				condition.put("message", "Creating a registry is failed");
-//				condition.put("reason", "Pod is not running");
-//				conditions.add(condition);
-//				status.put("conditions", conditions);
-//				status.put("phase", RegistryStatus.REGISTRY_PHASE_ERROR);
-//
-//				patchStatus.put("op", "replace");
-//				patchStatus.put("path", "/status");
-//				patchStatus.put("value", status);
-//				patchStatusArray.add(patchStatus);
-//				
-//				try{
-//					Object result = customObjectApi.patchNamespacedCustomObjectStatus(
-//							Constants.CUSTOM_OBJECT_GROUP, 
-//							Constants.CUSTOM_OBJECT_VERSION, 
-//							namespace, 
-//							Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, 
-//							registry.getMetadata().getName(), patchStatusArray);
-//					logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
-//				} catch (ApiException e2) {
-//					throw new Exception(e2.getResponseBody());
-//				}
-//			}
-//			
-//			JSONObject patchStatus = new JSONObject();
-//			JSONObject status = new JSONObject();
-//			JSONArray conditions = new JSONArray();
-//			JSONObject condition = new JSONObject();
-//			JSONArray patchStatusArray = new JSONArray();
-//			
-//			condition.put("type", "Phase");
-//			condition.put("status", RegistryStatus.REGISTRY_PHASE_RUNNING);
-//			condition.put("message", "Registry Is Running");
-//			condition.put("reason", "All registry resources are operating normally.");
-//			conditions.add(condition);
-//			status.put("conditions", conditions);
-//			status.put("phase", RegistryStatus.REGISTRY_PHASE_RUNNING);
-//
-//			patchStatus.put("op", "replace");
-//			patchStatus.put("path", "/status");
-//			patchStatus.put("value", status);
-//			patchStatusArray.add(patchStatus);
-//			
-//			try{
-//				Object result = customObjectApi.patchNamespacedCustomObjectStatus(
-//						Constants.CUSTOM_OBJECT_GROUP, 
-//						Constants.CUSTOM_OBJECT_VERSION, 
-//						namespace, 
-//						Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, 
-//						registry.getMetadata().getName(), patchStatusArray);
-//				logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
-//			} catch (ApiException e2) {
-//				throw new Exception(e2.getResponseBody());
-//			}
 			
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -1686,6 +1563,189 @@ public class K8sApiCaller {
 
 	}
 
+	/*
+	 * {"op":"remove","path":"/apiVersion"}
+		{"op":"replace","path":"/kind","value":"Registry3"}
+		{"op":"add","path":"/kind2","value":"Registry"}
+	 * 
+	 */
+	public static void updateRegistrySubResources(Registry registry, JsonNode diff) throws Throwable {
+		String namespace = registry.getMetadata().getNamespace();
+		String registryId = registry.getMetadata().getName();
+		Set<String> updateSubResources = new HashSet<>();
+		boolean restartPodRequired = false;
+		boolean renewLoginAuthRequired = false;
+		JsonArray jArrayPatchReplicaSet = new JsonArray();
+		JsonArray jArrayPatchSecret = new JsonArray();
+		
+		for( final JsonNode obj : diff) {
+			String path = "";
+			
+			logger.info("update object: " + obj.toString());
+			if( obj.get("path") != null) {
+				path = obj.get("path").toString().split("\"")[1];
+			}
+			
+			if(path.equals("/spec/image")) {
+				restartPodRequired = true;
+				JsonObject replJson = new JsonObject();
+				replJson.addProperty("op", "replace");
+				replJson.addProperty("path", "/spec/template/spec/containers/0/image");
+				replJson.addProperty("value", registry.getSpec().getImage());
+				
+				jArrayPatchReplicaSet.add(replJson);
+				
+				if(!updateSubResources.contains("ReplicaSet")) 
+					updateSubResources.add("ReplicaSet");
+			}
+			if(path.equals("/spec/loginId")) {
+				restartPodRequired = true;
+				renewLoginAuthRequired = true;
+				String dataStr = registry.getSpec().getLoginId();
+				byte[] encodeData = Base64.encodeBase64(dataStr.getBytes());
+				
+				JsonObject replJson = new JsonObject();
+				replJson.addProperty("op", "replace");
+				replJson.addProperty("path", "/data/ID");
+				replJson.addProperty("value", new String(encodeData));
+
+				jArrayPatchSecret.add(replJson);
+				
+				if(!updateSubResources.contains("ReplicaSet")) 
+					updateSubResources.add("ReplicaSet");
+				if(!updateSubResources.contains("Secret")) 
+					updateSubResources.add("Secret");
+				
+			}
+			if(path.equals("/spec/loginPassword")) {
+				restartPodRequired = true;
+				renewLoginAuthRequired = true;
+				String dataStr = registry.getSpec().getLoginPassword();
+				byte[] encodeData = Base64.encodeBase64(dataStr.getBytes());
+				JsonObject replJson = new JsonObject();
+				replJson.addProperty("op", "replace");
+				replJson.addProperty("path", "/data/PASSWD");
+				replJson.addProperty("value", new String(encodeData));
+
+				jArrayPatchSecret.add(replJson);
+				
+				if(!updateSubResources.contains("ReplicaSet")) 
+					updateSubResources.add("ReplicaSet");
+				if(!updateSubResources.contains("Secret")) 
+					updateSubResources.add("Secret");
+			}
+			
+			if( renewLoginAuthRequired ) {
+				String loginAuth = registry.getSpec().getLoginId() + ":" + registry.getSpec().getLoginPassword();
+				loginAuth = new String( Base64.encodeBase64( loginAuth.getBytes() ) );
+				
+				JsonObject replJson = new JsonObject();
+				replJson.addProperty("op", "replace");
+				replJson.addProperty("path", "/spec/template/spec/containers/0/readinessProbe/httpGet/httpHeaders/0/value");
+				replJson.addProperty("value", "Basic " + loginAuth);
+				
+				jArrayPatchReplicaSet.add(replJson);
+				
+				JsonObject replJson2 = new JsonObject();
+				replJson2.addProperty("op", "replace");
+				replJson2.addProperty("path", "/spec/template/spec/containers/0/livenessProbe/httpGet/httpHeaders/0/value");
+				replJson2.addProperty("value", "Basic " + loginAuth);
+				
+				jArrayPatchReplicaSet.add(replJson2);
+			}
+		}
+		
+		for(String res : updateSubResources) {
+			if(res.equals("ReplicaSet")) {
+				updateRegistryReplicaSet(registry, jArrayPatchReplicaSet);
+			}
+			if(res.equals("Secret")) {
+				updateRegistrySecret(registry, jArrayPatchSecret);
+			}
+		}
+		
+		if(restartPodRequired) {
+			String podName = "";
+			V1PodList pods = null;
+			String labelSelector = "apps=" + Constants.K8S_PREFIX + Constants.K8S_REGISTRY_PREFIX + registryId;
+
+			try {
+				pods = api.listNamespacedPod(namespace, null, null, null, null, labelSelector, null, null, null, false);
+
+				if( pods.getItems().size() == 0) {
+					logger.info("RegistryPod is not found");
+					return;
+				}
+
+				for(V1Pod pod : pods.getItems()) {
+					podName = pod.getMetadata().getName();
+					break;
+				}
+
+				api.deleteNamespacedPod(podName, namespace, null, null, null, null, null, null);
+				
+			}catch(ApiException e) {
+				logger.info(e.getResponseBody());
+			}
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public static void updateRegistryReplicaSet(Registry registry, JsonElement patchJson) throws Throwable {
+		String namespace = registry.getMetadata().getNamespace();
+		String registryId = registry.getMetadata().getName();
+		logger.info("updateRegistryReplicaSet's Json: " + patchJson.toString());
+
+		try {
+			V1ReplicaSet result = appApi.patchNamespacedReplicaSet(Constants.K8S_PREFIX + Constants.K8S_REGISTRY_PREFIX + registryId, namespace, patchJson, null, null, null, null);
+			logger.info("patchNamespacedReplicaSet result: " + result.toString());
+		}catch(ApiException e) {
+			logger.info(e.getResponseBody());
+			throw e;
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public static void updateRegistrySecret(Registry registry, JsonElement patchJson) throws Throwable {
+		String namespace = registry.getMetadata().getNamespace();
+		String registryId = registry.getMetadata().getName();
+		logger.info("updateRegistrySecret's Json: " + patchJson.toString());
+
+		try {
+			V1Secret result = api.patchNamespacedSecret(Constants.K8S_PREFIX + registryId, namespace, patchJson, null, null, null, null);
+			logger.info("patchNamespacedSecret result: " + result.toString());
+		}catch(ApiException e) {
+			logger.info(e.getResponseBody());
+			throw e;
+		}
+		
+	}
+	
+	
+	
+	@SuppressWarnings("unchecked")
+	public static void updateRegistryAnnotationLastCR(Registry registry) throws Throwable {
+		String namespace = registry.getMetadata().getNamespace();
+		String registryId = registry.getMetadata().getName();
+		
+		// ------ Patch Registry
+		Map<String, String> annotations
+		= registry.getMetadata().getAnnotations() == null
+		? new HashMap<>() : registry.getMetadata().getAnnotations();
+
+		JsonObject json = (JsonObject) Util.toJson(registry);
+		
+		annotations.put(Constants.LAST_CUSTOM_RESOURCE, json.toString());
+		registry.getMetadata().setAnnotations(annotations);
+
+		customObjectApi.replaceNamespacedCustomObject(
+				Constants.CUSTOM_OBJECT_GROUP,
+				Constants.CUSTOM_OBJECT_VERSION,
+				namespace,
+				Constants.CUSTOM_OBJECT_PLURAL_REGISTRY,
+				registryId, registry);
+	}
+	
 	@SuppressWarnings("unchecked")
 	public static void addRegistryAnnotation(Registry registry) throws Throwable {
 		String namespace = registry.getMetadata().getNamespace();
@@ -1699,8 +1759,14 @@ public class K8sApiCaller {
 		logger.info("REGISTRY_IP_PORT = " + registryIpPort);
 		
 		// ------ Patch Registry
-		Map<String, String> annotations = registry.getMetadata().getAnnotations();
-		annotations.put(Constants.CUSTOM_OBJECT_GROUP + "/registry-login-url", "https://" + registryIpPort);
+		Map<String, String> annotations
+		= registry.getMetadata().getAnnotations() == null
+		? new HashMap<>() : registry.getMetadata().getAnnotations();
+
+		JsonObject json = (JsonObject) Util.toJson(registry);
+
+		annotations.put(Constants.LAST_CUSTOM_RESOURCE, json.toString());
+		annotations.put(Constants.CUSTOM_OBJECT_GROUP + "/" + Registry.REGISTRY_LOGIN_URL, "https://" + registryIpPort);
 		registry.getMetadata().setAnnotations(annotations);
 
 		customObjectApi.replaceNamespacedCustomObject(
