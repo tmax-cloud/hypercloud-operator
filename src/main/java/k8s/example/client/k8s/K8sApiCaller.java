@@ -2121,9 +2121,9 @@ public class K8sApiCaller {
 
 			secretMap = result.getData();
 			//				logger.info("== real secret data ==");
-			for( String key : secretMap.keySet()) {
-				//					logger.info("[secret]" + key + "=" + new String(secretMap.get(key)));
-			}
+//			for( String key : secretMap.keySet()) {
+//				//					logger.info("[secret]" + key + "=" + new String(secretMap.get(key))); 
+//			}
 
 		} catch (ApiException e) {
 			logger.info(e.getResponseBody());
@@ -2148,6 +2148,25 @@ public class K8sApiCaller {
 			throw e;
 		}
 		
+	}
+	
+	public static Map <String, String> readSecret(String namespace, String secretName ) throws Throwable {
+		Map<String, byte[]> secretMap = new HashMap<>();
+		Map<String, String> returnMap = new HashMap<>();
+		try {
+			V1Secret secretReturn = api.readNamespacedSecret(secretName.toLowerCase(), namespace , null, null, null);
+
+			secretMap = secretReturn.getData();
+			for( String key : secretMap.keySet()) {
+				returnMap.put(key, new String(secretMap.get(key)));
+			logger.info("[secret]" + key + "=" + new String(secretMap.get(key)));  
+			}
+			
+		} catch (ApiException e) {
+			logger.info(e.getResponseBody());
+			throw e;
+		}
+		return returnMap;
 	}
 
 	private static String readFile(String filePath) throws IOException {

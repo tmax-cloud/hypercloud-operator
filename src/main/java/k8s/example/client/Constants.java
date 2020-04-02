@@ -5,7 +5,7 @@ public class Constants {
 	public static final String ACCESS_TOKEN_SECRET_KEY = "Access-Token-Secret-Key";
 	public static final String REFRESH_TOKEN_SECRET_KEY = "Refresh-Token-Secret-Key";
 	
-	//public static final String TEMPLATE_NAMESPACE = "hypercloud4-system";
+	public static final String TEMPLATE_NAMESPACE = "hypercloud4-system";
 	public static final String DEFAULT_NAMESPACE = "default";
 
 	public static final String CUSTOM_OBJECT_GROUP = "tmax.io";

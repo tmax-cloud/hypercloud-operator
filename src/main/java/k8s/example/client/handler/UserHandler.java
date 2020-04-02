@@ -41,6 +41,7 @@ import k8s.example.client.Main;
 import k8s.example.client.Util;
 import k8s.example.client.k8s.K8sApiCaller;
 import k8s.example.client.k8s.OAuthApiCaller;
+import k8s.example.client.models.BrokerResponse;
 
 public class UserHandler extends GeneralHandler {
 	private final String HOST = "mail.tmax.co.kr";
@@ -134,9 +135,12 @@ public class UserHandler extends GeneralHandler {
 		} catch (Exception e) {
 			logger.info( "Exception message: " + e.getMessage() );
 			e.printStackTrace();
-			
 			status = Status.UNAUTHORIZED;
 			outDO = Constants.LOGIN_FAILED;
+			
+		} catch (Throwable e) {
+			logger.info( "Exception message: " + e.getMessage() );
+			e.printStackTrace();
 		}
 		
 		if (status.equals(Status.UNAUTHORIZED)) {
@@ -156,10 +160,11 @@ public class UserHandler extends GeneralHandler {
     }
 	
 
-	private void sendMail( User userInDO, String accessToken ) throws AddressException, MessagingException {	
+	private void sendMail( User userInDO, String accessToken ) throws Throwable {	
+		
 		String subject = "메일테스트";	
 		Properties props = System.getProperties();
-		
+		String body = null;
 		props.put( "mail.transport.protocol", "smtp" );
 		props.put( "mail.smtp.host", HOST );
 		props.put( "mail.smtp.port", PORT );
@@ -183,17 +188,54 @@ public class UserHandler extends GeneralHandler {
 
 		mimeMessage.setSubject( subject );
 		
-		String body = accessToken;
+		// Make Body
+		Map<String, String> bodyMap = K8sApiCaller.readSecret(Constants.TEMPLATE_NAMESPACE, "authenticate-html");  		
+		if( bodyMap!=null ) {
+			body = bodyMap.get("body");
+		}
 
-		mimeMessage.setText( body );
+		if (body!=null) mimeMessage.setText( body );
+		
+		//Send Mail
 		Transport.send( mimeMessage );		
 	}
+	
+	public Response delete( UriResource uriResource, Map<String, String> urlParams, IHTTPSession session ) {
+		logger.info("***** DELETE /v2/service_instances/:instance_id/service_bindings/:binding_id");
+		
+		String serviceClassName = session.getParameters().get("service_id").get(0);
+		String instanceId = urlParams.get("instance_id");
+		String bindingId = urlParams.get("binding_id");
+		logger.info("Instance ID: " + instanceId);
+		logger.info("Binding ID: " + bindingId);
+		
+		BrokerResponse response = new BrokerResponse();
+		String outDO = null;
+		IStatus status = null;
+		
+		try {
+			response.setOperation("");
+			status = Status.OK;
+		} catch (Exception e) {
+			logger.info( "  Failed to unbind instance of service class \"" + serviceClassName + "\"");
+			logger.info( "Exception message: " + e.getMessage() );
+			e.printStackTrace();
+			status = Status.BAD_REQUEST;
+		}
+		
+		Gson gson = new GsonBuilder().setPrettyPrinting().create();
+		outDO = gson.toJson(response).toString();
+		logger.info("Response : " + outDO);
+		
+//				logger.info();
+		return NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO);
+    }
 
 
 	@Override
     public Response other(
       String method, UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
-		logger.info("***** OPTIONS /login");
+		logger.info("***** OPTIONS /User");
 		
 		return Util.setCors(NanoHTTPD.newFixedLengthResponse(""));
     }
