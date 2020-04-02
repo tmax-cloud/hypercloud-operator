@@ -124,6 +124,9 @@ public class InstanceOperator extends Thread {
 		        				for(JsonNode owner : instanceObj.get("metadata").get("ownerReferences")) {
 		        					if (owner.get("kind") != null && owner.get("kind").asText().equals(Constants.SERVICE_INSTANCE_KIND)) {
 		        						templateNamespace = Constants.DEFAULT_NAMESPACE;
+		        						if ( System.getenv(Constants.SYSTEM_ENV_CATALOG_NAMESPACE) != null && !System.getenv(Constants.SYSTEM_ENV_CATALOG_NAMESPACE).isEmpty() ) {
+		        							templateNamespace = System.getenv(Constants.SYSTEM_ENV_CATALOG_NAMESPACE);
+		        						}
 		        					}
 								}
 		        			}
