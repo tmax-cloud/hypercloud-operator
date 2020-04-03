@@ -472,6 +472,7 @@ plans:
           MYSQL_USER: root1
           MYSQL_PASSWORD: tmax@23
           MYSQL_DATABASE: root1
+parameters:
 - name: APP_NAME
   description: database app name
 - name: NAMESPACE
@@ -631,6 +632,7 @@ plans:
           POSTGRESQL_USER: root
           POSTGRESQL_PASSWORD: tmax@23
           POSTGRESQL_DATABASE: root
+parameters:
 - name: APP_NAME
   description: database app name
 - name: NAMESPACE

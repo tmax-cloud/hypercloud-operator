@@ -2431,13 +2431,13 @@ public class K8sApiCaller {
 			template.setMetadata(templateMeta);
 			
 			if(inDO.getParameters() != null) {
-				/*for(String key : inDO.getParameters().keySet()) {
+				for(String key : inDO.getParameters().keySet()) {
 					TemplateParameter parameter = new TemplateParameter();
 					parameter.setName(key);
 					parameter.setValue(inDO.getParameters().get(key));
 					parameters.add(parameter);
 				}
-				template.setParameters(parameters);*/
+				template.setParameters(parameters);
 			} else {
 				String planName = inDO.getPlan_id();
 				Object planResponse = customObjectApi.getNamespacedCustomObject("servicecatalog.k8s.io", "v1beta1", inDO.getContext().getNamespace(), "serviceplans", planName);

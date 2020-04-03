@@ -142,6 +142,7 @@ plans:
           MYSQL_USER: root1
           MYSQL_PASSWORD: tmax@23
           MYSQL_DATABASE: root1
+parameters:
 - name: APP_NAME
   description: database app name
 - name: NAMESPACE
