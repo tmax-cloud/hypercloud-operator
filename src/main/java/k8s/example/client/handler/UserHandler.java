@@ -1,5 +1,9 @@
 package k8s.example.client.handler;
 
+import java.io.FileInputStream;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +41,7 @@ import k8s.example.client.Main;
 import k8s.example.client.Util;
 import k8s.example.client.k8s.K8sApiCaller;
 import k8s.example.client.k8s.OAuthApiCaller;
+import k8s.example.client.metering.util.SimpleUtil;
 
 public class UserHandler extends GeneralHandler {
 	private final String HOST = "mail.tmax.co.kr";
@@ -155,6 +160,131 @@ public class UserHandler extends GeneralHandler {
 		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO));
     }
 	
+	public Response get( UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
+		logger.info("***** GET /User Id Find");
+		
+		List < UserCR > userCRList = null;
+		IStatus status = null;
+		String outDO = null; 
+		String userId = null;
+		
+		// Get Query Parameter
+		String mode = SimpleUtil.getQueryParameter( session.getParameters(), Constants.QUERY_PARAMETER_MODE );
+		String email = SimpleUtil.getQueryParameter( session.getParameters(), Constants.QUERY_PARAMETER_EMAIL );
+		
+		try {
+			if (mode.equalsIgnoreCase("id")) {
+				userCRList = K8sApiCaller.listUser();
+				if ( userCRList!=null ) {
+					for(UserCR userCR : userCRList) {
+						if( userCR.getUserInfo().getEmail().equalsIgnoreCase(email) ) {
+							userId = userCR.getMetadata().getName();
+						}
+					}
+				}
+				if (userId == null) {
+					throw new Exception(ErrorCode.NO_MATCHING_USER);
+				}
+				else {
+					logger.info( "User ID Found: " + userId );
+					status = Status.OK; 
+					outDO = userId;
+				}
+			}
+			
+		}catch (ApiException e) {
+			logger.info( "Exception message: " + e.getResponseBody() );
+			logger.info( "Exception message: " + e.getMessage() );
+			status = Status.UNAUTHORIZED; 
+			outDO = Constants.USER_ID_FIND_FAILED;
+			
+		} catch (Exception e) {
+			logger.info( "Exception message: " + e.getMessage() );
+			e.printStackTrace();
+			status = Status.UNAUTHORIZED;
+			outDO = Constants.USER_ID_FIND_FAILED;		
+		}		
+		
+		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO));
+	}
+	
+	public Response put( UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
+		logger.info("***** PUT /User");
+		
+		IStatus status = null;
+		String outDO = null; 
+		String updateMode = null;
+		UserCR userCR = null;
+		User userInDO = null;
+		
+		Map<String, String> body = new HashMap<String, String>();
+        try {
+			session.parseBody( body );
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        
+		// if updateMode exists
+		if(session.getParameters()!=null) {
+			if( session.getParameters().get("mode")!= null) {
+				updateMode = session.getParameters().get("mode").get(0);
+				logger.info("updateMode : " + updateMode );			
+			}
+		}
+
+		try {
+			String bodyStr = readFile(body.get("content"), Integer.valueOf(session.getHeaders().get("content-length")));
+			logger.info("Body: " + bodyStr);	
+			userInDO = new ObjectMapper().readValue(bodyStr, User.class);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		switch(updateMode) {	
+		case "meta":
+			logger.info( "  User ID: " + userInDO.getId() );
+			logger.info( "  User Name: " + userInDO.getName() );
+			logger.info( "  User Description: " + userInDO.getDescription() );
+			logger.info( "  User Department: " + userInDO.getDepartment() );
+			logger.info( "  User Phone: " + userInDO.getPhone() );
+			logger.info( "  User Position: " + userInDO.getPosition() );
+			
+			try {
+				// Validate
+	    		if (userInDO.getId() == null ) 	throw new Exception(ErrorCode.USER_ID_EMPTY);
+	    		userCR = K8sApiCaller.getUser( userInDO.getId() );
+	    		if (userCR.getMetadata().getName() == null) {
+	    			throw new Exception(ErrorCode.NO_CORRESPONDING_USER);
+	    		} else {
+	    			K8sApiCaller.updateUserMeta( userInDO );
+	    			status = Status.OK; 
+					outDO = Constants.USER_UPDATE_SUCCESS;
+	    		}
+	    		
+			} catch (ApiException e) {
+				logger.info( "Exception message: " + e.getResponseBody() );
+				logger.info( "Exception message: " + e.getMessage() );
+				status = Status.UNAUTHORIZED; 
+				outDO = Constants.USER_UPDATE_FAILED;
+				
+			} catch (Exception e) {
+				logger.info( "Exception message: " + e.getMessage() );
+				e.printStackTrace();
+				status = Status.UNAUTHORIZED;
+				outDO = Constants.USER_UPDATE_FAILED;		
+			}		
+			break;
+			
+		case "passwd":
+			//TODO : 일해라 태건아
+			break;
+		}
+		
+		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO));
+
+	}
+	
 
 	private void sendMail( User userInDO, String accessToken ) throws Throwable {	
 		logger.info( " Send Verification Mail to New User ");
@@ -191,6 +321,7 @@ public class UserHandler extends GeneralHandler {
 		
 		// Make Subject
 		mimeMessage.setSubject( subject, charSetUtf );
+//		mimeMessage.setSubject( subject, "text/plain; charset=UTF-8" );
 
 		// Make Body
 		Map<String, String> bodyMap = K8sApiCaller.readSecret(Constants.TEMPLATE_NAMESPACE, "authenticate-html");  		
@@ -208,6 +339,33 @@ public class UserHandler extends GeneralHandler {
             e.printStackTrace();
             logger.info( e.getMessage() + e.getStackTrace());
 		} 
+	}
+	
+	private String readFile(String path, Integer length) {
+		Charset charset = Charset.defaultCharset();
+		String bodyStr = "";
+		int byteCount;
+		try {
+			ByteBuffer buf = ByteBuffer.allocate(Integer.valueOf(length));
+			FileInputStream fis = new FileInputStream(path);
+			FileChannel dest = fis.getChannel();
+			
+			while(true) {
+				byteCount = dest.read(buf);
+				if(byteCount == -1) {
+					break;
+				} else {
+					buf.flip();
+					bodyStr += charset.decode(buf).toString();
+					buf.clear();
+				}
+			}
+			dest.close();
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		return bodyStr;
 	}
 
 	@Override
