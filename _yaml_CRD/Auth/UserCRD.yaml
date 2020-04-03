@@ -27,7 +27,7 @@ spec:
       properties:
         userInfo:
           type: object
-          required: [name, password, email, phone]
+          required: [name, email, phone]
           description: UserInfo contains user information
           properties:
             name:

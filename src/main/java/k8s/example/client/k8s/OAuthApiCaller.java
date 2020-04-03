@@ -36,21 +36,18 @@ public class OAuthApiCaller {
 //	}
 	
 	public static JsonArray ListUser() throws IOException {
-		logger.info( "[OAuth] User List Get Service Start" );
+		logger.info( "[OAuth] User List Service Start" );
 		
 		//GET svc
 		Request request = new Request.Builder().url(setAuthURL( Constants.SERVICE_NAME_OAUTH_USER_LIST )).build();
-		logger.info( "111" );
-
 	    Response response = client.newCall(request).execute();
-		logger.info( "222" );
 
-	    String result = response.body().toString();
-		logger.info( "333" );
+	    String result = response.body().string();   
+		logger.info("result : " + result);
 
 	    Gson gson = new Gson();
-	    JsonObject userList = (JsonObject) gson.fromJson(result, Object.class);
-	    return (JsonArray) userList.get("user"); 
+	    JsonObject userList = gson.fromJson(result, JsonObject.class);
+	    return userList.get("user").getAsJsonArray(); 
 	}
 
 	public static JsonObject createUser( User userInDO ) throws IOException {
@@ -69,29 +66,28 @@ public class OAuthApiCaller {
 	    
 		Response response = client.newCall(request).execute();
 		String result = response.body().string();
+		logger.info("result : " + result);
 
-	    JsonObject userCreateOut = (JsonObject) gson.fromJson(result, Object.class);
+	    JsonObject userCreateOut = gson.fromJson(result, JsonObject.class);
 	    return userCreateOut; 
 	}
 	
 	public static JsonObject AuthenticateCreate( User userInDO ) throws IOException {
 		logger.info( "[OAuth] Login Service Start" );
 	
-		JsonObject loginInDO = new JsonObject();		
-		loginInDO.addProperty("user_id", userInDO.getId());
-		loginInDO.addProperty("password", userInDO.getPassword());
+		String loginInDO = "{ \"user_id\" : " + userInDO.getId() + ", \"password\" : \"" + userInDO.getPassword() + "\" }";	
+		logger.info("loginInDO : " + loginInDO);	
 		
-		Gson gson = new Gson();
-	    String json = gson.toJson(loginInDO);
-		
+		Gson gson = new Gson();		
 	    //POST svc
 	    Request request = new Request.Builder().url(setAuthURL( Constants.SERVICE_NAME_OAUTH_AUTHENTICATE_CREATE ))
-	            .post(RequestBody.create(MediaType.parse("application/json"), json)).build();
+	            .post(RequestBody.create(MediaType.parse("application/json"), loginInDO)).build();
 	    
 		Response response = client.newCall(request).execute();
 		String result = response.body().string();
+		logger.info("result : " + result);
 
-	    JsonObject authenticateCreateOut = (JsonObject) gson.fromJson(result, Object.class);
+	    JsonObject authenticateCreateOut = gson.fromJson(result, JsonObject.class);
 	    return authenticateCreateOut; 
 	}
 	

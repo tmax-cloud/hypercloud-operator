@@ -470,17 +470,13 @@ public class K8sApiCaller {
     public static List < UserCR > listUser() throws Exception {
     	List < UserCR > userList = null;     
         try {
-        	logger.info("123123");
-
         	Object response = customObjectApi.listClusterCustomObject(
 					Constants.CUSTOM_OBJECT_GROUP,
 					Constants.CUSTOM_OBJECT_VERSION, 
 					Constants.CUSTOM_OBJECT_PLURAL_USER,
 					null, null, null, null, null, null, null, Boolean.FALSE);
-        	logger.info("321321");
 
 			JsonObject respJson = (JsonObject) new JsonParser().parse((new Gson()).toJson(response));
-        	logger.info("3211414321");
 
         	mapper.registerModule(new JodaModule());
 			userList = mapper.readValue((new Gson()).toJson(respJson.get("items")), new TypeReference<ArrayList<UserCR>>() {});
@@ -2151,6 +2147,8 @@ public class K8sApiCaller {
 	}
 	
 	public static Map <String, String> readSecret(String namespace, String secretName ) throws Throwable {
+		logger.info(" [k8sApiCaller] Read Secret Service Start ");  
+
 		Map<String, byte[]> secretMap = new HashMap<>();
 		Map<String, String> returnMap = new HashMap<>();
 		try {
@@ -3079,18 +3077,14 @@ public class K8sApiCaller {
 	public static void createUser(User userInDO) throws Exception {
 		try {
 			UserCR userCR = new UserCR();
-    		
     		// Set name & label
         	V1ObjectMeta metadata = new V1ObjectMeta();
         	metadata.setName(userInDO.getId());        	
-//        	Map<String, String> label = new HashMap<>();   있어야할지 판단 안됨
-//        	label.put("user", );
         	userCR.setMetadata(metadata);
         	
         	// Set userInfo
     		userCR.setUserInfo(userInDO);
-    		
-    		// Truncate PW
+    		// Truncate PW 
     		userCR.getUserInfo().setPassword(null);
     		
     		userCR.setStatus("blocked");

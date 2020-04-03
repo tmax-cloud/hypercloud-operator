@@ -1,5 +1,14 @@
 package k8s.example.client.metering;
 
+import java.util.Properties;
+
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -13,43 +22,47 @@ public class Test {
 	public static CustomObjectsApi customObjectApi = new CustomObjectsApi();
 
 	public static void main(String[] args) throws Exception {
-//		// Verify access token	
-//		String accessToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiY2x1c3Rlci1hZG1pbiIsInRva2VuSWQiOiJ3b29AdG1heC5jby5rciIsImlzcyI6IlRtYXgtUHJvQXV0aC1XZWJIb29rIiwiaWQiOiJhZG1pbkB0bWF4LmNvLmtyIiwiZXhwIjoxNzQzMzAwODgzfQ.kCOP4IjbeHS53tTY7z55E2aUPkrpQjDFk-Qhnc6Rgeo";
-//		JWTVerifier verifier = JWT.require(Algorithm.HMAC256(Constants.ACCESS_TOKEN_SECRET_KEY)).build();
-//		DecodedJWT jwt = verifier.verify(accessToken);
-//		
-//		String issuer = jwt.getIssuer();
-//		String userId = jwt.getClaims().get(Constants.CLAIM_USER_ID).asString();
-//		String tokenId = jwt.getClaims().get(Constants.CLAIM_TOKEN_ID).asString();
-//		System.out.println( "  Issuer: " + issuer );
-//		System.out.println( "  User ID: " + userId );
-//		System.out.println( "  Token ID: " + tokenId );
-		
-//		Builder tokenBuilder = JWT.create().withIssuer(Constants.ISSUER)
-//				.withExpiresAt(Util.getDateFromSecond(157680000)).withClaim(Constants.CLAIM_TOKEN_ID, "woo@tmax.co.kr")
-//				.withClaim(Constants.CLAIM_USER_ID,  "admin@tmax.co.kr").withClaim( Constants.CLAIM_ROLE, Constants.ROLE_ADMIN );
-//		
-//		System.out.println(tokenBuilder.sign(Algorithm.HMAC256(Constants.ACCESS_TOKEN_SECRET_KEY)));
+		// Recipient's email ID needs to be mentioned.
+	      String to = "taegeon_woo@tmax.co.kr";
 
+	      // Sender's email ID needs to be mentioned
+	      String from = "taegeon_woo@tmax.co.kr";
 
-//		Properties prop = System.getProperties();
-//        String key;
-//        for (Enumeration e = prop.propertyNames() ; e.hasMoreElements() ;) {
-//         key = (String)e.nextElement();
-//         System.out.println(key + "=" + prop.get(key));
-//        }
+	      // Assuming you are sending email from localhost
+	      String host = "localhost";
 
+	      // Get system properties
+	      Properties properties = System.getProperties();
 
-		Object response = customObjectApi.getClusterCustomObject(
-    			Constants.CUSTOM_OBJECT_GROUP,
-				Constants.CUSTOM_OBJECT_VERSION, 
-				Constants.CUSTOM_OBJECT_PLURAL_USER, 
-				"test-tmax.co.kr");
-		JsonObject respJson = (JsonObject) new JsonParser().parse((new Gson()).toJson(response));
-		System.out.println(respJson.toString());
-        User userInfo = new ObjectMapper().readValue((new Gson()).toJson(respJson.get("userInfo")), User.class);
-		
-		
+	      // Setup mail server
+	      properties.setProperty("mail.smtp.host", host);
+
+	      // Get the default Session object.
+	      Session session = Session.getDefaultInstance(properties);
+
+	      try {
+	         // Create a default MimeMessage object.
+	         MimeMessage message = new MimeMessage(session);
+
+	         // Set From: header field of the header.
+	         message.setFrom(new InternetAddress(from));
+
+	         // Set To: header field of the header.
+	         message.addRecipient(Message.RecipientType.TO, new InternetAddress(to));
+
+	         // Set Subject: header field
+	         message.setSubject("This is the Subject Line!");
+
+	         // Now set the actual message
+	         message.setText("This is actual message");
+
+	         // Send message
+	         Transport.send(message);
+	         System.out.println("Sent message successfully....");
+	      } catch (MessagingException mex) {
+	         mex.printStackTrace();
+	      }
+	
 	}
 
 }

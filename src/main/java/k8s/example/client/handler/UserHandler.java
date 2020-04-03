@@ -11,9 +11,9 @@ import javax.mail.MessagingException;
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 import javax.mail.Transport;
-import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeUtility;
 
 import org.slf4j.Logger;
 
@@ -41,7 +41,6 @@ import k8s.example.client.Main;
 import k8s.example.client.Util;
 import k8s.example.client.k8s.K8sApiCaller;
 import k8s.example.client.k8s.OAuthApiCaller;
-import k8s.example.client.models.BrokerResponse;
 
 public class UserHandler extends GeneralHandler {
 	private final String HOST = "mail.tmax.co.kr";
@@ -88,8 +87,6 @@ public class UserHandler extends GeneralHandler {
         			if ( user.getEmail().equalsIgnoreCase(userInDO.getEmail())) throw new Exception(ErrorCode.USER_MAIL_DUPLICATED);
         		}
     		}
-    		logger.info( " 0000" );
-
     		JsonArray userAuthList = OAuthApiCaller.ListUser();
     		if ( userAuthList != null ) {
     			for (JsonElement userAuth : userAuthList) {
@@ -98,7 +95,9 @@ public class UserHandler extends GeneralHandler {
     		}
     		
     		// UserCRD Create
-    		K8sApiCaller.createUser(userInDO);  		
+    		String password = userInDO.getPassword();
+    		K8sApiCaller.createUser(userInDO);
+    		userInDO.setPassword(password);
     		
     		// Create Role & RoleBinding
     		K8sApiCaller.createClusterRoleForNewUser(userInDO);  		
@@ -110,20 +109,21 @@ public class UserHandler extends GeneralHandler {
     		// Login to ProAuth & Get Token
     		JsonObject loginOut = OAuthApiCaller.AuthenticateCreate(userInDO);
 //    		String refreshToken = loginOut.get("refresh_token").toString();
-    		String accessToken = loginOut.get("token").toString();
-    		
+    		String accessToken = loginOut.get("token").toString(); //TODO : "" 없애야 한다.
+    		logger.info( "  accessToken : " + accessToken );
+
     		// Send E-mail to User
     		sendMail(userInDO, accessToken);
-    		
-    		
-    		
+			status = Status.CREATED;
+    		outDO = "User Create Success";
+    		  		
 		} catch (ApiException e) {
 			logger.info( "Exception message: " + e.getResponseBody() );
 			logger.info( "Exception message: " + e.getMessage() );
 			
 			if (e.getResponseBody().contains("NotFound")) {
 				logger.info( "  Login fail. User not exist." );
-				status = Status.OK; //ui요청
+				status = Status.UNAUTHORIZED; //ui요청
 				outDO = Constants.LOGIN_FAILED;
 			} else {
 				logger.info( "Response body: " + e.getResponseBody() );
@@ -161,8 +161,10 @@ public class UserHandler extends GeneralHandler {
 	
 
 	private void sendMail( User userInDO, String accessToken ) throws Throwable {	
-		
+		logger.info( " Send Verification Mail to New User ");
+
 		String subject = "메일테스트";	
+		String charSet = "UTF-8" ;
 		Properties props = System.getProperties();
 		String body = null;
 		props.put( "mail.transport.protocol", "smtp" );
@@ -174,63 +176,42 @@ public class UserHandler extends GeneralHandler {
 		props.put("mail.smtp.ssl.protocols", "TLSv1.2");
 		
 		Session session = Session.getDefaultInstance( props, new Authenticator() {
-			String un = "taegeon_woo";
-			String pw = "tg540315!";
+			String un = "taegeon_woo@tmax.co.kr";
+			String pw = "tg540315";
 			protected PasswordAuthentication getPasswordAuthentication() {
 				return new PasswordAuthentication( un, pw );
 			}
 		});		
+		
 		session.setDebug( true );
 
 		Message mimeMessage = new MimeMessage(session);
+		
+		//Sender
 		mimeMessage.setFrom( new InternetAddress( SEND_EMAIL ) );
+		
+		//Receiver
 		mimeMessage.setRecipient( Message.RecipientType.TO, new InternetAddress( SEND_EMAIL ) );
 
-		mimeMessage.setSubject( subject );
+		mimeMessage.setSubject( MimeUtility.encodeText(subject,  "UTF-8", "B") );
 		
 		// Make Body
 		Map<String, String> bodyMap = K8sApiCaller.readSecret(Constants.TEMPLATE_NAMESPACE, "authenticate-html");  		
-		if( bodyMap!=null ) {
-			body = bodyMap.get("body");
+		if( bodyMap != null ) {
+			body = bodyMap.get("body") + accessToken;
 		}
-
-		if (body!=null) mimeMessage.setText( body );
-		
-		//Send Mail
-		Transport.send( mimeMessage );		
-	}
-	
-	public Response delete( UriResource uriResource, Map<String, String> urlParams, IHTTPSession session ) {
-		logger.info("***** DELETE /v2/service_instances/:instance_id/service_bindings/:binding_id");
-		
-		String serviceClassName = session.getParameters().get("service_id").get(0);
-		String instanceId = urlParams.get("instance_id");
-		String bindingId = urlParams.get("binding_id");
-		logger.info("Instance ID: " + instanceId);
-		logger.info("Binding ID: " + bindingId);
-		
-		BrokerResponse response = new BrokerResponse();
-		String outDO = null;
-		IStatus status = null;
-		
+		logger.info( " Mail Body : "  + body );
+		if (body!=null) mimeMessage.setText( MimeUtility.encodeText(body,  "UTF-8", "B") );
+		logger.info( " Ready to Send Mail to " + SEND_EMAIL);
 		try {
-			response.setOperation("");
-			status = Status.OK;
-		} catch (Exception e) {
-			logger.info( "  Failed to unbind instance of service class \"" + serviceClassName + "\"");
-			logger.info( "Exception message: " + e.getMessage() );
-			e.printStackTrace();
-			status = Status.BAD_REQUEST;
-		}
-		
-		Gson gson = new GsonBuilder().setPrettyPrinting().create();
-		outDO = gson.toJson(response).toString();
-		logger.info("Response : " + outDO);
-		
-//				logger.info();
-		return NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO);
-    }
-
+			//Send Mail
+			Transport.send( mimeMessage );
+			logger.info( " Sent E-Mail to " + SEND_EMAIL);
+		}catch (MessagingException e) {
+            e.printStackTrace();
+            logger.info( e.getMessage() + e.getStackTrace());
+		} 
+	}
 
 	@Override
     public Response other(
