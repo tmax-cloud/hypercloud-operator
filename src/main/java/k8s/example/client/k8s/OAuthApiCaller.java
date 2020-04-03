@@ -72,10 +72,10 @@ public class OAuthApiCaller {
 	    return userCreateOut; 
 	}
 	
-	public static JsonObject AuthenticateCreate( User userInDO ) throws IOException {
+	public static JsonObject AuthenticateCreate( String id, String password ) throws IOException {
 		logger.info( "[OAuth] Login Service Start" );
 	
-		String loginInDO = "{ \"user_id\" : " + userInDO.getId() + ", \"password\" : \"" + userInDO.getPassword() + "\" }";	
+		String loginInDO = "{ \"user_id\" : " + id + ", \"password\" : \"" + password + "\" }";	
 		logger.info("loginInDO : " + loginInDO);	
 		
 		Gson gson = new Gson();		

@@ -122,6 +122,7 @@ public class Constants {
 	
 	// Oauth //TODO configmap으로 만들던지, 환경변수 읽어오는것으로 수정하자
 	public static final String OAUTH_URL = "http://proauth-server-service.proauth-system:8080/";
+	public static final String USER_CREATE_FAILED = "User Create Failed";
 	public static final String SERVICE_NAME_OAUTH_USER_LIST = "proauth/oauth/usersList";
 	public static final String SERVICE_NAME_OAUTH_USER_CREATE = "proauth/oauth/users";
 	public static final String SERVICE_NAME_OAUTH_USER_DELETE = "proauth/oauth/users/";

@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import javax.mail.Authenticator;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.PasswordAuthentication;
@@ -18,8 +17,6 @@ import javax.mail.internet.MimeUtility;
 import org.slf4j.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -33,7 +30,6 @@ import fi.iki.elonen.router.RouterNanoHTTPD.GeneralHandler;
 import fi.iki.elonen.router.RouterNanoHTTPD.UriResource;
 import io.kubernetes.client.openapi.ApiException;
 import k8s.example.client.Constants;
-import k8s.example.client.DataObject.CommonOutDO;
 import k8s.example.client.DataObject.User;
 import k8s.example.client.DataObject.UserCR;
 import k8s.example.client.ErrorCode;
@@ -107,9 +103,9 @@ public class UserHandler extends GeneralHandler {
     		OAuthApiCaller.createUser(userInDO);
     		
     		// Login to ProAuth & Get Token
-    		JsonObject loginOut = OAuthApiCaller.AuthenticateCreate(userInDO);
-//    		String refreshToken = loginOut.get("refresh_token").toString();
-    		String accessToken = loginOut.get("token").toString(); //TODO : "" 없애야 한다.
+    		JsonObject loginOut = OAuthApiCaller.AuthenticateCreate(userInDO.getId(), userInDO.getPassword());
+//    		String refreshToken = loginOut.get("refresh_token").toString().replaceAll("\"", "");
+    		String accessToken = loginOut.get("token").toString().replaceAll("\"", ""); //
     		logger.info( "  accessToken : " + accessToken );
 
     		// Send E-mail to User
@@ -124,36 +120,36 @@ public class UserHandler extends GeneralHandler {
 			if (e.getResponseBody().contains("NotFound")) {
 				logger.info( "  Login fail. User not exist." );
 				status = Status.UNAUTHORIZED; //ui요청
-				outDO = Constants.LOGIN_FAILED;
+				outDO = Constants.USER_CREATE_FAILED;
 			} else {
 				logger.info( "Response body: " + e.getResponseBody() );
 				e.printStackTrace();
 				
 				status = Status.UNAUTHORIZED;
-				outDO = Constants.LOGIN_FAILED;
+				outDO = Constants.USER_CREATE_FAILED;
 			}
 		} catch (Exception e) {
 			logger.info( "Exception message: " + e.getMessage() );
 			e.printStackTrace();
 			status = Status.UNAUTHORIZED;
-			outDO = Constants.LOGIN_FAILED;
+			outDO = Constants.USER_CREATE_FAILED;
 			
 		} catch (Throwable e) {
 			logger.info( "Exception message: " + e.getMessage() );
 			e.printStackTrace();
 		}
 		
-		if (status.equals(Status.UNAUTHORIZED)) {
-			CommonOutDO out = new CommonOutDO();
-			out.setMsg(outDO);
-			Gson gson = new GsonBuilder().setPrettyPrinting().create();
-			outDO = gson.toJson(out).toString();
-		} else if ( status.equals(Status.OK) && outDO.equals(Constants.LOGIN_FAILED)) { //ui요청
-			CommonOutDO out = new CommonOutDO();
-			out.setMsg(outDO);
-			Gson gson = new GsonBuilder().setPrettyPrinting().create();
-			outDO = gson.toJson(out).toString();
-		}
+//		if (status.equals(Status.UNAUTHORIZED)) {
+//			CommonOutDO out = new CommonOutDO();
+//			out.setMsg(outDO);
+//			Gson gson = new GsonBuilder().setPrettyPrinting().create();
+//			outDO = gson.toJson(out).toString();
+//		} else if ( status.equals(Status.OK) && outDO.equals(Constants.USER_CREATE_FAILED)) { //ui요청
+//			CommonOutDO out = new CommonOutDO();
+//			out.setMsg(outDO);
+//			Gson gson = new GsonBuilder().setPrettyPrinting().create();
+//			outDO = gson.toJson(out).toString();
+//		}
  
 //		logger.info();
 		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO));
@@ -163,8 +159,8 @@ public class UserHandler extends GeneralHandler {
 	private void sendMail( User userInDO, String accessToken ) throws Throwable {	
 		logger.info( " Send Verification Mail to New User ");
 
-		String subject = "메일테스트";	
-		String charSet = "UTF-8" ;
+		String subject = "MailTest 메일테스트";	
+		String charSetUtf = "UTF-8" ; //FIXME : 제목 한글 여전히 깨짐 ㅠㅠ
 		Properties props = System.getProperties();
 		String body = null;
 		props.put( "mail.transport.protocol", "smtp" );
@@ -175,7 +171,7 @@ public class UserHandler extends GeneralHandler {
 		props.put( "mail.smtp.starttls.enable", "true" );
 		props.put("mail.smtp.ssl.protocols", "TLSv1.2");
 		
-		Session session = Session.getDefaultInstance( props, new Authenticator() {
+		Session session = Session.getDefaultInstance( props, new javax.mail.Authenticator() {
 			String un = "taegeon_woo@tmax.co.kr";
 			String pw = "tg540315";
 			protected PasswordAuthentication getPasswordAuthentication() {
@@ -185,23 +181,24 @@ public class UserHandler extends GeneralHandler {
 		
 		session.setDebug( true );
 
-		Message mimeMessage = new MimeMessage(session);
+		MimeMessage mimeMessage = new MimeMessage(session);
 		
 		//Sender
-		mimeMessage.setFrom( new InternetAddress( SEND_EMAIL ) );
+		mimeMessage.setFrom( new InternetAddress(SEND_EMAIL, SEND_EMAIL, charSetUtf));
 		
 		//Receiver
 		mimeMessage.setRecipient( Message.RecipientType.TO, new InternetAddress( SEND_EMAIL ) );
+		mimeMessage.setSubject( subject, charSetUtf );
+		mimeMessage.setHeader("Content-Type", "text/html; charset=UTF-8");
 
-		mimeMessage.setSubject( MimeUtility.encodeText(subject,  "UTF-8", "B") );
-		
+
 		// Make Body
 		Map<String, String> bodyMap = K8sApiCaller.readSecret(Constants.TEMPLATE_NAMESPACE, "authenticate-html");  		
 		if( bodyMap != null ) {
 			body = bodyMap.get("body") + accessToken;
 		}
 		logger.info( " Mail Body : "  + body );
-		if (body!=null) mimeMessage.setText( MimeUtility.encodeText(body,  "UTF-8", "B") );
+		if (body!=null) mimeMessage.setText( MimeUtility.encodeText(body,  charSetUtf, "B") );
 		logger.info( " Ready to Send Mail to " + SEND_EMAIL);
 		try {
 			//Send Mail
