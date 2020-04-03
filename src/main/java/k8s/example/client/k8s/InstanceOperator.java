@@ -490,7 +490,7 @@ public class InstanceOperator extends Thread {
 		String dataType = null;
 		for(JsonNode parameter : parameters) {
 			if( parameter.has("name") && parameter.get("name").asText().toUpperCase().equals( paramName.toUpperCase() )) {
-				if( parameter.has("value") && parameter.get("value").asText().toUpperCase().equals( Constants.TEMPLATE_DATA_TYPE_NUMBER )) {
+				if( parameter.has("value") && parameter.get("value").asText().equals( Constants.TEMPLATE_DATA_TYPE_NUMBER )) {
 					dataType = Constants.TEMPLATE_DATA_TYPE_NUMBER;
 				} else {
 					dataType = Constants.TEMPLATE_DATA_TYPE_STRING;
