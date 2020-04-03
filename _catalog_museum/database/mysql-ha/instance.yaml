@@ -1,0 +1,25 @@
+apiVersion: tmax.io/v1
+kind: TemplateInstance
+metadata:
+  name: mysql-ha-template-instance
+spec:
+  template:
+    metadata:
+      name: mysql-ha-template
+    parameters:
+    - name: APP_NAME
+      description: A MySQL HA Deployment Name
+      displayName: AppName
+      required: true
+      value: mysql-ha-test-deploy
+    - name: NAMESPACE
+      description: A Namespace Name
+      displayName: Namespace
+      required: true
+      value: default
+    #- name: REPLICA
+    #  description: A Namespace Name
+    #  displayName: Namespace
+    #  required: true
+    #  value: 4
+
