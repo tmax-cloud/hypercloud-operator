@@ -87,6 +87,7 @@ import io.kubernetes.client.openapi.models.V1PolicyRule;
 import io.kubernetes.client.openapi.models.V1Probe;
 import io.kubernetes.client.openapi.models.V1ReplicaSet;
 import io.kubernetes.client.openapi.models.V1ReplicaSetBuilder;
+import io.kubernetes.client.openapi.models.V1ReplicaSetList;
 import io.kubernetes.client.openapi.models.V1ReplicaSetSpec;
 import io.kubernetes.client.openapi.models.V1ResourceQuota;
 import io.kubernetes.client.openapi.models.V1ResourceQuotaSpec;
@@ -230,6 +231,23 @@ public class K8sApiCaller {
 
 		logger.info("Registry Latest resource version: " + registryLatestResourceVersion);
 
+		// registry replicaSet
+		int registryReplicaSetLatestResourceVersion = 0;
+
+		try {
+
+			V1ReplicaSetList registryReplicaSetList = appApi.listReplicaSetForAllNamespaces(null, null, null, "app=registry", null, null, null, null, Boolean.FALSE);
+			for(V1ReplicaSet replicaSet : registryReplicaSetList.getItems()) {
+				int registryReplicaSetResourceVersion = Integer.parseInt(replicaSet.getMetadata().getResourceVersion());
+				registryReplicaSetLatestResourceVersion = (registryReplicaSetLatestResourceVersion >= registryReplicaSetResourceVersion) ? registryReplicaSetLatestResourceVersion : registryReplicaSetResourceVersion;
+			}
+		} catch (Exception e) {
+			logger.info("Exception: " + e.getMessage());
+			e.printStackTrace();
+		}
+
+		logger.info("Registry Replica Set Latest resource version: " + registryReplicaSetLatestResourceVersion);
+
 		// registry pod
 		int registryPodLatestResourceVersion = 0;
 
@@ -264,23 +282,40 @@ public class K8sApiCaller {
 
 		logger.info("Registry Service Latest resource version: " + registryServiceLatestResourceVersion);
 
-		// registry secret
-		int registrySecretLatestResourceVersion = 0;
+		// registry certSecret
+		int registryCertSecretLatestResourceVersion = 0;
 
 		try {
 
-			V1SecretList registrySecretList = api.listSecretForAllNamespaces(null, null, null, "app=registry", null, null, null, null, Boolean.FALSE);
-			for(V1Secret secret : registrySecretList.getItems()) {
-				int registrySecretResourceVersion = Integer.parseInt(secret.getMetadata().getResourceVersion());
-				registrySecretLatestResourceVersion = (registrySecretLatestResourceVersion >= registrySecretResourceVersion) ? registrySecretLatestResourceVersion : registrySecretResourceVersion;
+			V1SecretList registryCertSecretList = api.listSecretForAllNamespaces(null, null, null, "secret=cert", null, null, null, null, Boolean.FALSE);
+			for(V1Secret certSecret : registryCertSecretList.getItems()) {
+				int registryCertSecretResourceVersion = Integer.parseInt(certSecret.getMetadata().getResourceVersion());
+				registryCertSecretLatestResourceVersion = (registryCertSecretLatestResourceVersion >= registryCertSecretResourceVersion) ? registryCertSecretLatestResourceVersion : registryCertSecretResourceVersion;
 			}
 		} catch (Exception e) {
 			logger.info("Exception: " + e.getMessage());
 			e.printStackTrace();
 		}
 
-		logger.info("Registry Secret Latest resource version: " + registrySecretLatestResourceVersion);
+		logger.info("Registry CertSecret Latest resource version: " + registryCertSecretLatestResourceVersion);
 
+		// registry dockerSecret
+		int registryDockerSecretLatestResourceVersion = 0;
+
+		try {
+
+			V1SecretList registryDockerSecretList = api.listSecretForAllNamespaces(null, null, null, "secret=docker", null, null, null, null, Boolean.FALSE);
+			for(V1Secret dockerSecret : registryDockerSecretList.getItems()) {
+				int registryDockerSecretResourceVersion = Integer.parseInt(dockerSecret.getMetadata().getResourceVersion());
+				registryDockerSecretLatestResourceVersion = (registryDockerSecretLatestResourceVersion >= registryDockerSecretResourceVersion) ? registryDockerSecretLatestResourceVersion : registryDockerSecretResourceVersion;
+			}
+		} catch (Exception e) {
+			logger.info("Exception: " + e.getMessage());
+			e.printStackTrace();
+		}
+
+		logger.info("Registry DockerSecret Latest resource version: " + registryDockerSecretLatestResourceVersion);
+		
 		// Operator
 		int templateLatestResourceVersion = 0;
 		try {
@@ -361,6 +396,11 @@ public class K8sApiCaller {
 		RegistryWatcher registryWatcher = new RegistryWatcher(k8sClient, customObjectApi, String.valueOf(registryLatestResourceVersion));
 		registryWatcher.start();
 
+		// Start registry replicaSet watch
+		logger.info("Start registry replica set watcher");
+		RegistryReplicaSetWatcher registryReplicaSetWatcher = new RegistryReplicaSetWatcher(k8sClient, appApi, String.valueOf(registryReplicaSetLatestResourceVersion));
+		registryReplicaSetWatcher.start();
+
 		// Start registry pod watch
 		logger.info("Start registry pod watcher");
 		RegistryPodWatcher registryPodWatcher = new RegistryPodWatcher(k8sClient, api, String.valueOf(registryPodLatestResourceVersion));
@@ -371,10 +411,15 @@ public class K8sApiCaller {
 		RegistryServiceWatcher registryServiceWatcher = new RegistryServiceWatcher(k8sClient, api, String.valueOf(registryServiceLatestResourceVersion));
 		registryServiceWatcher.start();
 
-		// Start registry secret watch
-		logger.info("Start registry secret watcher");
-		RegistrySecretWatcher registrySecretWatcher = new RegistrySecretWatcher(k8sClient, api, String.valueOf(registrySecretLatestResourceVersion));
-		registrySecretWatcher.start();
+		// Start registry cert secret watch
+		logger.info("Start registry cert secret watcher");
+		RegistryCertSecretWatcher registryCertSecretWatcher = new RegistryCertSecretWatcher(k8sClient, api, String.valueOf(registryCertSecretLatestResourceVersion));
+		registryCertSecretWatcher.start();
+
+		// Start registry docker secret watch
+		logger.info("Start registry docker secret watcher");
+		RegistryDockerSecretWatcher registryDockerSecretWatcher = new RegistryDockerSecretWatcher(k8sClient, api, String.valueOf(registryDockerSecretLatestResourceVersion));
+		registryDockerSecretWatcher.start();
 
 		// Start Operator
 		logger.info("Start Template Operator");
@@ -427,6 +472,15 @@ public class K8sApiCaller {
 				}
 	
 				
+				if(!registryReplicaSetWatcher.isAlive()) {
+					String registryReplicaSetLatestResourceVersionStr = RegistryReplicaSetWatcher.getLatestResourceVersion();
+					logger.info("Registry replicaSet watcher is not alive. Restart registry replica set watcher! (Latest resource version: " + registryReplicaSetLatestResourceVersionStr + ")");
+					registryReplicaSetWatcher.interrupt();
+					registryReplicaSetWatcher = new RegistryReplicaSetWatcher(k8sClient, appApi, registryReplicaSetLatestResourceVersionStr);
+					registryReplicaSetWatcher.start();
+				}
+				
+				
 				if(!registryPodWatcher.isAlive()) {
 					String registryPodLatestResourceVersionStr = RegistryPodWatcher.getLatestResourceVersion();
 					logger.info("Registry pod watcher is not alive. Restart registry pod watcher! (Latest resource version: " + registryPodLatestResourceVersionStr + ")");
@@ -445,12 +499,21 @@ public class K8sApiCaller {
 				}
 				
 				
-				if(!registrySecretWatcher.isAlive()) {
-					String registrySecretLatestResourceVersionStr = RegistrySecretWatcher.getLatestResourceVersion();
-					logger.info("Registry secret watcher is not alive. Restart registry secret watcher! (Latest resource version: " + registrySecretLatestResourceVersionStr + ")");
-					registrySecretWatcher.interrupt();
-					registrySecretWatcher = new RegistrySecretWatcher(k8sClient, api, registrySecretLatestResourceVersionStr);
-					registrySecretWatcher.start();
+				if(!registryCertSecretWatcher.isAlive()) {
+					String registryCertSecretLatestResourceVersionStr = RegistryCertSecretWatcher.getLatestResourceVersion();
+					logger.info("Registry cert secret watcher is not alive. Restart registry cert secret watcher! (Latest resource version: " + registryCertSecretLatestResourceVersionStr + ")");
+					registryCertSecretWatcher.interrupt();
+					registryCertSecretWatcher = new RegistryCertSecretWatcher(k8sClient, api, registryCertSecretLatestResourceVersionStr);
+					registryCertSecretWatcher.start();
+				}
+				
+				
+				if(!registryDockerSecretWatcher.isAlive()) {
+					String registryDockerSecretLatestResourceVersionStr = RegistryDockerSecretWatcher.getLatestResourceVersion();
+					logger.info("Registry docker secret watcher is not alive. Restart registry docker secret watcher! (Latest resource version: " + registryDockerSecretLatestResourceVersionStr + ")");
+					registryDockerSecretWatcher.interrupt();
+					registryDockerSecretWatcher = new RegistryDockerSecretWatcher(k8sClient, api, registryDockerSecretLatestResourceVersionStr);
+					registryDockerSecretWatcher.start();
 				}
 				
 				
@@ -873,6 +936,14 @@ public class K8sApiCaller {
 			Map<String, String> selector = new HashMap<String, String>();
 
 			lbMeta.setName(Constants.K8S_PREFIX + registryId);
+			
+			logger.info("<Service Label List>");
+			Map<String, String> serviceLabels = new HashMap<String, String>();
+			serviceLabels.put("app", "registry");
+			serviceLabels.put("apps", lbMeta.getName());
+			logger.info("app: registry" );
+			logger.info("apps: " + lbMeta.getName());
+			lbMeta.setLabels(serviceLabels);
 			
 			List<V1OwnerReference> ownerRefs = new ArrayList<>();
 			V1OwnerReference ownerRef = new V1OwnerReference();
@@ -1340,7 +1411,16 @@ public class K8sApiCaller {
 			rsMeta.setName(Constants.K8S_PREFIX + Constants.K8S_REGISTRY_PREFIX + registryId);
 			logger.info("RS Name: " + rsMeta.getName());
 			
-			// 1-2. replica set owner ref
+			// 1-2 replica set label
+			logger.info("<RS Label List>");
+			Map<String, String> rsLabels = new HashMap<String, String>();
+			rsLabels.put("app", "registry");
+			rsLabels.put("apps", rsMeta.getName());
+			logger.info("app: registry" );
+			logger.info("apps: " + rsMeta.getName());
+			rsMeta.setLabels(rsLabels);
+
+			// 1-3. replica set owner ref
 			rsMeta.setOwnerReferences(ownerRefs);
 			
 			rsBuilder.withMetadata(rsMeta);
@@ -1568,12 +1648,12 @@ public class K8sApiCaller {
 			// 2-3. label selector
 			V1LabelSelector labelSelector = new V1LabelSelector();
 			logger.info("<RS Label List>");
-			Map<String, String> rsLabels = new HashMap<String, String>();
-			rsLabels.put("app", "registry");
-			rsLabels.put("apps", rsMeta.getName());
+			Map<String, String> podLabelSelector = new HashMap<String, String>();
+			podLabelSelector.put("app", "registry");
+			podLabelSelector.put("apps", rsMeta.getName());
 			logger.info("app: registry");
 			logger.info("apps: " + rsMeta.getName());
-			labelSelector.setMatchLabels(rsLabels);
+			labelSelector.setMatchLabels(podLabelSelector);
 
 			rsSpec.setSelector(labelSelector);
 
@@ -1885,9 +1965,8 @@ public class K8sApiCaller {
 		String registryName = "";
 		String registryPrefix = Constants.K8S_PREFIX + Constants.K8S_REGISTRY_PREFIX;
 		String namespace = rs.getMetadata().getNamespace();
-		String reason = "";
 		
-		registryName = rs.getMetadata().getLabels().get("apps");
+		registryName = rs.getMetadata().getName();
 		registryName = registryName.substring(registryPrefix.length());
 		logger.info("registry name: " + registryName);
 		
@@ -1993,6 +2072,7 @@ public class K8sApiCaller {
 			if( registry.getStatus().getPhase() != null) {
 				if(reason.equals("NotReady")) {
 					JSONObject patchStatus = new JSONObject();
+					JSONObject patchStatus2 = new JSONObject();
 					JSONObject condition = new JSONObject();
 					JSONObject condition2 = new JSONObject();
 
@@ -2007,13 +2087,14 @@ public class K8sApiCaller {
 					condition2.put("type", RegistryCondition.Condition.CONTAINER.getType());
 					condition2.put("status", RegistryStatus.Status.FALSE.getStatus());
 
-					patchStatus.put("op", "replace");
-					patchStatus.put("path", RegistryCondition.Condition.CONTAINER.getPath());
-					patchStatus.put("value", condition2);
-					patchStatusArray.add(patchStatus);
+					patchStatus2.put("op", "replace");
+					patchStatus2.put("path", RegistryCondition.Condition.CONTAINER.getPath());
+					patchStatus2.put("value", condition2);
+					patchStatusArray.add(patchStatus2);
 				}
 				else if( reason.equals("Running") ) {
 					JSONObject patchStatus = new JSONObject();
+					JSONObject patchStatus2 = new JSONObject();
 					JSONObject condition = new JSONObject();
 					JSONObject condition2 = new JSONObject();
 
@@ -2028,13 +2109,14 @@ public class K8sApiCaller {
 					condition2.put("type", RegistryCondition.Condition.CONTAINER.getType());
 					condition2.put("status", RegistryStatus.Status.TRUE.getStatus());
 
-					patchStatus.put("op", "replace");
-					patchStatus.put("path", RegistryCondition.Condition.CONTAINER.getPath());
-					patchStatus.put("value", condition2);
-					patchStatusArray.add(patchStatus);
+					patchStatus2.put("op", "replace");
+					patchStatus2.put("path", RegistryCondition.Condition.CONTAINER.getPath());
+					patchStatus2.put("value", condition2);
+					patchStatusArray.add(patchStatus2);
 				}
 				else {
 					JSONObject patchStatus = new JSONObject();
+					JSONObject patchStatus2 = new JSONObject();
 					JSONObject condition = new JSONObject();
 					JSONObject condition2 = new JSONObject();
 
@@ -2049,10 +2131,10 @@ public class K8sApiCaller {
 					condition2.put("type", RegistryCondition.Condition.CONTAINER.getType());
 					condition2.put("status", RegistryStatus.Status.FALSE.getStatus());
 
-					patchStatus.put("op", "replace");
-					patchStatus.put("path", RegistryCondition.Condition.CONTAINER.getPath());
-					patchStatus.put("value", condition2);
-					patchStatusArray.add(patchStatus);
+					patchStatus2.put("op", "replace");
+					patchStatus2.put("path", RegistryCondition.Condition.CONTAINER.getPath());
+					patchStatus2.put("value", condition2);
+					patchStatusArray.add(patchStatus2);
 					
 				}
 				
@@ -2075,11 +2157,10 @@ public class K8sApiCaller {
 	@SuppressWarnings("unchecked")
 	public static void updateRegistryStatus(V1Service svc, String eventType) throws Throwable {
 		String registryName = "";
-		String registryPrefix = Constants.K8S_PREFIX + Constants.K8S_REGISTRY_PREFIX;
+		String registryPrefix = Constants.K8S_PREFIX;
 		String namespace = svc.getMetadata().getNamespace();
-		String reason = "";
 		
-		registryName = svc.getMetadata().getLabels().get("apps");
+		registryName = svc.getMetadata().getName();
 		registryName = registryName.substring(registryPrefix.length());
 		logger.info("registry name: " + registryName);
 		
@@ -2141,11 +2222,13 @@ public class K8sApiCaller {
 	@SuppressWarnings("unchecked")
 	public static void updateRegistryStatus(V1Secret secret, String eventType) throws Throwable {
 		String registryName = "";
-		String registryPrefix = Constants.K8S_PREFIX + Constants.K8S_REGISTRY_PREFIX;
+		String registryPrefix = secret.getType().equals(Constants.K8S_SECRET_TYPE_DOCKER_CONFIG_JSON) 
+				? Constants.K8S_PREFIX + Constants.K8S_REGISTRY_PREFIX : Constants.K8S_PREFIX;
 		String namespace = secret.getMetadata().getNamespace();
-		String reason = "";
 		
-		registryName = secret.getMetadata().getLabels().get("apps");
+		logger.info("registry secret type: " + secret.getType());
+		logger.info("registry prefix: " + registryPrefix);
+		registryName = secret.getMetadata().getName();
 		registryName = registryName.substring(registryPrefix.length());
 		logger.info("registry name: " + registryName);
 		

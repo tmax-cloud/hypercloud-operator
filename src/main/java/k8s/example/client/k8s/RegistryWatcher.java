@@ -100,7 +100,7 @@ public class RegistryWatcher extends Thread {
 										
 										changePhase = RegistryStatus.StatusPhase.RUNNING.getStatus();
 										changeMessage = "Registry is running. All registry resources are operating normally.";
-										changeReason = "RegistryRunning";
+										changeReason = "Running";
 									}
 									// Registry Is Creating.
 									else if(phase.equals(RegistryStatus.StatusPhase.CREATING.getStatus()) ) {
@@ -141,8 +141,15 @@ public class RegistryWatcher extends Thread {
 											changeMessage = "Registry docker config json type secret is not exist.";
 											changeReason = "SecretNotFound";
 										}
+										else if(!statusMap.get(RegistryCondition.Condition.REPLICA_SET)
+												|| !statusMap.get(RegistryCondition.Condition.POD)
+												|| !statusMap.get(RegistryCondition.Condition.CONTAINER)) {
+
+											changePhase = RegistryStatus.StatusPhase.NOT_READY.getStatus();
+											changeMessage = "Registry is not ready.";
+											changeReason = "NotReady";
+										}
 									}
-									
 									
 									
 									K8sApiCaller.updateReigstryPhase(registry, changePhase, changeMessage, changeReason);

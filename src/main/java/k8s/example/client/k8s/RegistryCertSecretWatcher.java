@@ -8,22 +8,22 @@ import org.slf4j.Logger;
 import com.google.gson.reflect.TypeToken;
 
 import io.kubernetes.client.openapi.ApiClient;
-import io.kubernetes.client.openapi.apis.AppsV1Api;
-import io.kubernetes.client.openapi.models.V1ReplicaSet;
+import io.kubernetes.client.openapi.apis.CoreV1Api;
+import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.util.Watch;
 import k8s.example.client.Main;
 
-public class RegistryReplicaSetWatcher extends Thread {
-	private final Watch<V1ReplicaSet> watchRegistryRs;
+public class RegistryCertSecretWatcher extends Thread {
+	private final Watch<V1Secret> watchRegistrySecret;
 	private static String latestResourceVersion = "0";
 
     private Logger logger = Main.logger;
     
-	RegistryReplicaSetWatcher(ApiClient client, AppsV1Api appApi, String resourceVersion) throws Exception {
-		watchRegistryRs = Watch.createWatch(
+	RegistryCertSecretWatcher(ApiClient client, CoreV1Api api, String resourceVersion) throws Exception {
+		watchRegistrySecret = Watch.createWatch(
 		        client,
-		        appApi.listReplicaSetForAllNamespacesCall(null, null, null, "app=registry", null, null, null, null, Boolean.TRUE, null),
-		        new TypeToken<Watch.Response<V1ReplicaSet>>(){}.getType()
+		        api.listSecretForAllNamespacesCall(null, null, null, "secret=cert", null, null, null, null, Boolean.TRUE, null),
+		        new TypeToken<Watch.Response<V1Secret>>(){}.getType()
         );
 		
 		latestResourceVersion = resourceVersion;	
@@ -32,11 +32,11 @@ public class RegistryReplicaSetWatcher extends Thread {
 	@Override
 	public void run() {
 		try {
-			watchRegistryRs.forEach(response -> {
+			watchRegistrySecret.forEach(response -> {
 				try {
 					if (Thread.interrupted()) {
 						logger.info("Interrupted!");
-						watchRegistryRs.close();
+						watchRegistrySecret.close();
 					}
 				} catch (Exception e) {
 					logger.info(e.getMessage());
@@ -45,15 +45,14 @@ public class RegistryReplicaSetWatcher extends Thread {
 				
 				// Logic here
 				try {
-					V1ReplicaSet rs = response.object;
+					V1Secret secret = response.object;
 					
-					if( rs != null) {
+					if( secret != null) {
 						latestResourceVersion = response.object.getMetadata().getResourceVersion();
 						String eventType = response.type.toString();
-						logger.info("[RegistryReplicaSetWatcher] Registry ReplicaSet " + eventType + "\n");
+						logger.info("[RegistryCertSecretWatcher] Registry Cert Secret " + eventType + "\n");
 
-						K8sApiCaller.updateRegistryStatus(rs, eventType);
-						
+						K8sApiCaller.updateRegistryStatus(secret, eventType);
 						
 					}
 //				} catch (ApiException e) {
@@ -69,7 +68,7 @@ public class RegistryReplicaSetWatcher extends Thread {
 					e.printStackTrace();
 				}
 			});
-			logger.info("@@@@@@@@@@@@@@@@@@@@ Registry ReplicaSet 'For Each' END @@@@@@@@@@@@@@@@@@@@");
+			logger.info("@@@@@@@@@@@@@@@@@@@@ Registry Cert Secret 'For Each' END @@@@@@@@@@@@@@@@@@@@");
 		} catch (Exception e) {
 			logger.info("Registry Watcher Exception: " + e.getMessage());
 			StringWriter sw = new StringWriter();

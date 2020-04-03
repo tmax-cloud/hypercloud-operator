@@ -9,7 +9,6 @@ import com.google.gson.reflect.TypeToken;
 
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
-import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.util.Watch;
 import k8s.example.client.Main;
@@ -51,9 +50,7 @@ public class RegistryServiceWatcher extends Thread {
 					if( service != null) {
 						latestResourceVersion = response.object.getMetadata().getResourceVersion();
 						String eventType = response.type.toString();
-						logger.info("[RegistryServiceWatcher] Registry Service " + eventType + "\n"
-//						+ pod.toString()
-						);
+						logger.info("[RegistryServiceWatcher] Registry Service " + eventType + "\n");
 
 						K8sApiCaller.updateRegistryStatus(service, eventType);
 						
@@ -71,7 +68,7 @@ public class RegistryServiceWatcher extends Thread {
 					e.printStackTrace();
 				}
 			});
-			logger.info("@@@@@@@@@@@@@@@@@@@@ Registry Pod 'For Each' END @@@@@@@@@@@@@@@@@@@@");
+			logger.info("@@@@@@@@@@@@@@@@@@@@ Registry Service 'For Each' END @@@@@@@@@@@@@@@@@@@@");
 		} catch (Exception e) {
 			logger.info("Registry Watcher Exception: " + e.getMessage());
 			StringWriter sw = new StringWriter();
