@@ -2,6 +2,7 @@ apiVersion: tmax.io/v1
 kind: TemplateInstance
 metadata:
   name: tomcat-cicd-template-instance
+  namespace: default
 spec:
   template:
     metadata:

@@ -2,6 +2,7 @@ apiVersion: tmax.io/v1
 kind: Template
 metadata:
   name: postgresql-template
+  namespace: default
 shortDescription: postgresql-deployment
 imageUrl: https://upload.wikimedia.org/wikipedia/commons/2/29/Postgresql_elephant.svg
 longDescription: postgresql-deployment
@@ -114,9 +115,9 @@ plans:
     service_instance:
       create:
         parameters:
-          APP_NAME: postgresql-deploy
           NAMESPACE: default
           DB_STORAGE: 5Gi
+          APP_NAME: postgresql-deploy
           POSTGRESQL_USER: root
           POSTGRESQL_PASSWORD: tmax@23
           POSTGRESQL_DATABASE: root
@@ -135,9 +136,9 @@ plans:
     service_instance:
       create:
         parameters:
-          APP_NAME: postgresql-deploy
           NAMESPACE: default
           DB_STORAGE: 30Gi
+          APP_NAME: postgresql-deploy
           POSTGRESQL_USER: root
           POSTGRESQL_PASSWORD: tmax@23
           POSTGRESQL_DATABASE: root
