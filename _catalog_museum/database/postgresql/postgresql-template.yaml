@@ -142,3 +142,15 @@ plans:
           POSTGRESQL_USER: root
           POSTGRESQL_PASSWORD: tmax@23
           POSTGRESQL_DATABASE: root
+- name: APP_NAME
+  description: database app name
+- name: NAMESPACE
+  description: namespace of service, secret, pvc, deployment
+- name: DB_STORAGE
+  description: database request.storage size
+- name: POSTGRESQL_USER
+  description: database user
+- name: POSTGRESQL_PASSWORD
+  description: database password
+- name: POSTGRESQL_DATABASE
+  description: database name

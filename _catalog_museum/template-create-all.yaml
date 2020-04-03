@@ -1,512 +1,8 @@
 apiVersion: tmax.io/v1
 kind: Template
 metadata:
-  name: apache-cicd-template
-imageUrl: https://upload.wikimedia.org/wikipedia/commons/4/45/Apache_HTTP_server_logo_%282016%29.png
-provider: tmax
-recommend: false
-shortDescription: apache-cicd
-longDescription: apache-cicd-template
-tags:
-- was
-- apache
-plans:
-- bindable: false
-  description: apache
-  name: apache-plan1
-objects:
-- apiVersion: tekton.dev/v1alpha1
-  kind: Pipeline
-  metadata:
-    name: ${PIPELINE_NAME}
-    namespace: ${NAMESPACE}
-  spec:
-    resources:
-    - name: source-repo
-      type: git
-    - name: image
-      type: image
-    params:
-    - name: app-name
-      type: string
-      description: Application name
-    - name: replica
-      type: string
-      description: Number of replica
-      default: "1"
-    - name: port
-      type: string
-      description: Application port
-      default: "8080"
-    tasks:
-    - name: build-source
-      taskRef:
-        name: s2i
-        kind: ClusterTask
-      params:
-      - name: BUILDER_IMAGE
-        value: 192.168.6.110:5000/s2i-apache:2.4
-      resources:
-        inputs:
-        - name: source
-          resource: source-repo
-        outputs:
-        - name: image
-          resource: image
-    - name: deploy
-      conditions:
-      - conditionRef: ${PIPELINE_NAME}-condition
-        resources:
-        - name: scanned-image
-          resource: image
-          from:
-          - build-source
-      taskRef:
-        name: generate-and-deploy-using-kubectl
-        kind: ClusterTask
-      resources:
-        inputs:
-        - name: image
-          resource: image
-          from:
-          - build-source
-      params:
-      - name: app-name
-        value: $(params.app-name)
-      - name: replica
-        value: $(params.replica)
-      - name: port
-        value: $(params.port)
-- apiVersion: tekton.dev/v1alpha1
-  kind: Condition
-  metadata:
-    name: ${PIPELINE_NAME}-condition
-    namespace: ${NAMESPACE}
-  spec:
-    resources:
-    - name: scanned-image
-      type: image
-    check:
-      image: 192.168.6.110:5000/klar:v2.4.0
-      env:
-      - name: CLAIR_ADDR
-        value: http://172.22.11.2:30060
-      - name: CLAIR_THRESHOLD
-        value: '1000'
-      - name: REGISTRY_INSECURE
-        value: 'TRUE'
-      script: '/klar $(resources.scanned-image.url)'
-
----
-
-apiVersion: tmax.io/v1
-kind: Template
-metadata:
-  name: django-cicd-template
-imageUrl: https://upload.wikimedia.org/wikipedia/commons/7/75/Django_logo.svg
-provider: tmax
-recommend: false
-shortDescription: django-cicd
-longDescription: django-cicd-template
-tags:
-- was
-- django
-plans:
-- bindable: false
-  description: django
-  name: django-plan1
-objects:
-- apiVersion: tekton.dev/v1alpha1
-  kind: Pipeline
-  metadata:
-    name: ${PIPELINE_NAME}
-    namespace: ${NAMESPACE}
-  spec:
-    resources:
-    - name: source-repo
-      type: git
-    - name: image
-      type: image
-    params:
-    - name: app-name
-      type: string
-      description: Application name
-    - name: replica
-      type: string
-      description: Number of replica
-      default: "1"
-    - name: port
-      type: string
-      description: Application port
-      default: "8080"
-    tasks:
-    - name: build-source
-      taskRef:
-        name: s2i
-        kind: ClusterTask
-      params:
-      - name: BUILDER_IMAGE
-        value: 192.168.6.110:5000/s2i-django:35
-      resources:
-        inputs:
-        - name: source
-          resource: source-repo
-        outputs:
-        - name: image
-          resource: image
-    - name: deploy
-      conditions:
-      - conditionRef: ${PIPELINE_NAME}-condition
-        resources:
-        - name: scanned-image
-          resource: image
-          from:
-          - build-source
-      taskRef:
-        name: generate-and-deploy-using-kubectl
-        kind: ClusterTask
-      resources:
-        inputs:
-        - name: image
-          resource: image
-          from:
-          - build-source
-      params:
-      - name: app-name
-        value: $(params.app-name)
-      - name: replica
-        value: $(params.replica)
-      - name: port
-        value: $(params.port)
-- apiVersion: tekton.dev/v1alpha1
-  kind: Condition
-  metadata:
-    name: ${PIPELINE_NAME}-condition
-    namespace: ${NAMESPACE}
-  spec:
-    resources:
-    - name: scanned-image
-      type: image
-    check:
-      image: 192.168.6.110:5000/klar:v2.4.0
-      env:
-      - name: CLAIR_ADDR
-        value: http://172.22.11.2:30060
-      - name: CLAIR_THRESHOLD
-        value: '1000'
-      - name: REGISTRY_INSECURE
-        value: 'TRUE'
-      script: '/klar $(resources.scanned-image.url)'
-
----
-
-apiVersion: tmax.io/v1
-kind: Template
-metadata:
-  name: nodejs-cicd-template
-imageUrl: https://upload.wikimedia.org/wikipedia/commons/d/d9/Node.js_logo.svg
-provider: tmax
-recommend: false
-shortDescription: nodejs-cicd
-longDescription: nodejs-cicd-template
-tags:
-- was
-- nodejs
-plans:
-- bindable: false
-  description: nodejs
-  name: nodejs-plan1
-objects:
-- apiVersion: tekton.dev/v1alpha1
-  kind: Pipeline
-  metadata:
-    name: ${PIPELINE_NAME}
-    namespace: ${NAMESPACE}
-  spec:
-    resources:
-    - name: source-repo
-      type: git
-    - name: image
-      type: image
-    params:
-    - name: app-name
-      type: string
-      description: Application name
-    - name: replica
-      type: string
-      description: Number of replica
-      default: "1"
-    - name: port
-      type: string
-      description: Application port
-      default: "8080"
-    tasks:
-    - name: build-source
-      taskRef:
-        name: s2i
-        kind: ClusterTask
-      params:
-      - name: BUILDER_IMAGE
-        value: 192.168.6.110:5000/s2i-nodejs:8
-      resources:
-        inputs:
-        - name: source
-          resource: source-repo
-        outputs:
-        - name: image
-          resource: image
-    - name: deploy
-      conditions:
-      - conditionRef: ${PIPELINE_NAME}-condition
-        resources:
-        - name: scanned-image
-          resource: image
-          from:
-          - build-source
-      taskRef:
-        name: generate-and-deploy-using-kubectl
-        kind: ClusterTask
-      resources:
-        inputs:
-        - name: image
-          resource: image
-          from:
-          - build-source
-      params:
-      - name: app-name
-        value: $(params.app-name)
-      - name: replica
-        value: $(params.replica)
-      - name: port
-        value: $(params.port)
-- apiVersion: tekton.dev/v1alpha1
-  kind: Condition
-  metadata:
-    name: ${PIPELINE_NAME}-condition
-    namespace: ${NAMESPACE}
-  spec:
-    resources:
-    - name: scanned-image
-      type: image
-    check:
-      image: 192.168.6.110:5000/klar:v2.4.0
-      env:
-      - name: CLAIR_ADDR
-        value: http://172.22.11.2:30060
-      - name: CLAIR_THRESHOLD
-        value: '1000'
-      - name: REGISTRY_INSECURE
-        value: 'TRUE'
-      script: '/klar $(resources.scanned-image.url)'
-
----
-
-apiVersion: tmax.io/v1
-kind: Template
-metadata:
-  name: tomcat-cicd-template
-imageUrl: https://upload.wikimedia.org/wikipedia/commons/7/7b/Tomcat-logo.svg
-provider: tmax
-recommend: false
-shortDescription: tomcat-cicd
-longDescription: tomcat-cicd-template
-tags:
-- was
-- tomcat
-plans:
-- bindable: false
-  description: tomcat
-  name: tomcat-plan1
-objects:
-- apiVersion: tekton.dev/v1alpha1
-  kind: Pipeline
-  metadata:
-    name: ${PIPELINE_NAME}
-    namespace: ${NAMESPACE}
-  spec:
-    resources:
-    - name: source-repo
-      type: git
-    - name: image
-      type: image
-    params:
-    - name: app-name
-      type: string
-      description: Application name
-    - name: replica
-      type: string
-      description: Number of replica
-      default: "1"
-    - name: port
-      type: string
-      description: Application port
-      default: "8080"
-    tasks:
-    - name: build-source
-      taskRef:
-        name: s2i
-        kind: ClusterTask
-      params:
-      - name: BUILDER_IMAGE
-        value: 192.168.6.110:5000/s2i-tomcat:latest
-      resources:
-        inputs:
-        - name: source
-          resource: source-repo
-        outputs:
-        - name: image
-          resource: image
-    - name: deploy
-      conditions:
-      - conditionRef: ${PIPELINE_NAME}-condition
-        resources:
-        - name: scanned-image
-          resource: image
-          from:
-          - build-source
-      taskRef:
-        name: generate-and-deploy-using-kubectl
-        kind: ClusterTask
-      resources:
-        inputs:
-        - name: image
-          resource: image
-          from:
-          - build-source
-      params:
-      - name: app-name
-        value: $(params.app-name)
-      - name: replica
-        value: $(params.replica)
-      - name: port
-        value: $(params.port)
-- apiVersion: tekton.dev/v1alpha1
-  kind: Condition
-  metadata:
-    name: ${PIPELINE_NAME}-condition
-    namespace: ${NAMESPACE}
-  spec:
-    resources:
-    - name: scanned-image
-      type: image
-    check:
-      image: 192.168.6.110:5000/klar:v2.4.0
-      env:
-      - name: CLAIR_ADDR
-        value: http://172.22.11.2:30060
-      - name: CLAIR_THRESHOLD
-        value: '1000'
-      - name: REGISTRY_INSECURE
-        value: 'TRUE'
-      script: '/klar $(resources.scanned-image.url)'
-
----
-
-apiVersion: tmax.io/v1
-kind: Template
-metadata:
-  name: wildfly-cicd-template
-imageUrl: https://upload.wikimedia.org/wikipedia/commons/a/a3/Wildfly_logo.png
-provider: tmax
-recommend: false
-shortDescription: wildfly-cicd
-longDescription: wildfly-cicd-template
-tags:
-- was
-- wildfly
-plans:
-- bindable: false
-  description: wildfly
-  name: wildfly-plan1
-objects:
-- apiVersion: tekton.dev/v1alpha1
-  kind: Pipeline
-  metadata:
-    name: ${PIPELINE_NAME}
-    namespace: ${NAMESPACE}
-  spec:
-    resources:
-    - name: source-repo
-      type: git
-    - name: image
-      type: image
-    params:
-    - name: app-name
-      type: string
-      description: Application name
-    - name: replica
-      type: string
-      description: Number of replica
-      default: "1"
-    - name: port
-      type: string
-      description: Application port
-      default: "8080"
-    tasks:
-    - name: build-source
-      taskRef:
-        name: s2i
-        kind: ClusterTask
-      params:
-      - name: BUILDER_IMAGE
-        value: 192.168.6.110:5000/s2i-wildfly:latest
-      resources:
-        inputs:
-        - name: source
-          resource: source-repo
-        outputs:
-        - name: image
-          resource: image
-    - name: deploy
-      conditions:
-      - conditionRef: ${PIPELINE_NAME}-condition
-        resources:
-        - name: scanned-image
-          resource: image
-          from:
-          - build-source
-      taskRef:
-        name: generate-and-deploy-using-kubectl
-        kind: ClusterTask
-      resources:
-        inputs:
-        - name: image
-          resource: image
-          from:
-          - build-source
-      params:
-      - name: app-name
-        value: $(params.app-name)
-      - name: replica
-        value: $(params.replica)
-      - name: port
-        value: $(params.port)
-- apiVersion: tekton.dev/v1alpha1
-  kind: Condition
-  metadata:
-    name: ${PIPELINE_NAME}-condition
-    namespace: ${NAMESPACE}
-  spec:
-    resources:
-    - name: scanned-image
-      type: image
-    check:
-      image: 192.168.6.110:5000/klar:v2.4.0
-      env:
-      - name: CLAIR_ADDR
-        value: http://172.22.11.2:30060
-      - name: CLAIR_THRESHOLD
-        value: '1000'
-      - name: REGISTRY_INSECURE
-        value: 'TRUE'
-      script: '/klar $(resources.scanned-image.url)'
-
----
-
-apiVersion: tmax.io/v1
-kind: Template
-metadata:
   name: mariadb-template
+  namespace: default
 shortDescription: mariadb-deployment
 imageUrl: https://upload.wikimedia.org/wikipedia/commons/c/c9/MariaDB_Logo.png
 longDescription: mariadb-deployment
@@ -619,9 +115,9 @@ plans:
     service_instance:
       create:
         parameters:
-          APP_NAME: mariadb-deploy
           NAMESPACE: default
           DB_STORAGE: 5Gi
+          APP_NAME: mariadb-deploy
           MYSQL_USER: root1
           MYSQL_PASSWORD: tmax@23
           MYSQL_DATABASE: root1
@@ -640,12 +136,25 @@ plans:
     service_instance:
       create:
         parameters:
-          APP_NAME: mariadb-deploy
           NAMESPACE: default
           DB_STORAGE: 30Gi
+          APP_NAME: mariadb-deploy
           MYSQL_USER: root1
           MYSQL_PASSWORD: tmax@23
           MYSQL_DATABASE: root1
+parameters:
+- name: APP_NAME
+  description: database app name
+- name: NAMESPACE
+  description: namespace of service, secret, pvc, deployment
+- name: DB_STORAGE
+  description: database request.storage size
+- name: MYSQL_USER
+  description: database user
+- name: MYSQL_PASSWORD
+  description: database password
+- name: MYSQL_DATABASE
+  description: database name
 
 ---
 
@@ -653,6 +162,7 @@ apiVersion: tmax.io/v1
 kind: Template
 metadata:
   name: mongodb-template
+  namespace: default
 shortDescription: mongodb-deployment
 imageUrl: https://upload.wikimedia.org/wikipedia/en/4/45/MongoDB-Logo.svg
 longDescription: mongodb-deployment
@@ -771,9 +281,9 @@ plans:
     service_instance:
       create:
         parameters:
-          APP_NAME: mongodb-deploy
           NAMESPACE: default
           DB_STORAGE: 5Gi
+          APP_NAME: mongodb-deploy
           MONGODB_USER: root
           MONGODB_PASSWORD: root
           MONGODB_DATABASE: root
@@ -793,13 +303,28 @@ plans:
     service_instance:
       create:
         parameters:
-          APP_NAME: mongodb-deploy
           NAMESPACE: default
           DB_STORAGE: 30Gi
+          APP_NAME: mongodb-deploy
           MONGODB_USER: root
           MONGODB_PASSWORD: root
           MONGODB_DATABASE: root
           MONGODB_ADMIN_PASSWORD: root
+parameters:
+- name: APP_NAME
+  description: database app name
+- name: NAMESPACE
+  description: namespace of service, secret, pvc, deployment
+- name: DB_STORAGE
+  description: database request.storage size
+- name: MONGODB_USER
+  description: database user
+- name: MONGODB_PASSWORD
+  description: database password
+- name: MONGODB_DATABASE
+  description: database name
+- name: MONGODB_ADMIN_PASSWORD
+  description: database admin password
 
 ---
 
@@ -807,6 +332,7 @@ apiVersion: tmax.io/v1
 kind: Template
 metadata:
   name: mysql-template
+  namespace: default
 shortDescription: mysql-deployment
 imageUrl: https://upload.wikimedia.org/wikipedia/en/6/62/MySQL.svg
 longDescription: mysql-deployment
@@ -919,9 +445,9 @@ plans:
     service_instance:
       create:
         parameters:
-          APP_NAME: mysql-deploy
           NAMESPACE: default
           DB_STORAGE: 5Gi
+          APP_NAME: mysql-deploy
           MYSQL_USER: root1
           MYSQL_PASSWORD: tmax@23
           MYSQL_DATABASE: root1
@@ -940,12 +466,24 @@ plans:
     service_instance:
       create:
         parameters:
-          APP_NAME: mysql-deploy
           NAMESPACE: default
           DB_STORAGE: 30Gi
+          APP_NAME: mysql-deploy
           MYSQL_USER: root1
           MYSQL_PASSWORD: tmax@23
           MYSQL_DATABASE: root1
+- name: APP_NAME
+  description: database app name
+- name: NAMESPACE
+  description: namespace of service, secret, pvc, deployment
+- name: DB_STORAGE
+  description: database request.storage size
+- name: MYSQL_USER
+  description: database user
+- name: MYSQL_PASSWORD
+  description: database password
+- name: MYSQL_DATABASE
+  description: database name
 
 ---
 
@@ -953,6 +491,7 @@ apiVersion: tmax.io/v1
 kind: Template
 metadata:
   name: postgresql-template
+  namespace: default
 shortDescription: postgresql-deployment
 imageUrl: https://upload.wikimedia.org/wikipedia/commons/2/29/Postgresql_elephant.svg
 longDescription: postgresql-deployment
@@ -1065,9 +604,9 @@ plans:
     service_instance:
       create:
         parameters:
-          APP_NAME: postgresql-deploy
           NAMESPACE: default
           DB_STORAGE: 5Gi
+          APP_NAME: postgresql-deploy
           POSTGRESQL_USER: root
           POSTGRESQL_PASSWORD: tmax@23
           POSTGRESQL_DATABASE: root
@@ -1086,12 +625,24 @@ plans:
     service_instance:
       create:
         parameters:
-          APP_NAME: postgresql-deploy
           NAMESPACE: default
           DB_STORAGE: 30Gi
+          APP_NAME: postgresql-deploy
           POSTGRESQL_USER: root
           POSTGRESQL_PASSWORD: tmax@23
           POSTGRESQL_DATABASE: root
+- name: APP_NAME
+  description: database app name
+- name: NAMESPACE
+  description: namespace of service, secret, pvc, deployment
+- name: DB_STORAGE
+  description: database request.storage size
+- name: POSTGRESQL_USER
+  description: database user
+- name: POSTGRESQL_PASSWORD
+  description: database password
+- name: POSTGRESQL_DATABASE
+  description: database name
 
 ---
 
@@ -1099,6 +650,7 @@ apiVersion: tmax.io/v1
 kind: Template
 metadata:
   name: redis-template
+  namespace: default
 shortDescription: redis-deployment
 imageUrl: https://upload.wikimedia.org/wikipedia/en/6/6b/Redis_Logo.svg
 longDescription: redis-deployment
@@ -1205,9 +757,9 @@ plans:
     service_instance:
       create:
         parameters:
-          APP_NAME: redis-deploy
           NAMESPACE: default
           DB_STORAGE: 5Gi
+          APP_NAME: redis-deploy
           DATABASE_SERVICE_NAME: redis
           REDIS_PASSWORD: tmax@23
 - name: redis-plan2
@@ -1225,8 +777,564 @@ plans:
     service_instance:
       create:
         parameters:
-          APP_NAME: redis-deploy
           NAMESPACE: default
           DB_STORAGE: 30Gi
+          APP_NAME: redis-deploy
           DATABASE_SERVICE_NAME: redis
           REDIS_PASSWORD: tmax@23
+parameters:
+- name: APP_NAME
+  description: database app name
+- name: NAMESPACE
+  description: namespace of service, secret, pvc, deployment
+- name: DB_STORAGE
+  description: database request.storage size
+- name: DATABASE_SERVICE_NAME
+  description: database service name
+- name: REDIS_PASSWORD
+  description: database password
+
+---
+
+apiVersion: tmax.io/v1
+kind: Template
+metadata:
+  name: apache-cicd-template
+  namespace: default
+imageUrl: https://upload.wikimedia.org/wikipedia/commons/4/45/Apache_HTTP_server_logo_%282016%29.png
+provider: tmax
+recommend: false
+shortDescription: apache-cicd
+longDescription: apache-cicd-template
+tags:
+- was
+- apache
+plans:
+- bindable: false
+  description: apache
+  name: apache-plan1
+objects:
+- apiVersion: tekton.dev/v1alpha1
+  kind: Pipeline
+  metadata:
+    name: ${PIPELINE_NAME}
+    namespace: ${NAMESPACE}
+  spec:
+    resources:
+    - name: source-repo
+      type: git
+    - name: image
+      type: image
+    params:
+    - name: app-name
+      type: string
+      description: Application name
+    - name: replica
+      type: string
+      description: Number of replica
+      default: "1"
+    - name: port
+      type: string
+      description: Application port
+      default: "8080"
+    tasks:
+    - name: build-source
+      taskRef:
+        name: s2i
+        kind: ClusterTask
+      params:
+      - name: BUILDER_IMAGE
+        value: 192.168.6.110:5000/s2i-apache:2.4
+      resources:
+        inputs:
+        - name: source
+          resource: source-repo
+        outputs:
+        - name: image
+          resource: image
+    - name: deploy
+      conditions:
+      - conditionRef: ${PIPELINE_NAME}-condition
+        resources:
+        - name: scanned-image
+          resource: image
+          from:
+          - build-source
+      taskRef:
+        name: generate-and-deploy-using-kubectl
+        kind: ClusterTask
+      resources:
+        inputs:
+        - name: image
+          resource: image
+          from:
+          - build-source
+      params:
+      - name: app-name
+        value: $(params.app-name)
+      - name: replica
+        value: $(params.replica)
+      - name: port
+        value: $(params.port)
+      - name: image-url
+        value: $(tasks.build-source.results.image-url)
+- apiVersion: tekton.dev/v1alpha1
+  kind: Condition
+  metadata:
+    name: ${PIPELINE_NAME}-condition
+    namespace: ${NAMESPACE}
+  spec:
+    resources:
+    - name: scanned-image
+      type: image
+    check:
+      image: 192.168.6.110:5000/klar:v2.4.0
+      env:
+      - name: CLAIR_ADDR
+        value: http://172.22.11.2:30060
+      - name: CLAIR_THRESHOLD
+        value: '1000'
+      - name: REGISTRY_INSECURE
+        value: 'TRUE'
+      script: '/klar $(resources.scanned-image.url)'
+parameters:
+- name: PIPELINE_NAME
+  description: pipeline name for ci/cd
+- name: NAMESPACE
+  description: namespace of pipeline and condition
+
+---
+
+apiVersion: tmax.io/v1
+kind: Template
+metadata:
+  name: django-cicd-template
+  namespace: default
+imageUrl: https://upload.wikimedia.org/wikipedia/commons/7/75/Django_logo.svg
+provider: tmax
+recommend: false
+shortDescription: django-cicd
+longDescription: django-cicd-template
+tags:
+- was
+- django
+plans:
+- bindable: false
+  description: django
+  name: django-plan1
+objects:
+- apiVersion: tekton.dev/v1alpha1
+  kind: Pipeline
+  metadata:
+    name: ${PIPELINE_NAME}
+    namespace: ${NAMESPACE}
+  spec:
+    resources:
+    - name: source-repo
+      type: git
+    - name: image
+      type: image
+    params:
+    - name: app-name
+      type: string
+      description: Application name
+    - name: replica
+      type: string
+      description: Number of replica
+      default: "1"
+    - name: port
+      type: string
+      description: Application port
+      default: "8080"
+    tasks:
+    - name: build-source
+      taskRef:
+        name: s2i
+        kind: ClusterTask
+      params:
+      - name: BUILDER_IMAGE
+        value: 192.168.6.110:5000/s2i-django:35
+      resources:
+        inputs:
+        - name: source
+          resource: source-repo
+        outputs:
+        - name: image
+          resource: image
+    - name: deploy
+      conditions:
+      - conditionRef: ${PIPELINE_NAME}-condition
+        resources:
+        - name: scanned-image
+          resource: image
+          from:
+          - build-source
+      taskRef:
+        name: generate-and-deploy-using-kubectl
+        kind: ClusterTask
+      resources:
+        inputs:
+        - name: image
+          resource: image
+          from:
+          - build-source
+      params:
+      - name: app-name
+        value: $(params.app-name)
+      - name: replica
+        value: $(params.replica)
+      - name: port
+        value: $(params.port)
+      - name: image-url
+        value: $(tasks.build-source.results.image-url)
+- apiVersion: tekton.dev/v1alpha1
+  kind: Condition
+  metadata:
+    name: ${PIPELINE_NAME}-condition
+    namespace: ${NAMESPACE}
+  spec:
+    resources:
+    - name: scanned-image
+      type: image
+    check:
+      image: 192.168.6.110:5000/klar:v2.4.0
+      env:
+      - name: CLAIR_ADDR
+        value: http://172.22.11.2:30060
+      - name: CLAIR_THRESHOLD
+        value: '1000'
+      - name: REGISTRY_INSECURE
+        value: 'TRUE'
+      script: '/klar $(resources.scanned-image.url)'
+parameters:
+- name: PIPELINE_NAME
+  description: pipeline name for ci/cd
+- name: NAMESPACE
+  description: namespace of pipeline and condition
+
+---
+
+apiVersion: tmax.io/v1
+kind: Template
+metadata:
+  name: nodejs-cicd-template
+  namespace: default
+imageUrl: https://upload.wikimedia.org/wikipedia/commons/d/d9/Node.js_logo.svg
+provider: tmax
+recommend: false
+shortDescription: nodejs-cicd
+longDescription: nodejs-cicd-template
+tags:
+- was
+- nodejs
+plans:
+- bindable: false
+  description: nodejs
+  name: nodejs-plan1
+objects:
+- apiVersion: tekton.dev/v1alpha1
+  kind: Pipeline
+  metadata:
+    name: ${PIPELINE_NAME}
+    namespace: ${NAMESPACE}
+  spec:
+    resources:
+    - name: source-repo
+      type: git
+    - name: image
+      type: image
+    params:
+    - name: app-name
+      type: string
+      description: Application name
+    - name: replica
+      type: string
+      description: Number of replica
+      default: "1"
+    - name: port
+      type: string
+      description: Application port
+      default: "8080"
+    tasks:
+    - name: build-source
+      taskRef:
+        name: s2i
+        kind: ClusterTask
+      params:
+      - name: BUILDER_IMAGE
+        value: 192.168.6.110:5000/s2i-nodejs:8
+      resources:
+        inputs:
+        - name: source
+          resource: source-repo
+        outputs:
+        - name: image
+          resource: image
+    - name: deploy
+      conditions:
+      - conditionRef: ${PIPELINE_NAME}-condition
+        resources:
+        - name: scanned-image
+          resource: image
+          from:
+          - build-source
+      taskRef:
+        name: generate-and-deploy-using-kubectl
+        kind: ClusterTask
+      resources:
+        inputs:
+        - name: image
+          resource: image
+          from:
+          - build-source
+      params:
+      - name: app-name
+        value: $(params.app-name)
+      - name: replica
+        value: $(params.replica)
+      - name: port
+        value: $(params.port)
+      - name: image-url
+        value: $(tasks.build-source.results.image-url)
+- apiVersion: tekton.dev/v1alpha1
+  kind: Condition
+  metadata:
+    name: ${PIPELINE_NAME}-condition
+    namespace: ${NAMESPACE}
+  spec:
+    resources:
+    - name: scanned-image
+      type: image
+    check:
+      image: 192.168.6.110:5000/klar:v2.4.0
+      env:
+      - name: CLAIR_ADDR
+        value: http://172.22.11.2:30060
+      - name: CLAIR_THRESHOLD
+        value: '1000'
+      - name: REGISTRY_INSECURE
+        value: 'TRUE'
+      script: '/klar $(resources.scanned-image.url)'
+parameters:
+- name: PIPELINE_NAME
+  description: pipeline name for ci/cd
+- name: NAMESPACE
+  description: namespace of pipeline and condition
+
+---
+
+apiVersion: tmax.io/v1
+kind: Template
+metadata:
+  name: tomcat-cicd-template
+  namespace: default
+imageUrl: https://upload.wikimedia.org/wikipedia/commons/7/7b/Tomcat-logo.svg
+provider: tmax
+recommend: false
+shortDescription: tomcat-cicd
+longDescription: tomcat-cicd-template
+tags:
+- was
+- tomcat
+plans:
+- bindable: false
+  description: tomcat
+  name: tomcat-plan1
+objects:
+- apiVersion: tekton.dev/v1alpha1
+  kind: Pipeline
+  metadata:
+    name: ${PIPELINE_NAME}
+    namespace: ${NAMESPACE}
+  spec:
+    resources:
+    - name: source-repo
+      type: git
+    - name: image
+      type: image
+    params:
+    - name: app-name
+      type: string
+      description: Application name
+    - name: replica
+      type: string
+      description: Number of replica
+      default: "1"
+    - name: port
+      type: string
+      description: Application port
+      default: "8080"
+    tasks:
+    - name: build-source
+      taskRef:
+        name: s2i
+        kind: ClusterTask
+      params:
+      - name: BUILDER_IMAGE
+        value: 192.168.6.110:5000/s2i-tomcat:latest
+      resources:
+        inputs:
+        - name: source
+          resource: source-repo
+        outputs:
+        - name: image
+          resource: image
+    - name: deploy
+      conditions:
+      - conditionRef: ${PIPELINE_NAME}-condition
+        resources:
+        - name: scanned-image
+          resource: image
+          from:
+          - build-source
+      taskRef:
+        name: generate-and-deploy-using-kubectl
+        kind: ClusterTask
+      resources:
+        inputs:
+        - name: image
+          resource: image
+          from:
+          - build-source
+      params:
+      - name: app-name
+        value: $(params.app-name)
+      - name: replica
+        value: $(params.replica)
+      - name: port
+        value: $(params.port)
+      - name: image-url
+        value: $(tasks.build-source.results.image-url)
+- apiVersion: tekton.dev/v1alpha1
+  kind: Condition
+  metadata:
+    name: ${PIPELINE_NAME}-condition
+    namespace: ${NAMESPACE}
+  spec:
+    resources:
+    - name: scanned-image
+      type: image
+    check:
+      image: 192.168.6.110:5000/klar:v2.4.0
+      env:
+      - name: CLAIR_ADDR
+        value: http://172.22.11.2:30060
+      - name: CLAIR_THRESHOLD
+        value: '1000'
+      - name: REGISTRY_INSECURE
+        value: 'TRUE'
+      script: '/klar $(resources.scanned-image.url)'
+parameters:
+- name: PIPELINE_NAME
+  description: pipeline name for ci/cd
+- name: NAMESPACE
+  description: namespace of pipeline and condition
+
+---
+
+apiVersion: tmax.io/v1
+kind: Template
+metadata:
+  name: wildfly-cicd-template
+  namespace: default
+imageUrl: https://upload.wikimedia.org/wikipedia/commons/a/a3/Wildfly_logo.png
+provider: tmax
+recommend: false
+shortDescription: wildfly-cicd
+longDescription: wildfly-cicd-template
+tags:
+- was
+- wildfly
+plans:
+- bindable: false
+  description: wildfly
+  name: wildfly-plan1
+objects:
+- apiVersion: tekton.dev/v1alpha1
+  kind: Pipeline
+  metadata:
+    name: ${PIPELINE_NAME}
+    namespace: ${NAMESPACE}
+  spec:
+    resources:
+    - name: source-repo
+      type: git
+    - name: image
+      type: image
+    params:
+    - name: app-name
+      type: string
+      description: Application name
+    - name: replica
+      type: string
+      description: Number of replica
+      default: "1"
+    - name: port
+      type: string
+      description: Application port
+      default: "8080"
+    tasks:
+    - name: build-source
+      taskRef:
+        name: s2i
+        kind: ClusterTask
+      params:
+      - name: BUILDER_IMAGE
+        value: 192.168.6.110:5000/s2i-wildfly:latest
+      resources:
+        inputs:
+        - name: source
+          resource: source-repo
+        outputs:
+        - name: image
+          resource: image
+    - name: deploy
+      conditions:
+      - conditionRef: ${PIPELINE_NAME}-condition
+        resources:
+        - name: scanned-image
+          resource: image
+          from:
+          - build-source
+      taskRef:
+        name: generate-and-deploy-using-kubectl
+        kind: ClusterTask
+      resources:
+        inputs:
+        - name: image
+          resource: image
+          from:
+          - build-source
+      params:
+      - name: app-name
+        value: $(params.app-name)
+      - name: replica
+        value: $(params.replica)
+      - name: port
+        value: $(params.port)
+      - name: image-url
+        value: $(tasks.build-source.results.image-url)
+- apiVersion: tekton.dev/v1alpha1
+  kind: Condition
+  metadata:
+    name: ${PIPELINE_NAME}-condition
+    namespace: ${NAMESPACE}
+  spec:
+    resources:
+    - name: scanned-image
+      type: image
+    check:
+      image: 192.168.6.110:5000/klar:v2.4.0
+      env:
+      - name: CLAIR_ADDR
+        value: http://172.22.11.2:30060
+      - name: CLAIR_THRESHOLD
+        value: '1000'
+      - name: REGISTRY_INSECURE
+        value: 'TRUE'
+      script: '/klar $(resources.scanned-image.url)'
+parameters:
+- name: PIPELINE_NAME
+  description: pipeline name for ci/cd
+- name: NAMESPACE
+  description: namespace of pipeline and condition

@@ -99,3 +99,8 @@ objects:
       - name: REGISTRY_INSECURE
         value: 'TRUE'
       script: '/klar $(resources.scanned-image.url)'
+parameters:
+- name: PIPELINE_NAME
+  description: pipeline name for ci/cd
+- name: NAMESPACE
+  description: namespace of pipeline and condition

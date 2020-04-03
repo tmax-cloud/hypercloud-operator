@@ -150,3 +150,18 @@ plans:
           MONGODB_PASSWORD: root
           MONGODB_DATABASE: root
           MONGODB_ADMIN_PASSWORD: root
+parameters:
+- name: APP_NAME
+  description: database app name
+- name: NAMESPACE
+  description: namespace of service, secret, pvc, deployment
+- name: DB_STORAGE
+  description: database request.storage size
+- name: MONGODB_USER
+  description: database user
+- name: MONGODB_PASSWORD
+  description: database password
+- name: MONGODB_DATABASE
+  description: database name
+- name: MONGODB_ADMIN_PASSWORD
+  description: database admin password
