@@ -6,8 +6,6 @@ import java.io.StringWriter;
 import org.slf4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.fge.jsonpatch.diff.JsonDiff;
 import com.google.gson.reflect.TypeToken;
 
 import io.kubernetes.client.openapi.ApiClient;
@@ -87,13 +85,13 @@ public class RegistryWatcher extends Thread {
 								if( registry.getStatus().getConditions() != null) {
 									for( RegistryCondition registryCondition : registry.getStatus().getConditions()) {
 										if( registryCondition.getType().equals("Phase")) {
-											if (registryCondition.getStatus().equals(RegistryStatus.REGISTRY_PHASE_CREATING)) {
+											if (registryCondition.getStatus().equals(RegistryStatus.StatusPhase.CREATING.getStatus())) {
 												K8sApiCaller.createRegistry(registry);
 												logger.info("Registry is running");
 												next = false;
 												break;
 											}
-											else if (registryCondition.getStatus().equals(RegistryStatus.REGISTRY_PHASE_RUNNING)) {
+											else if (registryCondition.getStatus().equals(RegistryStatus.StatusPhase.RUNNING.getStatus())) {
 												if( registry.getMetadata().getAnnotations().get(Constants.CUSTOM_OBJECT_GROUP + "/" + Registry.REGISTRY_LOGIN_URL) == null) {
 													K8sApiCaller.addRegistryAnnotation(registry);
 													logger.info("Update registry-login-url annotation");

@@ -708,16 +708,52 @@ public class K8sApiCaller {
 		JSONObject patchStatus = new JSONObject();
 		JSONObject status = new JSONObject();
 		JSONArray conditions = new JSONArray();
-		JSONObject condition = new JSONObject();
+		JSONObject condition1 = new JSONObject();
+		JSONObject condition2 = new JSONObject();
+		JSONObject condition3 = new JSONObject();
+		JSONObject condition4 = new JSONObject();
+		JSONObject condition5 = new JSONObject();
+		JSONObject condition6 = new JSONObject();
 		JSONArray patchStatusArray = new JSONArray();
 		
-		condition.put("type", "Phase");
-		condition.put("status", RegistryStatus.REGISTRY_PHASE_CREATING);
-		condition.put("message", "Registry is creating");
-		condition.put("reason", "All resources in registry has not yet been created.");
-		conditions.add(condition);
+		condition1.put("type", RegistryCondition.Condition.PHASE.getType());
+		condition1.put("status", RegistryStatus.StatusPhase.CREATING.getStatus());
+		condition1.put("message", "Registry is creating. All resources in registry has not yet been created.");
+		condition1.put("reason", "RegistryCreated");
+		conditions.add(condition1);
+		
+		condition2.put("type", RegistryCondition.Condition.REPLICA_SET.getType());
+		condition2.put("status", RegistryStatus.StatusReplicaSet.CREATING.getStatus());
+		condition2.put("message", "Registry replicaset is creating");
+		condition2.put("reason", "ReplicaSetReady");
+		conditions.add(condition2);
+		
+		condition3.put("type", RegistryCondition.Condition.POD.getType());
+		condition3.put("status", RegistryStatus.StatusPod.CREATING.getStatus());
+		condition3.put("message", "Registry pod is creating");
+		condition3.put("reason", "PodReady");
+		conditions.add(condition3);
+		
+		condition4.put("type", RegistryCondition.Condition.SERVICE.getType());
+		condition4.put("status", RegistryStatus.Status.FALSE.getStatus());
+		condition4.put("message", "Registry service is not yet created");
+		condition4.put("reason", "ServiceReady");
+		conditions.add(condition4);
+		
+		condition5.put("type", RegistryCondition.Condition.SECRET_OPAQUE.getType());
+		condition5.put("status", RegistryStatus.Status.FALSE.getStatus());
+		condition5.put("message", "Registry opaque type secret is not yet created");
+		condition5.put("reason", "SecretOpaqueReady");
+		conditions.add(condition5);
+		
+		condition6.put("type", RegistryCondition.Condition.SECRET_DOCKER_CONFIG_JSON.getType());
+		condition6.put("status", RegistryStatus.Status.FALSE.getStatus());
+		condition6.put("message", "Registry docker config json type secret is not yet created");
+		condition6.put("reason", "SecretDockerConfigJsonReady");
+		conditions.add(condition6);
+		
 		status.put("conditions", conditions);
-		status.put("phase", RegistryStatus.REGISTRY_PHASE_CREATING);
+		status.put("phase", RegistryStatus.StatusPhase.CREATING.getStatus());
 
 		patchStatus.put("op", "add");
 		patchStatus.put("path", "/status");
@@ -866,12 +902,12 @@ public class K8sApiCaller {
 				JSONArray patchStatusArray = new JSONArray();
 				
 				condition.put("type", "Phase");
-				condition.put("status", RegistryStatus.REGISTRY_PHASE_ERROR);
+				condition.put("status", RegistryStatus.StatusPhase.ERROR.getStatus());
 				condition.put("message", "Creating a registry is failed");
 				condition.put("reason", e.getResponseBody());
 				conditions.add(condition);
 				status.put("conditions", conditions);
-				status.put("phase", RegistryStatus.REGISTRY_PHASE_ERROR);
+				status.put("phase", RegistryStatus.StatusPhase.ERROR.getStatus());
 
 				patchStatus.put("op", "replace");
 				patchStatus.put("path", "/status");
@@ -947,12 +983,12 @@ public class K8sApiCaller {
 					JSONArray patchStatusArray = new JSONArray();
 					
 					condition.put("type", "Phase");
-					condition.put("status", RegistryStatus.REGISTRY_PHASE_ERROR);
+					condition.put("status", RegistryStatus.StatusPhase.ERROR.getStatus());
 					condition.put("message", "Creating a registry is failed");
 					condition.put("reason", "Service(LB) is not found");
 					conditions.add(condition);
 					status.put("conditions", conditions);
-					status.put("phase", RegistryStatus.REGISTRY_PHASE_ERROR);
+					status.put("phase", RegistryStatus.StatusPhase.ERROR.getStatus());
 
 					patchStatus.put("op", "replace");
 					patchStatus.put("path", "/status");
@@ -1029,12 +1065,12 @@ public class K8sApiCaller {
 				JSONArray patchStatusArray = new JSONArray();
 				
 				condition.put("type", "Phase");
-				condition.put("status", RegistryStatus.REGISTRY_PHASE_ERROR);
+				condition.put("status", RegistryStatus.StatusPhase.ERROR.getStatus());
 				condition.put("message", "Creating a registry is failed");
 				condition.put("reason", e.getResponseBody());
 				conditions.add(condition);
 				status.put("conditions", conditions);
-				status.put("phase", RegistryStatus.REGISTRY_PHASE_ERROR);
+				status.put("phase", RegistryStatus.StatusPhase.ERROR.getStatus());
 
 				patchStatus.put("op", "replace");
 				patchStatus.put("path", "/status");
@@ -1091,12 +1127,12 @@ public class K8sApiCaller {
 				JSONArray patchStatusArray = new JSONArray();
 				
 				condition.put("type", "Phase");
-				condition.put("status", RegistryStatus.REGISTRY_PHASE_ERROR);
+				condition.put("status", RegistryStatus.StatusPhase.ERROR.getStatus());
 				condition.put("message", "Creating a registry is failed");
 				condition.put("reason", e.getMessage());
 				conditions.add(condition);
 				status.put("conditions", conditions);
-				status.put("phase", RegistryStatus.REGISTRY_PHASE_ERROR);
+				status.put("phase", RegistryStatus.StatusPhase.ERROR.getStatus());
 
 				patchStatus.put("op", "replace");
 				patchStatus.put("path", "/status");
@@ -1139,12 +1175,12 @@ public class K8sApiCaller {
 				JSONArray patchStatusArray = new JSONArray();
 				
 				condition.put("type", "Phase");
-				condition.put("status", RegistryStatus.REGISTRY_PHASE_ERROR);
+				condition.put("status", RegistryStatus.StatusPhase.ERROR.getStatus());
 				condition.put("message", "Creating a registry is failed");
 				condition.put("reason", e.getResponseBody());
 				conditions.add(condition);
 				status.put("conditions", conditions);
-				status.put("phase", RegistryStatus.REGISTRY_PHASE_ERROR);
+				status.put("phase", RegistryStatus.StatusPhase.ERROR.getStatus());
 
 				patchStatus.put("op", "replace");
 				patchStatus.put("path", "/status");
@@ -1193,12 +1229,12 @@ public class K8sApiCaller {
 				JSONArray patchStatusArray = new JSONArray();
 				
 				condition.put("type", "Phase");
-				condition.put("status", RegistryStatus.REGISTRY_PHASE_ERROR);
+				condition.put("status", RegistryStatus.StatusPhase.ERROR.getStatus());
 				condition.put("message", "Creating a registry is failed");
 				condition.put("reason", e.getResponseBody());
 				conditions.add(condition);
 				status.put("conditions", conditions);
-				status.put("phase", RegistryStatus.REGISTRY_PHASE_ERROR);
+				status.put("phase", RegistryStatus.StatusPhase.ERROR.getStatus());
 
 				patchStatus.put("op", "replace");
 				patchStatus.put("path", "/status");
@@ -1238,12 +1274,12 @@ public class K8sApiCaller {
 				JSONArray patchStatusArray = new JSONArray();
 				
 				condition.put("type", "Phase");
-				condition.put("status", RegistryStatus.REGISTRY_PHASE_ERROR);
+				condition.put("status", RegistryStatus.StatusPhase.ERROR.getStatus());
 				condition.put("message", "Creating a registry is failed");
 				condition.put("reason", e.getResponseBody());
 				conditions.add(condition);
 				status.put("conditions", conditions);
-				status.put("phase", RegistryStatus.REGISTRY_PHASE_ERROR);
+				status.put("phase", RegistryStatus.StatusPhase.ERROR.getStatus());
 
 				patchStatus.put("op", "replace");
 				patchStatus.put("path", "/status");
@@ -1529,12 +1565,12 @@ public class K8sApiCaller {
 				JSONArray patchStatusArray = new JSONArray();
 				
 				condition.put("type", "Phase");
-				condition.put("status", RegistryStatus.REGISTRY_PHASE_ERROR);
+				condition.put("status", RegistryStatus.StatusPhase.ERROR.getStatus());
 				condition.put("message", "Creating a registry is failed");
 				condition.put("reason", e.getResponseBody());
 				conditions.add(condition);
 				status.put("conditions", conditions);
-				status.put("phase", RegistryStatus.REGISTRY_PHASE_ERROR);
+				status.put("phase", RegistryStatus.StatusPhase.ERROR.getStatus());
 
 				patchStatus.put("op", "replace");
 				patchStatus.put("path", "/status");
@@ -1776,7 +1812,69 @@ public class K8sApiCaller {
 				Constants.CUSTOM_OBJECT_PLURAL_REGISTRY,
 				registryId, registry);
 	}
+
+	@SuppressWarnings("unchecked")
+	public static void updateRegistryStatus(V1ReplicaSet rs, String eventType) throws Throwable {
+		String registryName = "";
+		String registryPrefix = Constants.K8S_PREFIX + Constants.K8S_REGISTRY_PREFIX;
+		String namespace = rs.getMetadata().getNamespace();
+		String reason = "";
+		
+		registryName = rs.getMetadata().getLabels().get("apps");
+		registryName = registryName.substring(registryPrefix.length());
+		logger.info("registry name: " + registryName);
+		
+		Object response = customObjectApi.getNamespacedCustomObject(
+				Constants.CUSTOM_OBJECT_GROUP, 
+				Constants.CUSTOM_OBJECT_VERSION, 
+				namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registryName);
+
+		Registry registry = mapper.readValue(gson.toJson(response), Registry.class);
+		
+		logger.info("REGISTRY RESOURCE VERSION: " + registry.getMetadata().getResourceVersion());
+		logger.info("REGISTRY UID: " + registry.getMetadata().getUid());
+		
+		switch(eventType) {
+		case Constants.EVENT_TYPE_ADDED : 
+			
+			break;
+		case Constants.EVENT_TYPE_MODIFIED : 
+			
+			break;
+		case Constants.EVENT_TYPE_DELETED : 
+			
+			JSONObject patchStatus = new JSONObject();
+			JSONObject condition = new JSONObject();
+			JSONArray patchStatusArray = new JSONArray();
+
+			condition.put("type", "ReplicaSet");
+			condition.put("status", RegistryStatus.StatusReplicaSet.TERMINATED.getStatus());
+			condition.put("message", "Registry replicaset is not alive");
+			condition.put("reason", "ReplicaSetReady");
+
+			patchStatus.put("op", "replace");
+			patchStatus.put("path", RegistryCondition.Condition.REPLICA_SET.getPath());
+			patchStatus.put("value", condition);
+			patchStatusArray.add(patchStatus);
+
+			try{
+				Object result = customObjectApi.patchNamespacedCustomObjectStatus(
+						Constants.CUSTOM_OBJECT_GROUP, 
+						Constants.CUSTOM_OBJECT_VERSION, 
+						namespace, 
+						Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, 
+						registry.getMetadata().getName(), patchStatusArray);
+				logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
+			} catch (ApiException e2) {
+				throw new Exception(e2.getResponseBody());
+			}
+			
+			break;
+		}						
+		
+	}
 	
+	@SuppressWarnings("unchecked")
 	public static void updateRegistryStatus(V1Pod pod) throws Throwable {
 		String registryName = "";
 		String registryPrefix = Constants.K8S_PREFIX + Constants.K8S_REGISTRY_PREFIX;
@@ -1830,15 +1928,15 @@ public class K8sApiCaller {
 							JSONArray patchStatusArray = new JSONArray();
 
 							condition.put("type", "Phase");
-							condition.put("status", RegistryStatus.REGISTRY_PHASE_RUNNING);
-							condition.put("message", "Registry is running");
-							condition.put("reason", "All registry resources are operating normally.");
+							condition.put("status", RegistryStatus.StatusPhase.RUNNING.getStatus());
+							condition.put("message", "Registry is running. All registry resources are operating normally.");
+							condition.put("reason", "RegistryRunning");
 							conditions.add(condition);
 							status.put("conditions", conditions);
-							status.put("phase", RegistryStatus.REGISTRY_PHASE_RUNNING);
+							status.put("phase", RegistryStatus.StatusPhase.RUNNING.getStatus());
 
 							patchStatus.put("op", "replace");
-							patchStatus.put("path", "/status");
+							patchStatus.put("path", RegistryCondition.Condition.PHASE.getPath());
 							patchStatus.put("value", status);
 							patchStatusArray.add(patchStatus);
 
@@ -1854,7 +1952,7 @@ public class K8sApiCaller {
 								throw new Exception(e2.getResponseBody());
 							}
 						}
-						else if(!registryCondition.getStatus().equals(RegistryStatus.REGISTRY_PHASE_CREATING) 
+						else if(!registryCondition.getStatus().equals(RegistryStatus.StatusPhase.CREATING.getStatus()) 
 								&& reason.equals("ContainerCreating")) {
 							JSONObject patchStatus = new JSONObject();
 							JSONObject status = new JSONObject();
@@ -1863,15 +1961,15 @@ public class K8sApiCaller {
 							JSONArray patchStatusArray = new JSONArray();
 
 							condition.put("type", "Phase");
-							condition.put("status", RegistryStatus.REGISTRY_PHASE_NOT_READY);
+							condition.put("status", RegistryStatus.StatusPhase.NOT_READY.getStatus());
 							condition.put("message", "Reigstry is not ready. Recreate registry if 30 seconds have passed in NotReady state and the registry state has not changed to Running.");
 							condition.put("reason", "Registry container is checking for Readiness or container is creating");
 							conditions.add(condition);
 							status.put("conditions", conditions);
-							status.put("phase", RegistryStatus.REGISTRY_PHASE_NOT_READY);
+							status.put("phase", RegistryStatus.StatusPhase.NOT_READY.getStatus());
 
 							patchStatus.put("op", "replace");
-							patchStatus.put("path", "/status");
+							patchStatus.put("path", RegistryCondition.Condition.PHASE.getPath());
 							patchStatus.put("value", status);
 							patchStatusArray.add(patchStatus);
 
@@ -1895,15 +1993,15 @@ public class K8sApiCaller {
 							JSONArray patchStatusArray = new JSONArray();
 
 							condition.put("type", "Phase");
-							condition.put("status", RegistryStatus.REGISTRY_PHASE_NOT_READY);
+							condition.put("status", RegistryStatus.StatusPhase.NOT_READY.getStatus());
 							condition.put("message", "Reigstry is not ready. Recreate registry if 30 seconds have passed in NotReady state and the registry state has not changed to Running.");
 							condition.put("reason", "Registry container is checking for Readiness");
 							conditions.add(condition);
 							status.put("conditions", conditions);
-							status.put("phase", RegistryStatus.REGISTRY_PHASE_NOT_READY);
+							status.put("phase", RegistryStatus.StatusPhase.NOT_READY.getStatus());
 
 							patchStatus.put("op", "replace");
-							patchStatus.put("path", "/status");
+							patchStatus.put("path", RegistryCondition.Condition.PHASE.getPath());
 							patchStatus.put("value", status);
 							patchStatusArray.add(patchStatus);
 
@@ -1927,15 +2025,15 @@ public class K8sApiCaller {
 							JSONArray patchStatusArray = new JSONArray();
 
 							condition.put("type", "Phase");
-							condition.put("status", RegistryStatus.REGISTRY_PHASE_ERROR);
+							condition.put("status", RegistryStatus.StatusPhase.ERROR.getStatus());
 							condition.put("message", "Creating a registry is failed");
 							condition.put("reason", "Registry pod is error!");
 							conditions.add(condition);
 							status.put("conditions", conditions);
-							status.put("phase", RegistryStatus.REGISTRY_PHASE_ERROR);
+							status.put("phase", RegistryStatus.StatusPhase.ERROR.getStatus());
 
 							patchStatus.put("op", "replace");
-							patchStatus.put("path", "/status");
+							patchStatus.put("path", RegistryCondition.Condition.PHASE.getPath());
 							patchStatus.put("value", status);
 							patchStatusArray.add(patchStatus);
 
@@ -1951,15 +2049,10 @@ public class K8sApiCaller {
 								throw new Exception(e2.getResponseBody());
 							}
 						}
-
 					}
-
-
 				}
 			}
-
 		}
-
 	}
 	
 	public static CommandExecOut commandExecute(String[] command) throws Throwable {

@@ -46,7 +46,37 @@ public class RegistryCondition {
 	public void setType(String type) {
 		this.type = type;
 	}
+	
+	/* 
+	 * condition types
+	 * 0: Phase
+	 * 1: ReplicaSet
+	 * 2: Pod
+	 * 3: Service
+	 * 4: Secret Opaque
+	 * 5: Secret kubernetes.io/dockerconfigjson
+	*/
+	public static enum Condition {
+		PHASE("Phase", "/status/conditions/0"),
+		REPLICA_SET("ReplicaSet", "/status/conditions/1"),
+		POD("Pod", "/status/conditions/2"),
+		SERVICE("Service", "/status/conditions/3"),
+		SECRET_OPAQUE("SecretOpaque", "/status/conditions/4"),
+		SECRET_DOCKER_CONFIG_JSON("SecretDockerConfigJson", "/status/conditions/5"),
+		;
+		
+		private String type;
+		private String path;
 
+		Condition(String type, String path) {
+			this.type = type;
+			this.path = path;
+		}
+		
+		public String getType() { return type; }
+		public String getPath() { return path; }
+	}
+	
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("class V1PodCondition {\n");
