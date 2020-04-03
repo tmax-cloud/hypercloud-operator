@@ -8,13 +8,7 @@ spec:
     metadata:
       name: nodejs-cicd-template
     parameters:
-    - description: A Pipeline Name
-      displayName: PipelineName
-      name: PIPELINE_NAME
-      required: true
+    - name: PIPELINE_NAME
       value: nodejs-cicd-pipeline
-    - description: A Namespace Name
-      displayName: Namespace
-      name: NAMESPACE
-      required: true
+    - name: NAMESPACE
       value: default

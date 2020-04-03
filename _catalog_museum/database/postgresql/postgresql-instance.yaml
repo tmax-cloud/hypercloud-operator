@@ -9,28 +9,15 @@ spec:
       name: postgresql-template
     parameters:
     - name: APP_NAME
-      displayName: AppName
-      description: An App Name
-      required: true
       value: postgresql-sample-app
     - name: NAMESPACE
-      displayName: Namespace
       description: A Namespace Name
-      required: true
       value: default
-    - displayName: DBStorage
-      name: DB_STORAGE
-      required: true
+    - name: DB_STORAGE
       value: "20Gi"
     - name: POSTGRESQL_USER
-      displayName: PostgreSQLUser
-      required: true
       value: root
     - name: POSTGRESQL_PASSWORD
-      displayName: PostgreSQLPassword
-      required: true
       value: tmax@23
     - name: POSTGRESQL_DATABASE
-      displayName: PostgreSQLDatabase
-      required: true
       value: root

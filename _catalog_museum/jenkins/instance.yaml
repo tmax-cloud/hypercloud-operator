@@ -9,17 +9,8 @@ spec:
       name: jenkins-template
     parameters:
     - name: APP_NAME
-      description: A Jenkins Deployment Name
-      displayName: AppName
-      required: true
       value: jenkins-test-deploy
     - name: NAMESPACE
-      description: A Namespace Name
-      displayName: Namespace
-      required: true
       value: default
     - name: STORAGE
-      description: Storage size
-      displayName: Storage
-      required: true
       value: 10Gi

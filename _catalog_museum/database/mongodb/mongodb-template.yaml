@@ -107,19 +107,33 @@ objects:
             claimName: ${APP_NAME}-pvc
 parameters:
 - name: APP_NAME
+  displayName: AppName
   description: Application name
+  required: true
 - name: NAMESPACE
+  displayName: Namespace
+  required: true
   description: Application namespace
 - name: DB_STORAGE
+  displayName: DBStorage
   description: Storage size for DB
+  required: true
 - name: MONGODB_USER
+  displayName: MongoDBUser
   description: MongoDBUser
+  required: true
 - name: MONGODB_PASSWORD
+  displayName: MongoDBPassword
   description: MongoDBPassword
+  required: true
 - name: MONGODB_DATABASE
+  displayName: MongoDBDatabase
   description: MongoDBDatabase
+  required: true
 - name: MONGODB_ADMIN_PASSWORD
+  displayName: MongoDBAdminPassword
   description: MongoDBAdminPassword
+  required: true
 plans:
 - name: mongodb-plan1
   description: mongodb

@@ -76,11 +76,17 @@ objects:
             claimName: ${APP_NAME}-pvc
 parameters:
 - name: APP_NAME
-  description: Application name
+  displayName: AppName
+  description: A Jenkins Deployment Name
+  required: true
 - name: NAMESPACE
+  displayName: Namespace
   description: Application namespace
+  required: true
 - name: STORAGE
+  displayName: Storage
   description: Storage size
+  required: true
 plans:
 - name: jenkins-plan1
   description: "Jenkins Plan"

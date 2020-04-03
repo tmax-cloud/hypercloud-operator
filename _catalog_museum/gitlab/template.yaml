@@ -85,11 +85,17 @@ objects:
             claimName: ${APP_NAME}-pvc
 parameters:
 - name: APP_NAME
-  description: Application name
+  displayName: AppName
+  description: A GitLab Deployment Name
+  required: true
 - name: NAMESPACE
+  displayName: Namespace
   description: Application namespace
+  required: true
 - name: STORAGE
+  displayName: Storage
   description: Storage size
+  required: true
 plans:
 - name: gitlab-plan1
   description: "GitLab Plan"

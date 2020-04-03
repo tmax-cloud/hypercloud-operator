@@ -9,28 +9,15 @@ spec:
       name: mysql-template
     parameters:
     - name: APP_NAME
-      displayName: AppName
-      description: An App Name
-      required: true
       value: mysql-sample-app
     - name: NAMESPACE
-      displayName: Namespace
       description: A Namespace Name
-      required: true
       value: default
-    - displayName: DBStorage
-      name: DB_STORAGE
-      required: true
+    - name: DB_STORAGE
       value: "20Gi"
     - name: MYSQL_USER
-      displayName: MysqlUser
-      required: true
       value: root1
     - name: MYSQL_PASSWORD
-      displayName: MysqlPassword
-      required: true
       value: tmax@23
     - name: MYSQL_DATABASE
-      displayName: MysqlDatabase
-      required: true
       value: root1

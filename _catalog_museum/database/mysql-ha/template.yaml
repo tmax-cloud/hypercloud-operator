@@ -65,7 +65,7 @@ objects:
       matchLabels:
         app: ${APP_NAME}
     serviceName: ${APP_NAME}
-    replicas: 4
+    replicas: ${REPLICA}
     template:
       metadata:
         labels:
@@ -226,11 +226,18 @@ objects:
             storage: 5Gi
 parameters:
 - name: APP_NAME
-  description: Application name
+  displayName: AppName
+  description: A MySQL HA Deployment Name
+  required: true
 - name: NAMESPACE
+  displayName: Namespace
   description: Application namespace
-#- name: REPLICA
-#  description: Replication count
+  required: true
+- name: REPLICA
+  displayName: Replica
+  description: Replication count
+  required: true
+  value: number
 plans:
 - name: mysql-ha-plan1
   description: "MySQL HA Plan (1 replica)"
@@ -249,7 +256,7 @@ plans:
         parameters:
           APP_NAME: mysql-ha-deploy
           NAMESPACE: default
-          #REPLICA: 1
+          REPLICA: 1
 - name: mysql-ha-plan2
   description: "MySQL HA Plan (2 replica)"
   metadata:
@@ -267,7 +274,7 @@ plans:
         parameters:
           APP_NAME: mysql-ha-deploy
           NAMESPACE: default
-          #REPLICA: 2
+          REPLICA: 2
 - name: mysql-ha-plan3
   description: "MySQL HA Plan (3 replica)"
   metadata:
@@ -285,5 +292,5 @@ plans:
         parameters:
           APP_NAME: mysql-ha-deploy
           NAMESPACE: default
-          #REPLICA: 3
+          REPLICA: 3
 
