@@ -142,3 +142,16 @@ plans:
           MYSQL_USER: root1
           MYSQL_PASSWORD: tmax@23
           MYSQL_DATABASE: root1
+parameters:
+- name: APP_NAME
+  description: database app name
+- name: NAMESPACE
+  description: namespace of service, secret, pvc, deployment
+- name: DB_STORAGE
+  description: database request.storage size
+- name: MYSQL_USER
+  description: database user
+- name: MYSQL_PASSWORD
+  description: database password
+- name: MYSQL_DATABASE
+  description: database name

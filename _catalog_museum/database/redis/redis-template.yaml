@@ -134,3 +134,14 @@ plans:
           APP_NAME: redis-deploy
           DATABASE_SERVICE_NAME: redis
           REDIS_PASSWORD: tmax@23
+parameters:
+- name: APP_NAME
+  description: database app name
+- name: NAMESPACE
+  description: namespace of service, secret, pvc, deployment
+- name: DB_STORAGE
+  description: database request.storage size
+- name: DATABASE_SERVICE_NAME
+  description: database service name
+- name: REDIS_PASSWORD
+  description: database password
