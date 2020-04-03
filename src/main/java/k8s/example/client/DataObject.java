@@ -51,8 +51,8 @@ public class DataObject {
     
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class UserCR {
-    	private String apiVersion;
-    	private String kind;
+    	private String apiVersion = "tmax.io/v1";
+    	private String kind = "User";
     	private V1ObjectMeta metadata;
     	private User userInfo;
     	private String status;
@@ -68,7 +68,7 @@ public class DataObject {
     	public void setStatus(String status) { this.status = status; }
     }
     
-    public static class User {
+    public static class User implements Cloneable{
     	private String name;
     	private String id;    	
     	private String password;

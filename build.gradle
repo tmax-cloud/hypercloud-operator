@@ -39,6 +39,8 @@ dependencies {
     compile(group: "com.github.java-json-tools", name: "json-patch", version: "1.11")
 	compile 'org.quartz-scheduler:quartz:2.3.0'
 	compile 'mysql:mysql-connector-java:5.1.6'
+	compile 'javax.mail:mail:1.4.1'
+	
 	
     // Use JUnit test framework
     testImplementation 'junit:junit:4.12'    

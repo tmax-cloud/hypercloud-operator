@@ -25,44 +25,88 @@ public class OAuthApiCaller {
     static OkHttpClient client = new OkHttpClient();
 
 	private static String setAuthURL( String serviceName )  {
-		return Constants.OAUTH_URL + "/" + serviceName;
+		return Constants.OAUTH_URL + serviceName;
 	}
 	
-	public static void init() throws Exception {
-		
-//		if ( loginSuccess( "admin@tmax.co.kr", "admin" ) ) {
-//			updateAdminPW();
-//		}
-	}
+//	public static void init() throws Exception {
+//		
+////		if ( loginSuccess( "admin@tmax.co.kr", "admin" ) ) {
+////			updateAdminPW();
+////		}
+//	}
 	
 	public static JsonArray ListUser() throws IOException {
-		logger.info( "[OAuth] User List Get Service Start" );
+		logger.info( "[OAuth] User List Service Start" );
 		
-		//GET 서비스
+		//GET svc
 		Request request = new Request.Builder().url(setAuthURL( Constants.SERVICE_NAME_OAUTH_USER_LIST )).build();
 	    Response response = client.newCall(request).execute();
 
-	    String result = response.body().toString();
+	    String result = response.body().string();   
+		logger.info("result : " + result);
 
 	    Gson gson = new Gson();
-	    JsonObject userList = (JsonObject) gson.fromJson(result, Object.class);
-	    JsonElement dto = userList.get("dto");  //FIXME
-	    return (JsonArray) dto.getAsJsonObject().get("user"); 
+	    JsonObject userList = gson.fromJson(result, JsonObject.class);
+	    return userList.get("user").getAsJsonArray(); 
 	}
 
-	public static JsonObject createUser( User userinDO ) throws IOException {
+	public static JsonObject createUser( User userInDO ) throws IOException {
 		logger.info( "[OAuth] User Create Service Start" );
 	
+		JsonObject createUserInDO = new JsonObject();		
+		createUserInDO.addProperty("user_id", userInDO.getId());
+		createUserInDO.addProperty("password", userInDO.getPassword());
+		
 		Gson gson = new Gson();
-	    String json = gson.toJson(userinDO);
-		Request request = new Request.Builder().url(setAuthURL( Constants.SERVICE_NAME_OAUTH_USER_CREATE ))
+	    String json = gson.toJson(createUserInDO);
+		
+	    //POST svc
+	    Request request = new Request.Builder().url(setAuthURL( Constants.SERVICE_NAME_OAUTH_USER_CREATE ))
 	            .post(RequestBody.create(MediaType.parse("application/json"), json)).build();
 	    
 		Response response = client.newCall(request).execute();
 		String result = response.body().string();
+		logger.info("result : " + result);
 
-	    JsonObject userCreateOut = (JsonObject) gson.fromJson(result, Object.class);
+	    JsonObject userCreateOut = gson.fromJson(result, JsonObject.class);
 	    return userCreateOut; 
+	}
+	
+	public static JsonObject AuthenticateCreate( String id, String password ) throws IOException {
+		logger.info( "[OAuth] Login Service Start" );
+	
+		String loginInDO = "{ \"user_id\" : " + id + ", \"password\" : \"" + password + "\" }";	
+		logger.info("loginInDO : " + loginInDO);	
+		
+		Gson gson = new Gson();		
+	    //POST svc
+	    Request request = new Request.Builder().url(setAuthURL( Constants.SERVICE_NAME_OAUTH_AUTHENTICATE_CREATE ))
+	            .post(RequestBody.create(MediaType.parse("application/json"), loginInDO)).build();
+	    
+		Response response = client.newCall(request).execute();
+		String result = response.body().string();
+		logger.info("result : " + result);
+
+	    JsonObject authenticateCreateOut = gson.fromJson(result, JsonObject.class);
+	    return authenticateCreateOut; 
+	}
+	
+	public static JsonObject AuthenticateDelete( String accessToken ) throws IOException {
+		logger.info( "[OAuth] Logout Service Start" );
+	
+		logger.info("AccessToken : " + accessToken);	
+		
+		Gson gson = new Gson();		
+	    //Delete svc
+	    Request request = new Request.Builder().addHeader("token", accessToken)
+	    		.url(setAuthURL( Constants.SERVICE_NAME_OAUTH_AUTHENTICATE_DELETE )).delete().build();
+	    
+		Response response = client.newCall(request).execute();
+		String result = response.body().string();
+		logger.info("result : " + result);
+
+	    JsonObject authenticateDeleteOut = gson.fromJson(result, JsonObject.class);
+	    return authenticateDeleteOut; 
 	}
 	
 //	public static ContextDataObject makeUserCreateInDO( UserDO userInDO ) throws ProObjectException {

@@ -2,6 +2,7 @@ apiVersion: tmax.io/v1
 kind: Template
 metadata:
   name: redis-template
+  namespace: default
 shortDescription: redis-deployment
 imageUrl: https://upload.wikimedia.org/wikipedia/en/6/6b/Redis_Logo.svg
 longDescription: redis-deployment
@@ -92,6 +93,17 @@ objects:
         - name: redis-persistent-storage
           persistentVolumeClaim:
             claimName: ${APP_NAME}-pvc
+parameters:
+- name: APP_NAME
+  description: Application name
+- name: NAMESPACE
+  description: Application namespace
+- name: DB_STORAGE
+  description: Storage size for DB
+- name: DATABASE_SERVICE_NAME
+  description: DatabaseServiceName
+- name: REDIS_PASSWORD
+  description: RedisPassword
 plans:
 - name: redis-plan1
   description: redis
@@ -108,9 +120,9 @@ plans:
     service_instance:
       create:
         parameters:
-          APP_NAME: redis-deploy
           NAMESPACE: default
           DB_STORAGE: 5Gi
+          APP_NAME: redis-deploy
           DATABASE_SERVICE_NAME: redis
           REDIS_PASSWORD: tmax@23
 - name: redis-plan2
@@ -128,8 +140,8 @@ plans:
     service_instance:
       create:
         parameters:
-          APP_NAME: redis-deploy
           NAMESPACE: default
           DB_STORAGE: 30Gi
+          APP_NAME: redis-deploy
           DATABASE_SERVICE_NAME: redis
           REDIS_PASSWORD: tmax@23

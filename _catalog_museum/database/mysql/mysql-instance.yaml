@@ -2,7 +2,7 @@ apiVersion: tmax.io/v1
 kind: TemplateInstance
 metadata:
   name: mysql-template-instance
-  namespace: hypercloud4-system
+  namespace: default
 spec:
   template:
     metadata:

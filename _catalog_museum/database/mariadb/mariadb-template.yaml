@@ -2,6 +2,7 @@ apiVersion: tmax.io/v1
 kind: Template
 metadata:
   name: mariadb-template
+  namespace: default
 shortDescription: mariadb-deployment
 imageUrl: https://upload.wikimedia.org/wikipedia/commons/c/c9/MariaDB_Logo.png
 longDescription: mariadb-deployment
@@ -98,6 +99,19 @@ objects:
         - name: mariadb-persistent-storage
           persistentVolumeClaim:
             claimName: ${APP_NAME}-pvc
+parameters:
+- name: APP_NAME
+  description: Application name
+- name: NAMESPACE
+  description: Application namespace
+- name: DB_STORAGE
+  description: Storage size for DB
+- name: MYSQL_USER
+  description: MysqlUser
+- name: MYSQL_PASSWORD
+  description: MysqlPassword
+- name: MYSQL_DATABASE
+  description: MysqlDatabase
 plans:
 - name: mariadb-plan1
   description: mariadb
@@ -114,9 +128,9 @@ plans:
     service_instance:
       create:
         parameters:
-          APP_NAME: mariadb-deploy
           NAMESPACE: default
           DB_STORAGE: 5Gi
+          APP_NAME: mariadb-deploy
           MYSQL_USER: root1
           MYSQL_PASSWORD: tmax@23
           MYSQL_DATABASE: root1
@@ -135,9 +149,9 @@ plans:
     service_instance:
       create:
         parameters:
-          APP_NAME: mariadb-deploy
           NAMESPACE: default
           DB_STORAGE: 30Gi
+          APP_NAME: mariadb-deploy
           MYSQL_USER: root1
           MYSQL_PASSWORD: tmax@23
           MYSQL_DATABASE: root1

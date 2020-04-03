@@ -1,6 +1,26 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.0.6 start -------------------->
+
+## HyperCloudServer_4.1.0.6 (2020년 04월  3일 금 오전 11:35:05)
+
+### Added
+
+### Changed
+  - [mod] 통합 회원가입 서비스 구현완료 by taegeon_woo
+  - [mod] Template Service Broker 의 Namespace 를 HyperCloud4-Operator 생성 시 환경변수로 받을 수 있도록 수정 (기존: default namespace 로 고정) by seonho_choi
+  - [mod] template instance 와 object 간 ownerReference 로 연결 추가 by seonho_choi
+  - [mod] namespace get 수정 : clusterRole - RoleBinding 가능성 고려 로직 추가 by taegeon_woo
+
+### Fixed
+  - [ims][221436] Registry Edit 기능 추가 (loginId, loginPassword, image) by sukhee_yun
+  - [ims][221457] Registry PVC accessMode default 설정 제거 by sukhee_yun
+
+### Etc
+
+<!--------------------- v4.1.0.6 end --------------------->
+
 <!-------------------- v4.1.0.5 start -------------------->
 
 ## HyperCloudServer_4.1.0.5 (2020년 03월 31일 화 오후  3:58:27)

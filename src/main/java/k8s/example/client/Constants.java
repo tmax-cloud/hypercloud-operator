@@ -5,7 +5,7 @@ public class Constants {
 	public static final String ACCESS_TOKEN_SECRET_KEY = "Access-Token-Secret-Key";
 	public static final String REFRESH_TOKEN_SECRET_KEY = "Refresh-Token-Secret-Key";
 	
-	//public static final String TEMPLATE_NAMESPACE = "hypercloud4-system";
+	public static final String TEMPLATE_NAMESPACE = "hypercloud4-system";
 	public static final String DEFAULT_NAMESPACE = "default";
 	public static final String SYSTEM_ENV_CATALOG_NAMESPACE = "CATALOG_NAMESPACE";
 
@@ -27,6 +27,7 @@ public class Constants {
 	public static final String SERVICE_INSTANCE_PLURAL = "serviceinstances";
 	public static final String SERVICE_INSTANCE_KIND = "ServiceInstance";
 
+	public static final String RBAC_API_GROUP = "rbac.authorization.k8s.io";
 
 
 	
@@ -121,11 +122,14 @@ public class Constants {
 	public static final String DEFAULT_TAGS = "etc";
 	
 	// Oauth //TODO configmap으로 만들던지, 환경변수 읽어오는것으로 수정하자
-	public static final String OAUTH_URL = "";
+	public static final String OAUTH_URL = "http://proauth-server-service.proauth-system:8080/";
+	public static final String USER_CREATE_FAILED = "User Create Failed";
 	public static final String SERVICE_NAME_OAUTH_USER_LIST = "proauth/oauth/usersList";
 	public static final String SERVICE_NAME_OAUTH_USER_CREATE = "proauth/oauth/users";
 	public static final String SERVICE_NAME_OAUTH_USER_DELETE = "proauth/oauth/users/";
 	public static final String SERVICE_NAME_OAUTH_USER_UPDATE = "proauth/oauth/users/";
+	public static final String SERVICE_NAME_OAUTH_AUTHENTICATE_CREATE = "proauth/oauth/authenticate";
+	public static final String SERVICE_NAME_OAUTH_AUTHENTICATE_DELETE = "proauth/oauth/authenticate";
 
 
 }

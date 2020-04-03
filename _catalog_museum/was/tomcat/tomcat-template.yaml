@@ -2,6 +2,7 @@ apiVersion: tmax.io/v1
 kind: Template
 metadata:
   name: tomcat-cicd-template
+  namespace: default
 imageUrl: https://upload.wikimedia.org/wikipedia/commons/7/7b/Tomcat-logo.svg
 provider: tmax
 recommend: false
@@ -14,6 +15,11 @@ plans:
 - bindable: false
   description: tomcat
   name: tomcat-plan1
+parameters:
+- name: APP_NAME
+  description: Application name
+- name: NAMESPACE
+  description: Application namespace
 objects:
 - apiVersion: tekton.dev/v1alpha1
   kind: Pipeline
@@ -77,6 +83,8 @@ objects:
         value: $(params.replica)
       - name: port
         value: $(params.port)
+      - name: image-url
+        value: $(tasks.build-source.results.image-url)
 - apiVersion: tekton.dev/v1alpha1
   kind: Condition
   metadata:

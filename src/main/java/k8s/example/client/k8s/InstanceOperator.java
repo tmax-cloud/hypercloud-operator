@@ -165,12 +165,13 @@ public class InstanceOperator extends Thread {
 				        				if(parameter.has("name") && parameter.has("value")) {
 				        					paramName = parameter.get("name").asText();
 					        				paramValue = parameter.get("value").asText();
-					        				
 				        				}
-				        				if(objStr.contains("${" + paramName + "}")) {
-				        					logger.info("[Instance Operator] Parameter Name to be replaced : " + "${" + paramName + "}");
-					        				logger.info("[Instance Operator] Parameter Value to be replaced : " + paramValue);
-				        					objStr = objStr.replace("${" + paramName + "}", paramValue);
+				        				if ( objectToJsonNode(template).get("parameters") != null && existParameter( objectToJsonNode(template).get("parameters"), paramName ) ) {
+				        					if( objStr.contains("${" + paramName + "}") ) {
+					        					logger.info("[Instance Operator] Parameter Name to be replaced : " + "${" + paramName + "}");
+						        				logger.info("[Instance Operator] Parameter Value to be replaced : " + paramValue);
+					        					objStr = objStr.replace("${" + paramName + "}", paramValue);
+					        				}
 				        				}
 				        			}
 
@@ -198,7 +199,7 @@ public class InstanceOperator extends Thread {
 			        				JsonNode replacedObject = numberTypeConverter(mapper.readTree(objSb.toString()));
 			        				logger.info("[Instance Operator] Replaced Template Object : " + replacedObject);
 			        				
-			        				if(!objStr.contains("${")) {
+			        				//if(!objStr.contains("${")) {
 			        					String apiGroup = null;
 			        					String apiVersion = null;
 			        					String namespace = null;
@@ -245,9 +246,9 @@ public class InstanceOperator extends Thread {
 			        						patchStatus(instanceObj.get("metadata").get("name").asText(), Constants.STATUS_ERROR, e.getMessage(), instanceNamespace);
 			        						throw e;
 			        					}
-			        				} else {
-			        					throw new Exception("Some non-replaced parameters or invaild values exist");
-			        				}
+			        				//} else {
+			        				//	throw new Exception("Some non-replaced parameters or invaild values exist");
+			        				//}
 			        			}
 		        			}
 		        			
@@ -480,4 +481,11 @@ public class InstanceOperator extends Thread {
             }
         }
     }
+	
+	private boolean existParameter( JsonNode parameters, String paramName ) {
+		for(JsonNode parameter : parameters) {
+			if( parameter.has("name") && parameter.get("name").asText().toUpperCase().equals( paramName.toUpperCase() )) return true;
+		}
+		return false;
+	}
 }

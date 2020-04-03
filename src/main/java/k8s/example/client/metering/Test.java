@@ -1,58 +1,30 @@
 package k8s.example.client.metering;
 
-import java.util.Enumeration;
-import java.util.Map.Entry;
 import java.util.Properties;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.JWTVerifier;
-import com.auth0.jwt.JWTCreator.Builder;
-import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.interfaces.DecodedJWT;
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
+import io.kubernetes.client.openapi.apis.CustomObjectsApi;
 import k8s.example.client.Constants;
-import k8s.example.client.Util;
+import k8s.example.client.DataObject.User;
 
 public class Test {
+	public static CustomObjectsApi customObjectApi = new CustomObjectsApi();
 
 	public static void main(String[] args) throws Exception {
-//		// Verify access token	
-//		String accessToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiY2x1c3Rlci1hZG1pbiIsInRva2VuSWQiOiJ3b29AdG1heC5jby5rciIsImlzcyI6IlRtYXgtUHJvQXV0aC1XZWJIb29rIiwiaWQiOiJhZG1pbkB0bWF4LmNvLmtyIiwiZXhwIjoxNzQzMzAwODgzfQ.kCOP4IjbeHS53tTY7z55E2aUPkrpQjDFk-Qhnc6Rgeo";
-//		JWTVerifier verifier = JWT.require(Algorithm.HMAC256(Constants.ACCESS_TOKEN_SECRET_KEY)).build();
-//		DecodedJWT jwt = verifier.verify(accessToken);
-//		
-//		String issuer = jwt.getIssuer();
-//		String userId = jwt.getClaims().get(Constants.CLAIM_USER_ID).asString();
-//		String tokenId = jwt.getClaims().get(Constants.CLAIM_TOKEN_ID).asString();
-//		System.out.println( "  Issuer: " + issuer );
-//		System.out.println( "  User ID: " + userId );
-//		System.out.println( "  Token ID: " + tokenId );
 		
-//		Builder tokenBuilder = JWT.create().withIssuer(Constants.ISSUER)
-//				.withExpiresAt(Util.getDateFromSecond(157680000)).withClaim(Constants.CLAIM_TOKEN_ID, "woo@tmax.co.kr")
-//				.withClaim(Constants.CLAIM_USER_ID,  "admin@tmax.co.kr").withClaim( Constants.CLAIM_ROLE, Constants.ROLE_ADMIN );
-//		
-//		System.out.println(tokenBuilder.sign(Algorithm.HMAC256(Constants.ACCESS_TOKEN_SECRET_KEY)));
-
-
-//		Properties prop = System.getProperties();
-//        String key;
-//        for (Enumeration e = prop.propertyNames() ; e.hasMoreElements() ;) {
-//         key = (String)e.nextElement();
-//         System.out.println(key + "=" + prop.get(key));
-//        }
-
-
-		Properties properties = System.getProperties();
-
-		for(Entry entry : properties.entrySet()) {
-
-		System.out.println(entry.getKey()+"="+entry.getValue());
-
-		}
-
-		
-		
+		String token = "\"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJUbWF4LVByb0F1dGgiLCJpZCI6IndvbzQtdG1heC5jby5rciIsImV4cCI6MTU4NTg4OTE2NCwidXVpZCI6ImJjNDNkOTMwLTkwYTQtNDk3YS04YWM3LTk0ZDI4YmNmMGRkMyJ9.TQE3-OOBKWH69uIx8Q4Bnrx2giOOrOrnkfIhIVKM7lY\"";
+		System.out.println( token.replaceAll("\"", ""));
 	}
 
 }
