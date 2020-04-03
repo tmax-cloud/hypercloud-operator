@@ -2,6 +2,7 @@ apiVersion: tmax.io/v1
 kind: TemplateInstance
 metadata:
   name: django-cicd-template-instance
+  namespace: default
 spec:
   template:
     metadata:

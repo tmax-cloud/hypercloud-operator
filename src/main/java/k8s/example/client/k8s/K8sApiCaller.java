@@ -2231,10 +2231,14 @@ public class K8sApiCaller {
 	public static Services getCatalog() throws ApiException {
 		Services catalog = new Services();
 		List<ServiceOffering> serviceList = new ArrayList<ServiceOffering>();
+		String catalogNamespace = Constants.DEFAULT_NAMESPACE;
+		if ( System.getenv(Constants.SYSTEM_ENV_CATALOG_NAMESPACE) != null && !System.getenv(Constants.SYSTEM_ENV_CATALOG_NAMESPACE).isEmpty() ) {
+			catalogNamespace = System.getenv(Constants.SYSTEM_ENV_CATALOG_NAMESPACE);
+		}
 		Object templates = customObjectApi.listNamespacedCustomObject(
 				Constants.CUSTOM_OBJECT_GROUP, 
 				Constants.CUSTOM_OBJECT_VERSION, 
-				Constants.DEFAULT_NAMESPACE,
+				catalogNamespace,
 				Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE, 
 				null, null, null, null, null, null, null, false);
 		
@@ -2473,33 +2477,7 @@ public class K8sApiCaller {
 		
 		return response;
 	}
-	
-	public static Object deleteTemplateInstance(String instanceId) throws Exception {
-		Object response = null;
 		
-		try {
-    		V1DeleteOptions body = new V1DeleteOptions();
-    		
-        	response = customObjectApi.deleteNamespacedCustomObject(
-        			Constants.CUSTOM_OBJECT_GROUP,
-					Constants.CUSTOM_OBJECT_VERSION,
-					Constants.DEFAULT_NAMESPACE,
-					Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE,
-					instanceId, 
-					body, 0, null, null);
-        } catch (ApiException e) {
-        	logger.info("Response body: " + e.getResponseBody());
-        	e.printStackTrace();
-        	throw e;
-        } catch (Exception e) {
-        	logger.info("Exception message: " + e.getMessage());
-        	e.printStackTrace();
-        	throw e;
-        }
-		
-		return response;
-	}
-	
 	public static BindingOutDO insertBindingSecret(String instanceId, String bindingId, BindingInDO inDO) throws Exception {
 		BindingOutDO outDO = new BindingOutDO();
 		Map<String, Object> secretMap = new HashMap<String, Object>();

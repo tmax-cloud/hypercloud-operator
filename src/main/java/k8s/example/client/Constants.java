@@ -7,6 +7,7 @@ public class Constants {
 	
 	public static final String TEMPLATE_NAMESPACE = "hypercloud4-system";
 	public static final String DEFAULT_NAMESPACE = "default";
+	public static final String SYSTEM_ENV_CATALOG_NAMESPACE = "CATALOG_NAMESPACE";
 
 	public static final String CUSTOM_OBJECT_GROUP = "tmax.io";
 	public static final String CUSTOM_OBJECT_VERSION = "v1";

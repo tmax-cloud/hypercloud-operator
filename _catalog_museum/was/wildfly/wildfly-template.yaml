@@ -2,6 +2,7 @@ apiVersion: tmax.io/v1
 kind: Template
 metadata:
   name: wildfly-cicd-template
+  namespace: default
 imageUrl: https://upload.wikimedia.org/wikipedia/commons/a/a3/Wildfly_logo.png
 provider: tmax
 recommend: false
@@ -77,6 +78,8 @@ objects:
         value: $(params.replica)
       - name: port
         value: $(params.port)
+      - name: image-url
+        value: $(tasks.build-source.results.image-url)
 - apiVersion: tekton.dev/v1alpha1
   kind: Condition
   metadata:

@@ -2,6 +2,7 @@ apiVersion: tmax.io/v1
 kind: Template
 metadata:
   name: mongodb-template
+  namespace: default
 shortDescription: mongodb-deployment
 imageUrl: https://upload.wikimedia.org/wikipedia/en/4/45/MongoDB-Logo.svg
 longDescription: mongodb-deployment
@@ -120,9 +121,9 @@ plans:
     service_instance:
       create:
         parameters:
-          APP_NAME: mongodb-deploy
           NAMESPACE: default
           DB_STORAGE: 5Gi
+          APP_NAME: mongodb-deploy
           MONGODB_USER: root
           MONGODB_PASSWORD: root
           MONGODB_DATABASE: root
@@ -142,9 +143,9 @@ plans:
     service_instance:
       create:
         parameters:
-          APP_NAME: mongodb-deploy
           NAMESPACE: default
           DB_STORAGE: 30Gi
+          APP_NAME: mongodb-deploy
           MONGODB_USER: root
           MONGODB_PASSWORD: root
           MONGODB_DATABASE: root

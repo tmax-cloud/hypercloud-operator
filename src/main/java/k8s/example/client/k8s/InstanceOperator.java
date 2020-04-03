@@ -124,6 +124,9 @@ public class InstanceOperator extends Thread {
 		        				for(JsonNode owner : instanceObj.get("metadata").get("ownerReferences")) {
 		        					if (owner.get("kind") != null && owner.get("kind").asText().equals(Constants.SERVICE_INSTANCE_KIND)) {
 		        						templateNamespace = Constants.DEFAULT_NAMESPACE;
+		        						if ( System.getenv(Constants.SYSTEM_ENV_CATALOG_NAMESPACE) != null && !System.getenv(Constants.SYSTEM_ENV_CATALOG_NAMESPACE).isEmpty() ) {
+		        							templateNamespace = System.getenv(Constants.SYSTEM_ENV_CATALOG_NAMESPACE);
+		        						}
 		        					}
 								}
 		        			}
@@ -179,12 +182,20 @@ public class InstanceOperator extends Thread {
 			        				sb.append("\",\"uid\": \"");
 			        				sb.append(instanceObj.get("metadata").get("uid").asText());
 			        				sb.append("\"}],");
-			        				objStr = splitStr[0] + "\"metadata\":{" + sb.toString() + splitStr[1];
+			        				
+			        				StringBuilder objSb = new StringBuilder();
+			        				objSb.append( splitStr[0] );
+			        				for ( int i = 1; i < splitStr.length; i++ ) {
+			        					objSb.append( "\"metadata\":{" );
+			        					objSb.append( sb.toString() );
+			        					objSb.append( splitStr[i] );
+			        				}
+			        				//objStr = splitStr[0] + "\"metadata\":{" + sb.toString() + splitStr[1];
 			        				//logger.info("[Instance Operator] @@@@@@@@@@@@@@@@@ Split Template Object[0] : " + splitStr[0]);
 			        				//logger.info("[Instance Operator] @@@@@@@@@@@@@@@@@ Split Template Object[1] : " + splitStr[1]);
 			        				//logger.info("[Instance Operator] Template Object : " + objStr);
 
-			        				JsonNode replacedObject = numberTypeConverter(mapper.readTree(objStr));
+			        				JsonNode replacedObject = numberTypeConverter(mapper.readTree(objSb.toString()));
 			        				logger.info("[Instance Operator] Replaced Template Object : " + replacedObject);
 			        				
 			        				if(!objStr.contains("${")) {
