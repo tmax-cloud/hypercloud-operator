@@ -2,12 +2,12 @@ package k8s.example.client.k8s;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.slf4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.fge.jsonpatch.diff.JsonDiff;
 import com.google.gson.reflect.TypeToken;
 
 import io.kubernetes.client.openapi.ApiClient;
@@ -63,14 +63,14 @@ public class RegistryWatcher extends Thread {
 							logger.info("====================== Registry " + eventType + " ====================== \n");
 							
 							switch(eventType) {
-							case Constants.EVENT_TYPE_ADDED : 
+							case Constants.EVENT_TYPE_ADDED: 
 								if(registry.getStatus() == null ) {
 									K8sApiCaller.initRegistry(registry.getMetadata().getName(), registry);
 									logger.info("Creating registry");
 								}
 								
 								break;
-							case Constants.EVENT_TYPE_MODIFIED :
+							case Constants.EVENT_TYPE_MODIFIED:
 								if (registry.getMetadata().getAnnotations() == null) {
 									K8sApiCaller.updateRegistryAnnotationLastCR(registry);
 									break;
@@ -83,43 +83,98 @@ public class RegistryWatcher extends Thread {
 									break;
 								}
 								
-								boolean next = true;
-								if( registry.getStatus().getConditions() != null) {
-									for( RegistryCondition registryCondition : registry.getStatus().getConditions()) {
-										if( registryCondition.getType().equals("Phase")) {
-											if (registryCondition.getStatus().equals(RegistryStatus.REGISTRY_PHASE_CREATING)) {
-												K8sApiCaller.createRegistry(registry);
-												logger.info("Registry is running");
-												next = false;
-												break;
-											}
-											else if (registryCondition.getStatus().equals(RegistryStatus.REGISTRY_PHASE_RUNNING)) {
-												if( registry.getMetadata().getAnnotations().get(Constants.CUSTOM_OBJECT_GROUP + "/" + Registry.REGISTRY_LOGIN_URL) == null) {
-													K8sApiCaller.addRegistryAnnotation(registry);
-													logger.info("Update registry-login-url annotation");
-													next = false;
-													break;
-												}
-											}
+								if( registry.getStatus().getPhase() != null) {
+									String phase = registry.getStatus().getPhase();
+									String changePhase = null;
+									String changeMessage = null;
+									String changeReason = null;
+									Map <RegistryCondition.Condition, Boolean> statusMap = getStatusMap(registry);
+									
+									
+									if( statusMap.get(RegistryCondition.Condition.REPLICA_SET)
+											&& statusMap.get(RegistryCondition.Condition.POD)
+											&& statusMap.get(RegistryCondition.Condition.CONTAINER)
+											&& statusMap.get(RegistryCondition.Condition.SERVICE)
+											&& statusMap.get(RegistryCondition.Condition.SECRET_OPAQUE)
+											&& statusMap.get(RegistryCondition.Condition.SECRET_DOCKER_CONFIG_JSON) ) {
+										
+										changePhase = RegistryStatus.StatusPhase.RUNNING.getStatus();
+										changeMessage = "Registry is running. All registry resources are operating normally.";
+										changeReason = "Running";
+									}
+									// Registry Is Creating.
+									else if(phase.equals(RegistryStatus.StatusPhase.CREATING.getStatus()) ) {
+										if ( !statusMap.get(RegistryCondition.Condition.REPLICA_SET)
+												&& !statusMap.get(RegistryCondition.Condition.POD)
+												&& !statusMap.get(RegistryCondition.Condition.CONTAINER)
+												&& !statusMap.get(RegistryCondition.Condition.SERVICE)
+												&& !statusMap.get(RegistryCondition.Condition.SECRET_OPAQUE)
+												&& !statusMap.get(RegistryCondition.Condition.SECRET_DOCKER_CONFIG_JSON) ) {
+
+											K8sApiCaller.createRegistry(registry);
+											break;
+										} 
+										else if(statusMap.get(RegistryCondition.Condition.SERVICE)
+												&& statusMap.get(RegistryCondition.Condition.SECRET_OPAQUE)
+												&& statusMap.get(RegistryCondition.Condition.SECRET_DOCKER_CONFIG_JSON)) {
+
+											changePhase = RegistryStatus.StatusPhase.NOT_READY.getStatus();
+											changeMessage = "Registry is not ready.";
+											changeReason = "NotReady";
+										}
+
+									}
+									// Registry Is NotReady, Error or  Running.
+									else {
+										if(!statusMap.get(RegistryCondition.Condition.SERVICE)) {
+											changePhase = RegistryStatus.StatusPhase.ERROR.getStatus();
+											changeMessage = "Registry service is not exist.";
+											changeReason = "ServiceNotFound";
+										}
+										else if(!statusMap.get(RegistryCondition.Condition.SECRET_OPAQUE)) {
+											changePhase = RegistryStatus.StatusPhase.ERROR.getStatus();
+											changeMessage = "Registry opaque type secret is not exist.";
+											changeReason = "SecretNotFound";
+										}
+										else if(!statusMap.get(RegistryCondition.Condition.SECRET_DOCKER_CONFIG_JSON)) {
+											changePhase = RegistryStatus.StatusPhase.ERROR.getStatus();
+											changeMessage = "Registry docker config json type secret is not exist.";
+											changeReason = "SecretNotFound";
+										}
+										else if(!statusMap.get(RegistryCondition.Condition.REPLICA_SET)
+												|| !statusMap.get(RegistryCondition.Condition.POD)
+												|| !statusMap.get(RegistryCondition.Condition.CONTAINER)) {
+
+											changePhase = RegistryStatus.StatusPhase.NOT_READY.getStatus();
+											changeMessage = "Registry is not ready.";
+											changeReason = "NotReady";
 										}
 									}
-								}
-								
-								if( next ) {
-									logger.info("afterJson = " + Util.toJson(registry).toString());
-									JsonNode diff = Util.jsonDiff(beforeJson, Util.toJson(registry).toString());
-									logger.info("diff: " + diff.toString());
 									
-									if(diff.size() > 0 ) {
-										K8sApiCaller.updateRegistryAnnotationLastCR(registry);
-										K8sApiCaller.updateRegistrySubResources(registry, diff);
+									
+									K8sApiCaller.updateReigstryPhase(registry, changePhase, changeMessage, changeReason);
+									
+									if(phase.equals(RegistryStatus.StatusPhase.RUNNING.getStatus())) {
+										if( registry.getMetadata().getAnnotations().get(Constants.CUSTOM_OBJECT_GROUP + "/" + Registry.REGISTRY_LOGIN_URL) == null) {
+											K8sApiCaller.addRegistryAnnotation(registry);
+											logger.info("Update registry-login-url annotation");
+											break;
+										}
 									}
+
 								}
-//								
-								
+
+								logger.info("afterJson = " + Util.toJson(registry).toString());
+								JsonNode diff = Util.jsonDiff(beforeJson, Util.toJson(registry).toString());
+								logger.info("diff: " + diff.toString());
+
+								if(diff.size() > 0 ) {
+									K8sApiCaller.updateRegistryAnnotationLastCR(registry);
+									K8sApiCaller.updateRegistrySubResources(registry, diff);
+								}
+
 								break;
 							case Constants.EVENT_TYPE_DELETED : 
-//								K8sApiCaller.deleteRegistry(registry);
 								logger.info("Registry is deleted");
 								
 								break;
@@ -156,5 +211,41 @@ public class RegistryWatcher extends Thread {
 
 	public static String getLatestResourceVersion() {
 		return latestResourceVersion;
+	}
+	
+	public static Map <RegistryCondition.Condition, Boolean> getStatusMap(Registry registry) {
+		Map <RegistryCondition.Condition, Boolean> statusMap = new HashMap<>();
+		
+		RegistryCondition replicasetCondtion
+		= registry.getStatus().getConditions().get(RegistryCondition.Condition.INDEX_REPLICA_SET); 
+		statusMap.put(RegistryCondition.Condition.REPLICA_SET, 
+				replicasetCondtion.getStatus().equals(RegistryStatus.Status.TRUE.getStatus()));
+		
+		RegistryCondition podCondtion
+		= registry.getStatus().getConditions().get(RegistryCondition.Condition.INDEX_POD); 
+		statusMap.put(RegistryCondition.Condition.POD, 
+				podCondtion.getStatus().equals(RegistryStatus.Status.TRUE.getStatus()));
+		
+		RegistryCondition containerCondtion
+		= registry.getStatus().getConditions().get(RegistryCondition.Condition.INDEX_CONTAINER); 
+		statusMap.put(RegistryCondition.Condition.CONTAINER, 
+				containerCondtion.getStatus().equals(RegistryStatus.Status.TRUE.getStatus()));
+		
+		RegistryCondition serviceCondtion
+		= registry.getStatus().getConditions().get(RegistryCondition.Condition.INDEX_SERVICE);  
+		statusMap.put(RegistryCondition.Condition.SERVICE, 
+				serviceCondtion.getStatus().equals(RegistryStatus.Status.TRUE.getStatus()));
+		
+		RegistryCondition secretOpqueCondtion
+		= registry.getStatus().getConditions().get(RegistryCondition.Condition.INDEX_SECRET_OPAQUE); 
+		statusMap.put(RegistryCondition.Condition.SECRET_OPAQUE, 
+				secretOpqueCondtion.getStatus().equals(RegistryStatus.Status.TRUE.getStatus()));
+		
+		RegistryCondition secretDockerCondtion
+		= registry.getStatus().getConditions().get(RegistryCondition.Condition.INDEX_SECRET_DOCKER_CONFIG_JSON); 
+		statusMap.put(RegistryCondition.Condition.SECRET_DOCKER_CONFIG_JSON, 
+				secretDockerCondtion.getStatus().equals(RegistryStatus.Status.TRUE.getStatus()));
+		
+		return statusMap;
 	}
 }

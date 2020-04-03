@@ -15,6 +15,15 @@ plans:
 - bindable: false
   description: django
   name: django-plan1
+parameters:
+- name: PIPELINE_NAME
+  displayName: PipelineName
+  description: Pipeline name
+  required: true
+- name: NAMESPACE
+  displayName: Namespace
+  description: Application namespace
+  required: true
 objects:
 - apiVersion: tekton.dev/v1alpha1
   kind: Pipeline
@@ -99,8 +108,3 @@ objects:
       - name: REGISTRY_INSECURE
         value: 'TRUE'
       script: '/klar $(resources.scanned-image.url)'
-parameters:
-- name: PIPELINE_NAME
-  description: pipeline name for ci/cd
-- name: NAMESPACE
-  description: namespace of pipeline and condition

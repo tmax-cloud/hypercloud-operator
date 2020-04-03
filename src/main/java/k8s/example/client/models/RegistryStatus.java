@@ -4,13 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RegistryStatus {
-	public static final String REGISTRY_PHASE_CREATING = "Creating";
-	public static final String REGISTRY_PHASE_RUNNING = "Running";
-	public static final String REGISTRY_PHASE_NOT_READY = "NotReady";
-	public static final String REGISTRY_PHASE_ERROR = "Error";
-
 	private List<RegistryCondition> conditions = null;
 	private String phase = null;
+	private String message = null;
+	private String reason = null;
 
 	public List<RegistryCondition> getConditions() {
 		return conditions;
@@ -40,7 +37,48 @@ public class RegistryStatus {
 	public void setPhase(String phase) {
 		this.phase = phase;
 	}
+	
+	public String getMessage() {
+		return message;
+	}
 
+	public void setMessage(String message) {
+		this.message = message;
+	}
+
+	public String getReason() {
+		return reason;
+	}
+
+	public void setReason(String reason) {
+		this.reason = reason;
+	}
+
+	public static enum StatusPhase {
+		CREATING("Creating"),
+		RUNNING("Running"),
+		NOT_READY("NotReady"),
+		ERROR("Error"),
+		;
+		
+		private String status;
+
+		StatusPhase(String status) { this.status = status; }
+		public String getStatus() {	return status; }
+	}
+	
+	public static enum Status {
+		TRUE("True"),
+		FALSE("False"),
+		UNKNOWN("Unknown"),
+		;
+		
+		private String status;
+
+		Status(String status) { this.status = status; }
+		public String getStatus() {	return status; }
+	}
+	
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("class RegistryStatus {\n");

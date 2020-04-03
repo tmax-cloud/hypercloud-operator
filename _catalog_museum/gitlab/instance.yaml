@@ -1,14 +1,16 @@
 apiVersion: tmax.io/v1
 kind: TemplateInstance
 metadata:
-  name: django-cicd-template-instance
+  name: gitlab-template-instance
   namespace: default
 spec:
   template:
     metadata:
-      name: django-cicd-template
+      name: gitlab-template
     parameters:
-    - name: PIPELINE_NAME
-      value: django-cicd-pipeline
+    - name: APP_NAME
+      value: gitlab-test-deploy
     - name: NAMESPACE
       value: default
+    - name: STORAGE
+      value: 30Gi

@@ -12,11 +12,14 @@
 	- Status: Creating 
 		- Registry가 사용할 SVC, PVC, RS 생성중인 상태 
 	- Status: Running
-		- Registry의 Replicaset 내 Pod가 Running인 상태
+		- Registry의  SVC, Secret, RS가 존재하고 Pod내 container가 ready인 상태
 	- Status: NotReady
-		- Registry의 Replicaset 내 Pod가 Running인 상태이지만 컨테이너가 Ready가 되지 않은 상태
+		- Container가 ready가 아닌 상태
+		- RS가 ready가 아닌 상태
+		- Pod가 Running이 아닌 상태
 	- Status: Error
-		- Registry의 리소스(svc, pvc, rs) 생성에 실패한 상태
+		- Registry의 리소스(svc, pvc, rs, secret) 생성에 실패한 상태
+		- Reigstry의 리소스(svc, rs, secret)가 존재하지 않는 상태
 		- Registry Pod가 종료되었거나 에러인 경우
 	
 # 필수 요구 사항

@@ -166,12 +166,26 @@ public class InstanceOperator extends Thread {
 				        					paramName = parameter.get("name").asText();
 					        				paramValue = parameter.get("value").asText();
 				        				}
-				        				if ( objectToJsonNode(template).get("parameters") != null && existParameter( objectToJsonNode(template).get("parameters"), paramName ) ) {
-				        					if( objStr.contains("${" + paramName + "}") ) {
-					        					logger.info("[Instance Operator] Parameter Name to be replaced : " + "${" + paramName + "}");
+				        				String dataType = existParameter( objectToJsonNode(template).get("parameters"), paramName );
+				        				if ( objectToJsonNode(template).get("parameters") != null && dataType != null ) {
+				        					
+				        					if (dataType.equals(Constants.TEMPLATE_DATA_TYPE_NUMBER)) {
+				        						String replaceString = "\"${" + paramName + "}\"";
+				        						if( objStr.contains( replaceString ) ) {
+						        					logger.info("[Instance Operator] Parameter Number Name to be replaced : " + replaceString);
+							        				logger.info("[Instance Operator] Parameter Number Value to be replaced : " + paramValue);
+						        					objStr = objStr.replace( replaceString, paramValue );
+						        				}
+				        					}
+				        					
+				        					String replaceString = "${" + paramName + "}";
+				        					if( objStr.contains( replaceString ) ) {
+					        					logger.info("[Instance Operator] Parameter Name to be replaced : " + replaceString);
 						        				logger.info("[Instance Operator] Parameter Value to be replaced : " + paramValue);
-					        					objStr = objStr.replace("${" + paramName + "}", paramValue);
+					        					objStr = objStr.replace( replaceString, paramValue );
 					        				}
+				        					
+				        					
 				        				}
 				        			}
 
@@ -482,10 +496,17 @@ public class InstanceOperator extends Thread {
         }
     }
 	
-	private boolean existParameter( JsonNode parameters, String paramName ) {
+	private String existParameter( JsonNode parameters, String paramName ) {
+		String dataType = null;
 		for(JsonNode parameter : parameters) {
-			if( parameter.has("name") && parameter.get("name").asText().toUpperCase().equals( paramName.toUpperCase() )) return true;
+			if( parameter.has("name") && parameter.get("name").asText().toUpperCase().equals( paramName.toUpperCase() )) {
+				if( parameter.has("value") && parameter.get("value").asText().equals( Constants.TEMPLATE_DATA_TYPE_NUMBER )) {
+					dataType = Constants.TEMPLATE_DATA_TYPE_NUMBER;
+				} else {
+					dataType = Constants.TEMPLATE_DATA_TYPE_STRING;
+				}
+			}
 		}
-		return false;
+		return dataType;
 	}
 }

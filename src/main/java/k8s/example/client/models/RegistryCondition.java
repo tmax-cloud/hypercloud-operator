@@ -46,7 +46,43 @@ public class RegistryCondition {
 	public void setType(String type) {
 		this.type = type;
 	}
+	
+	/* 
+	 * condition types
+	 * 0: Phase
+	 * 1: ReplicaSet
+	 * 2: Pod
+	 * 3: Service
+	 * 4: Secret Opaque
+	 * 5: Secret kubernetes.io/dockerconfigjson
+	*/
+	public static enum Condition {
+		REPLICA_SET("ReplicaSetReady", "/status/conditions/" + Condition.INDEX_REPLICA_SET),
+		POD("PodRunning", "/status/conditions/" + Condition.INDEX_POD),
+		CONTAINER("ContainerReady", "/status/conditions/" + Condition.INDEX_CONTAINER),
+		SERVICE("ServiceExist", "/status/conditions/" + Condition.INDEX_SERVICE),
+		SECRET_OPAQUE("SecretOpaqueExist", "/status/conditions/" + Condition.INDEX_SECRET_OPAQUE),
+		SECRET_DOCKER_CONFIG_JSON("SecretDockerConfigJsonExist", "/status/conditions/" + Condition.INDEX_SECRET_DOCKER_CONFIG_JSON),
+		;
 
+		public static final int INDEX_REPLICA_SET = 0;
+		public static final int INDEX_POD = 1;
+		public static final int INDEX_CONTAINER = 2;
+		public static final int INDEX_SERVICE = 3;
+		public static final int INDEX_SECRET_OPAQUE = 4;
+		public static final int INDEX_SECRET_DOCKER_CONFIG_JSON = 5;
+		private String type;
+		private String path;
+
+		Condition(String type, String path) {
+			this.type = type;
+			this.path = path;
+		}
+		
+		public String getType() { return type; }
+		public String getPath() { return path; }
+	}
+	
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("class V1PodCondition {\n");

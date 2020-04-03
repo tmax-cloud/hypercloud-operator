@@ -105,6 +105,35 @@ objects:
         - name: mongodb-persistent-storage
           persistentVolumeClaim:
             claimName: ${APP_NAME}-pvc
+parameters:
+- name: APP_NAME
+  displayName: AppName
+  description: Application name
+  required: true
+- name: NAMESPACE
+  displayName: Namespace
+  required: true
+  description: Application namespace
+- name: DB_STORAGE
+  displayName: DBStorage
+  description: Storage size for DB
+  required: true
+- name: MONGODB_USER
+  displayName: MongoDBUser
+  description: MongoDBUser
+  required: true
+- name: MONGODB_PASSWORD
+  displayName: MongoDBPassword
+  description: MongoDBPassword
+  required: true
+- name: MONGODB_DATABASE
+  displayName: MongoDBDatabase
+  description: MongoDBDatabase
+  required: true
+- name: MONGODB_ADMIN_PASSWORD
+  displayName: MongoDBAdminPassword
+  description: MongoDBAdminPassword
+  required: true
 plans:
 - name: mongodb-plan1
   description: mongodb
@@ -150,18 +179,3 @@ plans:
           MONGODB_PASSWORD: root
           MONGODB_DATABASE: root
           MONGODB_ADMIN_PASSWORD: root
-parameters:
-- name: APP_NAME
-  description: database app name
-- name: NAMESPACE
-  description: namespace of service, secret, pvc, deployment
-- name: DB_STORAGE
-  description: database request.storage size
-- name: MONGODB_USER
-  description: database user
-- name: MONGODB_PASSWORD
-  description: database password
-- name: MONGODB_DATABASE
-  description: database name
-- name: MONGODB_ADMIN_PASSWORD
-  description: database admin password
