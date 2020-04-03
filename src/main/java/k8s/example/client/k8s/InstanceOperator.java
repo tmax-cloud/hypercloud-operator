@@ -168,14 +168,24 @@ public class InstanceOperator extends Thread {
 				        				}
 				        				String dataType = existParameter( objectToJsonNode(template).get("parameters"), paramName );
 				        				if ( objectToJsonNode(template).get("parameters") != null && dataType != null ) {
-				        					String replaceString = "${" + paramName + "}";
-				        					if (dataType.equals(Constants.TEMPLATE_DATA_TYPE_NUMBER)) replaceString = "\"${" + paramName + "}\"";
 				        					
+				        					if (dataType.equals(Constants.TEMPLATE_DATA_TYPE_NUMBER)) {
+				        						String replaceString = "\"${" + paramName + "}\"";
+				        						if( objStr.contains( replaceString ) ) {
+						        					logger.info("[Instance Operator] Parameter Number Name to be replaced : " + replaceString);
+							        				logger.info("[Instance Operator] Parameter Number Value to be replaced : " + paramValue);
+						        					objStr = objStr.replace( replaceString, paramValue );
+						        				}
+				        					}
+				        					
+				        					String replaceString = "${" + paramName + "}";
 				        					if( objStr.contains( replaceString ) ) {
 					        					logger.info("[Instance Operator] Parameter Name to be replaced : " + replaceString);
 						        				logger.info("[Instance Operator] Parameter Value to be replaced : " + paramValue);
 					        					objStr = objStr.replace( replaceString, paramValue );
 					        				}
+				        					
+				        					
 				        				}
 				        			}
 
