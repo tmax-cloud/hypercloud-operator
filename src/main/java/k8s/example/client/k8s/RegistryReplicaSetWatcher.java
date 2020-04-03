@@ -8,22 +8,22 @@ import org.slf4j.Logger;
 import com.google.gson.reflect.TypeToken;
 
 import io.kubernetes.client.openapi.ApiClient;
-import io.kubernetes.client.openapi.apis.CoreV1Api;
-import io.kubernetes.client.openapi.models.V1Pod;
+import io.kubernetes.client.openapi.apis.AppsV1Api;
+import io.kubernetes.client.openapi.models.V1ReplicaSet;
 import io.kubernetes.client.util.Watch;
 import k8s.example.client.Main;
 
-public class RegistryPodWatcher extends Thread {
-	private final Watch<V1Pod> watchRegistryPod;
+public class RegistryReplicaSetWatcher extends Thread {
+	private final Watch<V1ReplicaSet> watchRegistryRs;
 	private static String latestResourceVersion = "0";
 
     private Logger logger = Main.logger;
     
-	RegistryPodWatcher(ApiClient client, CoreV1Api api, String resourceVersion) throws Exception {
-		watchRegistryPod = Watch.createWatch(
+	RegistryReplicaSetWatcher(ApiClient client, AppsV1Api appApi, String resourceVersion) throws Exception {
+		watchRegistryRs = Watch.createWatch(
 		        client,
-		        api.listPodForAllNamespacesCall(null, null, null, "app=registry", null, null, null, null, Boolean.TRUE, null),
-		        new TypeToken<Watch.Response<V1Pod>>(){}.getType()
+		        appApi.listReplicaSetForAllNamespacesCall(null, null, null, "app=registry", null, null, null, null, Boolean.TRUE, null),
+		        new TypeToken<Watch.Response<V1ReplicaSet>>(){}.getType()
         );
 		
 		latestResourceVersion = resourceVersion;	
@@ -32,11 +32,11 @@ public class RegistryPodWatcher extends Thread {
 	@Override
 	public void run() {
 		try {
-			watchRegistryPod.forEach(response -> {
+			watchRegistryRs.forEach(response -> {
 				try {
 					if (Thread.interrupted()) {
 						logger.info("Interrupted!");
-						watchRegistryPod.close();
+						watchRegistryRs.close();
 					}
 				} catch (Exception e) {
 					logger.info(e.getMessage());
@@ -45,16 +45,15 @@ public class RegistryPodWatcher extends Thread {
 				
 				// Logic here
 				try {
-					V1Pod pod = response.object;
+					V1ReplicaSet rs = response.object;
 					
-					if( pod != null) {
+					if( rs != null) {
 						latestResourceVersion = response.object.getMetadata().getResourceVersion();
 						String eventType = response.type.toString();
-						logger.info("[RegistryPodWatcher] Registry Pod " + eventType + "\n"
-//						+ pod.toString()
-						);
+						logger.info("[RegistryReplicaSetWatcher] Registry ReplicaSet " + eventType + "\n");
 
-						K8sApiCaller.updateRegistryStatus(pod);
+						K8sApiCaller.updateRegistryStatus(rs, eventType);
+						
 						
 					}
 //				} catch (ApiException e) {
@@ -70,7 +69,7 @@ public class RegistryPodWatcher extends Thread {
 					e.printStackTrace();
 				}
 			});
-			logger.info("@@@@@@@@@@@@@@@@@@@@ Registry Pod 'For Each' END @@@@@@@@@@@@@@@@@@@@");
+			logger.info("@@@@@@@@@@@@@@@@@@@@ Registry ReplicaSet 'For Each' END @@@@@@@@@@@@@@@@@@@@");
 		} catch (Exception e) {
 			logger.info("Registry Watcher Exception: " + e.getMessage());
 			StringWriter sw = new StringWriter();

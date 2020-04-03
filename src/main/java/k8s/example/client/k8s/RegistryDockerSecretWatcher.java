@@ -9,21 +9,21 @@ import com.google.gson.reflect.TypeToken;
 
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
-import io.kubernetes.client.openapi.models.V1Pod;
+import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.util.Watch;
 import k8s.example.client.Main;
 
-public class RegistryPodWatcher extends Thread {
-	private final Watch<V1Pod> watchRegistryPod;
+public class RegistryDockerSecretWatcher extends Thread {
+	private final Watch<V1Secret> watchRegistrySecret;
 	private static String latestResourceVersion = "0";
 
     private Logger logger = Main.logger;
     
-	RegistryPodWatcher(ApiClient client, CoreV1Api api, String resourceVersion) throws Exception {
-		watchRegistryPod = Watch.createWatch(
+	RegistryDockerSecretWatcher(ApiClient client, CoreV1Api api, String resourceVersion) throws Exception {
+		watchRegistrySecret = Watch.createWatch(
 		        client,
-		        api.listPodForAllNamespacesCall(null, null, null, "app=registry", null, null, null, null, Boolean.TRUE, null),
-		        new TypeToken<Watch.Response<V1Pod>>(){}.getType()
+		        api.listSecretForAllNamespacesCall(null, null, null, "secret=docker", null, null, null, null, Boolean.TRUE, null),
+		        new TypeToken<Watch.Response<V1Secret>>(){}.getType()
         );
 		
 		latestResourceVersion = resourceVersion;	
@@ -32,11 +32,11 @@ public class RegistryPodWatcher extends Thread {
 	@Override
 	public void run() {
 		try {
-			watchRegistryPod.forEach(response -> {
+			watchRegistrySecret.forEach(response -> {
 				try {
 					if (Thread.interrupted()) {
 						logger.info("Interrupted!");
-						watchRegistryPod.close();
+						watchRegistrySecret.close();
 					}
 				} catch (Exception e) {
 					logger.info(e.getMessage());
@@ -45,16 +45,14 @@ public class RegistryPodWatcher extends Thread {
 				
 				// Logic here
 				try {
-					V1Pod pod = response.object;
+					V1Secret secret = response.object;
 					
-					if( pod != null) {
+					if( secret != null) {
 						latestResourceVersion = response.object.getMetadata().getResourceVersion();
 						String eventType = response.type.toString();
-						logger.info("[RegistryPodWatcher] Registry Pod " + eventType + "\n"
-//						+ pod.toString()
-						);
+						logger.info("[RegistryDockerSecretWatcher] Registry Docker Secret " + eventType + "\n");
 
-						K8sApiCaller.updateRegistryStatus(pod);
+						K8sApiCaller.updateRegistryStatus(secret, eventType);
 						
 					}
 //				} catch (ApiException e) {
@@ -70,7 +68,7 @@ public class RegistryPodWatcher extends Thread {
 					e.printStackTrace();
 				}
 			});
-			logger.info("@@@@@@@@@@@@@@@@@@@@ Registry Pod 'For Each' END @@@@@@@@@@@@@@@@@@@@");
+			logger.info("@@@@@@@@@@@@@@@@@@@@ Registry Docker Secret 'For Each' END @@@@@@@@@@@@@@@@@@@@");
 		} catch (Exception e) {
 			logger.info("Registry Watcher Exception: " + e.getMessage());
 			StringWriter sw = new StringWriter();
