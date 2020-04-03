@@ -91,6 +91,24 @@ public class OAuthApiCaller {
 	    return authenticateCreateOut; 
 	}
 	
+	public static JsonObject AuthenticateDelete( String accessToken ) throws IOException {
+		logger.info( "[OAuth] Logout Service Start" );
+	
+		logger.info("AccessToken : " + accessToken);	
+		
+		Gson gson = new Gson();		
+	    //Delete svc
+	    Request request = new Request.Builder().addHeader("token", accessToken)
+	    		.url(setAuthURL( Constants.SERVICE_NAME_OAUTH_AUTHENTICATE_DELETE )).delete().build();
+	    
+		Response response = client.newCall(request).execute();
+		String result = response.body().string();
+		logger.info("result : " + result);
+
+	    JsonObject authenticateDeleteOut = gson.fromJson(result, JsonObject.class);
+	    return authenticateDeleteOut; 
+	}
+	
 //	public static ContextDataObject makeUserCreateInDO( UserDO userInDO ) throws ProObjectException {
 //		ContextDataObject userCreateIn = new ContextDataObject();
 //		ContextDataObject metaIn = new ContextDataObject();

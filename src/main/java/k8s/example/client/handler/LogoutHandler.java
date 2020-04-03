@@ -10,6 +10,7 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.JsonObject;
 
 import fi.iki.elonen.NanoHTTPD;
 import fi.iki.elonen.NanoHTTPD.IHTTPSession;
@@ -25,6 +26,7 @@ import k8s.example.client.DataObject.Token;
 import k8s.example.client.DataObject.TokenCR;
 import k8s.example.client.Util;
 import k8s.example.client.k8s.K8sApiCaller;
+import k8s.example.client.k8s.OAuthApiCaller;
 
 public class LogoutHandler extends GeneralHandler {
     private Logger logger = Main.logger;
@@ -49,29 +51,51 @@ public class LogoutHandler extends GeneralHandler {
 			String accessToken = logoutInDO.getAccessToken();
     		logger.info( "  Token: " + accessToken );
     		
-    		// Verify access token	
-			JWTVerifier verifier = JWT.require(Algorithm.HMAC256(Constants.ACCESS_TOKEN_SECRET_KEY)).build();
-			DecodedJWT jwt = verifier.verify(accessToken);
-			
-			String issuer = jwt.getIssuer();
-			String userId = jwt.getClaims().get(Constants.CLAIM_USER_ID).asString();
-			String tokenId = jwt.getClaims().get(Constants.CLAIM_TOKEN_ID).asString();
-			logger.info( "  Issuer: " + issuer );
-			logger.info( "  User ID: " + userId );
-			logger.info( "  Token ID: " + tokenId );
-			
-			if(verifyAccessToken(accessToken, userId, tokenId, issuer)) {
-				status = Status.OK;
-				
-				String tokenName = userId.replace("@", "-") + "-" + tokenId;
-				logger.info( "  Logout success." );
-				K8sApiCaller.deleteToken(tokenName);
-				outDO = "Logout success.";
-			} else {
-				logger.info( "  Token is not valid" );
-				status = Status.UNAUTHORIZED;
-				outDO = "Logout fail. Token is not valid.";
-			}
+    		if (System.getenv( "PROAUTH_EXIST" ) != null) {   		
+        		if( System.getenv( "PROAUTH_EXIST" ).equalsIgnoreCase("1")) {
+    	    		logger.info( "  [[ Integrated OAuth System! ]] " );
+    	    		JsonObject logOutOut = OAuthApiCaller.AuthenticateDelete(accessToken);
+    	    		logger.info( "  logOutOut.get(\"result\") : " + logOutOut.get("result").toString() );
+    	    		if ( logOutOut.get("result").toString().equalsIgnoreCase("\"true\"") ){
+        				logger.info( "  Logout success." );
+        				outDO = "Logout success.";
+
+    	    			status = Status.OK; 
+    	    		} else {
+    	    			logger.info("  LogOut failed by ProAuth.");		    			
+		    			status = Status.OK; //ui요청
+	    				outDO = "Logout fail. Token is not valid.";
+    	    		}
+
+        		}
+    	    } 
+        	if (System.getenv( "PROAUTH_EXIST" ) == null || !System.getenv( "PROAUTH_EXIST" ).equalsIgnoreCase("1") ){	
+        		logger.info( "  [[ OpenAuth System! ]]" );  			
+        		// Verify access token	
+    			JWTVerifier verifier = JWT.require(Algorithm.HMAC256(Constants.ACCESS_TOKEN_SECRET_KEY)).build();
+    			DecodedJWT jwt = verifier.verify(accessToken);
+    			
+    			String issuer = jwt.getIssuer();
+    			String userId = jwt.getClaims().get(Constants.CLAIM_USER_ID).asString();
+    			String tokenId = jwt.getClaims().get(Constants.CLAIM_TOKEN_ID).asString();
+    			logger.info( "  Issuer: " + issuer );
+    			logger.info( "  User ID: " + userId );
+    			logger.info( "  Token ID: " + tokenId );
+    			
+    			if(verifyAccessToken(accessToken, userId, tokenId, issuer)) {
+    				status = Status.OK;
+    				
+    				String tokenName = userId.replace("@", "-") + "-" + tokenId;
+    				logger.info( "  Logout success." );
+    				K8sApiCaller.deleteToken(tokenName);
+    				outDO = "Logout success.";
+    			} else {
+    				logger.info( "  Token is not valid" );
+    				status = Status.UNAUTHORIZED;
+    				outDO = "Logout fail. Token is not valid.";
+    			}
+        	}
+    		
 		} catch (ApiException e) {
 			logger.info( "Exception message: " + e.getMessage() );
 			

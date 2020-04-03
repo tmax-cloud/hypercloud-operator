@@ -183,19 +183,19 @@ public class UserHandler extends GeneralHandler {
 
 		MimeMessage mimeMessage = new MimeMessage(session);
 		
-		//Sender
+		// Sender
 		mimeMessage.setFrom( new InternetAddress(SEND_EMAIL, SEND_EMAIL, charSetUtf));
 		
-		//Receiver
+		// Receiver
 		mimeMessage.setRecipient( Message.RecipientType.TO, new InternetAddress( SEND_EMAIL ) );
+		
+		// Make Subject
 		mimeMessage.setSubject( subject, charSetUtf );
-		mimeMessage.setHeader("Content-Type", "text/html; charset=UTF-8");
-
 
 		// Make Body
 		Map<String, String> bodyMap = K8sApiCaller.readSecret(Constants.TEMPLATE_NAMESPACE, "authenticate-html");  		
 		if( bodyMap != null ) {
-			body = bodyMap.get("body") + accessToken;
+			body = bodyMap.get("body") + accessToken; //TODO
 		}
 		logger.info( " Mail Body : "  + body );
 		if (body!=null) mimeMessage.setText( MimeUtility.encodeText(body,  charSetUtf, "B") );
