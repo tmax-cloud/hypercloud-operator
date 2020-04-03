@@ -129,6 +129,8 @@ public class Constants {
 	public static final String SERVICE_NAME_OAUTH_USER_UPDATE = "proauth/oauth/users/";
 	public static final String SERVICE_NAME_OAUTH_AUTHENTICATE_CREATE = "proauth/oauth/authenticate";
 	public static final String SERVICE_NAME_OAUTH_AUTHENTICATE_DELETE = "proauth/oauth/authenticate";
-
-
+	
+	// Template Parameter Data Type
+	public static final String TEMPLATE_DATA_TYPE_NUMBER = "number";
+	public static final String TEMPLATE_DATA_TYPE_STRING = "string";
 }
