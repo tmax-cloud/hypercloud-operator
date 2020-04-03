@@ -99,6 +99,19 @@ objects:
         - name: mariadb-persistent-storage
           persistentVolumeClaim:
             claimName: ${APP_NAME}-pvc
+parameters:
+- name: APP_NAME
+  description: Application name
+- name: NAMESPACE
+  description: Application namespace
+- name: DB_STORAGE
+  description: Storage size for DB
+- name: MYSQL_USER
+  description: MysqlUser
+- name: MYSQL_PASSWORD
+  description: MysqlPassword
+- name: MYSQL_DATABASE
+  description: MysqlDatabase
 plans:
 - name: mariadb-plan1
   description: mariadb
@@ -142,16 +155,3 @@ plans:
           MYSQL_USER: root1
           MYSQL_PASSWORD: tmax@23
           MYSQL_DATABASE: root1
-parameters:
-- name: APP_NAME
-  description: database app name
-- name: NAMESPACE
-  description: namespace of service, secret, pvc, deployment
-- name: DB_STORAGE
-  description: database request.storage size
-- name: MYSQL_USER
-  description: database user
-- name: MYSQL_PASSWORD
-  description: database password
-- name: MYSQL_DATABASE
-  description: database name

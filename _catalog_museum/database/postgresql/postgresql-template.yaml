@@ -99,6 +99,19 @@ objects:
         - name: postgresql-persistent-storage
           persistentVolumeClaim:
             claimName: ${APP_NAME}-pvc
+parameters:
+- name: APP_NAME
+  description: Application name
+- name: NAMESPACE
+  description: Application namespace
+- name: DB_STORAGE
+  description: Storage size for DB
+- name: POSTGRESQL_USER
+  description: PostgreSQLUser
+- name: POSTGRESQL_PASSWORD
+  description: PostgreSQLPassword
+- name: POSTGRESQL_DATABASE
+  description: PostgreSQLDatabase
 plans:
 - name: postgresql-plan1
   description: postgresql
@@ -142,16 +155,3 @@ plans:
           POSTGRESQL_USER: root
           POSTGRESQL_PASSWORD: tmax@23
           POSTGRESQL_DATABASE: root
-parameters:
-- name: APP_NAME
-  description: database app name
-- name: NAMESPACE
-  description: namespace of service, secret, pvc, deployment
-- name: DB_STORAGE
-  description: database request.storage size
-- name: POSTGRESQL_USER
-  description: database user
-- name: POSTGRESQL_PASSWORD
-  description: database password
-- name: POSTGRESQL_DATABASE
-  description: database name

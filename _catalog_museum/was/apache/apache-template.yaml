@@ -15,6 +15,11 @@ plans:
 - bindable: false
   description: apache
   name: apache-plan1
+parameters:
+- name: APP_NAME
+  description: Application name
+- name: NAMESPACE
+  description: Application namespace
 objects:
 - apiVersion: tekton.dev/v1alpha1
   kind: Pipeline
@@ -99,8 +104,3 @@ objects:
       - name: REGISTRY_INSECURE
         value: 'TRUE'
       script: '/klar $(resources.scanned-image.url)'
-parameters:
-- name: PIPELINE_NAME
-  description: pipeline name for ci/cd
-- name: NAMESPACE
-  description: namespace of pipeline and condition
