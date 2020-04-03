@@ -74,6 +74,7 @@ public class Constants {
 	 
 	// Secret Type
 	public static final String K8S_SECRET_TYPE_DOCKER_CONFIG_JSON = "kubernetes.io/dockerconfigjson";
+	public static final String K8S_SECRET_TYPE_OPAQUE = "opaque";
 	
 	// Status
 	public static final String STATUS_RUNNING = "Running";

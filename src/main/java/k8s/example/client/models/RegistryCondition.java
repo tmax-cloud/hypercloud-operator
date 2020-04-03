@@ -57,14 +57,20 @@ public class RegistryCondition {
 	 * 5: Secret kubernetes.io/dockerconfigjson
 	*/
 	public static enum Condition {
-		PHASE("Phase", "/status/conditions/0"),
-		REPLICA_SET("ReplicaSet", "/status/conditions/1"),
-		POD("Pod", "/status/conditions/2"),
-		SERVICE("Service", "/status/conditions/3"),
-		SECRET_OPAQUE("SecretOpaque", "/status/conditions/4"),
-		SECRET_DOCKER_CONFIG_JSON("SecretDockerConfigJson", "/status/conditions/5"),
+		REPLICA_SET("ReplicaSetReady", "/status/conditions/" + Condition.INDEX_REPLICA_SET),
+		POD("PodRunning", "/status/conditions/" + Condition.INDEX_POD),
+		CONTAINER("ContainerReady", "/status/conditions/" + Condition.INDEX_CONTAINER),
+		SERVICE("ServiceExist", "/status/conditions/" + Condition.INDEX_SERVICE),
+		SECRET_OPAQUE("SecretOpaqueExist", "/status/conditions/" + Condition.INDEX_SECRET_OPAQUE),
+		SECRET_DOCKER_CONFIG_JSON("SecretDockerConfigJsonExist", "/status/conditions/" + Condition.INDEX_SECRET_DOCKER_CONFIG_JSON),
 		;
-		
+
+		public static final int INDEX_REPLICA_SET = 0;
+		public static final int INDEX_POD = 1;
+		public static final int INDEX_CONTAINER = 2;
+		public static final int INDEX_SERVICE = 3;
+		public static final int INDEX_SECRET_OPAQUE = 4;
+		public static final int INDEX_SECRET_DOCKER_CONFIG_JSON = 5;
 		private String type;
 		private String path;
 

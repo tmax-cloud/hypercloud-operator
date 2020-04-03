@@ -6,6 +6,8 @@ import java.util.List;
 public class RegistryStatus {
 	private List<RegistryCondition> conditions = null;
 	private String phase = null;
+	private String message = null;
+	private String reason = null;
 
 	public List<RegistryCondition> getConditions() {
 		return conditions;
@@ -36,6 +38,22 @@ public class RegistryStatus {
 		this.phase = phase;
 	}
 	
+	public String getMessage() {
+		return message;
+	}
+
+	public void setMessage(String message) {
+		this.message = message;
+	}
+
+	public String getReason() {
+		return reason;
+	}
+
+	public void setReason(String reason) {
+		this.reason = reason;
+	}
+
 	public static enum StatusPhase {
 		CREATING("Creating"),
 		RUNNING("Running"),
@@ -46,32 +64,6 @@ public class RegistryStatus {
 		private String status;
 
 		StatusPhase(String status) { this.status = status; }
-		public String getStatus() {	return status; }
-	}
-	
-	public static enum StatusReplicaSet {
-		CREATING("Creating"),
-		TERMINATED("Terminated"),
-		NOT_READY("NotReady"),
-		READY("Ready"),
-		;
-		
-		private String status;
-
-		StatusReplicaSet(String status) { this.status = status; }
-		public String getStatus() {	return status; }
-	}
-	
-	public static enum StatusPod {
-		CREATING("Creating"),
-		RUNNING("Running"),
-		NOT_READY("NotReady"),
-		READY("Ready"),
-		;
-		
-		private String status;
-
-		StatusPod(String status) { this.status = status; }
 		public String getStatus() {	return status; }
 	}
 	

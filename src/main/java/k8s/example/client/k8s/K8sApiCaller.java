@@ -97,8 +97,10 @@ import io.kubernetes.client.openapi.models.V1RoleBindingList;
 import io.kubernetes.client.openapi.models.V1RoleRef;
 import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.openapi.models.V1SecretKeySelector;
+import io.kubernetes.client.openapi.models.V1SecretList;
 import io.kubernetes.client.openapi.models.V1SecretVolumeSource;
 import io.kubernetes.client.openapi.models.V1Service;
+import io.kubernetes.client.openapi.models.V1ServiceList;
 import io.kubernetes.client.openapi.models.V1ServicePort;
 import io.kubernetes.client.openapi.models.V1ServiceSpec;
 import io.kubernetes.client.openapi.models.V1Subject;
@@ -115,7 +117,6 @@ import k8s.example.client.Main;
 import k8s.example.client.StringUtil;
 import k8s.example.client.Util;
 import k8s.example.client.k8s.apis.CustomResourceApi;
-import k8s.example.client.metering.util.UIDGenerator;
 import k8s.example.client.models.BindingInDO;
 import k8s.example.client.models.BindingOutDO;
 import k8s.example.client.models.CommandExecOut;
@@ -210,7 +211,6 @@ public class K8sApiCaller {
 			Object response = customObjectApi.listClusterCustomObject(
 					Constants.CUSTOM_OBJECT_GROUP,
 					Constants.CUSTOM_OBJECT_VERSION, 
-					//					"hypercloud-system",
 					Constants.CUSTOM_OBJECT_PLURAL_REGISTRY,
 					null, null, null, null, null, null, null, Boolean.FALSE);
 			JsonObject respJson = (JsonObject) new JsonParser().parse((new Gson()).toJson(response));
@@ -246,6 +246,40 @@ public class K8sApiCaller {
 		}
 
 		logger.info("Registry Pod Latest resource version: " + registryPodLatestResourceVersion);
+
+		// registry service
+		int registryServiceLatestResourceVersion = 0;
+
+		try {
+
+			V1ServiceList registryServiceList = api.listServiceForAllNamespaces(null, null, null, "app=registry", null, null, null, null, Boolean.FALSE);
+			for(V1Service service : registryServiceList.getItems()) {
+				int registryServiceResourceVersion = Integer.parseInt(service.getMetadata().getResourceVersion());
+				registryServiceLatestResourceVersion = (registryServiceLatestResourceVersion >= registryServiceResourceVersion) ? registryServiceLatestResourceVersion : registryServiceResourceVersion;
+			}
+		} catch (Exception e) {
+			logger.info("Exception: " + e.getMessage());
+			e.printStackTrace();
+		}
+
+		logger.info("Registry Service Latest resource version: " + registryServiceLatestResourceVersion);
+
+		// registry secret
+		int registrySecretLatestResourceVersion = 0;
+
+		try {
+
+			V1SecretList registrySecretList = api.listSecretForAllNamespaces(null, null, null, "app=registry", null, null, null, null, Boolean.FALSE);
+			for(V1Secret secret : registrySecretList.getItems()) {
+				int registrySecretResourceVersion = Integer.parseInt(secret.getMetadata().getResourceVersion());
+				registrySecretLatestResourceVersion = (registrySecretLatestResourceVersion >= registrySecretResourceVersion) ? registrySecretLatestResourceVersion : registrySecretResourceVersion;
+			}
+		} catch (Exception e) {
+			logger.info("Exception: " + e.getMessage());
+			e.printStackTrace();
+		}
+
+		logger.info("Registry Secret Latest resource version: " + registrySecretLatestResourceVersion);
 
 		// Operator
 		int templateLatestResourceVersion = 0;
@@ -332,6 +366,16 @@ public class K8sApiCaller {
 		RegistryPodWatcher registryPodWatcher = new RegistryPodWatcher(k8sClient, api, String.valueOf(registryPodLatestResourceVersion));
 		registryPodWatcher.start();
 
+		// Start registry service watch
+		logger.info("Start registry service watcher");
+		RegistryServiceWatcher registryServiceWatcher = new RegistryServiceWatcher(k8sClient, api, String.valueOf(registryServiceLatestResourceVersion));
+		registryServiceWatcher.start();
+
+		// Start registry secret watch
+		logger.info("Start registry secret watcher");
+		RegistrySecretWatcher registrySecretWatcher = new RegistrySecretWatcher(k8sClient, api, String.valueOf(registrySecretLatestResourceVersion));
+		registrySecretWatcher.start();
+
 		// Start Operator
 		logger.info("Start Template Operator");
 		TemplateOperator templateOperator = new TemplateOperator(k8sClient, templateApi, templateLatestResourceVersion);
@@ -389,6 +433,24 @@ public class K8sApiCaller {
 					registryPodWatcher.interrupt();
 					registryPodWatcher = new RegistryPodWatcher(k8sClient, api, registryPodLatestResourceVersionStr);
 					registryPodWatcher.start();
+				}
+				
+				
+				if(!registryServiceWatcher.isAlive()) {
+					String registryServiceLatestResourceVersionStr = RegistryServiceWatcher.getLatestResourceVersion();
+					logger.info("Registry service watcher is not alive. Restart registry service watcher! (Latest resource version: " + registryServiceLatestResourceVersionStr + ")");
+					registryServiceWatcher.interrupt();
+					registryServiceWatcher = new RegistryServiceWatcher(k8sClient, api, registryServiceLatestResourceVersionStr);
+					registryServiceWatcher.start();
+				}
+				
+				
+				if(!registrySecretWatcher.isAlive()) {
+					String registrySecretLatestResourceVersionStr = RegistrySecretWatcher.getLatestResourceVersion();
+					logger.info("Registry secret watcher is not alive. Restart registry secret watcher! (Latest resource version: " + registrySecretLatestResourceVersionStr + ")");
+					registrySecretWatcher.interrupt();
+					registrySecretWatcher = new RegistrySecretWatcher(k8sClient, api, registrySecretLatestResourceVersionStr);
+					registrySecretWatcher.start();
 				}
 				
 				
@@ -716,45 +778,35 @@ public class K8sApiCaller {
 		JSONObject condition6 = new JSONObject();
 		JSONArray patchStatusArray = new JSONArray();
 		
-		condition1.put("type", RegistryCondition.Condition.PHASE.getType());
-		condition1.put("status", RegistryStatus.StatusPhase.CREATING.getStatus());
-		condition1.put("message", "Registry is creating. All resources in registry has not yet been created.");
-		condition1.put("reason", "RegistryCreated");
+		condition1.put("type", RegistryCondition.Condition.REPLICA_SET.getType());
+		condition1.put("status", RegistryStatus.Status.FALSE.getStatus());
 		conditions.add(condition1);
 		
-		condition2.put("type", RegistryCondition.Condition.REPLICA_SET.getType());
-		condition2.put("status", RegistryStatus.StatusReplicaSet.CREATING.getStatus());
-		condition2.put("message", "Registry replicaset is creating");
-		condition2.put("reason", "ReplicaSetReady");
+		condition2.put("type", RegistryCondition.Condition.POD.getType());
+		condition2.put("status", RegistryStatus.Status.FALSE.getStatus());
 		conditions.add(condition2);
 		
-		condition3.put("type", RegistryCondition.Condition.POD.getType());
-		condition3.put("status", RegistryStatus.StatusPod.CREATING.getStatus());
-		condition3.put("message", "Registry pod is creating");
-		condition3.put("reason", "PodReady");
+		condition3.put("type", RegistryCondition.Condition.CONTAINER.getType());
+		condition3.put("status", RegistryStatus.Status.FALSE.getStatus());
 		conditions.add(condition3);
 		
 		condition4.put("type", RegistryCondition.Condition.SERVICE.getType());
 		condition4.put("status", RegistryStatus.Status.FALSE.getStatus());
-		condition4.put("message", "Registry service is not yet created");
-		condition4.put("reason", "ServiceReady");
 		conditions.add(condition4);
 		
 		condition5.put("type", RegistryCondition.Condition.SECRET_OPAQUE.getType());
 		condition5.put("status", RegistryStatus.Status.FALSE.getStatus());
-		condition5.put("message", "Registry opaque type secret is not yet created");
-		condition5.put("reason", "SecretOpaqueReady");
 		conditions.add(condition5);
 		
 		condition6.put("type", RegistryCondition.Condition.SECRET_DOCKER_CONFIG_JSON.getType());
 		condition6.put("status", RegistryStatus.Status.FALSE.getStatus());
-		condition6.put("message", "Registry docker config json type secret is not yet created");
-		condition6.put("reason", "SecretDockerConfigJsonReady");
 		conditions.add(condition6);
 		
 		status.put("conditions", conditions);
 		status.put("phase", RegistryStatus.StatusPhase.CREATING.getStatus());
-
+		status.put("message", "Registry is creating. All resources in registry has not yet been created.");
+		status.put("reason", "RegistryNotCreated");
+		
 		patchStatus.put("op", "add");
 		patchStatus.put("path", "/status");
 		patchStatus.put("value", status);
@@ -774,43 +826,11 @@ public class K8sApiCaller {
 		
 	}
 
-	public static void deleteRegistry(Registry registry) throws Throwable {
-		try {
-			logger.info("delete Registry Replica Set");
-			appApi.deleteNamespacedReplicaSet(Constants.K8S_PREFIX + Constants.K8S_REGISTRY_PREFIX + registry.getMetadata().getName(), registry.getMetadata().getNamespace(), null, null, null, null, null, null);
-		} catch (ApiException e) {
-			logger.info(e.getResponseBody());
-		}
-		
-		try {
-			logger.info("delete Secret");
-			deleteSecret(registry.getMetadata().getNamespace(), registry.getMetadata().getName(), null);
-			deleteSecret(registry.getMetadata().getNamespace(), registry.getMetadata().getName(), Constants.K8S_SECRET_TYPE_DOCKER_CONFIG_JSON);
-		} catch (ApiException e) {
-			logger.info(e.getResponseBody());
-		}
-		
-		try {
-			logger.info("delete Service");
-			api.deleteNamespacedService(Constants.K8S_PREFIX + registry.getMetadata().getName(), registry.getMetadata().getNamespace(), null, null, null, null, null, null);
-		} catch (ApiException e) {
-			logger.info(e.getResponseBody());
-		}
-		
-		try {
-			logger.info("delete PVC");
-			api.deleteNamespacedPersistentVolumeClaim(Constants.K8S_PREFIX + registry.getMetadata().getName(), registry.getMetadata().getNamespace(), null, null, 0, null, null, new  V1DeleteOptions());
-		} catch (ApiException e) {
-			logger.info(e.getResponseBody());
-		}
-	}
-	
-
 	@SuppressWarnings("unchecked")
 	public static void createRegistry(Registry registry) throws Throwable {
 		try {
-			long time = System.currentTimeMillis();
-			String randomUID = UIDGenerator.getInstance().generate32( registry, 8, time );
+//			long time = System.currentTimeMillis();
+//			String randomUID = UIDGenerator.getInstance().generate32( registry, 8, time );
 			
 			String namespace = registry.getMetadata().getNamespace();
 			String registryId = registry.getMetadata().getName();
@@ -895,24 +915,25 @@ public class K8sApiCaller {
 			} catch (ApiException e) {
 				logger.info(e.getResponseBody());
 
-				JSONObject patchStatus = new JSONObject();
-				JSONObject status = new JSONObject();
-				JSONArray conditions = new JSONArray();
-				JSONObject condition = new JSONObject();
+				JSONObject phase = new JSONObject();
+				JSONObject message = new JSONObject();
+				JSONObject reason = new JSONObject();
 				JSONArray patchStatusArray = new JSONArray();
 				
-				condition.put("type", "Phase");
-				condition.put("status", RegistryStatus.StatusPhase.ERROR.getStatus());
-				condition.put("message", "Creating a registry is failed");
-				condition.put("reason", e.getResponseBody());
-				conditions.add(condition);
-				status.put("conditions", conditions);
-				status.put("phase", RegistryStatus.StatusPhase.ERROR.getStatus());
-
-				patchStatus.put("op", "replace");
-				patchStatus.put("path", "/status");
-				patchStatus.put("value", status);
-				patchStatusArray.add(patchStatus);
+				phase.put("op", "replace");
+				phase.put("path", "/status/phase");
+				phase.put("value", RegistryStatus.StatusPhase.ERROR.getStatus());
+				patchStatusArray.add(phase);
+				
+				message.put("op", "replace");
+				message.put("path", "/status/message");
+				message.put("value", e.getResponseBody());
+				patchStatusArray.add(message);
+				
+				reason.put("op", "replace");
+				reason.put("path", "/status/reason");
+				reason.put("value", "CreateServiceFailed");
+				patchStatusArray.add(reason);
 				
 				try{
 					Object result = customObjectApi.patchNamespacedCustomObjectStatus(
@@ -976,24 +997,25 @@ public class K8sApiCaller {
 				}
 
 				if (i == RETRY_CNT - 1) {
-					JSONObject patchStatus = new JSONObject();
-					JSONObject status = new JSONObject();
-					JSONArray conditions = new JSONArray();
-					JSONObject condition = new JSONObject();
+					JSONObject phase = new JSONObject();
+					JSONObject message = new JSONObject();
+					JSONObject reason = new JSONObject();
 					JSONArray patchStatusArray = new JSONArray();
 					
-					condition.put("type", "Phase");
-					condition.put("status", RegistryStatus.StatusPhase.ERROR.getStatus());
-					condition.put("message", "Creating a registry is failed");
-					condition.put("reason", "Service(LB) is not found");
-					conditions.add(condition);
-					status.put("conditions", conditions);
-					status.put("phase", RegistryStatus.StatusPhase.ERROR.getStatus());
-
-					patchStatus.put("op", "replace");
-					patchStatus.put("path", "/status");
-					patchStatus.put("value", status);
-					patchStatusArray.add(patchStatus);
+					phase.put("op", "replace");
+					phase.put("path", "/status/phase");
+					phase.put("value", RegistryStatus.StatusPhase.ERROR.getStatus());
+					patchStatusArray.add(phase);
+					
+					message.put("op", "replace");
+					message.put("path", "/status/message");
+					message.put("value", "Creating a registry is failed. Service(LB) is not found");
+					patchStatusArray.add(message);
+					
+					reason.put("op", "replace");
+					reason.put("path", "/status/reason");
+					reason.put("value", "ServiceNotFound");
+					patchStatusArray.add(reason);
 					
 					try{
 						Object result = customObjectApi.patchNamespacedCustomObjectStatus(
@@ -1058,24 +1080,26 @@ public class K8sApiCaller {
 			} catch (ApiException e) {
 				logger.info(e.getResponseBody());
 
-				JSONObject patchStatus = new JSONObject();
-				JSONObject status = new JSONObject();
-				JSONArray conditions = new JSONArray();
-				JSONObject condition = new JSONObject();
+
+				JSONObject phase = new JSONObject();
+				JSONObject message = new JSONObject();
+				JSONObject reason = new JSONObject();
 				JSONArray patchStatusArray = new JSONArray();
 				
-				condition.put("type", "Phase");
-				condition.put("status", RegistryStatus.StatusPhase.ERROR.getStatus());
-				condition.put("message", "Creating a registry is failed");
-				condition.put("reason", e.getResponseBody());
-				conditions.add(condition);
-				status.put("conditions", conditions);
-				status.put("phase", RegistryStatus.StatusPhase.ERROR.getStatus());
-
-				patchStatus.put("op", "replace");
-				patchStatus.put("path", "/status");
-				patchStatus.put("value", status);
-				patchStatusArray.add(patchStatus);
+				phase.put("op", "replace");
+				phase.put("path", "/status/phase");
+				phase.put("value", RegistryStatus.StatusPhase.ERROR.getStatus());
+				patchStatusArray.add(phase);
+				
+				message.put("op", "replace");
+				message.put("path", "/status/message");
+				message.put("value", e.getResponseBody());
+				patchStatusArray.add(message);
+				
+				reason.put("op", "replace");
+				reason.put("path", "/status/reason");
+				reason.put("value", "CreatePVCFailed");
+				patchStatusArray.add(reason);
 				
 				try{
 					Object result = customObjectApi.patchNamespacedCustomObjectStatus(
@@ -1120,24 +1144,25 @@ public class K8sApiCaller {
 			}catch (Exception e) {
 				logger.info(e.getMessage());
 				
-				JSONObject patchStatus = new JSONObject();
-				JSONObject status = new JSONObject();
-				JSONArray conditions = new JSONArray();
-				JSONObject condition = new JSONObject();
+				JSONObject phase = new JSONObject();
+				JSONObject message = new JSONObject();
+				JSONObject reason = new JSONObject();
 				JSONArray patchStatusArray = new JSONArray();
 				
-				condition.put("type", "Phase");
-				condition.put("status", RegistryStatus.StatusPhase.ERROR.getStatus());
-				condition.put("message", "Creating a registry is failed");
-				condition.put("reason", e.getMessage());
-				conditions.add(condition);
-				status.put("conditions", conditions);
-				status.put("phase", RegistryStatus.StatusPhase.ERROR.getStatus());
-
-				patchStatus.put("op", "replace");
-				patchStatus.put("path", "/status");
-				patchStatus.put("value", status);
-				patchStatusArray.add(patchStatus);
+				phase.put("op", "replace");
+				phase.put("path", "/status/phase");
+				phase.put("value", RegistryStatus.StatusPhase.ERROR.getStatus());
+				patchStatusArray.add(phase);
+				
+				message.put("op", "replace");
+				message.put("path", "/status/message");
+				message.put("value", e.getMessage());
+				patchStatusArray.add(message);
+				
+				reason.put("op", "replace");
+				reason.put("path", "/status/reason");
+				reason.put("value", "CreateRegistryFailed");
+				patchStatusArray.add(reason);
 				
 				try{
 					Object result = customObjectApi.patchNamespacedCustomObjectStatus(
@@ -1168,24 +1193,25 @@ public class K8sApiCaller {
 			try {
 				commandExecute(commands.toArray(new String[commands.size()]));
 			}catch (ApiException e) {
-				JSONObject patchStatus = new JSONObject();
-				JSONObject status = new JSONObject();
-				JSONArray conditions = new JSONArray();
-				JSONObject condition = new JSONObject();
+				JSONObject phase = new JSONObject();
+				JSONObject message = new JSONObject();
+				JSONObject reason = new JSONObject();
 				JSONArray patchStatusArray = new JSONArray();
 				
-				condition.put("type", "Phase");
-				condition.put("status", RegistryStatus.StatusPhase.ERROR.getStatus());
-				condition.put("message", "Creating a registry is failed");
-				condition.put("reason", e.getResponseBody());
-				conditions.add(condition);
-				status.put("conditions", conditions);
-				status.put("phase", RegistryStatus.StatusPhase.ERROR.getStatus());
-
-				patchStatus.put("op", "replace");
-				patchStatus.put("path", "/status");
-				patchStatus.put("value", status);
-				patchStatusArray.add(patchStatus);
+				phase.put("op", "replace");
+				phase.put("path", "/status/phase");
+				phase.put("value", RegistryStatus.StatusPhase.ERROR.getStatus());
+				patchStatusArray.add(phase);
+				
+				message.put("op", "replace");
+				message.put("path", "/status/message");
+				message.put("value", e.getResponseBody());
+				patchStatusArray.add(message);
+				
+				reason.put("op", "replace");
+				reason.put("path", "/status/reason");
+				reason.put("value", "CreateRegistryFailed");
+				patchStatusArray.add(reason);
 				
 				try{
 					Object result = customObjectApi.patchNamespacedCustomObjectStatus(
@@ -1222,24 +1248,25 @@ public class K8sApiCaller {
 				logger.info("K8SApiCall createSecret");
 				secretName = K8sApiCaller.createSecret(namespace, secrets, registryId, labels, null, ownerRefs);
 			}catch (ApiException e) {
-				JSONObject patchStatus = new JSONObject();
-				JSONObject status = new JSONObject();
-				JSONArray conditions = new JSONArray();
-				JSONObject condition = new JSONObject();
+				JSONObject phase = new JSONObject();
+				JSONObject message = new JSONObject();
+				JSONObject reason = new JSONObject();
 				JSONArray patchStatusArray = new JSONArray();
 				
-				condition.put("type", "Phase");
-				condition.put("status", RegistryStatus.StatusPhase.ERROR.getStatus());
-				condition.put("message", "Creating a registry is failed");
-				condition.put("reason", e.getResponseBody());
-				conditions.add(condition);
-				status.put("conditions", conditions);
-				status.put("phase", RegistryStatus.StatusPhase.ERROR.getStatus());
-
-				patchStatus.put("op", "replace");
-				patchStatus.put("path", "/status");
-				patchStatus.put("value", status);
-				patchStatusArray.add(patchStatus);
+				phase.put("op", "replace");
+				phase.put("path", "/status/phase");
+				phase.put("value", RegistryStatus.StatusPhase.ERROR.getStatus());
+				patchStatusArray.add(phase);
+				
+				message.put("op", "replace");
+				message.put("path", "/status/message");
+				message.put("value", e.getResponseBody());
+				patchStatusArray.add(message);
+				
+				reason.put("op", "replace");
+				reason.put("path", "/status/reason");
+				reason.put("value", "CreateRegistryFailed");
+				patchStatusArray.add(reason);
 				
 				try{
 					Object result = customObjectApi.patchNamespacedCustomObjectStatus(
@@ -1267,24 +1294,25 @@ public class K8sApiCaller {
 			try {
 				K8sApiCaller.createSecret(namespace, secrets2, registryId, labels2, Constants.K8S_SECRET_TYPE_DOCKER_CONFIG_JSON, ownerRefs);
 			}catch (ApiException e) {
-				JSONObject patchStatus = new JSONObject();
-				JSONObject status = new JSONObject();
-				JSONArray conditions = new JSONArray();
-				JSONObject condition = new JSONObject();
+				JSONObject phase = new JSONObject();
+				JSONObject message = new JSONObject();
+				JSONObject reason = new JSONObject();
 				JSONArray patchStatusArray = new JSONArray();
 				
-				condition.put("type", "Phase");
-				condition.put("status", RegistryStatus.StatusPhase.ERROR.getStatus());
-				condition.put("message", "Creating a registry is failed");
-				condition.put("reason", e.getResponseBody());
-				conditions.add(condition);
-				status.put("conditions", conditions);
-				status.put("phase", RegistryStatus.StatusPhase.ERROR.getStatus());
-
-				patchStatus.put("op", "replace");
-				patchStatus.put("path", "/status");
-				patchStatus.put("value", status);
-				patchStatusArray.add(patchStatus);
+				phase.put("op", "replace");
+				phase.put("path", "/status/phase");
+				phase.put("value", RegistryStatus.StatusPhase.ERROR.getStatus());
+				patchStatusArray.add(phase);
+				
+				message.put("op", "replace");
+				message.put("path", "/status/message");
+				message.put("value", e.getResponseBody());
+				patchStatusArray.add(message);
+				
+				reason.put("op", "replace");
+				reason.put("path", "/status/reason");
+				reason.put("value", "CreateRegistryFailed");
+				patchStatusArray.add(reason);
 				
 				try{
 					Object result = customObjectApi.patchNamespacedCustomObjectStatus(
@@ -1558,24 +1586,25 @@ public class K8sApiCaller {
 			} catch (ApiException e) {
 				logger.info("Create Replicaset Failed");
 				logger.info(e.getResponseBody());
-				JSONObject patchStatus = new JSONObject();
-				JSONObject status = new JSONObject();
-				JSONArray conditions = new JSONArray();
-				JSONObject condition = new JSONObject();
+				JSONObject phase = new JSONObject();
+				JSONObject message = new JSONObject();
+				JSONObject reason = new JSONObject();
 				JSONArray patchStatusArray = new JSONArray();
 				
-				condition.put("type", "Phase");
-				condition.put("status", RegistryStatus.StatusPhase.ERROR.getStatus());
-				condition.put("message", "Creating a registry is failed");
-				condition.put("reason", e.getResponseBody());
-				conditions.add(condition);
-				status.put("conditions", conditions);
-				status.put("phase", RegistryStatus.StatusPhase.ERROR.getStatus());
-
-				patchStatus.put("op", "replace");
-				patchStatus.put("path", "/status");
-				patchStatus.put("value", status);
-				patchStatusArray.add(patchStatus);
+				phase.put("op", "replace");
+				phase.put("path", "/status/phase");
+				phase.put("value", RegistryStatus.StatusPhase.ERROR.getStatus());
+				patchStatusArray.add(phase);
+				
+				message.put("op", "replace");
+				message.put("path", "/status/message");
+				message.put("value", e.getResponseBody());
+				patchStatusArray.add(message);
+				
+				reason.put("op", "replace");
+				reason.put("path", "/status/reason");
+				reason.put("value", "CreateRegistryFailed");
+				patchStatusArray.add(reason);
 				
 				try{
 					Object result = customObjectApi.patchNamespacedCustomObjectStatus(
@@ -1599,6 +1628,44 @@ public class K8sApiCaller {
 
 	}
 
+	public static void updateReigstryPhase(Registry registry, String changePhase, String changeMessage, String changeReason) throws Exception {
+		String namespace = registry.getMetadata().getNamespace();
+		
+		if( changePhase != null && changeMessage != null && changeReason != null) {
+			JSONObject jPhase = new JSONObject();
+			JSONObject message = new JSONObject();
+			JSONObject reason = new JSONObject();
+			JSONArray patchStatusArray = new JSONArray();
+			
+			jPhase.put("op", "replace");
+			jPhase.put("path", "/status/phase");
+			jPhase.put("value", changePhase);
+			patchStatusArray.add(jPhase);
+			
+			message.put("op", "replace");
+			message.put("path", "/status/message");
+			message.put("value", changeMessage);
+			patchStatusArray.add(message);
+			
+			reason.put("op", "replace");
+			reason.put("path", "/status/reason");
+			reason.put("value", changeReason);
+			patchStatusArray.add(reason);
+			
+			try{
+				Object result = customObjectApi.patchNamespacedCustomObjectStatus(
+						Constants.CUSTOM_OBJECT_GROUP, 
+						Constants.CUSTOM_OBJECT_VERSION, 
+						namespace, 
+						Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, 
+						registry.getMetadata().getName(), patchStatusArray);
+				logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
+			} catch (ApiException e2) {
+				throw new Exception(e2.getResponseBody());
+			}
+		}
+	}
+	
 	/*
 	 * {"op":"remove","path":"/apiVersion"}
 		{"op":"replace","path":"/kind","value":"Registry3"}
@@ -1833,44 +1900,49 @@ public class K8sApiCaller {
 		
 		logger.info("REGISTRY RESOURCE VERSION: " + registry.getMetadata().getResourceVersion());
 		logger.info("REGISTRY UID: " + registry.getMetadata().getUid());
+
+		
+		JSONObject patchStatus = new JSONObject();
+		JSONObject condition = new JSONObject();
+		JSONArray patchStatusArray = new JSONArray();
 		
 		switch(eventType) {
 		case Constants.EVENT_TYPE_ADDED : 
+			condition.put("type", RegistryCondition.Condition.REPLICA_SET.getType());
+			condition.put("status", RegistryStatus.Status.TRUE.getStatus());
+
+			patchStatus.put("op", "replace");
+			patchStatus.put("path", RegistryCondition.Condition.REPLICA_SET.getPath());
+			patchStatus.put("value", condition);
+			patchStatusArray.add(patchStatus);
 			
 			break;
 		case Constants.EVENT_TYPE_MODIFIED : 
 			
 			break;
 		case Constants.EVENT_TYPE_DELETED : 
-			
-			JSONObject patchStatus = new JSONObject();
-			JSONObject condition = new JSONObject();
-			JSONArray patchStatusArray = new JSONArray();
-
-			condition.put("type", "ReplicaSet");
-			condition.put("status", RegistryStatus.StatusReplicaSet.TERMINATED.getStatus());
-			condition.put("message", "Registry replicaset is not alive");
-			condition.put("reason", "ReplicaSetReady");
+			condition.put("type", RegistryCondition.Condition.REPLICA_SET.getType());
+			condition.put("status", RegistryStatus.Status.FALSE.getStatus());
 
 			patchStatus.put("op", "replace");
 			patchStatus.put("path", RegistryCondition.Condition.REPLICA_SET.getPath());
 			patchStatus.put("value", condition);
 			patchStatusArray.add(patchStatus);
-
-			try{
-				Object result = customObjectApi.patchNamespacedCustomObjectStatus(
-						Constants.CUSTOM_OBJECT_GROUP, 
-						Constants.CUSTOM_OBJECT_VERSION, 
-						namespace, 
-						Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, 
-						registry.getMetadata().getName(), patchStatusArray);
-				logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
-			} catch (ApiException e2) {
-				throw new Exception(e2.getResponseBody());
-			}
 			
 			break;
-		}						
+		}
+		
+		try{
+			Object result = customObjectApi.patchNamespacedCustomObjectStatus(
+					Constants.CUSTOM_OBJECT_GROUP, 
+					Constants.CUSTOM_OBJECT_VERSION, 
+					namespace, 
+					Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, 
+					registry.getMetadata().getName(), patchStatusArray);
+			logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
+		} catch (ApiException e2) {
+			throw new Exception(e2.getResponseBody());
+		}
 		
 	}
 	
@@ -1915,144 +1987,268 @@ public class K8sApiCaller {
 			
 			logger.info("REGISTRY RESOURCE VERSION: " + registry.getMetadata().getResourceVersion());
 			logger.info("REGISTRY UID: " + registry.getMetadata().getUid());
+
+			JSONArray patchStatusArray = new JSONArray();
 			
-			if( registry.getStatus().getConditions() != null) {
-				for( RegistryCondition registryCondition : registry.getStatus().getConditions()) {
-					if( registryCondition.getType().equals("Phase")) {
+			if( registry.getStatus().getPhase() != null) {
+				if(reason.equals("NotReady")) {
+					JSONObject patchStatus = new JSONObject();
+					JSONObject condition = new JSONObject();
+					JSONObject condition2 = new JSONObject();
 
-						if( reason.equals("Running") ) {
-							JSONObject patchStatus = new JSONObject();
-							JSONObject status = new JSONObject();
-							JSONArray conditions = new JSONArray();
-							JSONObject condition = new JSONObject();
-							JSONArray patchStatusArray = new JSONArray();
+					condition.put("type", RegistryCondition.Condition.POD.getType());
+					condition.put("status", RegistryStatus.Status.TRUE.getStatus());
 
-							condition.put("type", "Phase");
-							condition.put("status", RegistryStatus.StatusPhase.RUNNING.getStatus());
-							condition.put("message", "Registry is running. All registry resources are operating normally.");
-							condition.put("reason", "RegistryRunning");
-							conditions.add(condition);
-							status.put("conditions", conditions);
-							status.put("phase", RegistryStatus.StatusPhase.RUNNING.getStatus());
+					patchStatus.put("op", "replace");
+					patchStatus.put("path", RegistryCondition.Condition.POD.getPath());
+					patchStatus.put("value", condition);
+					patchStatusArray.add(patchStatus);
+					
+					condition2.put("type", RegistryCondition.Condition.CONTAINER.getType());
+					condition2.put("status", RegistryStatus.Status.FALSE.getStatus());
 
-							patchStatus.put("op", "replace");
-							patchStatus.put("path", RegistryCondition.Condition.PHASE.getPath());
-							patchStatus.put("value", status);
-							patchStatusArray.add(patchStatus);
-
-							try{
-								Object result = customObjectApi.patchNamespacedCustomObjectStatus(
-										Constants.CUSTOM_OBJECT_GROUP, 
-										Constants.CUSTOM_OBJECT_VERSION, 
-										namespace, 
-										Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, 
-										registry.getMetadata().getName(), patchStatusArray);
-								logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
-							} catch (ApiException e2) {
-								throw new Exception(e2.getResponseBody());
-							}
-						}
-						else if(!registryCondition.getStatus().equals(RegistryStatus.StatusPhase.CREATING.getStatus()) 
-								&& reason.equals("ContainerCreating")) {
-							JSONObject patchStatus = new JSONObject();
-							JSONObject status = new JSONObject();
-							JSONArray conditions = new JSONArray();
-							JSONObject condition = new JSONObject();
-							JSONArray patchStatusArray = new JSONArray();
-
-							condition.put("type", "Phase");
-							condition.put("status", RegistryStatus.StatusPhase.NOT_READY.getStatus());
-							condition.put("message", "Reigstry is not ready. Recreate registry if 30 seconds have passed in NotReady state and the registry state has not changed to Running.");
-							condition.put("reason", "Registry container is checking for Readiness or container is creating");
-							conditions.add(condition);
-							status.put("conditions", conditions);
-							status.put("phase", RegistryStatus.StatusPhase.NOT_READY.getStatus());
-
-							patchStatus.put("op", "replace");
-							patchStatus.put("path", RegistryCondition.Condition.PHASE.getPath());
-							patchStatus.put("value", status);
-							patchStatusArray.add(patchStatus);
-
-							try{
-								Object result = customObjectApi.patchNamespacedCustomObjectStatus(
-										Constants.CUSTOM_OBJECT_GROUP, 
-										Constants.CUSTOM_OBJECT_VERSION, 
-										namespace, 
-										Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, 
-										registry.getMetadata().getName(), patchStatusArray);
-								logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
-							} catch (ApiException e2) {
-								throw new Exception(e2.getResponseBody());
-							}
-						}
-						else if( reason.equals("NotReady") ) {
-							JSONObject patchStatus = new JSONObject();
-							JSONObject status = new JSONObject();
-							JSONArray conditions = new JSONArray();
-							JSONObject condition = new JSONObject();
-							JSONArray patchStatusArray = new JSONArray();
-
-							condition.put("type", "Phase");
-							condition.put("status", RegistryStatus.StatusPhase.NOT_READY.getStatus());
-							condition.put("message", "Reigstry is not ready. Recreate registry if 30 seconds have passed in NotReady state and the registry state has not changed to Running.");
-							condition.put("reason", "Registry container is checking for Readiness");
-							conditions.add(condition);
-							status.put("conditions", conditions);
-							status.put("phase", RegistryStatus.StatusPhase.NOT_READY.getStatus());
-
-							patchStatus.put("op", "replace");
-							patchStatus.put("path", RegistryCondition.Condition.PHASE.getPath());
-							patchStatus.put("value", status);
-							patchStatusArray.add(patchStatus);
-
-							try{
-								Object result = customObjectApi.patchNamespacedCustomObjectStatus(
-										Constants.CUSTOM_OBJECT_GROUP, 
-										Constants.CUSTOM_OBJECT_VERSION, 
-										namespace, 
-										Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, 
-										registry.getMetadata().getName(), patchStatusArray);
-								logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
-							} catch (ApiException e2) {
-								throw new Exception(e2.getResponseBody());
-							}
-						}
-						else if( reason.equals("Error") ) {
-							JSONObject patchStatus = new JSONObject();
-							JSONObject status = new JSONObject();
-							JSONArray conditions = new JSONArray();
-							JSONObject condition = new JSONObject();
-							JSONArray patchStatusArray = new JSONArray();
-
-							condition.put("type", "Phase");
-							condition.put("status", RegistryStatus.StatusPhase.ERROR.getStatus());
-							condition.put("message", "Creating a registry is failed");
-							condition.put("reason", "Registry pod is error!");
-							conditions.add(condition);
-							status.put("conditions", conditions);
-							status.put("phase", RegistryStatus.StatusPhase.ERROR.getStatus());
-
-							patchStatus.put("op", "replace");
-							patchStatus.put("path", RegistryCondition.Condition.PHASE.getPath());
-							patchStatus.put("value", status);
-							patchStatusArray.add(patchStatus);
-
-							try{
-								Object result = customObjectApi.patchNamespacedCustomObjectStatus(
-										Constants.CUSTOM_OBJECT_GROUP, 
-										Constants.CUSTOM_OBJECT_VERSION, 
-										namespace, 
-										Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, 
-										registry.getMetadata().getName(), patchStatusArray);
-								logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
-							} catch (ApiException e2) {
-								throw new Exception(e2.getResponseBody());
-							}
-						}
-					}
+					patchStatus.put("op", "replace");
+					patchStatus.put("path", RegistryCondition.Condition.CONTAINER.getPath());
+					patchStatus.put("value", condition2);
+					patchStatusArray.add(patchStatus);
 				}
+				else if( reason.equals("Running") ) {
+					JSONObject patchStatus = new JSONObject();
+					JSONObject condition = new JSONObject();
+					JSONObject condition2 = new JSONObject();
+
+					condition.put("type", RegistryCondition.Condition.POD.getType());
+					condition.put("status", RegistryStatus.Status.TRUE.getStatus());
+
+					patchStatus.put("op", "replace");
+					patchStatus.put("path", RegistryCondition.Condition.POD.getPath());
+					patchStatus.put("value", condition);
+					patchStatusArray.add(patchStatus);
+					
+					condition2.put("type", RegistryCondition.Condition.CONTAINER.getType());
+					condition2.put("status", RegistryStatus.Status.TRUE.getStatus());
+
+					patchStatus.put("op", "replace");
+					patchStatus.put("path", RegistryCondition.Condition.CONTAINER.getPath());
+					patchStatus.put("value", condition2);
+					patchStatusArray.add(patchStatus);
+				}
+				else {
+					JSONObject patchStatus = new JSONObject();
+					JSONObject condition = new JSONObject();
+					JSONObject condition2 = new JSONObject();
+
+					condition.put("type", RegistryCondition.Condition.POD.getType());
+					condition.put("status", RegistryStatus.Status.FALSE.getStatus());
+
+					patchStatus.put("op", "replace");
+					patchStatus.put("path", RegistryCondition.Condition.POD.getPath());
+					patchStatus.put("value", condition);
+					patchStatusArray.add(patchStatus);
+					
+					condition2.put("type", RegistryCondition.Condition.CONTAINER.getType());
+					condition2.put("status", RegistryStatus.Status.FALSE.getStatus());
+
+					patchStatus.put("op", "replace");
+					patchStatus.put("path", RegistryCondition.Condition.CONTAINER.getPath());
+					patchStatus.put("value", condition2);
+					patchStatusArray.add(patchStatus);
+					
+				}
+				
+				try{
+					Object result = customObjectApi.patchNamespacedCustomObjectStatus(
+							Constants.CUSTOM_OBJECT_GROUP, 
+							Constants.CUSTOM_OBJECT_VERSION, 
+							namespace, 
+							Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, 
+							registry.getMetadata().getName(), patchStatusArray);
+					logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
+				} catch (ApiException e2) {
+					throw new Exception(e2.getResponseBody());
+				}
+				
 			}
 		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	public static void updateRegistryStatus(V1Service svc, String eventType) throws Throwable {
+		String registryName = "";
+		String registryPrefix = Constants.K8S_PREFIX + Constants.K8S_REGISTRY_PREFIX;
+		String namespace = svc.getMetadata().getNamespace();
+		String reason = "";
+		
+		registryName = svc.getMetadata().getLabels().get("apps");
+		registryName = registryName.substring(registryPrefix.length());
+		logger.info("registry name: " + registryName);
+		
+		Object response = customObjectApi.getNamespacedCustomObject(
+				Constants.CUSTOM_OBJECT_GROUP, 
+				Constants.CUSTOM_OBJECT_VERSION, 
+				namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registryName);
+
+		Registry registry = mapper.readValue(gson.toJson(response), Registry.class);
+		
+		logger.info("REGISTRY RESOURCE VERSION: " + registry.getMetadata().getResourceVersion());
+		logger.info("REGISTRY UID: " + registry.getMetadata().getUid());
+
+		
+		JSONArray patchStatusArray = new JSONArray();
+		JSONObject patchStatus = new JSONObject();
+		JSONObject condition = new JSONObject();
+		
+		switch(eventType) {
+		case Constants.EVENT_TYPE_ADDED : 
+			condition.put("type", RegistryCondition.Condition.SERVICE.getType());
+			condition.put("status", RegistryStatus.Status.TRUE.getStatus());
+
+			patchStatus.put("op", "replace");
+			patchStatus.put("path", RegistryCondition.Condition.SERVICE.getPath());
+			patchStatus.put("value", condition);
+			patchStatusArray.add(patchStatus);
+			
+			break;
+		case Constants.EVENT_TYPE_MODIFIED : 
+			
+			break;
+		case Constants.EVENT_TYPE_DELETED : 
+			condition.put("type", RegistryCondition.Condition.SERVICE.getType());
+			condition.put("status", RegistryStatus.Status.FALSE.getStatus());
+
+			patchStatus.put("op", "replace");
+			patchStatus.put("path", RegistryCondition.Condition.SERVICE.getPath());
+			patchStatus.put("value", condition);
+			patchStatusArray.add(patchStatus);
+
+			break;
+		}
+		
+		try{
+			Object result = customObjectApi.patchNamespacedCustomObjectStatus(
+					Constants.CUSTOM_OBJECT_GROUP, 
+					Constants.CUSTOM_OBJECT_VERSION, 
+					namespace, 
+					Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, 
+					registry.getMetadata().getName(), patchStatusArray);
+			logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
+		} catch (ApiException e2) {
+			throw new Exception(e2.getResponseBody());
+		}
+		
+	}
+	
+	@SuppressWarnings("unchecked")
+	public static void updateRegistryStatus(V1Secret secret, String eventType) throws Throwable {
+		String registryName = "";
+		String registryPrefix = Constants.K8S_PREFIX + Constants.K8S_REGISTRY_PREFIX;
+		String namespace = secret.getMetadata().getNamespace();
+		String reason = "";
+		
+		registryName = secret.getMetadata().getLabels().get("apps");
+		registryName = registryName.substring(registryPrefix.length());
+		logger.info("registry name: " + registryName);
+		
+		Object response = customObjectApi.getNamespacedCustomObject(
+				Constants.CUSTOM_OBJECT_GROUP, 
+				Constants.CUSTOM_OBJECT_VERSION, 
+				namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registryName);
+
+		Registry registry = mapper.readValue(gson.toJson(response), Registry.class);
+		
+		logger.info("REGISTRY RESOURCE VERSION: " + registry.getMetadata().getResourceVersion());
+		logger.info("REGISTRY UID: " + registry.getMetadata().getUid());
+
+		// DOCKEER CONFIG JSON TYPE SECRET
+		if ( secret.getType().equals(Constants.K8S_SECRET_TYPE_DOCKER_CONFIG_JSON)) {
+			JSONArray patchStatusArray = new JSONArray();
+			JSONObject patchStatus = new JSONObject();
+			JSONObject condition = new JSONObject();
+			
+			switch(eventType) {
+			case Constants.EVENT_TYPE_ADDED : 
+				condition.put("type", RegistryCondition.Condition.SECRET_DOCKER_CONFIG_JSON.getType());
+				condition.put("status", RegistryStatus.Status.TRUE.getStatus());
+
+				patchStatus.put("op", "replace");
+				patchStatus.put("path", RegistryCondition.Condition.SECRET_DOCKER_CONFIG_JSON.getPath());
+				patchStatus.put("value", condition);
+				patchStatusArray.add(patchStatus);
+				
+				break;
+			case Constants.EVENT_TYPE_MODIFIED : 
+				
+				break;
+			case Constants.EVENT_TYPE_DELETED : 
+				condition.put("type", RegistryCondition.Condition.SECRET_DOCKER_CONFIG_JSON.getType());
+				condition.put("status", RegistryStatus.Status.FALSE.getStatus());
+
+				patchStatus.put("op", "replace");
+				patchStatus.put("path", RegistryCondition.Condition.SECRET_DOCKER_CONFIG_JSON.getPath());
+				patchStatus.put("value", condition);
+				patchStatusArray.add(patchStatus);
+
+				break;
+			}
+			
+			try{
+				Object result = customObjectApi.patchNamespacedCustomObjectStatus(
+						Constants.CUSTOM_OBJECT_GROUP, 
+						Constants.CUSTOM_OBJECT_VERSION, 
+						namespace, 
+						Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, 
+						registry.getMetadata().getName(), patchStatusArray);
+				logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
+			} catch (ApiException e2) {
+				throw new Exception(e2.getResponseBody());
+			}
+		
+		// OPAQUE TYPE SECRET
+		}else {
+			JSONArray patchStatusArray = new JSONArray();
+			JSONObject patchStatus = new JSONObject();
+			JSONObject condition = new JSONObject();
+			
+			switch(eventType) {
+			case Constants.EVENT_TYPE_ADDED : 
+				condition.put("type", RegistryCondition.Condition.SECRET_OPAQUE.getType());
+				condition.put("status", RegistryStatus.Status.TRUE.getStatus());
+
+				patchStatus.put("op", "replace");
+				patchStatus.put("path", RegistryCondition.Condition.SECRET_OPAQUE.getPath());
+				patchStatus.put("value", condition);
+				patchStatusArray.add(patchStatus);
+				
+				break;
+			case Constants.EVENT_TYPE_MODIFIED : 
+				
+				break;
+			case Constants.EVENT_TYPE_DELETED : 
+				condition.put("type", RegistryCondition.Condition.SECRET_OPAQUE.getType());
+				condition.put("status", RegistryStatus.Status.FALSE.getStatus());
+
+				patchStatus.put("op", "replace");
+				patchStatus.put("path", RegistryCondition.Condition.SECRET_OPAQUE.getPath());
+				patchStatus.put("value", condition);
+				patchStatusArray.add(patchStatus);
+
+				break;
+			}
+			
+			try{
+				Object result = customObjectApi.patchNamespacedCustomObjectStatus(
+						Constants.CUSTOM_OBJECT_GROUP, 
+						Constants.CUSTOM_OBJECT_VERSION, 
+						namespace, 
+						Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, 
+						registry.getMetadata().getName(), patchStatusArray);
+				logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
+			} catch (ApiException e2) {
+				throw new Exception(e2.getResponseBody());
+			}
+		}
+
+		
 	}
 	
 	public static CommandExecOut commandExecute(String[] command) throws Throwable {
