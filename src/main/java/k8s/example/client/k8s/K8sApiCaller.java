@@ -1012,7 +1012,6 @@ public class K8sApiCaller {
 				api.createNamespacedService(namespace, lb, null, null, null);
 			} catch (ApiException e) {
 				logger.info(e.getResponseBody());
-
 				JSONObject phase = new JSONObject();
 				JSONObject message = new JSONObject();
 				JSONObject reason = new JSONObject();
@@ -1735,6 +1734,7 @@ public class K8sApiCaller {
 
 	}
 
+	@SuppressWarnings("unchecked")
 	public static void updateReigstryPhase(Registry registry, String changePhase, String changeMessage, String changeReason) throws Exception {
 		String namespace = registry.getMetadata().getNamespace();
 		
@@ -1900,7 +1900,6 @@ public class K8sApiCaller {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	public static void updateRegistryReplicaSet(Registry registry, JsonElement patchJson) throws Throwable {
 		String namespace = registry.getMetadata().getNamespace();
 		String registryId = registry.getMetadata().getName();
@@ -1915,7 +1914,6 @@ public class K8sApiCaller {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	public static void updateRegistrySecret(Registry registry, JsonElement patchJson) throws Throwable {
 		String namespace = registry.getMetadata().getNamespace();
 		String registryId = registry.getMetadata().getName();
@@ -1931,9 +1929,6 @@ public class K8sApiCaller {
 		
 	}
 	
-	
-	
-	@SuppressWarnings("unchecked")
 	public static void updateRegistryAnnotationLastCR(Registry registry) throws Throwable {
 		String namespace = registry.getMetadata().getNamespace();
 		String registryId = registry.getMetadata().getName();
@@ -1956,7 +1951,6 @@ public class K8sApiCaller {
 				registryId, registry);
 	}
 	
-	@SuppressWarnings("unchecked")
 	public static void addRegistryAnnotation(Registry registry) throws Throwable {
 		String namespace = registry.getMetadata().getNamespace();
 		String registryId = registry.getMetadata().getName();

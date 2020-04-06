@@ -1,6 +1,27 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.0.7 start -------------------->
+
+## HyperCloudServer_4.1.0.7 (2020년 04월  6일 월 오후  1:04:45)
+
+### Added
+
+### Changed
+  - [mod] 통합 user id찾기 구현 완료 by taegeon_woo
+  - [mod] RegistryCRD.yaml 수정 by sukhee_yun
+  - [mod] Registry Running 상태 기준 수정(모든 서브 리소스들이 정상일 때 Running) by sukhee_yun
+  - [mod] template parameter 의 number value 처리 by seonho_choi
+  - [mod] 통합 logout 서비스 구현 완료 by taegeon_woo
+  - [mod] template 생성 시 paramters 입력하지 않으면 정상동작하지 않도록 수정. _catalog_museum 의 template 들 모두 수정 by seonho_choi
+  - [mod] 통합 로그인 서비스 구현 by taegeon_woo
+
+### Fixed
+
+### Etc
+
+<!--------------------- v4.1.0.7 end --------------------->
+
 <!-------------------- v4.1.0.6 start -------------------->
 
 ## HyperCloudServer_4.1.0.6 (2020년 04월  3일 금 오전 11:35:05)

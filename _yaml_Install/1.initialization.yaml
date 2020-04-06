@@ -443,7 +443,7 @@ spec:
                   enum: [ClusterIP, NodePort, LoadBalancer]
             persistentVolumeClaim:
               type: object
-              required: [storageSize, accessModes, storageClassName]
+              required: [storageSize, storageClassName]
               properties:
                 accessModes:
                   type: array
@@ -478,6 +478,10 @@ spec:
                      type: string
              phase:
                type: string
+             message:
+               type: string
+             reason:
+               type: string
   subresources:
     status: {}
   additionalPrinterColumns:
@@ -496,6 +500,7 @@ spec:
   - name: Age
     type: date
     JSONPath: .metadata.creationTimestamp
+
 
 ---
 
