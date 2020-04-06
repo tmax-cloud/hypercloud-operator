@@ -147,8 +147,8 @@ public class Constants {
 	public static final String SERVICE_NAME_OAUTH_USER_DELETE = "proauth/oauth/users/";
 	public static final String SERVICE_NAME_OAUTH_USER_UPDATE = "proauth/oauth/users/";
 	public static final String SERVICE_NAME_OAUTH_AUTHENTICATE_CREATE = "proauth/oauth/authenticate";
-	public static final String SERVICE_NAME_OAUTH_AUTHENTICATE_DELETE = "proauth/oauth/authenticateDelete";
-	public static final String SERVICE_NAME_OAUTH_AUTHENTICATE_UPDATE = "proauth/oauth/authenticateUpdate";
+	public static final String SERVICE_NAME_OAUTH_AUTHENTICATE_DELETE = "proauth/oauth/authenticate";
+	public static final String SERVICE_NAME_OAUTH_AUTHENTICATE_UPDATE = "proauth/oauth/authenticate";
 	public static final String SERVICE_NAME_SET_PASSWORD_SERVICE = "proauth/oauth/setPassword";
 	
 	// Template Parameter Data Type
