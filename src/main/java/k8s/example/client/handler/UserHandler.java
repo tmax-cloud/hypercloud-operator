@@ -120,21 +120,14 @@ public class UserHandler extends GeneralHandler {
     		  		
 		} catch (ApiException e) {
 			logger.info( "Exception message: " + e.getResponseBody() );
-			logger.info( "Exception message: " + e.getMessage() );
+			e.printStackTrace();
 			
-			if (e.getResponseBody().contains("NotFound")) {
-				logger.info( "  Login fail. User not exist." );
-				status = Status.UNAUTHORIZED; //ui요청
-				outDO = Constants.USER_CREATE_FAILED;
-			} else {
-				logger.info( "Response body: " + e.getResponseBody() );
-				e.printStackTrace();
-				
-				status = Status.UNAUTHORIZED;
-				outDO = Constants.USER_CREATE_FAILED;
-			}
+			status = Status.UNAUTHORIZED;
+			outDO = Constants.USER_CREATE_FAILED;
+			
 		} catch (Exception e) {
 			logger.info( "Exception message: " + e.getMessage() );
+
 			e.printStackTrace();
 			status = Status.UNAUTHORIZED;
 			outDO = Constants.USER_CREATE_FAILED;
@@ -142,21 +135,10 @@ public class UserHandler extends GeneralHandler {
 		} catch (Throwable e) {
 			logger.info( "Exception message: " + e.getMessage() );
 			e.printStackTrace();
+			status = Status.UNAUTHORIZED;
+			outDO = Constants.USER_CREATE_FAILED;
 		}
 		
-//		if (status.equals(Status.UNAUTHORIZED)) {
-//			CommonOutDO out = new CommonOutDO();
-//			out.setMsg(outDO);
-//			Gson gson = new GsonBuilder().setPrettyPrinting().create();
-//			outDO = gson.toJson(out).toString();
-//		} else if ( status.equals(Status.OK) && outDO.equals(Constants.USER_CREATE_FAILED)) { //ui요청
-//			CommonOutDO out = new CommonOutDO();
-//			out.setMsg(outDO);
-//			Gson gson = new GsonBuilder().setPrettyPrinting().create();
-//			outDO = gson.toJson(out).toString();
-//		}
- 
-//		logger.info();
 		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO));
     }
 	
