@@ -39,6 +39,37 @@ components:
         default: 20
       description: "The number of items to return"
   schemas:
+    User:
+      type: object
+      description: "HyperCloud4 User DO"
+      properties:
+        id:
+          type: string
+          description: "User ID"
+        password:
+          type: string
+          description: "User Password"  
+        name:
+          type: string
+          description: "User Name"
+        passwordSalt:
+          type: string
+          description: "User PasswordSalt"
+        email:
+          type: string
+          description: "User E-mail"
+        phone:
+          type: string
+          description: "User Phone Number"
+        position:
+          type: string
+          description: "User Position"
+        department:
+          type: string
+          description: "User Department"
+        description:
+          type: string
+          description: "User Description"                                                                                    
     UserLoginDO:
       type: object
       description: "HyperCloud4 Login DO"
@@ -91,10 +122,57 @@ components:
            type: string
            description: "Redirect Uri of Client After Oauth Login"
 paths:
+  /user:
+    post:
+      tags:
+      - "Integrated Auth"
+      summary: "Integrated Hyper Cloud4 User Create Service"
+      requestBody:
+        description: "User"
+        required: true  
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                dto:
+                  $ref: "#/components/schemas/User"    
+              example:
+                {
+                  "id": "woo-tmax.co.kr",
+                  "name": "woo",
+                  "password": "tmax@23",
+                  "email": "woo@tmax.co.kr",
+                  "phone": "010-4878-8544",
+                  "department": "ck2-3",
+                  "position" : "developer"
+                }     
+      responses:
+        200:
+          description: User Create Success
+    get:
+      tags:
+      - "Integrated Auth"
+      summary: "Integrated Hyper Cloud4 User ID or PassWord Find Service"
+      parameters:
+      - in: "query"
+        name: "mode"
+        description: "id / password"
+        schema:
+          type: "string"
+      - in: "query"
+        name: "eamil"
+        description: "User E-mail"
+        schema:
+          type: "string"     
+      responses:
+        200:
+          description: User ID                                                                        
   /login:
     post:
       tags:
       - "Auth"
+      - "Integrated Auth"
       summary: "Hyper Cloud4 Login Service"
       parameters:
       - in: "query"
@@ -141,6 +219,7 @@ paths:
     post:
       tags:
       - "Auth"
+      - "Integrated Auth"
       summary: "Hyper Cloud4 Logout Service"
       requestBody:
         description: "TokenDO"
@@ -162,6 +241,7 @@ paths:
     post:
       tags:
       - "Auth"
+      - "Integrated Auth"
       summary: "Hyper Cloud4 Refresh Service"
       requestBody:
         description: "TokenDO"

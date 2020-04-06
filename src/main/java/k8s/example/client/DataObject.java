@@ -68,7 +68,7 @@ public class DataObject {
     	public void setStatus(String status) { this.status = status; }
     }
     
-    public static class User implements Cloneable{
+    public static class User {
     	private String name;
     	private String id;    	
     	private String password;
