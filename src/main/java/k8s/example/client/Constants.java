@@ -97,7 +97,17 @@ public class Constants {
 	
 	// LoginPage of HyperCloud4
 	public static final String LOGIN_PAGE_URI = "http://192.168.8.36/oauth/login.html";
+	
+	// User of HyperCloud4
+	public static final String LOGIN_SUCCESS = "Login Success";
+	public static final String LOGOUT_SUCCESS = "Logout Success";
+	public static final String REFRESH_SUCCESS = "Refresh Success";
+	public static final String PASSWORD_CHANGE_SUCCESS = "Password Change Success";
 	public static final String LOGIN_FAILED = "Wrong ID or Password";
+	public static final String LOGOUT_FAILED = "Log Out Failed, Token is not Exist or Valid";
+	public static final String REFRESH_FAILED = "Refresh Failed, Refresh Token is not Valid";
+	public static final String PASSWORD_CHANGE_FAILED = "Password Change Failed";
+
 	
 	// Metering Cron Expression
 	public static final String METERING_CRON_EXPRESSION = "0 0/5 * 1/1 * ? *"; // sec, mins, hrs, dom(day of month), month, dow(day of week)
@@ -125,7 +135,7 @@ public class Constants {
 	public static final String DEFAULT_PROVIDER = "tmax";
 	public static final String DEFAULT_TAGS = "etc";
 	
-	// Oauth //TODO configmap으로 만들던지, 환경변수 읽어오는것으로 수정하자
+	// Oauth 
 	public static final String OAUTH_URL = "http://proauth-server-service.proauth-system:8080/";
 	public static final String USER_CREATE_SUCCESS = "User Create Success";
 	public static final String USER_CREATE_FAILED = "User Create Failed";
@@ -137,7 +147,9 @@ public class Constants {
 	public static final String SERVICE_NAME_OAUTH_USER_DELETE = "proauth/oauth/users/";
 	public static final String SERVICE_NAME_OAUTH_USER_UPDATE = "proauth/oauth/users/";
 	public static final String SERVICE_NAME_OAUTH_AUTHENTICATE_CREATE = "proauth/oauth/authenticate";
-	public static final String SERVICE_NAME_OAUTH_AUTHENTICATE_DELETE = "proauth/oauth/authenticate";
+	public static final String SERVICE_NAME_OAUTH_AUTHENTICATE_DELETE = "proauth/oauth/authenticateDelete";
+	public static final String SERVICE_NAME_OAUTH_AUTHENTICATE_UPDATE = "proauth/oauth/authenticateUpdate";
+	public static final String SERVICE_NAME_SET_PASSWORD_SERVICE = "proauth/oauth/setPassword";
 	
 	// Template Parameter Data Type
 	public static final String TEMPLATE_DATA_TYPE_NUMBER = "number";

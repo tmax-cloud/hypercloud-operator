@@ -198,6 +198,7 @@ public class UserHandler extends GeneralHandler {
 		String updateMode = null;
 		UserCR userCR = null;
 		User userInDO = null;
+		String accessToken = null;
 		
 		Map<String, String> body = new HashMap<String, String>();
         try {
@@ -259,7 +260,51 @@ public class UserHandler extends GeneralHandler {
 			break;
 			
 		case "passwd":
-			//TODO : 일해라 태건아
+			logger.info( "  User ID: " + userInDO.getId() );
+			logger.info( "  User Current Password: " + userInDO.getPassword() );
+			logger.info( "  User Alter Password: " + userInDO.getAlterPassword() );
+			
+			try {
+				// Validate
+	    		if (userInDO.getId() == null ) 	throw new Exception(ErrorCode.USER_ID_EMPTY);
+	    		if (userInDO.getPassword() == null ) 	throw new Exception(ErrorCode.USER_PASSWORD_EMPTY);
+	    		if (userInDO.getAlterPassword() == null ) 	throw new Exception(ErrorCode.USER_ALTER_PASSWORD_EMPTY);
+	    		
+	    		// Read AccessToken from Header
+				if(!session.getHeaders().get("authorization").isEmpty()) {
+					accessToken = session.getHeaders().get("authorization");
+				} else {
+					status = Status.BAD_REQUEST;
+					throw new Exception(ErrorCode.TOKEN_EMPTY);
+				}
+	    		logger.info( "  Token: " + accessToken );
+	    		
+	    		// Call ProAuth
+	    		JsonObject setPasswordOut = OAuthApiCaller.SetPasswordService( accessToken, userInDO.getAlterPassword() );
+	    		logger.info( "  result : " + setPasswordOut.get("result").toString() );
+	    		if ( setPasswordOut.get("result").toString().equalsIgnoreCase("\"true\"") ){
+    				logger.info( "  Password Change success." );
+    				outDO = Constants.PASSWORD_CHANGE_SUCCESS;
+	    			status = Status.OK; 
+	    		} else {
+	    			logger.info("  Password Change failed by ProAuth.");
+	    			logger.info( setPasswordOut.get("error").toString());
+	    			status = Status.UNAUTHORIZED; 
+    				outDO = Constants.PASSWORD_CHANGE_FAILED;
+	    		}
+	    		
+			} catch (ApiException e) {
+				logger.info( "Exception message: " + e.getResponseBody() );
+				logger.info( "Exception message: " + e.getMessage() );
+				status = Status.UNAUTHORIZED; 
+				outDO = Constants.PASSWORD_CHANGE_FAILED;
+				
+			} catch (Exception e) {
+				logger.info( "Exception message: " + e.getMessage() );
+				e.printStackTrace();
+				status = Status.UNAUTHORIZED;
+				outDO = Constants.PASSWORD_CHANGE_FAILED;		
+			}		
 			break;
 		}
 		

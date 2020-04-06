@@ -48,7 +48,10 @@ components:
           description: "User ID"
         password:
           type: string
-          description: "User Password"  
+          description: "User Password" 
+        alterPassword:
+          type: string
+          description: "User Alter Password"            
         name:
           type: string
           description: "User Name"
@@ -153,7 +156,7 @@ paths:
     get:
       tags:
       - "Integrated Auth"
-      summary: "Integrated Hyper Cloud4 User ID or PassWord Find Service"
+      summary: "Integrated Hyper Cloud4 User ID Find Service"
       parameters:
       - in: "query"
         name: "mode"
@@ -167,7 +170,31 @@ paths:
           type: "string"     
       responses:
         200:
-          description: User ID                                                                        
+          description: User ID
+    put:
+      tags:
+      - "Integrated Auth"
+      summary: "Integrated Hyper Cloud4 User Password Change Service"
+      parameters:
+      - $ref: "#/components/parameters/tokenParam"    
+      requestBody:
+        description: "User"
+        required: true  
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                dto:
+                  $ref: "#/components/schemas/User"    
+              example:
+                {
+                  "password": "tmax@23",
+                  "alterPassword" : "tmax@2323"
+                }     
+      responses:
+        200:
+          description: Password Change Success                                                                                  
   /login:
     post:
       tags:
@@ -524,7 +551,6 @@ paths:
       summary: "NameSpace List Get Service by User"
       parameters:
       - $ref: "#/components/parameters/tokenParam"
-      - $ref: "#/components/parameters/offsetParam"
       - $ref: "#/components/parameters/limitParam"
       responses:
         200:

@@ -36,14 +36,14 @@ public class OAuthApiCaller {
 //	}
 	
 	public static JsonArray ListUser() throws IOException {
-		logger.info( "[OAuth] User List Service Start" );
+		logger.info( " [OAuth] User List Service Start" );
 		
 		//GET svc
 		Request request = new Request.Builder().url(setAuthURL( Constants.SERVICE_NAME_OAUTH_USER_LIST )).build();
 	    Response response = client.newCall(request).execute();
 
 	    String result = response.body().string();   
-		logger.info("result : " + result);
+		logger.info(" result : " + result);
 
 	    Gson gson = new Gson();
 	    JsonObject userList = gson.fromJson(result, JsonObject.class);
@@ -51,7 +51,7 @@ public class OAuthApiCaller {
 	}
 
 	public static JsonObject createUser( User userInDO ) throws IOException {
-		logger.info( "[OAuth] User Create Service Start" );
+		logger.info( " [OAuth] User Create Service Start" );
 	
 		JsonObject createUserInDO = new JsonObject();		
 		createUserInDO.addProperty("user_id", userInDO.getId());
@@ -66,47 +66,94 @@ public class OAuthApiCaller {
 	    
 		Response response = client.newCall(request).execute();
 		String result = response.body().string();
-		logger.info("result : " + result);
+		logger.info(" result : " + result);
 
 	    JsonObject userCreateOut = gson.fromJson(result, JsonObject.class);
 	    return userCreateOut; 
 	}
 	
 	public static JsonObject AuthenticateCreate( String id, String password ) throws IOException {
-		logger.info( "[OAuth] Login Service Start" );
+		logger.info( " [OAuth] Login Service Start" );
 	
-		String loginInDO = "{ \"user_id\" : " + id + ", \"password\" : \"" + password + "\" }";	
-		logger.info("loginInDO : " + loginInDO);	
-		
+		JsonObject loginInDO = new JsonObject();		
+		loginInDO.addProperty("user_id", id);
+		loginInDO.addProperty("password", password);
+				
 		Gson gson = new Gson();		
+	    String json = gson.toJson(loginInDO);
+    
 	    //POST svc
 	    Request request = new Request.Builder().url(setAuthURL( Constants.SERVICE_NAME_OAUTH_AUTHENTICATE_CREATE ))
-	            .post(RequestBody.create(MediaType.parse("application/json"), loginInDO)).build();
+	            .post(RequestBody.create(MediaType.parse("application/json"), json)).build();
 	    
 		Response response = client.newCall(request).execute();
 		String result = response.body().string();
-		logger.info("result : " + result);
+		logger.info(" result : " + result);
 
 	    JsonObject authenticateCreateOut = gson.fromJson(result, JsonObject.class);
 	    return authenticateCreateOut; 
 	}
 	
 	public static JsonObject AuthenticateDelete( String accessToken ) throws IOException {
-		logger.info( "[OAuth] Logout Service Start" );
+		logger.info( " [OAuth] Logout Service Start" );
 	
-		logger.info("AccessToken : " + accessToken);	
+		logger.info(" AccessToken : " + accessToken);	
 		
 		Gson gson = new Gson();		
-	    //Delete svc
+	    //DELETE svc
 	    Request request = new Request.Builder().addHeader("token", accessToken)
 	    		.url(setAuthURL( Constants.SERVICE_NAME_OAUTH_AUTHENTICATE_DELETE )).delete().build();
 	    
 		Response response = client.newCall(request).execute();
 		String result = response.body().string();
-		logger.info("result : " + result);
+		logger.info(" result : " + result);
 
 	    JsonObject authenticateDeleteOut = gson.fromJson(result, JsonObject.class);
 	    return authenticateDeleteOut; 
+	}
+	
+	public static JsonObject AuthenticateUpdate( String refreshToken ) throws IOException {
+		logger.info( " [OAuth] Refresh Service Start" );
+	
+		logger.info(" RefreshToken : " + refreshToken);	
+		
+		Gson gson = new Gson();		
+	    //PUT svc
+	    Request request = new Request.Builder().addHeader("refresh_token", refreshToken)
+	    		.url(setAuthURL( Constants.SERVICE_NAME_OAUTH_AUTHENTICATE_DELETE )).put(RequestBody.create(MediaType.parse("application/json"), "")).build();
+	    
+		Response response = client.newCall(request).execute();
+		String result = response.body().string();
+		logger.info("result : " + result);
+
+	    JsonObject authenticateUpdateOut = gson.fromJson(result, JsonObject.class);
+	    return authenticateUpdateOut; 
+	}
+	
+	public static JsonObject SetPasswordService( String token, String alterPassword ) throws IOException {
+		logger.info( "[OAuth] Password Change Service Start" );
+	
+		logger.info(" Token : " + token);	
+		logger.info(" Alter Password : " + alterPassword);	
+	    
+		JsonObject setPasswordInDO = new JsonObject();		
+		setPasswordInDO.addProperty("password", alterPassword);
+		setPasswordInDO.addProperty("confirmPassword", alterPassword);
+				
+		Gson gson = new Gson();		
+	    String json = gson.toJson(setPasswordInDO);
+	
+	    //POST svc
+	    Request request = new Request.Builder().addHeader("token", token)
+	    		.url(setAuthURL( Constants.SERVICE_NAME_SET_PASSWORD_SERVICE ))
+	            .post(RequestBody.create(MediaType.parse("application/json"), json)).build();
+	    
+		Response response = client.newCall(request).execute();
+		String result = response.body().string();
+		logger.info("result : " + result);
+
+	    JsonObject setPasswordOut = gson.fromJson(result, JsonObject.class);
+	    return setPasswordOut; 
 	}
 	
 //	public static ContextDataObject makeUserCreateInDO( UserDO userInDO ) throws ProObjectException {

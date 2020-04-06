@@ -51,6 +51,7 @@ public class LogoutHandler extends GeneralHandler {
 			String accessToken = logoutInDO.getAccessToken();
     		logger.info( "  Token: " + accessToken );
     		
+    		// Integrated Auth or OpenAuth
     		if (System.getenv( "PROAUTH_EXIST" ) != null) {   		
         		if( System.getenv( "PROAUTH_EXIST" ).equalsIgnoreCase("1")) {
     	    		logger.info( "  [[ Integrated OAuth System! ]] " );
@@ -58,18 +59,19 @@ public class LogoutHandler extends GeneralHandler {
     	    		logger.info( "  logOutOut.get(\"result\") : " + logOutOut.get("result").toString() );
     	    		if ( logOutOut.get("result").toString().equalsIgnoreCase("\"true\"") ){
         				logger.info( "  Logout success." );
-        				outDO = "Logout success.";
-
+        				outDO = Constants.LOGOUT_SUCCESS;
     	    			status = Status.OK; 
     	    		} else {
     	    			logger.info("  LogOut failed by ProAuth.");		    			
 		    			status = Status.OK; //ui요청
-	    				outDO = "Logout fail. Token is not valid.";
+	    				outDO = Constants.LOGOUT_FAILED;
     	    		}
 
         		}
     	    } 
+    		
         	if (System.getenv( "PROAUTH_EXIST" ) == null || !System.getenv( "PROAUTH_EXIST" ).equalsIgnoreCase("1") ){	
+        		
         		logger.info( "  [[ OpenAuth System! ]]" );  			
         		// Verify access token	
     			JWTVerifier verifier = JWT.require(Algorithm.HMAC256(Constants.ACCESS_TOKEN_SECRET_KEY)).build();
@@ -92,7 +94,7 @@ public class LogoutHandler extends GeneralHandler {
     			} else {
     				logger.info( "  Token is not valid" );
     				status = Status.UNAUTHORIZED;
-    				outDO = "Logout fail. Token is not valid.";
+    				outDO = Constants.LOGOUT_FAILED;
     			}
         	}
     		
@@ -102,20 +104,20 @@ public class LogoutHandler extends GeneralHandler {
 			if (e.getResponseBody().contains("NotFound")) {
 				logger.info( "  Logout fail. Token not exist." );
 				status = Status.UNAUTHORIZED;
-				outDO = "Logout failed. Token not exist.";
+				outDO = Constants.LOGOUT_FAILED;
 			} else {
 				logger.info( "Response body: " + e.getResponseBody() );
 				e.printStackTrace();
 				
 				status = Status.UNAUTHORIZED;
-				outDO = "Logout failed. Exception occurs.";
+				outDO = Constants.LOGOUT_FAILED;
 			}
 		} catch (Exception e) {
 			logger.info( "Exception message: " + e.getMessage() );
 			e.printStackTrace();
 			
 			status = Status.UNAUTHORIZED;
-			outDO = "Logout failed. Exception occurs.";
+			outDO = Constants.LOGOUT_FAILED;
 		}
 		
 //		logger.info();
