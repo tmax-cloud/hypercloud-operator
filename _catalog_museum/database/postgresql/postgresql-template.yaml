@@ -101,17 +101,29 @@ objects:
             claimName: ${APP_NAME}-pvc
 parameters:
 - name: APP_NAME
+  displayName: AppName
   description: Application name
+  required: true
 - name: NAMESPACE
+  displayName: Namespace
+  required: true
   description: Application namespace
 - name: DB_STORAGE
+  displayName: DBStorage
   description: Storage size for DB
+  required: true
 - name: POSTGRESQL_USER
+  displayName: PostgreSQLUser
   description: PostgreSQLUser
+  required: true
 - name: POSTGRESQL_PASSWORD
+  displayName: PostgreSQLPassword
   description: PostgreSQLPassword
+  required: true
 - name: POSTGRESQL_DATABASE
+  displayName: PostgreSQLDatabase
   description: PostgreSQLDatabase
+  required: true
 plans:
 - name: postgresql-plan1
   description: postgresql

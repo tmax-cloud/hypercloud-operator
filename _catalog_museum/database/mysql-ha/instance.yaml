@@ -8,18 +8,9 @@ spec:
       name: mysql-ha-template
     parameters:
     - name: APP_NAME
-      description: A MySQL HA Deployment Name
-      displayName: AppName
-      required: true
       value: mysql-ha-test-deploy
     - name: NAMESPACE
-      description: A Namespace Name
-      displayName: Namespace
-      required: true
       value: default
-    #- name: REPLICA
-    #  description: A Namespace Name
-    #  displayName: Namespace
-    #  required: true
-    #  value: 4
+    - name: REPLICA
+      value: 4
 

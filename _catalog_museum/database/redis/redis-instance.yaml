@@ -9,24 +9,13 @@ spec:
       name: redis-template
     parameters:
     - name: APP_NAME
-      displayName: AppName
-      description: An App Name
-      required: true
       value: redis-sample-app
     - name: NAMESPACE
-      displayName: Namespace
       description: A Namespace Name
-      required: true
       value: default
-    - displayName: DBStorage
-      name: DB_STORAGE
-      required: true
+    - name: DB_STORAGE
       value: "20Gi"
     - name: DATABASE_SERVICE_NAME
-      displayName: DatabaseServiceName
-      required: true
       value: redis
     - name: REDIS_PASSWORD
-      displayName: RedisPassword
-      required: true
       value: tmax@23

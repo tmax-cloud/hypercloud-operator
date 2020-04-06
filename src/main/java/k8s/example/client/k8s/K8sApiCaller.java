@@ -592,6 +592,33 @@ public class K8sApiCaller {
     	return user;
     }
     
+    public static void updateUserMeta(User userInfo) throws Exception {
+        try {
+        	String jsonPatchStr = "["
+        			+ "{\"op\":\"replace\",\"path\":\"/userInfo/name\",\"value\": " + userInfo.getName() + "},"
+        			+ "{\"op\":\"replace\",\"path\":\"/userInfo/department\",\"value\": " + userInfo.getDepartment() + "},"
+        			+ "{\"op\":\"replace\",\"path\":\"/userInfo/position\",\"value\": " + userInfo.getPosition() + "},"
+        			+ "{\"op\":\"replace\",\"path\":\"/userInfo/phone\",\"value\": " + userInfo.getPhone() + "},"
+        			+ "{\"op\":\"replace\",\"path\":\"/userInfo/description\",\"value\": " + userInfo.getDescription() + "}"
+        			+ "]";
+			JsonElement jsonPatch = (JsonElement) new JsonParser().parse(jsonPatchStr);
+
+			customObjectApi.patchClusterCustomObject(
+					Constants.CUSTOM_OBJECT_GROUP,
+					Constants.CUSTOM_OBJECT_VERSION, 
+					Constants.CUSTOM_OBJECT_PLURAL_USER,
+					userInfo.getId(), jsonPatch);
+        } catch (ApiException e) {
+        	logger.info("Response body: " + e.getResponseBody());
+        	e.printStackTrace();
+        	throw e;
+        } catch (Exception e) {
+        	logger.info("Exception message: " + e.getMessage());
+        	e.printStackTrace();
+        	throw e;
+        }
+    }
+    
     public static List < UserCR > listUser() throws Exception {
     	List < UserCR > userList = null;     
         try {

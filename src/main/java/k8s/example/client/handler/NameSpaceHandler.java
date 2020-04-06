@@ -27,6 +27,7 @@ import k8s.example.client.ErrorCode;
 import k8s.example.client.Main;
 import k8s.example.client.Util;
 import k8s.example.client.k8s.K8sApiCaller;
+import k8s.example.client.metering.util.SimpleUtil;
 
 public class NameSpaceHandler extends GeneralHandler {
     private Logger logger = Main.logger;
@@ -39,15 +40,9 @@ public class NameSpaceHandler extends GeneralHandler {
 		String accessToken = null;
 		V1NamespaceList nsList = null;
 		String outDO = null; 
-		String limit = null;
 		
 		// if limit exists
-		if(session.getParameters()!=null) {
-			if( session.getParameters().get("limit")!= null) {
-				limit = session.getParameters().get("limit").get(0);
-				logger.info("limit : " + limit );			
-			}
-		}
+		String limit = SimpleUtil.getQueryParameter( session.getParameters(), Constants.QUERY_PARAMETER_LIMIT );
 		
 		try {
 			// Read AccessToken from Header

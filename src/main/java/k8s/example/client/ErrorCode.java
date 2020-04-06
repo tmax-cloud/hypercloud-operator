@@ -13,6 +13,8 @@ public class ErrorCode {
 	
 	
 	// USER
+	public static final String NO_MATCHING_USER = "No Matching User";
+	public static final String NO_CORRESPONDING_USER = "No Corresponding User";
 	public static final String USER_ID_EMPTY = "User ID is empty";
 	public static final String USER_ID_DUPLICATED = "User ID is Duplicated";
 	public static final String USER_MAIL_DUPLICATED = "User Mail is Duplicated";

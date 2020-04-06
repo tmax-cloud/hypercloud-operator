@@ -16,10 +16,14 @@ plans:
   description: wildfly
   name: wildfly-plan1
 parameters:
-- name: APP_NAME
-  description: Application name
+- name: PIPELINE_NAME
+  displayName: PipelineName
+  description: Pipeline name
+  required: true
 - name: NAMESPACE
+  displayName: Namespace
   description: Application namespace
+  required: true
 objects:
 - apiVersion: tekton.dev/v1alpha1
   kind: Pipeline

@@ -111,6 +111,10 @@ public class Constants {
 	public static final String QUERY_PARAMETER_ENDTIME = "endTime";
 	public static final String QUERY_PARAMETER_SORT = "sort";
 	
+	// User Get Query Parameters
+	public static final String QUERY_PARAMETER_MODE = "mode";
+	public static final String QUERY_PARAMETER_EMAIL = "email";
+	
 	// Mysql DB Connection
 	public static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
 	public static final String DB_URL = "jdbc:mysql://mysql-service.hypercloud4-system:3306/metering?useSSL=false";
@@ -123,7 +127,11 @@ public class Constants {
 	
 	// Oauth //TODO configmap으로 만들던지, 환경변수 읽어오는것으로 수정하자
 	public static final String OAUTH_URL = "http://proauth-server-service.proauth-system:8080/";
+	public static final String USER_CREATE_SUCCESS = "User Create Success";
 	public static final String USER_CREATE_FAILED = "User Create Failed";
+	public static final String USER_UPDATE_SUCCESS = "User Update Success";
+	public static final String USER_UPDATE_FAILED = "User Update Failed";
+	public static final String USER_ID_FIND_FAILED = "User ID Find Failed";
 	public static final String SERVICE_NAME_OAUTH_USER_LIST = "proauth/oauth/usersList";
 	public static final String SERVICE_NAME_OAUTH_USER_CREATE = "proauth/oauth/users";
 	public static final String SERVICE_NAME_OAUTH_USER_DELETE = "proauth/oauth/users/";

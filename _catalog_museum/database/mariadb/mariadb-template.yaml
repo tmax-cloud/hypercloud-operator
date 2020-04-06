@@ -101,17 +101,29 @@ objects:
             claimName: ${APP_NAME}-pvc
 parameters:
 - name: APP_NAME
+  displayName: AppName
   description: Application name
+  required: true
 - name: NAMESPACE
+  displayName: Namespace
+  required: true
   description: Application namespace
 - name: DB_STORAGE
+  displayName: DBStorage
   description: Storage size for DB
+  required: true
 - name: MYSQL_USER
+  displayName: MysqlUser
   description: MysqlUser
+  required: true
 - name: MYSQL_PASSWORD
+  displayName: MysqlPassword
   description: MysqlPassword
+  required: true
 - name: MYSQL_DATABASE
+  displayName: MysqlDatabase
   description: MysqlDatabase
+  required: true
 plans:
 - name: mariadb-plan1
   description: mariadb

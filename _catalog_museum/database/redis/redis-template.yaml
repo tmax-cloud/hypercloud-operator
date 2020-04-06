@@ -95,15 +95,25 @@ objects:
             claimName: ${APP_NAME}-pvc
 parameters:
 - name: APP_NAME
+  displayName: AppName
   description: Application name
+  required: true
 - name: NAMESPACE
+  displayName: Namespace
+  required: true
   description: Application namespace
 - name: DB_STORAGE
+  displayName: DBStorage
   description: Storage size for DB
+  required: true
 - name: DATABASE_SERVICE_NAME
+  displayName: DatabaseServiceName
   description: DatabaseServiceName
+  required: true
 - name: REDIS_PASSWORD
+  displayName: RedisPassword
   description: RedisPassword
+  required: true
 plans:
 - name: redis-plan1
   description: redis
