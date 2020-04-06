@@ -99,6 +99,10 @@ public class OperatorFunc {
 		pluralMapper.put("PipelineRun", "pipelineruns");
 		pluralMapper.put("PipelineResource", "pipelineresources");
 		pluralMapper.put("Condition", "conditions");
+		pluralMapper.put("ClusterTriggerBinding", "clustertriggerbindings");
+		pluralMapper.put("TriggerBinding", "triggerbindings");
+		pluralMapper.put("TriggerTemplate", "triggertemplates");
+		pluralMapper.put("EventListener", "eventlisteners");
 //		pluralMapper.put("", "");
 //		pluralMapper.put("", "");
 //		pluralMapper.put("", "");
