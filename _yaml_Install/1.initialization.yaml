@@ -443,7 +443,7 @@ spec:
                   enum: [ClusterIP, NodePort, LoadBalancer]
             persistentVolumeClaim:
               type: object
-              required: [storageSize, storageClassName]
+              required: [accessModes, storageSize, storageClassName]
               properties:
                 accessModes:
                   type: array
