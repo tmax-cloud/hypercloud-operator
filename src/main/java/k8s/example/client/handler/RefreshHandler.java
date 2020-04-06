@@ -13,6 +13,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 
 import fi.iki.elonen.NanoHTTPD;
 import fi.iki.elonen.NanoHTTPD.IHTTPSession;
@@ -27,6 +28,7 @@ import k8s.example.client.DataObject.Token;
 import k8s.example.client.DataObject.TokenCR;
 import k8s.example.client.Util;
 import k8s.example.client.k8s.K8sApiCaller;
+import k8s.example.client.k8s.OAuthApiCaller;
 
 public class RefreshHandler extends GeneralHandler {
     private Logger logger = Main.logger;
@@ -53,71 +55,103 @@ public class RefreshHandler extends GeneralHandler {
 			logger.info( "  Access token: " + refreshInDO.getAccessToken() );
     		logger.info( "  Refresh token: " + refreshInDO.getRefreshToken() );
     		
-    		// Get token name
-    		DecodedJWT jwt = JWT.decode(refreshInDO.getAccessToken());
-    		String userId = jwt.getClaim(Constants.CLAIM_USER_ID).asString();
-    		String tokenId = jwt.getClaim(Constants.CLAIM_TOKEN_ID).asString();
-    		logger.info( "  User ID: " + userId );
-    		logger.info( "  Token ID: " + tokenId );
-    		String tokenName = userId.replace("@", "-") + "-" + tokenId;
+    		// Integrated Auth or OpenAuth
+    		if (System.getenv( "PROAUTH_EXIST" ) != null) {   		
+        		if( System.getenv( "PROAUTH_EXIST" ).equalsIgnoreCase("1")) {
+        			
+    	    		logger.info( "  [[ Integrated OAuth System! ]] " );
+    	    		JsonObject refreshOut = OAuthApiCaller.AuthenticateUpdate(refreshInDO.getRefreshToken());
+    	    		logger.info( "  Oauth Call Result : " + refreshOut.get("result").toString() );
+    	    		logger.info( "  New Access Token : " + refreshOut.get("token").toString() );
+    	    		logger.info( "  New Refresh Token : " + refreshOut.get("refresh_token").toString() );
+    	    		
+    	    		if ( refreshOut.get("result").toString().equalsIgnoreCase("\"true\"") ){
+        				logger.info( "  refresh success." );
+        				
+        				// Make outDO
+            			refreshOutDO = new Token();
+            			refreshOutDO.setAccessToken(refreshOut.get("token").toString().replaceAll("\"", ""));
+            			refreshOutDO.setRefreshToken(refreshOut.get("refresh_token").toString().replaceAll("\"", ""));
+            			Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            			outDO = gson.toJson(refreshOutDO).toString();
+    	    			status = Status.OK; 
+    	    		} else {
+    	    			logger.info(" Refresh failed by ProAuth.");		    			
+		    			status = Status.UNAUTHORIZED; //ui요청
+	    				outDO = Constants.REFRESH_FAILED;
+    	    		}
+        		}
+    		}
     		
-			// Verify refresh token	
-			JWTVerifier verifier = JWT.require(Algorithm.HMAC256(Constants.REFRESH_TOKEN_SECRET_KEY)).build();
-			try {
-				jwt = verifier.verify(refreshInDO.getRefreshToken());
-			} catch (Exception e) {
-				logger.info( "Exception message: " + e.getMessage() );
-				K8sApiCaller.deleteToken(tokenName);
-			}
+        	if (System.getenv( "PROAUTH_EXIST" ) == null || !System.getenv( "PROAUTH_EXIST" ).equalsIgnoreCase("1") ){
 
-			String issuer = jwt.getIssuer();
-			logger.info( "  Issuer: " + issuer );
-			
-			if(verifyRefreshToken(refreshInDO.getAccessToken(), refreshInDO.getRefreshToken(), tokenName, issuer)) {
-				logger.info( "  Refresh success" );	
-				status = Status.OK;
-				
-				// Make a new access token
-				atExpireTimeSec = (refreshInDO.getAtExpireTime() == 0)?  Constants.ACCESS_TOKEN_EXP_TIME : refreshInDO.getAtExpireTime() * 60;
-				logger.info( "  AT Expire Time : " +  atExpireTimeSec/60  + " min");	
-				
-				Builder tokenBuilder = JWT.create().withIssuer(Constants.ISSUER)
-						.withExpiresAt(Util.getDateFromSecond(atExpireTimeSec))
-						.withClaim(Constants.CLAIM_USER_ID, userId)
-						.withClaim(Constants.CLAIM_TOKEN_ID, tokenId);
-				
-				// TODO
-    			if ( userId.equals( Constants.MASTER_USER_ID ) ) {
-    				tokenBuilder.withClaim( Constants.CLAIM_ROLE, Constants.ROLE_ADMIN );
-    			} else {
-    				tokenBuilder.withClaim( Constants.CLAIM_ROLE, Constants.ROLE_USER );
+        		logger.info( "  [[ OpenAuth System! ]]" );  			
+        		// Get token name
+        		DecodedJWT jwt = JWT.decode(refreshInDO.getAccessToken());
+        		String userId = jwt.getClaim(Constants.CLAIM_USER_ID).asString();
+        		String tokenId = jwt.getClaim(Constants.CLAIM_TOKEN_ID).asString();
+        		logger.info( "  User ID: " + userId );
+        		logger.info( "  Token ID: " + tokenId );
+        		String tokenName = userId.replace("@", "-") + "-" + tokenId;
+        		
+    			// Verify refresh token	
+    			JWTVerifier verifier = JWT.require(Algorithm.HMAC256(Constants.REFRESH_TOKEN_SECRET_KEY)).build();
+    			try {
+    				jwt = verifier.verify(refreshInDO.getRefreshToken());
+    			} catch (Exception e) {
+    				logger.info( "Exception message: " + e.getMessage() );
+    				K8sApiCaller.deleteToken(tokenName);
     			}
+
+    			String issuer = jwt.getIssuer();
+    			logger.info( "  Issuer: " + issuer );
     			
-    			String newAccessToken = tokenBuilder.sign(Algorithm.HMAC256(Constants.ACCESS_TOKEN_SECRET_KEY));
-    			logger.info( "  New access token: " + newAccessToken );
-    			
-    			// Make outDO
-    			refreshOutDO = new Token();
-    			refreshOutDO.setAccessToken(newAccessToken);
-    			refreshOutDO.setAtExpireTime(refreshInDO.getAtExpireTime());
-    			Gson gson = new GsonBuilder().setPrettyPrinting().create();
-    			outDO = gson.toJson(refreshOutDO).toString();
-    			
-    			// Update access token
-    			K8sApiCaller.updateAccessToken(tokenName, Util.Crypto.encryptSHA256(newAccessToken));
-			} else {
-				logger.info( "  Refresh fail" );
-				status = Status.UNAUTHORIZED;
-			}
+    			if(verifyRefreshToken(refreshInDO.getAccessToken(), refreshInDO.getRefreshToken(), tokenName, issuer)) {
+    				logger.info( "  Refresh success" );	
+    				status = Status.OK;
+    				
+    				// Make a new access token
+    				atExpireTimeSec = (refreshInDO.getAtExpireTime() == 0)?  Constants.ACCESS_TOKEN_EXP_TIME : refreshInDO.getAtExpireTime() * 60;
+    				logger.info( "  AT Expire Time : " +  atExpireTimeSec/60  + " min");	
+    				
+    				Builder tokenBuilder = JWT.create().withIssuer(Constants.ISSUER)
+    						.withExpiresAt(Util.getDateFromSecond(atExpireTimeSec))
+    						.withClaim(Constants.CLAIM_USER_ID, userId)
+    						.withClaim(Constants.CLAIM_TOKEN_ID, tokenId);
+    				
+    				// TODO
+        			if ( userId.equals( Constants.MASTER_USER_ID ) ) {
+        				tokenBuilder.withClaim( Constants.CLAIM_ROLE, Constants.ROLE_ADMIN );
+        			} else {
+        				tokenBuilder.withClaim( Constants.CLAIM_ROLE, Constants.ROLE_USER );
+        			}
+        			
+        			String newAccessToken = tokenBuilder.sign(Algorithm.HMAC256(Constants.ACCESS_TOKEN_SECRET_KEY));
+        			logger.info( "  New access token: " + newAccessToken );
+        			
+        			// Make outDO
+        			refreshOutDO = new Token();
+        			refreshOutDO.setAccessToken(newAccessToken);
+        			refreshOutDO.setAtExpireTime(refreshInDO.getAtExpireTime());
+        			Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        			outDO = gson.toJson(refreshOutDO).toString();
+        			
+        			// Update access token
+        			K8sApiCaller.updateAccessToken(tokenName, Util.Crypto.encryptSHA256(newAccessToken));
+    			} else {
+    				logger.info( "  Refresh fail" );
+    				status = Status.UNAUTHORIZED;
+    				outDO = Constants.REFRESH_FAILED;
+    			}
+        	}  		
 		} catch (Exception e) {
 			logger.info( "  Refresh fail" );
 			logger.info( "Exception message: " + e.getMessage() );
 			e.printStackTrace();
-			
 			status = Status.UNAUTHORIZED;
+			outDO = Constants.REFRESH_FAILED;
 		}
 		
-//		logger.info();
 		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO));
 	}
 	

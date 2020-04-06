@@ -201,10 +201,13 @@ public class LoginHandler extends GeneralHandler {
 			}
 			
 			if (status.equals(Status.UNAUTHORIZED)) {
+				//Make OutDO
 				CommonOutDO out = new CommonOutDO();
+				out.setStatus(Constants.LOGIN_SUCCESS);
 				out.setMsg(outDO);
 				Gson gson = new GsonBuilder().setPrettyPrinting().create();
 				outDO = gson.toJson(out).toString();
+				
 			} else if ( status.equals(Status.OK) && outDO.equals(Constants.LOGIN_FAILED)) { 
 				CommonOutDO out = new CommonOutDO();
 				out.setMsg(outDO);

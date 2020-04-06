@@ -19,6 +19,7 @@ public class ErrorCode {
 	public static final String USER_ID_DUPLICATED = "User ID is Duplicated";
 	public static final String USER_MAIL_DUPLICATED = "User Mail is Duplicated";
 	public static final String USER_PASSWORD_EMPTY = "User Password is empty";
+	public static final String USER_ALTER_PASSWORD_EMPTY = "User Alter Password is empty";
 	public static final String USER_MAIL_EMPTY = "User Mail is empty";
 
 	
