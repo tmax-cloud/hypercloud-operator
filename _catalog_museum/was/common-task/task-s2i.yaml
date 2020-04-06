@@ -1,0 +1,93 @@
+apiVersion: tekton.dev/v1alpha1
+kind: ClusterTask
+metadata:
+  name: s2i
+spec:
+  description: S2I Task
+  inputs:
+    params:
+    - description: The location of the s2i builder image.
+      name: BUILDER_IMAGE
+    - default: .
+      description: The location of the path to run s2i from.
+      name: PATH_CONTEXT
+    - default: 'false'
+      description: Verify the TLS on the registry endpoint (for push/pull to a non-TLS
+        registry)
+      name: TLSVERIFY
+    - name: LOGLEVEL
+      description: Log level when running the S2I binary
+      default: '0'
+    resources:
+    - name: source
+      type: git
+  outputs:
+    resources:
+    - name: image
+      type: image
+  results:
+  - name: image-url
+    description: Tag-updated image url
+  steps:
+  - command:
+    - /edit-image-url.sh
+    args:
+    - /workspace/source
+    - $(outputs.resources.image.url)
+    - $(results.image-url.path)
+    image: 172.22.11.2:30500/update-image-url:latest
+    name: update-image
+  - command:
+    - /usr/local/bin/s2i
+    - --loglevel=$(inputs.params.LOGLEVEL)
+    - build
+    - $(inputs.params.PATH_CONTEXT)
+    - $(inputs.params.BUILDER_IMAGE)
+    - --as-dockerfile
+    - /gen-source/Dockerfile.gen
+    image: quay.io/openshift-pipeline/s2i:nightly
+    name: generate
+    volumeMounts:
+    - mountPath: /gen-source
+      name: gen-source
+    workingdir: /workspace/source
+  - script: |
+      buildah \
+      bud \
+      --format \
+      docker \
+      --tls-verify=$(inputs.params.TLSVERIFY) \
+      --layers \
+      -f \
+      /gen-source/Dockerfile.gen \
+      -t \
+      $(cat $(results.image-url.path)) \
+      .
+    image: quay.io/buildah/stable
+    name: build
+    securityContext:
+      privileged: true
+    volumeMounts:
+    - mountPath: /var/lib/containers
+      name: varlibcontainers
+    - mountPath: /gen-source
+      name: gen-source
+    workingdir: /gen-source
+  - script: |
+      buildah \
+      push \
+      --tls-verify=$(inputs.params.TLSVERIFY) \
+      $(cat $(results.image-url.path)) \
+      docker://$(cat $(results.image-url.path))
+    image: quay.io/buildah/stable
+    name: push
+    securityContext:
+      privileged: true
+    volumeMounts:
+    - mountPath: /var/lib/containers
+      name: varlibcontainers
+  volumes:
+  - emptyDir: {}
+    name: varlibcontainers
+  - emptyDir: {}
+    name: gen-source

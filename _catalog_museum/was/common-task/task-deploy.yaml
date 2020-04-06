@@ -1,0 +1,46 @@
+apiVersion: tekton.dev/v1alpha1
+kind: ClusterTask
+metadata:
+  name: generate-and-deploy-using-kubectl
+spec:
+  inputs:
+    resources:
+      - name: image
+        type: image
+    params:
+      - name: app-name
+        description: Deployment name
+      - name: port
+        description: Port for was deployment
+      - name: replica
+        description: Number of replica
+      - name: image-url
+        description: Updated image url:tag
+        default: $(inputs.resources.image.url)
+  steps:
+    - name: create-yaml
+      image: 172.22.11.2:30500/mk-dp:latest
+      command: ["/make-deployment"]
+      args:
+        - $(inputs.params.app-name)
+        - $(inputs.params.replica)
+        - $(inputs.params.image-url)
+        - $(inputs.params.port)
+      volumeMounts:
+      - mountPath: /generate
+        name: generate
+    - name: run-kubectl
+      image: lachlanevenson/k8s-kubectl
+      command: ["kubectl"]
+      args:
+        - apply
+        - -f
+        - /generate/deployment.yaml
+      volumeMounts:
+      - mountPath: /generate
+        name: generate
+  volumes:
+    - emptyDir: {}
+      name: generate
+
+
