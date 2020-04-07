@@ -65,16 +65,22 @@ public class ResourceQuotaClaimController extends Thread {
 							resourceName = claim.getResourceName();
 							claimNamespace = claim.getMetadata().getNamespace();
 							switch( eventType ) {
-								case Constants.EVENT_TYPE_ADDED : 
-									// Patch Status to Awaiting
-									replaceRqcStatus( claimName, Constants.CLAIM_STATUS_AWAITING, "wait for admin permission", claimNamespace );	
+								case Constants.EVENT_TYPE_ADDED :
+									if ( K8sApiCaller.namespaceAlreadyExist( resourceName ) ) {
+										replaceRqcStatus( claimName, Constants.CLAIM_STATUS_REJECT, "Duplicated ResourceQuota Name", claimNamespace );
+									} else {
+										// Patch Status to Awaiting
+										replaceRqcStatus( claimName, Constants.CLAIM_STATUS_AWAITING, "wait for admin permission", claimNamespace );	
+									}					
 									break;
 								case Constants.EVENT_TYPE_MODIFIED : 
 									String status = getClaimStatus( claimName, claimNamespace );
-									if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && K8sApiCaller.resourcequotaAlreadyExist( resourceName, claimNamespace ) ) {
-										K8sApiCaller.updateResourceQuota( claim );
-										replaceRqcStatus( claimName, Constants.CLAIM_STATUS_SUCCESS, "resource quota update success.", claimNamespace );
-									} else if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && !K8sApiCaller.resourcequotaAlreadyExist( resourceName, claimNamespace ) ) {
+//									if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && K8sApiCaller.resourcequotaAlreadyExist( resourceName, claimNamespace ) ) {
+//										K8sApiCaller.updateResourceQuota( claim );
+//										replaceRqcStatus( claimName, Constants.CLAIM_STATUS_SUCCESS, "resource quota update success.", claimNamespace );
+//									} else          //FIXME : 조금 더 생각을 해보자
+										
+									if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && !K8sApiCaller.resourcequotaAlreadyExist( resourceName, claimNamespace ) ) {
 										K8sApiCaller.createResourceQuota( claim );
 										replaceRqcStatus( claimName, Constants.CLAIM_STATUS_SUCCESS, "resource quota create success.", claimNamespace );
 									}
