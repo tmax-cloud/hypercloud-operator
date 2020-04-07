@@ -156,7 +156,7 @@ paths:
     get:
       tags:
       - "Integrated Auth"
-      summary: "Integrated Hyper Cloud4 User ID Find Service"
+      summary: "Integrated Hyper Cloud4 User ID/Password Find Service"
       parameters:
       - in: "query"
         name: "mode"
@@ -164,10 +164,15 @@ paths:
         schema:
           type: "string"
       - in: "query"
-        name: "eamil"
-        description: "User E-mail"
+        name: "email"
+        description: "Input User E-mail only to find User ID"
         schema:
-          type: "string"     
+          type: "string"   
+      - in: "query"
+        name: "id"
+        description: "Input User ID only to find User Password"
+        schema:
+          type: "string"    
       responses:
         200:
           description: User ID
