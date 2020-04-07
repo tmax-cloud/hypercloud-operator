@@ -57,7 +57,9 @@ public class RegistryWatcher extends Thread {
 					try {
 						Registry registry = response.object;
 						
-						if( registry != null) {
+						if( registry != null
+								&& Integer.parseInt(registry.getMetadata().getResourceVersion()) > Integer.parseInt(latestResourceVersion)) {
+							
 							latestResourceVersion = response.object.getMetadata().getResourceVersion();
 							String eventType = response.type.toString();
 							logger.info("====================== Registry " + eventType + " ====================== \n");
