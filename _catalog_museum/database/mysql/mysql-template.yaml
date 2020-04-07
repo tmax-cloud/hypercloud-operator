@@ -3,9 +3,9 @@ kind: Template
 metadata:
   name: mysql-template
   namespace: default
-shortDescription: mysql-deployment
+shortDescription: MySQL Deployment
+longDescription: MySQL Deployment
 imageUrl: https://upload.wikimedia.org/wikipedia/en/6/62/MySQL.svg
-longDescription: mysql-deployment
 provider: tmax
 tags:
 - db

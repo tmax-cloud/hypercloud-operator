@@ -3,9 +3,9 @@ kind: Template
 metadata:
   name: mariadb-template
   namespace: default
-shortDescription: mariadb-deployment
+shortDescription: MariaDB Deployment
+longDescription: MariaDB Deployment
 imageUrl: https://upload.wikimedia.org/wikipedia/commons/c/c9/MariaDB_Logo.png
-longDescription: mariadb-deployment
 provider: tmax
 tags:
 - db

@@ -1,0 +1,28 @@
+apiVersion: tekton.dev/v1alpha1
+kind: ClusterTask
+metadata:
+  name: analyze-image-vulnerabilities
+spec:
+  inputs:
+    resources:
+      - name: scanned-image
+        type: image
+    params:
+      - name: image-url
+        default: $(inputs.resources.scanned-image.url)
+  steps:
+    - name: scan-image
+      image: 192.168.6.110:5000/klar:v2.4.0
+      env:
+        - name: CLAIR_ADDR
+          value: http://172.22.11.2:30060
+        - name: CLAIR_THRESHOLD
+          value: '1000'
+        - name: REGISTRY_INSECURE
+          value: 'TRUE'
+        - name: IMAGE_NAME
+          value: $(inputs.params.image-url)
+      script: |
+        #!/bin/sh
+        set -x
+        /klar $IMAGE_NAME
