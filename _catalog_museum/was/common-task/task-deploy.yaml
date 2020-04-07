@@ -19,7 +19,7 @@ spec:
         default: $(inputs.resources.image.url)
   steps:
     - name: create-yaml
-      image: 172.22.11.2:30500/mk-dp:latest
+      image: 192.168.6.110:5000/mk-dp:latest
       command: ["/make-deployment"]
       args:
         - $(inputs.params.app-name)
