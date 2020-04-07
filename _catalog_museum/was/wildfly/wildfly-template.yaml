@@ -6,8 +6,8 @@ metadata:
 imageUrl: https://upload.wikimedia.org/wikipedia/commons/a/a3/Wildfly_logo.png
 provider: tmax
 recommend: false
-shortDescription: wildfly-cicd
-longDescription: wildfly-cicd-template
+shortDescription: Wildfly CI/CD Template
+longDescription: Wildfly CI/CD Template
 tags:
 - was
 - wildfly

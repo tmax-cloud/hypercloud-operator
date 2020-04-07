@@ -6,8 +6,8 @@ metadata:
 imageUrl: https://upload.wikimedia.org/wikipedia/commons/7/75/Django_logo.svg
 provider: tmax
 recommend: false
-shortDescription: django-cicd
-longDescription: django-cicd-template
+shortDescription: Django CI/CD Template
+longDescription: Django CI/CD Template
 tags:
 - was
 - django

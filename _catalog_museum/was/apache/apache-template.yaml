@@ -6,8 +6,8 @@ metadata:
 imageUrl: https://upload.wikimedia.org/wikipedia/commons/4/45/Apache_HTTP_server_logo_%282016%29.png
 provider: tmax
 recommend: false
-shortDescription: apache-cicd
-longDescription: apache-cicd-template
+shortDescription: Apache CI/CD Template
+longDescription: Apache CI/CD Template
 tags:
 - was
 - apache

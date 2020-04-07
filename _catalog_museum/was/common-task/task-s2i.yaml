@@ -57,6 +57,7 @@ spec:
       --format \
       docker \
       --tls-verify=$(inputs.params.TLSVERIFY) \
+      --storage-driver=vfs \
       --layers \
       -f \
       /gen-source/Dockerfile.gen \
@@ -77,6 +78,7 @@ spec:
       buildah \
       push \
       --tls-verify=$(inputs.params.TLSVERIFY) \
+      --storage-driver=vfs \
       $(cat $(results.image-url.path)) \
       docker://$(cat $(results.image-url.path))
     image: quay.io/buildah/stable

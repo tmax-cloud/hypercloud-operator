@@ -3,9 +3,9 @@ kind: Template
 metadata:
   name: postgresql-template
   namespace: default
-shortDescription: postgresql-deployment
+shortDescription: PostgreSQL Deployment
+longDescription: PostgreSQL Deployment
 imageUrl: https://upload.wikimedia.org/wikipedia/commons/2/29/Postgresql_elephant.svg
-longDescription: postgresql-deployment
 provider: tmax
 tags:
 - db

@@ -6,8 +6,8 @@ metadata:
 imageUrl: https://upload.wikimedia.org/wikipedia/commons/d/d9/Node.js_logo.svg
 provider: tmax
 recommend: false
-shortDescription: nodejs-cicd
-longDescription: nodejs-cicd-template
+shortDescription: NodeJS CI/CD Template
+longDescription: NodeJS CI/CD Template
 tags:
 - was
 - nodejs

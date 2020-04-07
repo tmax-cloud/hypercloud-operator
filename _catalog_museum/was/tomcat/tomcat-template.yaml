@@ -6,8 +6,8 @@ metadata:
 imageUrl: https://upload.wikimedia.org/wikipedia/commons/7/7b/Tomcat-logo.svg
 provider: tmax
 recommend: false
-shortDescription: tomcat-cicd
-longDescription: tomcat-cicd-template
+shortDescription: Tomcat CI/CD Template
+longDescription: Tomcat CI/CD Template
 tags:
 - was
 - tomcat
