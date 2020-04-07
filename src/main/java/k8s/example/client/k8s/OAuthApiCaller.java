@@ -117,10 +117,15 @@ public class OAuthApiCaller {
 	
 		logger.info(" RefreshToken : " + refreshToken);	
 		
+		JsonObject refreshInDO = new JsonObject();		
+		refreshInDO.addProperty("refresh_token", refreshToken);
+				
 		Gson gson = new Gson();		
+	    String json = gson.toJson(refreshInDO);
+	    
 	    //PUT svc
-	    Request request = new Request.Builder().addHeader("refresh_token", refreshToken)
-	    		.url(setAuthURL( Constants.SERVICE_NAME_OAUTH_AUTHENTICATE_DELETE )).put(RequestBody.create(MediaType.parse("application/json"), "")).build();
+	    Request request = new Request.Builder()
+	    		.url(setAuthURL( Constants.SERVICE_NAME_OAUTH_AUTHENTICATE_UPDATE )).put(RequestBody.create(MediaType.parse("application/json"), json)).build();
 	    
 		Response response = client.newCall(request).execute();
 		String result = response.body().string();
@@ -143,10 +148,11 @@ public class OAuthApiCaller {
 		Gson gson = new Gson();		
 	    String json = gson.toJson(setPasswordInDO);
 	
-	    //POST svc
+//	    POST svc
 	    Request request = new Request.Builder().addHeader("token", token)
 	    		.url(setAuthURL( Constants.SERVICE_NAME_SET_PASSWORD_SERVICE ))
 	            .post(RequestBody.create(MediaType.parse("application/json"), json)).build();
+
 	    
 		Response response = client.newCall(request).execute();
 		String result = response.body().string();

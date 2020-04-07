@@ -6,8 +6,8 @@ metadata:
 imageUrl: https://upload.wikimedia.org/wikipedia/commons/d/d9/Node.js_logo.svg
 provider: tmax
 recommend: false
-shortDescription: nodejs-cicd
-longDescription: nodejs-cicd-template
+shortDescription: NodeJS CI/CD Template
+longDescription: NodeJS CI/CD Template
 tags:
 - was
 - nodejs
@@ -63,23 +63,29 @@ objects:
         outputs:
         - name: image
           resource: image
-    - name: deploy
-      conditions:
-      - conditionRef: ${PIPELINE_NAME}-condition
-        resources:
+    - name: scan-and-sign-image
+      taskRef:
+        name: analyze-image-vulnerabilities
+        kind: ClusterTask
+      resources:
+        inputs:
         - name: scanned-image
           resource: image
           from:
           - build-source
+      params:
+      - name: image-url
+        value: $(tasks.build-source.results.image-url)
+    - name: deploy
       taskRef:
         name: generate-and-deploy-using-kubectl
         kind: ClusterTask
+      runAfter:
+      - scan-and-sign-image
       resources:
         inputs:
         - name: image
           resource: image
-          from:
-          - build-source
       params:
       - name: app-name
         value: $(params.app-name)
@@ -89,22 +95,3 @@ objects:
         value: $(params.port)
       - name: image-url
         value: $(tasks.build-source.results.image-url)
-- apiVersion: tekton.dev/v1alpha1
-  kind: Condition
-  metadata:
-    name: ${PIPELINE_NAME}-condition
-    namespace: ${NAMESPACE}
-  spec:
-    resources:
-    - name: scanned-image
-      type: image
-    check:
-      image: 192.168.6.110:5000/klar:v2.4.0
-      env:
-      - name: CLAIR_ADDR
-        value: http://172.22.11.2:30060
-      - name: CLAIR_THRESHOLD
-        value: '1000'
-      - name: REGISTRY_INSECURE
-        value: 'TRUE'
-      script: '/klar $(resources.scanned-image.url)'
