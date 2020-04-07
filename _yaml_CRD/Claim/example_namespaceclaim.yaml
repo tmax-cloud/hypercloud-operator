@@ -2,6 +2,7 @@ apiVersion: tmax.io/v1
 kind: NamespaceClaim
 metadata:
   name: example-namespace
+resourceName: example-namespace-claim
 spec:
   hard:
     limits.cpu: "1"

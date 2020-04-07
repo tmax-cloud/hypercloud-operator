@@ -48,10 +48,10 @@ public class ResourceQuotaClaimController extends Thread {
 					} catch (Exception e) {
 						logger.info(e.getMessage());
 					}
-					
-					
+									
 					// Logic here
 					String claimName = "unknown";
+					String resourceName = "unknown";
 					String claimNamespace = "unknown";
 					try {
 						NamespaceClaim claim = response.object;
@@ -62,20 +62,21 @@ public class ResourceQuotaClaimController extends Thread {
 							logger.info("[ResourceQuotaClaim Controller] Event Type : " + eventType );
 							logger.info("[ResourceQuotaClaim Controller] == ResourceQuotaClaim == \n" + claim.toString());
 							claimName = claim.getMetadata().getName();
+							resourceName = claim.getResourceName();
 							claimNamespace = claim.getMetadata().getNamespace();
 							switch( eventType ) {
 								case Constants.EVENT_TYPE_ADDED : 
 									// Patch Status to Awaiting
-									replaceRqcStatus( claim.getMetadata().getName(), Constants.CLAIM_STATUS_AWAITING, "wait for admin permission", claimNamespace );
+									replaceRqcStatus( claimName, Constants.CLAIM_STATUS_AWAITING, "wait for admin permission", claimNamespace );	
 									break;
 								case Constants.EVENT_TYPE_MODIFIED : 
-									String status = getClaimStatus( claim.getMetadata().getName(), claimNamespace );
-									if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && K8sApiCaller.resourcequotaAlreadyExist( claimNamespace ) ) {
+									String status = getClaimStatus( claimName, claimNamespace );
+									if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && K8sApiCaller.resourcequotaAlreadyExist( resourceName, claimNamespace ) ) {
 										K8sApiCaller.updateResourceQuota( claim );
-										replaceRqcStatus( claim.getMetadata().getName(), Constants.CLAIM_STATUS_SUCCESS, "resource quota update success.", claimNamespace );
-									} else if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && !K8sApiCaller.resourcequotaAlreadyExist( claimNamespace ) ) {
+										replaceRqcStatus( claimName, Constants.CLAIM_STATUS_SUCCESS, "resource quota update success.", claimNamespace );
+									} else if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && !K8sApiCaller.resourcequotaAlreadyExist( resourceName, claimNamespace ) ) {
 										K8sApiCaller.createResourceQuota( claim );
-										replaceRqcStatus( claim.getMetadata().getName(), Constants.CLAIM_STATUS_SUCCESS, "resource quota create success.", claimNamespace );
+										replaceRqcStatus( claimName, Constants.CLAIM_STATUS_SUCCESS, "resource quota create success.", claimNamespace );
 									}
 									break;
 								case Constants.EVENT_TYPE_DELETED : 

@@ -23,8 +23,10 @@ spec:
         # Admins or Owner can change the 'status' of the rolebindingclaim.
         # If change the Status to 'Success', rolebinding is created.
         type: object
-        required: [apiVersion,kind,metadata,subjects,roleRef]
+        required: [resourceName,apiVersion,kind,metadata,subjects,roleRef]
         properties:
+          resourceName:
+            type: string
           apiVersion:
             type: string
           kind:

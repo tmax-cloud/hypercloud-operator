@@ -24,8 +24,10 @@ spec:
         # Admins can change the 'status' of the namespaceclaim.
         # If Admin change the Status to 'Success', a namespace and resourcequota are created.
         type: object
-        required: [apiVersion,kind,metadata,spec]
+        required: [resourceName,apiVersion,kind,metadata,spec]
         properties:
+          resourceName:
+            type: string
           apiVersion:
             type: string
           kind:

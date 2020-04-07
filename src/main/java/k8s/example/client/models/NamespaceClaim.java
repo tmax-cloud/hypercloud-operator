@@ -6,10 +6,11 @@ import io.kubernetes.client.openapi.models.V1ResourceQuotaSpec;
 public class NamespaceClaim {
 	private String apiVersion = "tmax.io/v1";
 	private String kind = null;
+	private String resourceName = null;	
 	private V1ObjectMeta metadata = null;
 	private V1ResourceQuotaSpec spec = null;
 	private ClaimStatus status = null;
-	
+
 	public String getApiVersion() {
 		return apiVersion;
 	}
@@ -21,6 +22,12 @@ public class NamespaceClaim {
 	}
 	public void setKind(String kind) {
 		this.kind = kind;
+	}
+	public String getResourceName() {
+		return resourceName;
+	}
+	public void setResourceName(String resourceName) {
+		this.resourceName = resourceName;
 	}
 	public V1ObjectMeta getMetadata() {
 		return metadata;
