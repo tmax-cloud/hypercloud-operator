@@ -57,6 +57,8 @@ import io.kubernetes.client.openapi.apis.RbacAuthorizationV1Api;
 import io.kubernetes.client.openapi.models.V1ClusterRole;
 import io.kubernetes.client.openapi.models.V1ClusterRoleBinding;
 import io.kubernetes.client.openapi.models.V1ClusterRoleBindingList;
+import io.kubernetes.client.openapi.models.V1ConfigMap;
+import io.kubernetes.client.openapi.models.V1ConfigMapVolumeSource;
 import io.kubernetes.client.openapi.models.V1Container;
 import io.kubernetes.client.openapi.models.V1ContainerPort;
 import io.kubernetes.client.openapi.models.V1DeleteOptions;
@@ -1426,6 +1428,28 @@ public class K8sApiCaller {
 				throw e;
 			}
 			
+			
+			
+			// ---- Create Config Map
+			boolean regConfigExist = true;
+			String configMapName = Constants.K8S_PREFIX + registry.getMetadata().getName();
+			try {
+				V1ConfigMap regConfig = api.readNamespacedConfigMap(Constants.REGISTRY_CONFIG_MAP_NAME, Constants.REGISTRY_NAMESPACE, null, null, null);
+				
+				V1ConfigMap configMap = new V1ConfigMap();
+				V1ObjectMeta metadata = new V1ObjectMeta();
+				metadata.setName(configMapName);
+				metadata.setNamespace(namespace);
+				configMap.setMetadata(metadata);
+				configMap.setData(regConfig.getData());
+				
+				api.createNamespacedConfigMap(namespace, configMap, null, null, null);
+			} catch (ApiException e) {
+				logger.info(e.getResponseBody());
+				regConfigExist = false;
+			}
+			
+			
 
 			// ----- Create Registry Replica Set
 			V1ReplicaSetBuilder rsBuilder = new V1ReplicaSetBuilder();
@@ -1571,7 +1595,7 @@ public class K8sApiCaller {
 			valueFrom2.setSecretKeyRef(secretKeyRef2);
 			secretEnv2.setValueFrom(valueFrom2);
 			container.addEnvItem(secretEnv2);
-
+			
 			// 2-2-2-2-5. port
 			V1ContainerPort portsItem = new V1ContainerPort();
 			portsItem.setContainerPort(registrySVCTargetPort);
@@ -1581,6 +1605,15 @@ public class K8sApiCaller {
 			portsItem.setProtocol(RegistryService.REGISTRY_PORT_PROTOCOL);
 			container.addPortsItem(portsItem);
 
+			if( regConfigExist ) {
+				// Configmap Volume mount 
+				// config.yml:/etc/docker/registry/config.yml
+				V1VolumeMount configMount = new V1VolumeMount();
+				configMount.setName("config");
+				configMount.setMountPath("/etc/docker/registry");
+				container.addVolumeMountsItem(configMount);
+			}
+			
 			// Secret Volume mount
 			V1VolumeMount certMount = new V1VolumeMount();
 			certMount.setName("certs");
@@ -1643,8 +1676,20 @@ public class K8sApiCaller {
 
 			podSpec.addContainersItem(container);
 
-			// Secret Volume
+			
 			List<V1Volume> volumes = new ArrayList<>();
+			
+			if( regConfigExist ) {
+				// Configmap Volume
+				V1Volume configVolume = new V1Volume();
+				V1ConfigMapVolumeSource configMap = new V1ConfigMapVolumeSource ();
+				configMap.setName(configMapName);
+				configVolume.setConfigMap(configMap);
+				configVolume.setName("config");
+				volumes.add(configVolume);
+			}
+			
+			// Secret Volume
 			V1Volume certVolume = new V1Volume();
 			certVolume.setName("certs");
 			V1SecretVolumeSource volSecret = new V1SecretVolumeSource();

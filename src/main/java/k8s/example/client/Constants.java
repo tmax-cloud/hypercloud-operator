@@ -4,10 +4,11 @@ public class Constants {
 	public static final String ISSUER = "Tmax-ProAuth-WebHook";
 	public static final String ACCESS_TOKEN_SECRET_KEY = "Access-Token-Secret-Key";
 	public static final String REFRESH_TOKEN_SECRET_KEY = "Refresh-Token-Secret-Key";
-	
+
 	public static final String TEMPLATE_NAMESPACE = "hypercloud4-system";
 	public static final String DEFAULT_NAMESPACE = "default";
 	public static final String SYSTEM_ENV_CATALOG_NAMESPACE = "CATALOG_NAMESPACE";
+	public static final String REGISTRY_NAMESPACE = "hypercloud4-system";
 
 	public static final String CUSTOM_OBJECT_GROUP = "tmax.io";
 	public static final String CUSTOM_OBJECT_VERSION = "v1";
@@ -154,4 +155,8 @@ public class Constants {
 	// Template Parameter Data Type
 	public static final String TEMPLATE_DATA_TYPE_NUMBER = "number";
 	public static final String TEMPLATE_DATA_TYPE_STRING = "string";
+	
+	// Registry
+	public static final String REGISTRY_CONFIG_MAP_NAME = "registry-config";
+	
 }
