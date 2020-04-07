@@ -12,6 +12,7 @@ import com.google.gson.JsonObject;
 import k8s.example.client.Constants;
 import k8s.example.client.DataObject.User;
 import k8s.example.client.Main;
+import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -135,10 +136,11 @@ public class OAuthApiCaller {
 	    return authenticateUpdateOut; 
 	}
 	
-	public static JsonObject SetPasswordService( String token, String alterPassword ) throws IOException {
+	public static JsonObject SetPasswordService( String token, String id,  String alterPassword ) throws IOException {
 		logger.info( "[OAuth] Password Change Service Start" );
 	
-		logger.info(" Token : " + token);	
+		if (token != null) logger.info(" Token : " + token);	
+		if (id != null) logger.info(" User ID : " + id);	
 		logger.info(" Alter Password : " + alterPassword);	
 	    
 		JsonObject setPasswordInDO = new JsonObject();		
@@ -147,12 +149,19 @@ public class OAuthApiCaller {
 				
 		Gson gson = new Gson();		
 	    String json = gson.toJson(setPasswordInDO);
+	    Request request = null;
 	
 //	    POST svc
-	    Request request = new Request.Builder().addHeader("token", token)
-	    		.url(setAuthURL( Constants.SERVICE_NAME_SET_PASSWORD_SERVICE ))
-	            .post(RequestBody.create(MediaType.parse("application/json"), json)).build();
-
+		if (token != null) {
+		    request = new Request.Builder().addHeader("token", token)
+		    		.url(setAuthURL( Constants.SERVICE_NAME_SET_PASSWORD_SERVICE ))
+		            .post(RequestBody.create(MediaType.parse("application/json"), json)).build();
+		} else if (id != null) {
+			HttpUrl.Builder urlBuilder = HttpUrl.parse(setAuthURL( Constants.SERVICE_NAME_SET_PASSWORD_SERVICE )).newBuilder();
+		    urlBuilder.addQueryParameter("id", id);
+		    String url = urlBuilder.build().toString();
+		    request = new Request.Builder().url(url).post(RequestBody.create(MediaType.parse("application/json"), json)).build();
+		} 
 	    
 		Response response = client.newCall(request).execute();
 		String result = response.body().string();
