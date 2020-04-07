@@ -123,6 +123,7 @@ public class Constants {
 	public static final String QUERY_PARAMETER_SORT = "sort";
 	
 	// User Get Query Parameters
+	public static final String QUERY_PARAMETER_ID = "id";
 	public static final String QUERY_PARAMETER_MODE = "mode";
 	public static final String QUERY_PARAMETER_EMAIL = "email";
 	
@@ -142,6 +143,8 @@ public class Constants {
 	public static final String USER_CREATE_FAILED = "User Create Failed";
 	public static final String USER_UPDATE_SUCCESS = "User Update Success";
 	public static final String USER_UPDATE_FAILED = "User Update Failed";
+	public static final String USER_PASSWORD_FIND_SUCCESS = "User Password Change & Send Email Success";
+	public static final String USER_PASSWORD_FIND_FAILED = "User Password Change & Send Email Failed";
 	public static final String USER_ID_FIND_FAILED = "User ID Find Failed";
 	public static final String SERVICE_NAME_OAUTH_USER_LIST = "proauth/oauth/usersList";
 	public static final String SERVICE_NAME_OAUTH_USER_CREATE = "proauth/oauth/users";

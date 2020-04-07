@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.UUID;
 
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -39,6 +40,7 @@ import k8s.example.client.DataObject.UserCR;
 import k8s.example.client.ErrorCode;
 import k8s.example.client.Main;
 import k8s.example.client.Util;
+import k8s.example.client.Util.Crypto;
 import k8s.example.client.k8s.K8sApiCaller;
 import k8s.example.client.k8s.OAuthApiCaller;
 import k8s.example.client.metering.util.SimpleUtil;
@@ -47,7 +49,6 @@ public class UserHandler extends GeneralHandler {
 	private final String HOST = "mail.tmax.co.kr";
 	private final int PORT = 25;
 //	private final String USERNAME = "taegeon_woo";
-	private final String SEND_EMAIL = "taegeon_woo@tmax.co.kr";
     private Logger logger = Main.logger;
 	@Override
     public Response post(
@@ -114,7 +115,7 @@ public class UserHandler extends GeneralHandler {
     		logger.info( "  accessToken : " + accessToken );
 
     		// Send E-mail to User
-    		sendMail(userInDO, accessToken);
+    		sendMail(userInDO.getEmail(), accessToken, null);
 			status = Status.CREATED;
     		outDO = "User Create Success";
     		  		
@@ -150,42 +151,111 @@ public class UserHandler extends GeneralHandler {
 		String outDO = null; 
 		String userId = null;
 		
-		// Get Query Parameter
+		// Get Find Mode
 		String mode = SimpleUtil.getQueryParameter( session.getParameters(), Constants.QUERY_PARAMETER_MODE );
-		String email = SimpleUtil.getQueryParameter( session.getParameters(), Constants.QUERY_PARAMETER_EMAIL );
 		
-		try {
-			if (mode.equalsIgnoreCase("id")) {
-				userCRList = K8sApiCaller.listUser();
-				if ( userCRList!=null ) {
-					for(UserCR userCR : userCRList) {
-						if( userCR.getUserInfo().getEmail().equalsIgnoreCase(email) ) {
-							userId = userCR.getMetadata().getName();
+		switch(mode) {	
+			
+		case "id":
+			// Get email with query parameter
+			try {
+				String email = SimpleUtil.getQueryParameter( session.getParameters(), Constants.QUERY_PARAMETER_EMAIL );			
+
+				if (mode.equalsIgnoreCase("id")) {
+					userCRList = K8sApiCaller.listUser();
+					if ( userCRList!=null ) {
+						for(UserCR userCR : userCRList) {
+							if( userCR.getUserInfo().getEmail().equalsIgnoreCase(email) ) {
+								userId = userCR.getMetadata().getName();
+							}
 						}
 					}
-				}
-				if (userId == null) {
-					throw new Exception(ErrorCode.NO_MATCHING_USER);
-				}
+					if (userId == null) {
+						throw new Exception(ErrorCode.NO_MATCHING_USER);
+					}
+					else {
+						logger.info( "User ID Found: " + userId );
+						status = Status.OK; 
+						outDO = userId;
+					}
+				}				
+			}catch (ApiException e) {
+				logger.info( "Exception message: " + e.getResponseBody() );
+				logger.info( "Exception message: " + e.getMessage() );
+				status = Status.UNAUTHORIZED; 
+				outDO = Constants.USER_ID_FIND_FAILED;
+				
+			} catch (Exception e) {
+				logger.info( "Exception message: " + e.getMessage() );
+				e.printStackTrace();
+				status = Status.UNAUTHORIZED;
+				outDO = Constants.USER_ID_FIND_FAILED;		
+			}			
+			break;
+		
+		case "password": 
+			// Get id with query parameter
+			try {
+				String id = SimpleUtil.getQueryParameter( session.getParameters(), Constants.QUERY_PARAMETER_ID );
+				String email = null;
+				
+				// Get e-mail from k8s with user ID
+				if ( id == null) throw new Exception(ErrorCode.USER_ID_EMPTY);
 				else {
-					logger.info( "User ID Found: " + userId );
-					status = Status.OK; 
-					outDO = userId;
+					UserCR userCR = K8sApiCaller.getUser(id);
+					email = userCR.getUserInfo().getEmail();
+					logger.info( " User Email : " + email );
+
 				}
-			}
+				
+				// Set Random Password to proauth
+				String alterPassword = Util.getRamdomPassword(10);
+				logger.info( " AlterPassword : " + alterPassword );
+
+				JsonObject setPasswordOut = OAuthApiCaller.SetPasswordService( null, id , alterPassword );
+				
+	    		logger.info( "  result : " + setPasswordOut.get("result").toString() );
+	    		
+	    		if ( setPasswordOut.get("result").toString().equalsIgnoreCase("\"true\"") ){
+    				logger.info( "  Password Change to random success." );
+    				outDO = Constants.PASSWORD_CHANGE_SUCCESS;
+	    			status = Status.OK; 
+	    		} else {
+	    			logger.info("  Password Change to random failed by ProAuth.");
+	    			logger.info( setPasswordOut.get("error").toString());
+	    			status = Status.UNAUTHORIZED; 
+    				outDO = Constants.PASSWORD_CHANGE_FAILED;
+	    		}
+	    		
+	    		// Login to ProAuth with new Password & Get Token
+	    		JsonObject loginOut = OAuthApiCaller.AuthenticateCreate( id, alterPassword);
+//	    		String refreshToken = loginOut.get("refresh_token").toString().replaceAll("\"", "");
+	    		String accessToken = loginOut.get("token").toString().replaceAll("\"", ""); //
+	    		logger.info( "  accessToken : " + accessToken );
+	    		
+	    		// Send E-mail to User
+				sendMail( email, accessToken, alterPassword );
 			
-		}catch (ApiException e) {
-			logger.info( "Exception message: " + e.getResponseBody() );
-			logger.info( "Exception message: " + e.getMessage() );
-			status = Status.UNAUTHORIZED; 
-			outDO = Constants.USER_ID_FIND_FAILED;
-			
-		} catch (Exception e) {
-			logger.info( "Exception message: " + e.getMessage() );
-			e.printStackTrace();
-			status = Status.UNAUTHORIZED;
-			outDO = Constants.USER_ID_FIND_FAILED;		
-		}		
+				status = Status.OK;
+	    		outDO = Constants.USER_PASSWORD_FIND_SUCCESS;
+
+			} catch (ApiException e) {
+				logger.info( "Exception message: " + e.getResponseBody() );
+				logger.info( "Exception message: " + e.getMessage() );
+				status = Status.UNAUTHORIZED; 
+				outDO = Constants.USER_PASSWORD_FIND_FAILED;
+			} catch (Exception e) {
+				logger.info( "Exception message: " + e.getMessage() );
+				status = Status.UNAUTHORIZED; 
+				outDO = Constants.USER_PASSWORD_FIND_FAILED;
+			} catch (Throwable e) {
+				logger.info( "Exception message: " + e.getMessage() );
+				status = Status.UNAUTHORIZED; 
+				outDO = Constants.USER_PASSWORD_FIND_FAILED;
+				e.printStackTrace();
+			}		
+			break;	
+		}	
 		
 		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO));
 	}
@@ -195,7 +265,6 @@ public class UserHandler extends GeneralHandler {
 		
 		IStatus status = null;
 		String outDO = null; 
-		String updateMode = null;
 		UserCR userCR = null;
 		User userInDO = null;
 		String accessToken = null;
@@ -208,12 +277,7 @@ public class UserHandler extends GeneralHandler {
 		}
         
 		// if updateMode exists
-		if(session.getParameters()!=null) {
-			if( session.getParameters().get("mode")!= null) {
-				updateMode = session.getParameters().get("mode").get(0);
-				logger.info("updateMode : " + updateMode );			
-			}
-		}
+		String mode = SimpleUtil.getQueryParameter( session.getParameters(), Constants.QUERY_PARAMETER_MODE );
 
 		try {
 			String bodyStr = readFile(body.get("content"), Integer.valueOf(session.getHeaders().get("content-length")));
@@ -224,7 +288,7 @@ public class UserHandler extends GeneralHandler {
 			e.printStackTrace();
 		}
 
-		switch(updateMode) {	
+		switch(mode) {	
 		case "meta":
 			logger.info( "  User ID: " + userInDO.getId() );
 			logger.info( "  User Name: " + userInDO.getName() );
@@ -259,7 +323,7 @@ public class UserHandler extends GeneralHandler {
 			}		
 			break;
 			
-		case "passwd":
+		case "password":
 			logger.info( "  User ID: " + userInDO.getId() );
 			logger.info( "  User Current Password: " + userInDO.getPassword() );
 			logger.info( "  User Alter Password: " + userInDO.getAlterPassword() );
@@ -280,7 +344,7 @@ public class UserHandler extends GeneralHandler {
 	    		logger.info( "  Token: " + accessToken );
 	    		
 	    		// Call ProAuth
-	    		JsonObject setPasswordOut = OAuthApiCaller.SetPasswordService( accessToken, userInDO.getAlterPassword() );
+	    		JsonObject setPasswordOut = OAuthApiCaller.SetPasswordService( accessToken, null, userInDO.getAlterPassword() );
 	    		logger.info( "  result : " + setPasswordOut.get("result").toString() );
 	    		if ( setPasswordOut.get("result").toString().equalsIgnoreCase("\"true\"") ){
     				logger.info( "  Password Change success." );
@@ -313,8 +377,10 @@ public class UserHandler extends GeneralHandler {
 	}
 	
 
-	private void sendMail( User userInDO, String accessToken ) throws Throwable {	
-		logger.info( " Send Verification Mail to New User ");
+	private void sendMail( String email, String accessToken, String content ) throws Throwable {	
+		logger.info( " Send Verification Mail User ");
+		String recipient = "taegeon_woo@tmax.co.kr";
+//		String recipient = email;  //FIXME
 
 		String subject = "MailTest 메일테스트";	
 		String charSetUtf = "UTF-8" ; //FIXME : 제목 한글 여전히 깨짐 ㅠㅠ
@@ -341,10 +407,10 @@ public class UserHandler extends GeneralHandler {
 		MimeMessage mimeMessage = new MimeMessage(session);
 		
 		// Sender
-		mimeMessage.setFrom( new InternetAddress(SEND_EMAIL, SEND_EMAIL, charSetUtf));
+		mimeMessage.setFrom( new InternetAddress(recipient, recipient, charSetUtf));
 		
 		// Receiver
-		mimeMessage.setRecipient( Message.RecipientType.TO, new InternetAddress( SEND_EMAIL ) );
+		mimeMessage.setRecipient( Message.RecipientType.TO, new InternetAddress( recipient ) );
 		
 		// Make Subject
 		mimeMessage.setSubject( subject, charSetUtf );
@@ -353,15 +419,16 @@ public class UserHandler extends GeneralHandler {
 		// Make Body
 		Map<String, String> bodyMap = K8sApiCaller.readSecret(Constants.TEMPLATE_NAMESPACE, "authenticate-html");  		
 		if( bodyMap != null ) {
-			body = bodyMap.get("body") + accessToken; //TODO
+			body = bodyMap.get("body") + " \n AccessToken\n" + accessToken;
+			if( content != null) body = body + " \n Alter PassWord\n" + content; //TODO
 		}
 		logger.info( " Mail Body : "  + body );
 		if (body!=null) mimeMessage.setText( MimeUtility.encodeText(body,  charSetUtf, "B") );
-		logger.info( " Ready to Send Mail to " + SEND_EMAIL);
+		logger.info( " Ready to Send Mail to " + recipient);
 		try {
 			//Send Mail
 			Transport.send( mimeMessage );
-			logger.info( " Sent E-Mail to " + SEND_EMAIL);
+			logger.info( " Sent E-Mail to " + recipient);
 		}catch (MessagingException e) {
             e.printStackTrace();
             logger.info( e.getMessage() + e.getStackTrace());
