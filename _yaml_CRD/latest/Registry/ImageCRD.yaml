@@ -23,13 +23,15 @@ spec:
       properties:
         spec:
           type: object
-          required: [name, version, registry]
+          required: [name, versions, registry]
           description: Image information
           properties:
             name:
               type: string
-            version:
-              type: string
+            versions:
+              type: array
+              items:
+                type: string
             registry:
               type: string
   subresources:
@@ -39,10 +41,6 @@ spec:
     type: string
     description: Image Name
     JSONPath: .spec.name
-  - name: ImageVersion
-    type: string
-    description: Image Version or Tag
-    JSONPath: .spec.version
   - name: Registry
     type: string
     description: Registry URL

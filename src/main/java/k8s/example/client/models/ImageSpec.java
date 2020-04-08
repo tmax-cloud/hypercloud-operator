@@ -1,8 +1,10 @@
 package k8s.example.client.models;
 
+import java.util.List;
+
 public class ImageSpec {
 	private String name = null;
-	private String version = null;
+	private List<String> versions = null;
 	private String registry = null;
 
 	public String getName() {
@@ -13,12 +15,12 @@ public class ImageSpec {
 		this.name = name;
 	}
 
-	public String getVersion() {
-		return version;
+	public List<String> getVersions() {
+		return versions;
 	}
 
-	public void setVersion(String version) {
-		this.version = version;
+	public void setVersions(List<String> versions) {
+		this.versions = versions;
 	}
 
 	public String getRegistry() {
@@ -29,24 +31,4 @@ public class ImageSpec {
 		this.registry = registry;
 	}
 
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		sb.append("class ImageSpec {\n");
-		sb.append("    name: ").append(toIndentedString(name)).append("\n");
-		sb.append("    version: ").append(toIndentedString(version)).append("\n");
-		sb.append("    registry: ").append(toIndentedString(registry)).append("\n");
-		sb.append("}");
-		return sb.toString();
-	}
-
-	/**
-	 * Convert the given object to string with each line indented by 4 spaces
-	 * (except the first line).
-	 */
-	private String toIndentedString(java.lang.Object o) {
-		if (o == null) {
-			return "null";
-		}
-		return o.toString().replace("\n", "\n    ");
-	}
 }
