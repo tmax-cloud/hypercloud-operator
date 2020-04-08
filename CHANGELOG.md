@@ -13,13 +13,15 @@ All notable changes to this project will be documented in this file.
   - [mod] CRD Version 관리 by seonho_choi
   - [mod] catalog museum 이 이미지 내에 포함되도록 수정 by seonho_choi
   - [mod] ResourceQuotaClaimController.java update하는 로직 제거 by taegeon_woo
-  - [ims] [221625] 생성되어 있는 CRD와 동일한 이름으로 Claim  생성시 reject 상태로 되게끔 변경, [mod] Claim 이름과 CRD Resource 이름을 분리하여 같은 Resource를 위한 복수개의 Claim을 생성 할 수 있도록 변경 [ims] [221771] ResourceQuota 이름과  nameSpace 이름을 분리 by taegeon_woo
+  - [mod] Claim 이름과 CRD Resource 이름을 분리하여 같은 Resource를 위한 복수개의 Claim을 생성 할 수 있도록 변경  by taegeon_woo
   - [mod] 비밀번호 찾기 기능 구현 완료 by taegeon_woo
   - [mod] Tekton trigger crd pluralMapper 추가 by Sunghyun Kim
   - [mod] 통합 auth password 변경 기능, refresh 기능  추가 by taegeon_woo
 
 ### Fixed
   - [ims][221499] namespace-owner.yaml 오타 수정 by taegeon_woo
+  - [ims] [221625] 생성되어 있는 CRD와 동일한 이름으로 Claim  생성시 reject 상태로 되게끔 변경  by taegeon_woo
+  - [ims] [221771] ResourceQuota 이름과  nameSpace 이름을 분리  by taegeon_woo
 
 ### CRD yaml
   - [crd] NamespaceClaimCRD : resourceName 추가 ( 필수값 ), 관련 default, example yaml에 반영
