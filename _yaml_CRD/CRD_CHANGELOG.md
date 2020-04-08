@@ -9,6 +9,9 @@
 ### Changed
 
 ### Fixed
+NamespaceClaimCRD : resourceName 추가 ( 필수값 ), 관련 default, example yaml에 반영
+ResourceQuotaClaimCRD : resourceName 추가 ( 필수값 ), 관련 default, example yaml에 반영
+RoleBindingClaimCRD : resourceName 추가 ( 필수값 ), 관련 default, example yaml에 반영
 
 ### Etc
 
