@@ -1,6 +1,38 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.0.8 start -------------------->
+
+## HyperCloudServer_4.1.0.8 (2020년 04월  8일 수 오후  1:20:10)
+
+### Added
+
+### Changed
+  - [mod] 이미지 안에 yaml CRD/latest 폴더 들어 가도록 수정 by seonho_choi
+  - [mod] CRD yaml 변경 내용 CHANGELOG.md 에 명시되도록 수정 by seonho_choi
+  - [mod] CRD Version 관리 by seonho_choi
+  - [mod] catalog museum 이 이미지 내에 포함되도록 수정 by seonho_choi
+  - [mod] ResourceQuotaClaimController.java update하는 로직 제거 by taegeon_woo
+  - [mod] Claim 이름과 CRD Resource 이름을 분리하여 같은 Resource를 위한 복수개의 Claim을 생성 할 수 있도록 변경  by taegeon_woo
+  - [mod] 비밀번호 찾기 기능 구현 완료 by taegeon_woo
+  - [mod] Tekton trigger crd pluralMapper 추가 by Sunghyun Kim
+  - [mod] 통합 auth password 변경 기능, refresh 기능  추가 by taegeon_woo
+
+### Fixed
+  - [ims][221499] namespace-owner.yaml 오타 수정 by taegeon_woo
+  - [ims] [221625] 생성되어 있는 CRD와 동일한 이름으로 Claim  생성시 reject 상태로 되게끔 변경  by taegeon_woo
+  - [ims] [221771] ResourceQuota 이름과  nameSpace 이름을 분리  by taegeon_woo
+
+### CRD yaml
+  - [crd] NamespaceClaimCRD : resourceName 추가 ( 필수값 ), 관련 default, example yaml에 반영
+  - [crd] ResourceQuotaClaimCRD : resourceName 추가 ( 필수값 ), 관련 default, example yaml에 반영
+  - [crd] RoleBindingClaimCRD : resourceName 추가 ( 필수값 ), 관련 default, example yaml에 반영
+  - [crd] RegistryCRD.yaml 수정 /spec/persistentVolumeClaim/accessModes를 required로 추가
+  
+### Etc
+
+<!--------------------- v4.1.0.8 end --------------------->
+
 <!-------------------- v4.1.0.7 start -------------------->
 
 ## HyperCloudServer_4.1.0.7 (2020년 04월  6일 월 오후  1:04:45)
