@@ -20,7 +20,7 @@ RoleBindingClaimCRD : resourceName 추가 ( 필수값 ), 관련 default, example
 <!------------------------ README ------------------------>
 
 ## CRD Version 관리
-- Version 별 CRD 관련 yaml 들 저장
+- 목적 : Version 별 CRD 관련 yaml 들을 저장함으로써 yaml 관리
 - CRD yaml 수정 방법
 	- '_next_version' 및 'latest' 폴더에 수정 사항 반영
 	- CRD_CHANGELOG.md 에 수정 내용 명시
