@@ -75,7 +75,6 @@ public class LoginHandler extends GeneralHandler {
 		    		logger.info( "  App Name: " + appNameRequestParameter );  
 	        	}
 	    				   		
-	    		// Integration 분기 시작!!!!!!
 	        	if (System.getenv( "PROAUTH_EXIST" ) != null) {   		
 	        		if( System.getenv( "PROAUTH_EXIST" ).equalsIgnoreCase("1")) {
 	        			

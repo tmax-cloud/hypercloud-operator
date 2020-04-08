@@ -3,9 +3,9 @@ kind: Template
 metadata:
   name: redis-template
   namespace: default
-shortDescription: redis-deployment
+shortDescription: Redis Deployment
+longDescription: Redis Deployment
 imageUrl: https://upload.wikimedia.org/wikipedia/en/6/6b/Redis_Logo.svg
-longDescription: redis-deployment
 provider: tmax
 tags:
 - db

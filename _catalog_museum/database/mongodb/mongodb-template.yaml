@@ -3,9 +3,9 @@ kind: Template
 metadata:
   name: mongodb-template
   namespace: default
-shortDescription: mongodb-deployment
+shortDescription: MongoDB Deployment
+longDescription: MongoDB Deployment
 imageUrl: https://upload.wikimedia.org/wikipedia/en/4/45/MongoDB-Logo.svg
-longDescription: mongodb-deployment
 provider: tmax
 tags:
 - db

@@ -1,8 +1,9 @@
 apiVersion: tmax.io/v1
 kind: RoleBindingClaim
 metadata:
-  name: example-rolebinding-claim
+  name: example-rolebinding
   namespace: example-namespace
+resourceName: example-claim
 subjects:
 - kind: User
   name: example@tmax.co.kr
