@@ -51,6 +51,8 @@ task doBuild {
 	dependsOn "copyDependencies"
 	dependsOn "copyStartShell"
 	dependsOn "copyK8sOperatorHome"
+	dependsOn "copyCatalogMuseum"
+	dependsOn "copyCRDyaml"
 }
 
 task makeJar(type: Jar) {
@@ -79,4 +81,14 @@ task copyStartShell(type: Copy) {
 task copyK8sOperatorHome(type: Copy) {
 	from '_operator'
 	into 'build/hypercloud4-operator'
+}
+
+task copyCatalogMuseum(type: Copy) {
+	from '_catalog_museum'
+	into 'build/hypercloud4-operator/_catalog_museum'
+}
+
+task copyCRDyaml(type: Copy) {
+	from '_yaml_CRD/latest'
+	into 'build/hypercloud4-operator/_yaml_CRD'
 }

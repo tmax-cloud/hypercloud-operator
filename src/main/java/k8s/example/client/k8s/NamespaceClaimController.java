@@ -49,10 +49,10 @@ public class NamespaceClaimController extends Thread {
 					} catch (Exception e) {
 						logger.info(e.getMessage());
 					}
-					
-					
+										
 					// Logic here
 					String claimName = "unknown";
+					String resourceName = "unknown";
 					try {
 						NamespaceClaim claim = response.object;
 
@@ -62,27 +62,29 @@ public class NamespaceClaimController extends Thread {
 							logger.info("[NamespaceClaim Controller] Event Type : " + eventType );
 							logger.info("[NamespaceClaim Controller] == NamespcaeClaim == \n" + claim.toString());
 							claimName = claim.getMetadata().getName();
+							resourceName = claim.getResourceName();
 							
 							switch( eventType ) {
 								case Constants.EVENT_TYPE_ADDED : 
-									// Patch Status to Awaiting
-									replaceNscStatus( claim.getMetadata().getName(), Constants.CLAIM_STATUS_AWAITING, "wait for admin permission" );
+									if ( K8sApiCaller.namespaceAlreadyExist( resourceName ) ) {
+										replaceNscStatus( claimName, Constants.CLAIM_STATUS_REJECT, "Duplicated NameSpaceName" );
+									} else {
+										// Patch Status to Awaiting
+										replaceNscStatus( claimName, Constants.CLAIM_STATUS_AWAITING, "wait for admin permission" );
+									}
 									break;
 								case Constants.EVENT_TYPE_MODIFIED : 
-									String status = getClaimStatus( claim.getMetadata().getName() );
-									if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && !K8sApiCaller.namespaceAlreadyExist( claimName ) ) {
+									String status = getClaimStatus( claimName );
+									if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && !K8sApiCaller.namespaceAlreadyExist( resourceName ) ) {
 										K8sApiCaller.createNamespace( claim );
-										replaceNscStatus( claim.getMetadata().getName(), Constants.CLAIM_STATUS_SUCCESS, "namespace create success." );
-									} else if ( ( status.equals( Constants.CLAIM_STATUS_AWAITING ) || status.equals( Constants.CLAIM_STATUS_REJECT ) ) && K8sApiCaller.namespaceAlreadyExist( claimName ) ) {
-										replaceNscStatus( claim.getMetadata().getName(), Constants.CLAIM_STATUS_SUCCESS, "namespace create success." );
-									}
+										replaceNscStatus( claimName, Constants.CLAIM_STATUS_SUCCESS, "namespace create success." );
+									} 
 									break;
 								case Constants.EVENT_TYPE_DELETED : 
 									// Nothing to do
 									break;
 							}
-						}
-						
+						}					
 					} catch (Exception e) {
 						logger.info("Exception: " + e.getMessage());
 						StringWriter sw = new StringWriter();

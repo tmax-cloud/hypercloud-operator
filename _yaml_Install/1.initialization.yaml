@@ -82,7 +82,7 @@ spec:
       properties:
         userInfo:
           type: object
-          required: [name, password, email, phone]
+          required: [name, email, phone]
           description: UserInfo contains user information
           properties:
             name:
@@ -501,7 +501,6 @@ spec:
     type: date
     JSONPath: .metadata.creationTimestamp
 
-
 ---
 
 apiVersion: apiextensions.k8s.io/v1beta1
@@ -529,8 +528,10 @@ spec:
         # Admins can change the 'status' of the namespaceclaim.
         # If Admin change the Status to 'Success', a namespace and resourcequota are created.
         type: object
-        required: [apiVersion,kind,metadata,spec]
+        required: [resourceName,apiVersion,kind,metadata,spec]
         properties:
+          resourceName:
+            type: string
           apiVersion:
             type: string
           kind:
@@ -598,8 +599,10 @@ spec:
         # Admins can change the 'status' of the resourcequotaclaim.
         # If Admin change the Status to 'Success', resourcequota is updated.
         type: object
-        required: [apiVersion,kind,metadata,spec]
+        required: [resourceName,apiVersion,kind,metadata,spec]
         properties:
+          resourceName:
+            type: string
           apiVersion:
             type: string
           kind:
@@ -667,8 +670,10 @@ spec:
         # Admins or Owner can change the 'status' of the rolebindingclaim.
         # If change the Status to 'Success', rolebinding is created.
         type: object
-        required: [apiVersion,kind,metadata,subjects,roleRef]
+        required: [resourceName,apiVersion,kind,metadata,subjects,roleRef]
         properties:
+          resourceName:
+            type: string
           apiVersion:
             type: string
           kind:

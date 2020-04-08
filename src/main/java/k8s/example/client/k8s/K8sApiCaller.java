@@ -47,9 +47,11 @@ import com.google.gson.JsonParser;
 
 import io.kubernetes.client.custom.IntOrString;
 import io.kubernetes.client.custom.Quantity;
+import io.kubernetes.client.openapi.ApiCallback;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.Configuration;
+import io.kubernetes.client.openapi.ProgressResponseBody;
 import io.kubernetes.client.openapi.apis.AppsV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.apis.CustomObjectsApi;
@@ -120,6 +122,7 @@ import k8s.example.client.DataObject.UserCR;
 import k8s.example.client.Main;
 import k8s.example.client.StringUtil;
 import k8s.example.client.Util;
+import k8s.example.client.interceptor.LogInterceptor;
 import k8s.example.client.k8s.apis.CustomResourceApi;
 import k8s.example.client.models.BindingInDO;
 import k8s.example.client.models.BindingOutDO;
@@ -150,6 +153,10 @@ import k8s.example.client.models.TemplateInstance;
 import k8s.example.client.models.TemplateInstanceSpec;
 import k8s.example.client.models.TemplateInstanceSpecTemplate;
 import k8s.example.client.models.TemplateParameter;
+import okhttp3.Interceptor;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class K8sApiCaller {	
 	private static ApiClient k8sClient;
@@ -165,10 +172,12 @@ public class K8sApiCaller {
     
 	public static void initK8SClient() throws Exception {
 		k8sClient = Config.fromCluster();
+		//k8sClient.setHttpClient(getHttpClient()); // set network interceptors
 		k8sClient.setConnectTimeout(0);
 		k8sClient.setReadTimeout(0);
-		k8sClient.setWriteTimeout(0);		
+		k8sClient.setWriteTimeout(0);
 		Configuration.setDefaultApiClient(k8sClient);
+	
 
 		api = new CoreV1Api();
 		appApi = new AppsV1Api();
@@ -3246,7 +3255,7 @@ public class K8sApiCaller {
 		Map<String,String> label = new HashMap<>();
 		label.put( "fromClaim", claim.getMetadata().getName() );
 		namespaceMeta.setLabels( label );
-		namespaceMeta.setName( claim.getMetadata().getName() );
+		namespaceMeta.setName( claim.getResourceName() );
 		namespace.setMetadata( namespaceMeta );
 
 		V1Namespace namespaceResult;
@@ -3259,8 +3268,8 @@ public class K8sApiCaller {
 		
 		V1ResourceQuota quota = new V1ResourceQuota();
 		V1ObjectMeta quotaMeta = new V1ObjectMeta();
-		quotaMeta.setName( claim.getMetadata().getName()  );
-		quotaMeta.setNamespace( claim.getMetadata().getName() );
+		quotaMeta.setName( claim.getResourceName()  );
+		quotaMeta.setNamespace( claim.getResourceName() );
 		Map<String,String> quotaLabel = new HashMap<>();
 		quotaLabel.put( "fromClaim", claim.getMetadata().getName() );
 		quotaMeta.setLabels( quotaLabel );
@@ -3270,7 +3279,7 @@ public class K8sApiCaller {
 		
 		V1ResourceQuota quotaResult;
 		try {
-			quotaResult = api.createNamespacedResourceQuota( claim.getMetadata().getName(), quota, null, null, null );
+			quotaResult = api.createNamespacedResourceQuota( claim.getResourceName(), quota, null, null, null );
 		} catch (ApiException e) {
 			logger.info( e.getResponseBody() );
 			throw e;
@@ -3282,7 +3291,7 @@ public class K8sApiCaller {
 		
 		V1ResourceQuota quota = new V1ResourceQuota();
 		V1ObjectMeta quotaMeta = new V1ObjectMeta();
-		quotaMeta.setName( claim.getMetadata().getNamespace() );
+		quotaMeta.setName( claim.getResourceName() );
 		quotaMeta.setNamespace( claim.getMetadata().getNamespace() );
 		Map<String,String> quotaLabel = new HashMap<>();
 		quotaLabel.put( "fromClaim", claim.getMetadata().getName() );
@@ -3305,14 +3314,14 @@ public class K8sApiCaller {
 				
 		V1ResourceQuota quota = new V1ResourceQuota();
 		V1ObjectMeta quotaMeta = new V1ObjectMeta();
-		quotaMeta.setName( claim.getMetadata().getNamespace() );
+		quotaMeta.setName( claim.getResourceName() );
 		quotaMeta.setNamespace( claim.getMetadata().getNamespace() );
 		V1ResourceQuotaSpec spec = claim.getSpec();
 		quota.setMetadata( quotaMeta );
 		quota.setSpec( spec );
 		
 		try {
-			api.replaceNamespacedResourceQuota( claim.getMetadata().getNamespace(), claim.getMetadata().getNamespace(), quota, null, null, null);
+			api.replaceNamespacedResourceQuota( claim.getResourceName(), claim.getMetadata().getNamespace(), quota, null, null, null);
 		} catch (ApiException e) {
 			logger.info( e.getResponseBody() );
 			throw e;
@@ -3339,19 +3348,19 @@ public class K8sApiCaller {
 		}
 	}
 	
-	public static boolean resourcequotaAlreadyExist( String namespace ) throws Throwable {
+	public static boolean resourcequotaAlreadyExist( String name, String namespace ) throws Throwable {
 		logger.info( "[K8S ApiCaller] Get Resource Quota Start" );
 
 		V1ResourceQuota resourceQuotaResult;
 		try {
-			resourceQuotaResult = api.readNamespacedResourceQuota(namespace, namespace, null, null, null);
+			resourceQuotaResult = api.readNamespacedResourceQuota(name, namespace, null, null, null);
 		} catch (ApiException e) {
-			logger.info( "[K8S ApiCaller][Exception] ResourceQuota-" + namespace + " is not Exist" );
+			logger.info( "[K8S ApiCaller][Exception] ResourceQuota-" + name + " is not Exist" );
 			return false;
 		}
 		
 		if ( resourceQuotaResult == null ) {
-			logger.info( "[K8S ApiCaller][Exception] ResourceQuota-" + namespace + " is not Exist" );
+			logger.info( "[K8S ApiCaller][Exception] ResourceQuota-" + name + " is not Exist" );
 			return false;
 		} else {
 			logger.info( resourceQuotaResult.toString() );
@@ -3384,7 +3393,7 @@ public class K8sApiCaller {
 
 		V1RoleBinding roleBinding = new V1RoleBinding();
 		V1ObjectMeta roleBindingMeta = new V1ObjectMeta();
-		roleBindingMeta.setName( claim.getMetadata().getName() );
+		roleBindingMeta.setName( claim.getResourceName() );
 		roleBindingMeta.setNamespace( claim.getMetadata().getNamespace() );
 		roleBinding.setMetadata( roleBindingMeta );
 		roleBinding.setSubjects( claim.getSubjects() );
@@ -3707,4 +3716,35 @@ public class K8sApiCaller {
         }
 		
 	}
+	
+	
+	
+	private static OkHttpClient getHttpClient() {
+	    OkHttpClient httpClient;
+        OkHttpClient.Builder builder = new OkHttpClient.Builder();
+        builder.addNetworkInterceptor( getProgressInterceptor() ); // K8S Interceptor
+        builder.addNetworkInterceptor( new LogInterceptor() ); // HyperCloud Interceptor
+        httpClient = builder.build();
+        return httpClient;
+	}
+    /**
+     * Get network interceptor to add it to the httpClient to track download progress for
+     * async requests.
+     */
+    private static Interceptor getProgressInterceptor() {
+        return new Interceptor() {
+            @Override
+            public Response intercept(Interceptor.Chain chain) throws IOException {
+                final Request request = chain.request();
+                final Response originalResponse = chain.proceed(request);
+                if (request.tag() instanceof ApiCallback) {
+                    final ApiCallback callback = (ApiCallback) request.tag();
+                    return originalResponse.newBuilder()
+                        .body(new ProgressResponseBody(originalResponse.body(), callback))
+                        .build();
+                }
+                return originalResponse;
+            }
+        };
+    }
 }

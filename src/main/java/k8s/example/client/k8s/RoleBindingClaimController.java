@@ -53,6 +53,7 @@ public class RoleBindingClaimController extends Thread {
 					
 					// Logic here
 					String claimName = "unknown";
+					String resourceName = "unknown";
 					String claimNamespace = "unknown";
 					try {
 						RoleBindingClaim claim = response.object;
@@ -63,20 +64,23 @@ public class RoleBindingClaimController extends Thread {
 							logger.info("[RoleBindingClaim Controller] Event Type : " + eventType );
 							logger.info("[RoleBindingClaim Controller] == ResourceQuotaClaim == \n" + claim.toString());
 							claimName = claim.getMetadata().getName();
+							resourceName = claim.getResourceName();
 							claimNamespace = claim.getMetadata().getNamespace();
 							switch( eventType ) {
 								case Constants.EVENT_TYPE_ADDED : 
-									// Patch Status to Awaiting
-									replaceRbcStatus( claim.getMetadata().getName(), Constants.CLAIM_STATUS_AWAITING, "wait for admin permission", claimNamespace );
+									if ( K8sApiCaller.roleBindingAlreadyExist( resourceName, claimNamespace ) ) {
+										replaceRbcStatus( claimName, Constants.CLAIM_STATUS_REJECT, "Duplicated RoleBinding Name", claimNamespace );
+									} else {
+										// Patch Status to Awaiting
+										replaceRbcStatus( claimName, Constants.CLAIM_STATUS_AWAITING, "wait for admin permission", claimNamespace );
+									}
 									break;
 								case Constants.EVENT_TYPE_MODIFIED : 
-									String status = getClaimStatus( claim.getMetadata().getName(), claimNamespace );
-									if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && !K8sApiCaller.roleBindingAlreadyExist( claimName, claimNamespace ) ) {
+									String status = getClaimStatus( claimName, claimNamespace );
+									if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && !K8sApiCaller.roleBindingAlreadyExist( resourceName, claimNamespace ) ) {
 										K8sApiCaller.createRoleBinding( claim );
-										replaceRbcStatus( claim.getMetadata().getName(), Constants.CLAIM_STATUS_SUCCESS, "rolebinding create success.", claimNamespace );
-									} else if ( ( status.equals( Constants.CLAIM_STATUS_AWAITING ) || status.equals( Constants.CLAIM_STATUS_REJECT ) ) && K8sApiCaller.roleBindingAlreadyExist( claimName, claimNamespace ) ) {
-										replaceRbcStatus( claim.getMetadata().getName(), Constants.CLAIM_STATUS_SUCCESS, "rolebinding create success.", claimNamespace );
-									}
+										replaceRbcStatus( claimName, Constants.CLAIM_STATUS_SUCCESS, "rolebinding create success.", claimNamespace );
+									} 
 									break;
 								case Constants.EVENT_TYPE_DELETED : 
 									// Nothing to do

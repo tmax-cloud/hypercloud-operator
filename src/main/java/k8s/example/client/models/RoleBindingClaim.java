@@ -10,6 +10,7 @@ import io.kubernetes.client.openapi.models.V1Subject;
 public class RoleBindingClaim {
 	private String apiVersion = "tmax.io/v1";
 	private String kind = "RoleBindingClaim";
+	private String resourceName = null;
 	private V1ObjectMeta metadata = null;
 	private List<V1Subject> subjects = null;
 	private V1RoleRef roleRef = null;
@@ -29,6 +30,14 @@ public class RoleBindingClaim {
 
 	public void setKind(String kind) {
 		this.kind = kind;
+	}
+	
+	public String getResourceName() {
+		return resourceName;
+	}
+	
+	public void setResourceName(String resourceName) {
+		this.resourceName = resourceName;
 	}
 
 	public V1ObjectMeta getMetadata() {
