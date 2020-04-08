@@ -19,6 +19,7 @@ public class Constants {
 	public static final String CUSTOM_OBJECT_PLURAL_CLIENT = "clients";
 	public static final String CUSTOM_OBJECT_KIND_TEMPLATE_INSTANCE = "TemplateInstance";
 	public static final String CUSTOM_OBJECT_PLURAL_REGISTRY = "registries";
+	public static final String CUSTOM_OBJECT_PLURAL_IMAGE = "images";
 	public static final String CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM = "namespaceclaims";
 	public static final String CUSTOM_OBJECT_PLURAL_RESOURCEQUOTACLAIM = "resourcequotaclaims";
 	public static final String CUSTOM_OBJECT_PLURAL_ROLEBINDINGCLAIM = "rolebindingclaims";

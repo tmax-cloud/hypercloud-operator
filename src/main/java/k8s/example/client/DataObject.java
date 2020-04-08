@@ -1,10 +1,13 @@
 package k8s.example.client;
 
+import java.util.List;
+
 import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import io.kubernetes.client.proto.Meta.Time;
 
 public class DataObject {
 	
@@ -179,8 +182,19 @@ public class DataObject {
     }
     
     public static class RegistryEventDO {
+    	private List<RegistryEvent> events;
+
+		public List<RegistryEvent> getEvents() {
+			return events;
+		}
+		public void setEvents(List<RegistryEvent> events) {
+			this.events = events;
+		}
+    }
+    
+    public static class RegistryEvent {
     	private String id;
-    	private DateTime timestamp;
+    	private String timestamp;
     	private String action;
     	private RegistryDescriptor target;
     	private int length;
@@ -195,8 +209,8 @@ public class DataObject {
 		public String getId() { return id; }
 		public void setId(String id) { this.id = id; }
 		
-		public DateTime getTimestamp() { return timestamp; }
-		public void setTimestamp(DateTime timestamp) { this.timestamp = timestamp; }
+		public String getTimestamp() { return timestamp; }
+		public void setTimestamp(String timestamp) { this.timestamp = timestamp; }
 		
 		public String getAction() { return action; }
 		public void setAction(String action) { this.action = action; }
@@ -288,7 +302,7 @@ public class DataObject {
     	private String addr;
     	private String host;
     	private String method;
-    	private String userAgent;
+    	private String useragent;
 		public String getId() {
 			return id;
 		}
@@ -313,11 +327,11 @@ public class DataObject {
 		public void setMethod(String method) {
 			this.method = method;
 		}
-		public String getUserAgent() {
-			return userAgent;
+		public String getUseragent() {
+			return useragent;
 		}
-		public void setUserAgent(String userAgent) {
-			this.userAgent = userAgent;
+		public void setUseragent(String useragent) {
+			this.useragent = useragent;
 		}
     	
     	
@@ -336,6 +350,7 @@ public class DataObject {
     	
     	
     }
+    
     public static class SourceRecord {
     	private String addr;
     	private String instanceID;

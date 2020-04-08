@@ -1,12 +1,10 @@
 package k8s.example.client.handler;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import fi.iki.elonen.NanoHTTPD;
@@ -16,7 +14,9 @@ import fi.iki.elonen.NanoHTTPD.Response.IStatus;
 import fi.iki.elonen.NanoHTTPD.Response.Status;
 import fi.iki.elonen.router.RouterNanoHTTPD.GeneralHandler;
 import fi.iki.elonen.router.RouterNanoHTTPD.UriResource;
+import k8s.example.client.DataObject.RegistryEvent;
 import k8s.example.client.DataObject.RegistryEventDO;
+import k8s.example.client.k8s.K8sApiCaller;
 import k8s.example.client.Main;
 import k8s.example.client.Util;
 
@@ -34,19 +34,33 @@ public class RegistryEventHandler extends GeneralHandler {
 			e.printStackTrace();
 		}
    
-        List<RegistryEventDO> events = null;
+        RegistryEventDO regEvent = null;
 		String outDO = null;
 		IStatus status = null;
 		
 		try {
 			// Read inDO
-			events = new ObjectMapper().readValue(body.get( "events" ), new TypeReference<List<RegistryEventDO>>(){});
-
-			logger.info("  Registry Event Count: " + events.size());
-			for( RegistryEventDO event : events) {
+			regEvent = new ObjectMapper().readValue(body.get( "postData" ), RegistryEventDO.class);
+			
+			logger.info("====== Registry Event ======\n" + body.get( "postData" ));
+			
+			logger.info("  Registry Event Count: " + regEvent.getEvents().size());
+			for( RegistryEvent event : regEvent.getEvents()) {
 				logger.info("    Registry Action: " + event.getAction());
-				if ( event.getRequest() != null ) 
-					logger.info("    Registry Request Host: " + event.getRequest().getHost());
+				if (event.getAction().equals("push")) {
+					try {
+						K8sApiCaller.createImage(event);
+					} catch (Throwable e) {
+						e.printStackTrace();
+					}
+				}
+				else if (event.getAction().equals("delete")) {
+					try {
+						K8sApiCaller.deleteImage(event);
+					} catch (Throwable e) {
+						e.printStackTrace();
+					}
+				}
 			}
 
 		}catch (Exception e) {
@@ -66,3 +80,38 @@ public class RegistryEventHandler extends GeneralHandler {
 		return Util.setCors(NanoHTTPD.newFixedLengthResponse(""));
     }
 }
+
+/*
+{
+   "events": [
+      {
+         "id": "445bf67f-89b2-4a1e-bad0-a206be1121d1",
+         "timestamp": "2020-04-07T11:32:14.731044205Z",
+         "action": "push",
+         "target": {
+            "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+            "size": 2421,
+            "digest": "sha256:43cb618d4ca0f2720bb8fe9fad098261e47f7b9d248b1d66063efd5e2db67932",
+            "length": 2421,
+            "repository": "tomcat",
+            "url": "https://192.168.6.218:443/v2/tomcat/manifests/sha256:43cb618d4ca0f2720bb8fe9fad098261e47f7b9d248b1d66063efd5e2db67932",
+            "tag": "8.5"
+         },
+         "request": {
+            "id": "fb9257ae-69a6-4b5c-b19c-c2ddc2cd2d54",
+            "addr": "10.244.48.64:9931",
+            "host": "192.168.6.218:443",
+            "method": "PUT",
+            "useragent": "docker/19.03.8 go/go1.12.17 git-commit/afacb8b7f0 kernel/4.15.0-55-generic os/linux arch/amd64 UpstreamClient(Docker-Client/19.03.8 \\(linux\\))"
+         },
+         "actor": {
+            "name": "tmax"
+         },
+         "source": {
+            "addr": "hpcd-registry-t2-registry-46nfk:443",
+            "instanceID": "cbba8965-a19a-4732-8bdc-18c7541c8e2c"
+         }
+      }
+   ]
+}
+*/
