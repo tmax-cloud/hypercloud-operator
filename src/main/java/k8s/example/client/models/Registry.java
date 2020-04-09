@@ -7,12 +7,20 @@ public class Registry {
 	public static String REGISTRY_LOGIN_URL = Constants.CUSTOM_OBJECT_GROUP + "/" + "registry-login-url";
 	
 	public static String REGISTRY_KIND = "Registry";
+	private String operatorStartTime = null;
 	private String apiVersion = "tmax.io/v1";
 	private String kind = "Registry";
 	private V1ObjectMeta metadata = null;
 	private RegistrySpec spec = null;
 	private RegistryStatus status = null;
 	
+	
+	public String getOperatorStartTime() {
+		return operatorStartTime;
+	}
+	public void setOperatorStartTime(String operatorStartTime) {
+		this.operatorStartTime = operatorStartTime;
+	}
 	
 	public String getApiVersion() {
 		return apiVersion;
