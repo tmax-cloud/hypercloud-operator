@@ -89,7 +89,7 @@ public class UserHandler extends GeneralHandler {
         			if ( user.getEmail().equalsIgnoreCase(userInDO.getEmail())) throw new Exception(ErrorCode.USER_MAIL_DUPLICATED);
         		}
     		}
-    		JsonArray userAuthList = OAuthApiCaller.ListUser();
+    		JsonArray userAuthList = OAuthApiCaller.listUser();
     		if ( userAuthList != null ) {
     			for (JsonElement userAuth : userAuthList) {
     				if (userAuth.getAsJsonObject().get("user_id").toString().equalsIgnoreCase(userInDO.getId())) throw new Exception(ErrorCode.USER_ID_DUPLICATED);

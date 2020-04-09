@@ -114,7 +114,14 @@ public class Constants {
 	public static final String LOGOUT_FAILED = "Log Out Failed, Token is not Exist or Valid";
 	public static final String REFRESH_FAILED = "Refresh Failed, Refresh Token is not Valid";
 	public static final String PASSWORD_CHANGE_FAILED = "Password Change Failed";
+	
+	// User Status
+	public static final String USER_STATUS_BLOCKED = "blocked";
+	public static final String USER_STATUS_ACTIVE = "active";
 
+	// User Delete Cron Expression
+//	public static final String USER_DELETE_CRON_EXPRESSION = "0 0/5 * 1/1 * ? *"; // every 5 mins for test
+	public static final String USER_DELETE_CRON_EXPRESSION = "0 0 4 ? * MON *"; // every monday 04:00am
 	
 	// Metering Cron Expression
 	public static final String METERING_CRON_EXPRESSION = "0 0/5 * 1/1 * ? *"; // sec, mins, hrs, dom(day of month), month, dow(day of week)
@@ -153,6 +160,7 @@ public class Constants {
 	public static final String USER_PASSWORD_FIND_FAILED = "User Password Change & Send Email Failed";
 	public static final String USER_ID_FIND_FAILED = "User ID Find Failed";
 	public static final String SERVICE_NAME_OAUTH_USER_LIST = "proauth/oauth/usersList";
+	public static final String SERVICE_NAME_OAUTH_USER_DETAIL = "proauth/oauth/user-details/";
 	public static final String SERVICE_NAME_OAUTH_USER_CREATE = "proauth/oauth/users";
 	public static final String SERVICE_NAME_OAUTH_USER_DELETE = "proauth/oauth/users/";
 	public static final String SERVICE_NAME_OAUTH_USER_UPDATE = "proauth/oauth/users/";

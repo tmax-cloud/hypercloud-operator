@@ -1,6 +1,7 @@
 package k8s.example.client.k8s;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.slf4j.Logger;
 
@@ -9,7 +10,9 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
+import fi.iki.elonen.NanoHTTPD.Response.Status;
 import k8s.example.client.Constants;
+import k8s.example.client.ErrorCode;
 import k8s.example.client.DataObject.User;
 import k8s.example.client.Main;
 import okhttp3.HttpUrl;
@@ -36,7 +39,7 @@ public class OAuthApiCaller {
 ////		}
 //	}
 	
-	public static JsonArray ListUser() throws IOException {
+	public static JsonArray listUser() throws IOException {
 		logger.info( " [OAuth] User List Service Start" );
 		
 		//GET svc
@@ -49,6 +52,27 @@ public class OAuthApiCaller {
 	    Gson gson = new Gson();
 	    JsonObject userList = gson.fromJson(result, JsonObject.class);
 	    return userList.get("user").getAsJsonArray(); 
+	}
+	
+	public static JsonObject detailUser( String userId ) throws IOException {
+//		logger.info( " [OAuth] User Detail Get Service Start" );
+	    Request request = null;
+//		logger.info( " User ID : " + userId );
+
+		//GET svc
+		HttpUrl.Builder urlBuilder = HttpUrl.parse(setAuthURL( Constants.SERVICE_NAME_OAUTH_USER_DETAIL )).newBuilder();
+		urlBuilder.addQueryParameter("userId", userId);
+	    String url = urlBuilder.build().toString();
+	    request = new Request.Builder().url(url).get().build();
+		
+	    Response response = client.newCall(request).execute();
+
+	    String result = response.body().string();   
+//		logger.info(" result : " + result);
+
+	    Gson gson = new Gson();
+	    JsonObject userDetail = gson.fromJson(result, JsonObject.class);
+	    return userDetail; 
 	}
 
 	public static JsonObject createUser( User userInDO ) throws IOException {
@@ -71,6 +95,27 @@ public class OAuthApiCaller {
 
 	    JsonObject userCreateOut = gson.fromJson(result, JsonObject.class);
 	    return userCreateOut; 
+	}
+	
+	public static JsonObject deleteUser( String userUuId ) throws IOException {
+//		logger.info( " [OAuth] User Delete Service Start" );
+	    Request request = null;
+//		logger.info( " User UUID : " + userUuId );
+
+		//GET svc
+		HttpUrl.Builder urlBuilder = HttpUrl.parse(setAuthURL( Constants.SERVICE_NAME_OAUTH_USER_DELETE )).newBuilder();
+		urlBuilder.addPathSegment(userUuId);
+	    String url = urlBuilder.build().toString();
+	    request = new Request.Builder().url(url).delete().build();
+		
+	    Response response = client.newCall(request).execute();
+
+	    String result = response.body().string();   
+//		logger.info(" result : " + result);
+
+	    Gson gson = new Gson();
+	    JsonObject userDelete = gson.fromJson(result, JsonObject.class);
+	    return userDelete; 
 	}
 	
 	public static JsonObject AuthenticateCreate( String id, String password ) throws IOException {
@@ -169,6 +214,33 @@ public class OAuthApiCaller {
 
 	    JsonObject setPasswordOut = gson.fromJson(result, JsonObject.class);
 	    return setPasswordOut; 
+	}
+
+	public static void deleteBlockedUser(List<String> deletedUserIdList) throws Exception {
+//		logger.info( " [OAuth] Delete Blocked User Service Start" );
+		String userUuId = null;
+		for ( String deletedUserId : deletedUserIdList ) {
+			JsonObject detailUser = detailUser( deletedUserId ); 
+			
+			if ( detailUser.get("result").toString().equalsIgnoreCase("\"true\"") ){
+//				logger.info( "  User Detail Get by ProAuth success." );
+				userUuId = detailUser.get("user").getAsJsonObject().get("uuid").toString().replaceAll("\"", ""); 
+    		} else {
+    			logger.info("  User Detail Get by ProAuth Failed.");
+    			logger.info( detailUser.get("error").toString());
+				throw new Exception(ErrorCode.NO_MATCHING_USER);
+    		}
+			if (userUuId != null) {
+				JsonObject deleteUser = deleteUser ( userUuId );
+				if ( deleteUser.get("result").toString().equalsIgnoreCase("\"true\"") ){
+					logger.info(  " Bloced User [ " + deletedUserId + " ] delete Success in proAuth");
+	    		} else {
+	    			logger.info("  User Delete by ProAuth Failed.");
+	    			logger.info( detailUser.get("error").toString());
+					throw new Exception(ErrorCode.USER_DELETE_FAILED);
+	    		}
+			}	
+		}	
 	}
 	
 //	public static ContextDataObject makeUserCreateInDO( UserDO userInDO ) throws ProObjectException {

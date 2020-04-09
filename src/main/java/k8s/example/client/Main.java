@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import io.kubernetes.client.openapi.ApiCallback;
 import io.kubernetes.client.openapi.ProgressResponseBody;
+import k8s.example.client.handler.UserDeleteJob;
 import k8s.example.client.k8s.K8sApiCaller;
 import k8s.example.client.metering.MeteringJob;
 import okhttp3.Interceptor;
@@ -30,8 +31,12 @@ public class Main {
 			new WebHookServer();
 			
 			// Start Metering
-			logger.info("[Main] Start Metring");
+			logger.info("[Main] Start Metering per 30 mins");
 			startMeteringTimer();
+			
+			// Start UserDelete
+			logger.info("[Main] Start User Delete per Week");
+			startUserDeleteTimer();
 			
 			// Start Controllers
 			logger.info("[Main] Init & start K8S watchers");
@@ -51,6 +56,21 @@ public class Main {
 				.withIdentity( "MeteringCronTrigger" )
 				.withSchedule(
 				CronScheduleBuilder.cronSchedule( Constants.METERING_CRON_EXPRESSION ))
+				.build();
+
+		Scheduler sch = new StdSchedulerFactory().getScheduler();
+		sch.start(); sch.scheduleJob( job, cronTrigger );
+	}
+	
+	private static void startUserDeleteTimer() throws SchedulerException {
+		JobDetail job = JobBuilder.newJob( UserDeleteJob.class )
+				.withIdentity( "UserDeleteJob" ).build();
+
+		CronTrigger cronTrigger = TriggerBuilder
+				.newTrigger()
+				.withIdentity( "UserDeleteCronTrigger" )
+				.withSchedule(
+				CronScheduleBuilder.cronSchedule( Constants.USER_DELETE_CRON_EXPRESSION ))
 				.build();
 
 		Scheduler sch = new StdSchedulerFactory().getScheduler();
