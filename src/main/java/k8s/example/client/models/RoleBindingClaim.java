@@ -82,6 +82,7 @@ public class RoleBindingClaim {
 		sb.append("class Namespace Claim {\n");
 		sb.append("    apiVersion: ").append(toIndentedString(apiVersion)).append("\n");
 		if(metadata != null ) 	sb.append("    metadata: ").append(toIndentedString(metadata.toString())).append("\n");
+		if(resourceName != null ) 	sb.append("    resourceName: ").append(toIndentedString(resourceName.toString())).append("\n");
 		if(subjects != null ) 		sb.append("    subjects: ").append(toIndentedString(subjects.toString())).append("\n");
 		if(roleRef != null ) 		sb.append("    roleRef: ").append(toIndentedString(roleRef.toString())).append("\n");
 		if(status != null ) 	sb.append("    status: ").append(toIndentedString(status.toString())).append("\n");

@@ -44,7 +44,7 @@ import okio.ByteString;
 public class InstanceOperator extends Thread {
     private Logger logger = Main.logger;
 	private Watch<Object> watchInstance;
-	private static int latestResourceVersion = 0;
+	private static long latestResourceVersion = 0;
 	
 	ApiClient client = null;
 	CustomResourceApi tpApi = null;
@@ -66,7 +66,7 @@ public class InstanceOperator extends Thread {
 //            .registerTypeAdapter(new TypeToken<Watch.Response<Object>>(){}.getType(),  new MapDeserializerDoubleAsIntFix())
             .create();
 	
-	InstanceOperator(ApiClient client, CustomResourceApi api, int resourceVersion) throws Exception {
+	InstanceOperator(ApiClient client, CustomResourceApi api, long resourceVersion) throws Exception {
 		JSON clientJson = client.getJSON();
 		clientJson.setGson(kubeGson);
 		client.setJSON(clientJson);
@@ -108,7 +108,7 @@ public class InstanceOperator extends Thread {
 						logger.info("[Instance Operator] Event Type : " + response.type.toString()); //ADDED, MODIFIED, DELETED
 						logger.info("[Instance Operator] Object : " + instanceObj.toString());
 						
-		        		latestResourceVersion = instanceObj.get("metadata").get("resourceVersion").asInt();
+		        		latestResourceVersion = instanceObj.get("metadata").get("resourceVersion").asLong();
 		        		String instanceNamespace = instanceObj.get("metadata").get("namespace").asText();
 		        		logger.info("[Instance Operator] Instance Name : " + instanceObj.get("metadata").get("name").asText());
 		        		logger.info("[Instance Operator] Instance Namespace : " + instanceObj.get("metadata").get("namespace").asText());
@@ -426,7 +426,7 @@ public class InstanceOperator extends Thread {
 		return resultNode;
 	}
 
-	public static int getLatestResourceVersion() {
+	public static long getLatestResourceVersion() {
 		return latestResourceVersion;
 	}
 	

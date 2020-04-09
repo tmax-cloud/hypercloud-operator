@@ -20,6 +20,8 @@ spec:
     openAPIV3Schema:
       type: object
       properties:
+        operatorStartTime:
+          type: string
         apiVersion:
           type: string
         kind:

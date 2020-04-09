@@ -25,6 +25,8 @@ spec:
         type: object
         required: [resourceName,apiVersion,kind,metadata,subjects,roleRef]
         properties:
+          operatorStartTime:
+            type: string
           resourceName:
             type: string
           apiVersion:
