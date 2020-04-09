@@ -428,6 +428,8 @@ spec:
       type: object
       required: [spec]
       properties:
+        operatorStartTime:
+          type: string
         spec:
           type: object
           required: [image, loginId, loginPassword, service, persistentVolumeClaim]
@@ -890,6 +892,8 @@ spec:
       type: object
       required: [spec]
       properties:
+        operatorStartTime:
+          type: string
         spec:
           type: object
           required: [name, versions, registry]
@@ -917,3 +921,4 @@ spec:
   - name: Age
     type: date
     JSONPath: .metadata.creationTimestamp
+
