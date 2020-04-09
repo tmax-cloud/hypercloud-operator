@@ -25,6 +25,8 @@ spec:
       type: object
       required: [userInfo, status]
       properties:
+        operatorStartTime:
+          type: string
         userInfo:
           type: object
           required: [name, email, phone]

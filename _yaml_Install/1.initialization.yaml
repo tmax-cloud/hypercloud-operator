@@ -80,6 +80,8 @@ spec:
       type: object
       required: [userInfo, status]
       properties:
+        operatorStartTime:
+          type: string
         userInfo:
           type: object
           required: [name, email, phone]
@@ -169,6 +171,8 @@ spec:
     openAPIV3Schema:
       type: object
       properties:
+        operatorStartTime:
+          type: string
         apiVersion:
           type: string
         kind:
@@ -258,6 +262,8 @@ spec:
     openAPIV3Schema:
         type: object
         properties:
+          operatorStartTime:
+            type: string
           apiVersion:
             type: string
           kind:
@@ -412,6 +418,8 @@ spec:
       type: object
       required: [spec]
       properties:
+        operatorStartTime:
+          type: string
         spec:
           type: object
           required: [image, loginId, loginPassword, service, persistentVolumeClaim]
@@ -530,6 +538,8 @@ spec:
         type: object
         required: [resourceName,apiVersion,kind,metadata,spec]
         properties:
+          operatorStartTime:
+            type: string
           resourceName:
             type: string
           apiVersion:
@@ -601,6 +611,8 @@ spec:
         type: object
         required: [resourceName,apiVersion,kind,metadata,spec]
         properties:
+          operatorStartTime:
+            type: string
           resourceName:
             type: string
           apiVersion:
@@ -672,6 +684,8 @@ spec:
         type: object
         required: [resourceName,apiVersion,kind,metadata,subjects,roleRef]
         properties:
+          operatorStartTime:
+            type: string
           resourceName:
             type: string
           apiVersion:
