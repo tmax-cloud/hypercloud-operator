@@ -12,8 +12,8 @@ metadata:
   namespace: hypercloud4-system
 spec:
   hard:
-    limits.cpu: "3"
-    limits.memory: "15Gi"
+    limits.cpu: "4"
+    limits.memory: "20Gi"
     requests.storage: "30Gi"
 
 ---
