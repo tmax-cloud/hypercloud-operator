@@ -1,0 +1,33 @@
+apiVersion: tmax.io/v1
+kind: TemplateInstance
+metadata:
+  name: nodejs-mysql-template-instance
+  namespace: default
+spec:
+  template:
+    metadata:
+      name: nodejs-mysql-template
+    parameters:
+    - name: APP_NAME
+      value: nodejs-mysql-sample-app
+    - name: NAMESPACE
+      value: default
+    - name: SERVICE_ACCOUNT_NAME
+      value: tutorial-service
+    - name: WAS_PORT
+      value: 3000
+    - name: DB_STORAGE
+      value: 20Gi
+    - name: MYSQL_USER
+      value: root1
+    - name: MYSQL_PASSWORD
+      value: tmax@23
+    - name: MYSQL_DATABASE
+      value: root1
+    - name: GIT_URL
+      value: https://github.com/cqbqdd11519/nodejs-mysql-crud
+    - name: GIT_REV
+      value: master
+    - name: IMAGE_URL
+      value: 192.168.6.110:5000/nodejs-sample
+
