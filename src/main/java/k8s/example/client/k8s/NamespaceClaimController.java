@@ -74,11 +74,16 @@ public class NamespaceClaimController extends Thread {
 									}
 									break;
 								case Constants.EVENT_TYPE_MODIFIED : 
-									String status = getClaimStatus( claimName );
-									if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && !K8sApiCaller.namespaceAlreadyExist( resourceName ) ) {
+									String status = getClaimStatus( claimName );		
+									if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && K8sApiCaller.namespaceAlreadyExist( resourceName ) ) {						
+										K8sApiCaller.updateNamespace( claim );
+										replaceNscStatus( claimName, Constants.CLAIM_STATUS_SUCCESS, "namespace update success." );
+									} else if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && !K8sApiCaller.namespaceAlreadyExist( resourceName ) ) {
 										K8sApiCaller.createNamespace( claim );
 										replaceNscStatus( claimName, Constants.CLAIM_STATUS_SUCCESS, "namespace create success." );
-									} 
+									} else if ( status.equals( Constants.CLAIM_STATUS_REJECT )) {
+										replaceNscStatus( claimName, Constants.CLAIM_STATUS_AWAITING, "wait for admin permission" );
+									}
 									break;
 								case Constants.EVENT_TYPE_DELETED : 
 									// Nothing to do
