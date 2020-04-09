@@ -163,6 +163,8 @@ public class K8sApiCaller {
 	private static ObjectMapper mapper = new ObjectMapper();
 	private static Gson gson = new GsonBuilder().create();
 
+	private static long time = System.currentTimeMillis();
+	
     private static Logger logger = Main.logger;
     
 	public static void initK8SClient() throws Exception {
@@ -181,65 +183,10 @@ public class K8sApiCaller {
 		templateApi = new CustomResourceApi();
 	}
 
-	public static void startWatcher() throws Exception {    	
+	public static void startWatcher() throws Exception {    
 		// Get latest resource version
 		logger.info("Get latest resource version");
-		int userLatestResourceVersion = 0;
-		try {
-			Object response = customObjectApi.listClusterCustomObject(
-					Constants.CUSTOM_OBJECT_GROUP,
-					Constants.CUSTOM_OBJECT_VERSION, 
-					Constants.CUSTOM_OBJECT_PLURAL_USER,
-					null, null, null, null, null, null, null, Boolean.FALSE);
-			JsonObject respJson = (JsonObject) new JsonParser().parse((new Gson()).toJson(response));
-
-			// Register Joda deserialization module because of creationTimestamp of k8s object
-			
-			mapper.registerModule(new JodaModule());
-			ArrayList<UserCR> userList = mapper.readValue((new Gson()).toJson(respJson.get("items")), new TypeReference<ArrayList<UserCR>>() {});
-
-			for(UserCR user : userList) {
-				int userResourceVersion = Integer.parseInt(user.getMetadata().getResourceVersion());
-				userLatestResourceVersion = (userLatestResourceVersion >= userResourceVersion) ? userLatestResourceVersion : userResourceVersion;
-			}
-    	} catch (ApiException e) {
-        	logger.info("Response body: " + e.getResponseBody());
-        	e.printStackTrace();
-        	throw e;
-        } catch (Exception e) {
-        	logger.info("Exception message: " + e.getMessage());
-        	e.printStackTrace();
-        	throw e;
-        }
-    	
-		logger.info("User Latest resource version: " + userLatestResourceVersion);
-
-		// registry
-		int registryLatestResourceVersion = 0;
-
-		try {
-			Object response = customObjectApi.listClusterCustomObject(
-					Constants.CUSTOM_OBJECT_GROUP,
-					Constants.CUSTOM_OBJECT_VERSION, 
-					Constants.CUSTOM_OBJECT_PLURAL_REGISTRY,
-					null, null, null, null, null, null, null, Boolean.FALSE);
-			JsonObject respJson = (JsonObject) new JsonParser().parse((new Gson()).toJson(response));
-
-			// Register Joda deserialization module because of creationTimestamp of k8s object
-			mapper.registerModule(new JodaModule());
-			ArrayList<Registry> registryList = mapper.readValue((new Gson()).toJson(respJson.get("items")), new TypeReference<ArrayList<Registry>>() {});
-
-			for(Registry registry : registryList) {
-				int registryResourceVersion = Integer.parseInt(registry.getMetadata().getResourceVersion());
-				registryLatestResourceVersion = (registryLatestResourceVersion >= registryResourceVersion) ? registryLatestResourceVersion : registryResourceVersion;
-			}
-		} catch (Exception e) {
-			logger.info("Exception: " + e.getMessage());
-			e.printStackTrace();
-		}
-
-		logger.info("Registry Latest resource version: " + registryLatestResourceVersion);
-
+		
 		// registry replicaSet
 		int registryReplicaSetLatestResourceVersion = 0;
 
@@ -325,76 +272,23 @@ public class K8sApiCaller {
 
 		logger.info("Registry DockerSecret Latest resource version: " + registryDockerSecretLatestResourceVersion);
 		
-		// Operator
-		int templateLatestResourceVersion = 0;
-		try {
-			Object result = templateApi.listClusterCustomObject(
-					Constants.CUSTOM_OBJECT_GROUP, 
-					Constants.CUSTOM_OBJECT_VERSION,
-					Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE, 
-					null, null, null, null, null, null, null, Boolean.FALSE);
-			
-			String JsonInString = gson.toJson(result);
-			JsonFactory factory = mapper.getFactory();
-			com.fasterxml.jackson.core.JsonParser parser = factory.createParser(JsonInString);
-			JsonNode customObjectList = mapper.readTree(parser);
-			
-			if(customObjectList.get("items").isArray()) {
-				for(JsonNode instance : customObjectList.get("items")) {
-					int templateResourceVersion = instance.get("metadata").get("resourceVersion").asInt();
-					templateLatestResourceVersion = (templateLatestResourceVersion >= templateResourceVersion) ? templateLatestResourceVersion : templateResourceVersion;
-				}
-			}
-		} catch (ApiException e) {
-			logger.info("Response body: " + e.getResponseBody());
-        	e.printStackTrace();
-        	throw e;
-		} catch (Exception e) {
-			logger.info("Exception: " + e.getMessage());
-			e.printStackTrace();
-			throw e;
-		}
 		
+		
+		long userLatestResourceVersion = getLatestResourceVersion( Constants.CUSTOM_OBJECT_PLURAL_USER, false );    	
+		logger.info("User Latest resource version: " + userLatestResourceVersion);
+		long registryLatestResourceVersion = getLatestResourceVersion( Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, true );    	
+		logger.info("Registry Latest resource version: " + registryLatestResourceVersion);
+		long templateLatestResourceVersion = getLatestResourceVersion( Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE, true );		
 		logger.info("Template Latest resource version: " + templateLatestResourceVersion);
-		
-		int instanceLatestResourceVersion = 0;
-		try {
-			Object result = templateApi.listClusterCustomObject(
-					Constants.CUSTOM_OBJECT_GROUP, 
-					Constants.CUSTOM_OBJECT_VERSION, 
-					Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, 
-					null, null, null, null, null, null, null, Boolean.FALSE);
-			
-			String JsonInString = gson.toJson(result);
-			JsonFactory factory = mapper.getFactory();
-			com.fasterxml.jackson.core.JsonParser parser = factory.createParser(JsonInString);
-			JsonNode customObjectList = mapper.readTree(parser);
-			
-			if(customObjectList.get("items").isArray()) {
-				for(JsonNode instance : customObjectList.get("items")) {
-					int instanceResourceVersion = instance.get("metadata").get("resourceVersion").asInt();
-					instanceLatestResourceVersion = (instanceLatestResourceVersion >= instanceResourceVersion) ? instanceLatestResourceVersion : instanceResourceVersion;
-				}
-			}
-		} catch (ApiException e) {
-			logger.info("Response body: " + e.getResponseBody());
-        	e.printStackTrace();
-        	throw e;
-		} catch (Exception e) {
-			logger.info("Exception: " + e.getMessage());
-			e.printStackTrace();
-			throw e;
-		}
-		
+		long instanceLatestResourceVersion = getLatestResourceVersion( Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, true );			
 		logger.info("Instance Latest resource version: " + instanceLatestResourceVersion);
+		long nscLatestResourceVersion = getLatestResourceVersion( Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, false );
+		logger.info("Namespace Claim Latest resource version: " + nscLatestResourceVersion);
+		long rqcLatestResourceVersion = getLatestResourceVersion( Constants.CUSTOM_OBJECT_PLURAL_RESOURCEQUOTACLAIM, true );
+		logger.info("ResourceQuota Claim Latest resource version: " + rqcLatestResourceVersion);
+		long rbcLatestResourceVersion = getLatestResourceVersion( Constants.CUSTOM_OBJECT_PLURAL_ROLEBINDINGCLAIM, true );
+		logger.info("RoleBinding Claim Latest resource version: " + rbcLatestResourceVersion);
 
-		// Get NamespaceClaim LatestResourceVersion
-		int nscLatestResourceVersion = getLatestResourceVersion( Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM );
-		// Get NamespaceClaim LatestResourceVersion
-		int rqcLatestResourceVersion = getLatestResourceVersion( Constants.CUSTOM_OBJECT_PLURAL_RESOURCEQUOTACLAIM );
-		// Get RoleBindingClaim LatestResourceVersion
-		int rbcLatestResourceVersion = getLatestResourceVersion( Constants.CUSTOM_OBJECT_PLURAL_ROLEBINDINGCLAIM );
-		
 		// Start user watch
 		logger.info("Start user watcher");
 		UserWatcher userWatcher = new UserWatcher(k8sClient, customObjectApi, String.valueOf(userLatestResourceVersion));
@@ -461,14 +355,6 @@ public class K8sApiCaller {
 					logger.info("User watcher is not alive. Restart user watcher! (Latest resource version: " + userLatestResourceVersionStr + ")");
 					userWatcher.interrupt();
 					userWatcher = new UserWatcher(k8sClient, customObjectApi, userLatestResourceVersionStr);
-					/*Thread.UncaughtExceptionHandler h = new Thread.UncaughtExceptionHandler() {
-						@Override
-						public void uncaughtException(Thread t, Throwable e) {
-							logger.info( "@@@@@@@@@@@@@@@@@@@@ Uncaught Exception User @@@@@@@@@@@@@@@@@@@@" );
-							logger.info( "" + e );
-						}
-					}; 
-					userWatcher.setUncaughtExceptionHandler(h);*/
 					userWatcher.start();
 				}
 	
@@ -2987,8 +2873,8 @@ public class K8sApiCaller {
 	 * START method for Namespace Claim Controller by seonho_choi
 	 * DO-NOT-DELETE
 	 */
-	private static int getLatestResourceVersion( String customResourceName ) throws Exception {
-		int latestResourceVersion = 0;
+	private static long getLatestResourceVersion( String customResourceName, boolean isNamespaced ) throws Exception {
+		long latestResourceVersion = 0;
 		try {
 			
 			Object result = customObjectApi.listClusterCustomObject(
@@ -3004,8 +2890,12 @@ public class K8sApiCaller {
 			
 			if(customObjectList.get("items").isArray()) {
 				for(JsonNode instance : customObjectList.get("items")) {
-					int resourceVersion = instance.get("metadata").get("resourceVersion").asInt();
-					latestResourceVersion = (latestResourceVersion >= resourceVersion) ? latestResourceVersion : resourceVersion;
+					long resourceVersion = instance.get("metadata").get("resourceVersion").asLong();
+					if (isNamespaced) {
+						latestResourceVersion = patchOperatorStartTime( customResourceName, instance.get("metadata").get("name").asText(), instance.get("metadata").get("namespace").asText(), resourceVersion );
+					} else {
+						latestResourceVersion = patchOperatorStartTime( customResourceName, instance.get("metadata").get("name").asText(), resourceVersion );
+					}
 				}
 			}
 		} catch (ApiException e) {
@@ -3488,6 +3378,74 @@ public class K8sApiCaller {
         	throw e;
         }
 		
+	}
+	
+	
+	private static long patchOperatorStartTime( String plural, String name, String namespace, long version ) {
+		
+		JsonArray patchArray = new JsonArray();
+		JsonObject patch = new JsonObject();
+		patch.addProperty("op", "replace");
+		patch.addProperty("path", "/operatorStartTime");
+		patch.addProperty("value", Long.toString(time));
+		patchArray.add( patch );
+
+		//logger.info( "Patch Annotation Object : " + patchArray );
+		
+		Object response = null;
+		try {
+			response = customObjectApi.patchNamespacedCustomObject(
+					Constants.CUSTOM_OBJECT_GROUP, 
+					Constants.CUSTOM_OBJECT_VERSION, 
+					namespace, 
+					plural, 
+					name, 
+					patchArray);
+		} catch (ApiException e) {
+			logger.info(e.getResponseBody());
+			logger.info("ApiException Code: " + e.getCode());
+		}
+		
+		long resourceVersion = version;
+		if ( response != null ) {
+			JsonObject json = (JsonObject) new JsonParser().parse(new Gson().toJson(response));
+			resourceVersion = json.get("metadata").getAsJsonObject().get("resourceVersion").getAsLong();
+		}
+		
+		return resourceVersion;
+	}
+	
+	private static long patchOperatorStartTime( String plural, String name, long version ) {
+		
+		JsonArray patchArray = new JsonArray();
+		JsonObject patch = new JsonObject();
+		patch.addProperty("op", "replace");
+		patch.addProperty("path", "/operatorStartTime");
+		patch.addProperty("value", Long.toString(time));
+		patchArray.add( patch );
+
+		//logger.info( "Patch Annotation Object : " + patchArray );
+		
+		Object response = null;
+		try {
+			response = customObjectApi.patchClusterCustomObject(
+					Constants.CUSTOM_OBJECT_GROUP, 
+					Constants.CUSTOM_OBJECT_VERSION, 
+					plural, 
+					name, 
+					patchArray);
+		} catch (ApiException e) {
+			logger.info(e.getResponseBody());
+			logger.info("ApiException Code: " + e.getCode());
+		}
+		
+		long resourceVersion = version;
+		if ( response != null ) {
+			JsonObject json = (JsonObject) new JsonParser().parse(new Gson().toJson(response));
+			resourceVersion = json.get("metadata").getAsJsonObject().get("resourceVersion").getAsLong();
+		}
+		
+		return resourceVersion;
 	}
 	
 	

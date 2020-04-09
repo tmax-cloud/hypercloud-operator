@@ -21,15 +21,15 @@ import k8s.example.client.models.NamespaceClaim;
 
 public class NamespaceClaimController extends Thread {
 	private Watch<NamespaceClaim> nscController;
-	private static int latestResourceVersion = 0;
+	private static long latestResourceVersion = 0;
 	private CustomObjectsApi api = null;
 	ApiClient client = null;
 	
     private Logger logger = Main.logger;
 
-	NamespaceClaimController(ApiClient client, CustomObjectsApi api, int resourceVersion) throws Exception {
+	NamespaceClaimController(ApiClient client, CustomObjectsApi api, long resourceVersion) throws Exception {
 		nscController = Watch.createWatch(client,
-				api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, null, null, null, null, null, Integer.toString( resourceVersion ), null, Boolean.TRUE, null),
+				api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, null, null, null, null, null, Long.toString( resourceVersion ), null, Boolean.TRUE, null),
 				new TypeToken<Watch.Response<NamespaceClaim>>() {}.getType());
 		this.api = api;
 		this.client = client;
@@ -57,7 +57,7 @@ public class NamespaceClaimController extends Thread {
 						NamespaceClaim claim = response.object;
 
 						if( claim != null) {
-							latestResourceVersion = Integer.parseInt( response.object.getMetadata().getResourceVersion() );
+							latestResourceVersion = Long.parseLong( response.object.getMetadata().getResourceVersion() );
 							String eventType = response.type.toString(); //ADDED, MODIFIED, DELETED
 							logger.info("[NamespaceClaim Controller] Event Type : " + eventType );
 							logger.info("[NamespaceClaim Controller] == NamespcaeClaim == \n" + claim.toString());
@@ -103,7 +103,7 @@ public class NamespaceClaimController extends Thread {
 				});
 				logger.info("=============== NSC 'For Each' END ===============");
 				nscController = Watch.createWatch(client,
-						api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, null, null, null, null, null, Integer.toString( latestResourceVersion ), null, Boolean.TRUE, null),
+						api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, null, null, null, null, null, Long.toString( latestResourceVersion ), null, Boolean.TRUE, null),
 						new TypeToken<Watch.Response<NamespaceClaim>>() {}.getType());
 			}
 		} catch (Exception e) {
@@ -174,7 +174,7 @@ public class NamespaceClaimController extends Thread {
 		return status;
 	}
 	
-	public static int getLatestResourceVersion() {
+	public static long getLatestResourceVersion() {
 		return latestResourceVersion;
 	}
 }

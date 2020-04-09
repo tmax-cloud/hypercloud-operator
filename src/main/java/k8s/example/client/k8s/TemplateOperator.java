@@ -28,7 +28,7 @@ import k8s.example.client.k8s.apis.CustomResourceApi;
 
 public class TemplateOperator extends Thread {
 	private Watch<Object> watchInstance;
-	private static int latestResourceVersion = 0;
+	private static long latestResourceVersion = 0;
     private Logger logger = Main.logger;
 	
 	ApiClient client = null;
@@ -36,7 +36,7 @@ public class TemplateOperator extends Thread {
 	ObjectMapper mapper = new ObjectMapper();
 	Gson gson = new GsonBuilder().create();
 
-	TemplateOperator(ApiClient client, CustomResourceApi api, int resourceVersion) throws Exception {		
+	TemplateOperator(ApiClient client, CustomResourceApi api, long resourceVersion) throws Exception {		
 		watchInstance = Watch.createWatch(
 		        client,
 		        api.listClusterCustomObjectCall(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE, null, null, null, null, null, String.valueOf(resourceVersion), null, Boolean.TRUE, null),
@@ -72,7 +72,7 @@ public class TemplateOperator extends Thread {
 						logger.info("[Template Operator] Template Name : " + templateName);
 						logger.info("[Template Operator] Template Namespace : " + namespace);
 
-		        		latestResourceVersion = template.get("metadata").get("resourceVersion").asInt();
+		        		latestResourceVersion = template.get("metadata").get("resourceVersion").asLong();
 		        		logger.info("[Template Operator] Custom LatestResourceVersion : " + latestResourceVersion);
 		        		
 		        		if(response.type.toString().equals("ADDED")) {
@@ -161,7 +161,7 @@ public class TemplateOperator extends Thread {
 		return resultNode;
 	}
 
-	public static int getLatestResourceVersion() {
+	public static long getLatestResourceVersion() {
 		return latestResourceVersion;
 	}
 }

@@ -22,14 +22,14 @@ import k8s.example.client.models.RoleBindingClaim;
 
 public class RoleBindingClaimController extends Thread {
 	private Watch<RoleBindingClaim> rbcController;
-	private static int latestResourceVersion = 0;
+	private static long latestResourceVersion = 0;
 	private CustomObjectsApi api = null;
 	ApiClient client = null;
     private Logger logger = Main.logger;
 
-	RoleBindingClaimController(ApiClient client, CustomObjectsApi api, int resourceVersion) throws Exception {
+	RoleBindingClaimController(ApiClient client, CustomObjectsApi api, long resourceVersion) throws Exception {
 		rbcController = Watch.createWatch(client,
-				api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_ROLEBINDINGCLAIM, null, null, null, null, null, Integer.toString( resourceVersion ), null, Boolean.TRUE, null),
+				api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_ROLEBINDINGCLAIM, null, null, null, null, null, Long.toString( resourceVersion ), null, Boolean.TRUE, null),
 				new TypeToken<Watch.Response<RoleBindingClaim>>() {}.getType());
 		this.api = api;
 		this.client = client;
@@ -59,7 +59,7 @@ public class RoleBindingClaimController extends Thread {
 						RoleBindingClaim claim = response.object;
 
 						if( claim != null) {
-							latestResourceVersion = Integer.parseInt( response.object.getMetadata().getResourceVersion() );
+							latestResourceVersion = Long.parseLong( response.object.getMetadata().getResourceVersion() );
 							String eventType = response.type.toString(); //ADDED, MODIFIED, DELETED
 							logger.info("[RoleBindingClaim Controller] Event Type : " + eventType );
 							logger.info("[RoleBindingClaim Controller] == ResourceQuotaClaim == \n" + claim.toString());
@@ -106,7 +106,7 @@ public class RoleBindingClaimController extends Thread {
 				});
 				logger.info("=============== RBC 'For Each' END ===============");
 				rbcController = Watch.createWatch(client,
-						api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_ROLEBINDINGCLAIM, null, null, null, null, null, Integer.toString( latestResourceVersion ), null, Boolean.TRUE, null),
+						api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_ROLEBINDINGCLAIM, null, null, null, null, null, Long.toString( latestResourceVersion ), null, Boolean.TRUE, null),
 						new TypeToken<Watch.Response<RoleBindingClaim>>() {}.getType());
 			}
 		} catch (Exception e) {
@@ -179,7 +179,7 @@ public class RoleBindingClaimController extends Thread {
 		return status;
 	}
 	
-	public static int getLatestResourceVersion() {
+	public static long getLatestResourceVersion() {
 		return latestResourceVersion;
 	}
 }
