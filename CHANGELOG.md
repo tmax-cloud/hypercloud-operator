@@ -1,6 +1,31 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.0.10 start -------------------->
+
+## HyperCloudServer_4.1.0.10 (2020년 04월  9일 목 오후  3:16:06)
+
+### Added
+  - [feat] ImageCRD 추가 및 ImageList 조회 기능 추가 (ImageCRD의 Create, Delete, Edit 기능 미지원) by sukhee_yun
+
+### Changed
+  - [mod] install 1.initialization.yaml 수정 by seonho_choi
+  - [mod] Definition 수정 후 Operator 재기동 시 기존 Resource 를 지우지 않아도 패치 가능하도록 수정 by seonho_choi
+  - [mod] Blocked user clear job 구현 완료 by taegeon_woo
+
+### Fixed
+
+### CRD yaml
+  - [crd] annotation 에 operator.version 명시되도록 수정 by seonho_choi
+  - [crd] guide_image 추가 by sukhee_yun
+  - [crd] RegistryCRD.yaml, guide_registry 수정: customConfigYml 필드 추가 by sukhee_yun
+  - [crd] ImageCRD 추가 by sukhee_yun
+  - [crd] 모든 CRD definition 에 'operatorStartTime' Field 추가 (모두 재 apply 필요) by seonho_choi
+
+### Etc
+
+<!--------------------- v4.1.0.10 end --------------------->
+
 <!-------------------- v4.1.0.9 start -------------------->
 
 ## HyperCloudServer_4.1.0.9 (2020년 04월  8일 수 오후  3:02:23)
