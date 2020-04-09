@@ -1,6 +1,25 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.0.11 start -------------------->
+
+## HyperCloudServer_4.1.0.11 (2020년 04월  9일 목 오후  4:37:39)
+
+### Added
+  - [feat] CRD 4.1.0.11 version by seonho_choi
+
+### Changed
+  - [mod] 모든 resource DO 에 operatorStartTime 추가 by seonho_choi
+
+### Fixed
+
+### CRD yaml
+  - [crd] ImageCRD.yaml, RegistryCRD.yaml : annoatation 및 operatorStartTime 필드 추가 by sukhee_yun
+
+### Etc
+
+<!--------------------- v4.1.0.11 end --------------------->
+
 <!-------------------- v4.1.0.10 start -------------------->
 
 ## HyperCloudServer_4.1.0.10 (2020년 04월  9일 목 오후  3:16:06)
