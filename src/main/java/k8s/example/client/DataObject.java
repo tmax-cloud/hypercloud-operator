@@ -1,8 +1,13 @@
 package k8s.example.client;
 
+import java.util.List;
+
+import org.joda.time.DateTime;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import io.kubernetes.client.proto.Meta.Time;
 
 public class DataObject {
 	
@@ -174,5 +179,195 @@ public class DataObject {
     	
     	public void setMsg(String msg) { this.msg = msg; }
     	public void setStatus(String status) { this.status = status; }
+    }
+    
+    public static class RegistryEventDO {
+    	private List<RegistryEvent> events;
+
+		public List<RegistryEvent> getEvents() {
+			return events;
+		}
+		public void setEvents(List<RegistryEvent> events) {
+			this.events = events;
+		}
+    }
+    
+    public static class RegistryEvent {
+    	private String id;
+    	private String timestamp;
+    	private String action;
+    	private RegistryDescriptor target;
+    	private int length;
+    	private String repository;
+    	private String fromRepository;
+    	private String url;
+    	private String tag;
+    	private RequestRecord request;
+    	private ActorRecord actor;
+    	private SourceRecord source;
+    	
+		public String getId() { return id; }
+		public void setId(String id) { this.id = id; }
+		
+		public String getTimestamp() { return timestamp; }
+		public void setTimestamp(String timestamp) { this.timestamp = timestamp; }
+		
+		public String getAction() { return action; }
+		public void setAction(String action) { this.action = action; }
+		
+		public RegistryDescriptor getTarget() { return target; }
+		public void setTarget(RegistryDescriptor target) { this.target = target; }
+		
+		public int getLength() { return length; }
+		public void setLength(int length) { this.length = length; }
+		
+		public String getRepository() { return repository; }
+		public void setRepository(String repository) { this.repository = repository; }
+		
+		public String getFromRepository() { return fromRepository; }
+		public void setFromRepository(String fromRepository) { this.fromRepository = fromRepository; }
+		
+		public String getUrl() { return url; }
+		public void setUrl(String url) { this.url = url; }
+		
+		public String getTag() { return tag; }
+		public void setTag(String tag) { this.tag = tag; }
+		
+		public RequestRecord getRequest() { return request; }
+		public void setRequest(RequestRecord request) { this.request = request; }
+		
+		public ActorRecord getActor() { return actor; }
+		public void setActor(ActorRecord actor) { this.actor = actor; }
+		
+		public SourceRecord getSource() { return source; }
+		public void setSource(SourceRecord source) { this.source = source; }
+    }
+    
+    public static class RegistryDescriptor {
+    	private String mediaType;
+    	private int size;
+    	private String digest;
+    	private int length;
+    	private String repository; 
+    	private String url;
+    	private String tag;
+		public String getMediaType() {
+			return mediaType;
+		}
+		public void setMediaType(String mediaType) {
+			this.mediaType = mediaType;
+		}
+		public int getSize() {
+			return size;
+		}
+		public void setSize(int size) {
+			this.size = size;
+		}
+		public String getDigest() {
+			return digest;
+		}
+		public void setDigest(String digest) {
+			this.digest = digest;
+		}
+		public int getLength() {
+			return length;
+		}
+		public void setLength(int length) {
+			this.length = length;
+		}
+		public String getRepository() {
+			return repository;
+		}
+		public void setRepository(String repository) {
+			this.repository = repository;
+		}
+		public String getUrl() {
+			return url;
+		}
+		public void setUrl(String url) {
+			this.url = url;
+		}
+		public String getTag() {
+			return tag;
+		}
+		public void setTag(String tag) {
+			this.tag = tag;
+		}
+    	
+    	
+    }
+    
+    public static class RequestRecord {
+    	private String id;
+    	private String addr;
+    	private String host;
+    	private String method;
+    	private String useragent;
+		public String getId() {
+			return id;
+		}
+		public void setId(String id) {
+			this.id = id;
+		}
+		public String getAddr() {
+			return addr;
+		}
+		public void setAddr(String addr) {
+			this.addr = addr;
+		}
+		public String getHost() {
+			return host;
+		}
+		public void setHost(String host) {
+			this.host = host;
+		}
+		public String getMethod() {
+			return method;
+		}
+		public void setMethod(String method) {
+			this.method = method;
+		}
+		public String getUseragent() {
+			return useragent;
+		}
+		public void setUseragent(String useragent) {
+			this.useragent = useragent;
+		}
+    	
+    	
+    }
+
+    public static class ActorRecord {
+    	private String name;
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+    	
+    	
+    }
+    
+    public static class SourceRecord {
+    	private String addr;
+    	private String instanceID;
+    	
+		public String getAddr() {
+			return addr;
+		}
+		public void setAddr(String addr) {
+			this.addr = addr;
+		}
+		public String getInstanceID() {
+			return instanceID;
+		}
+		public void setInstanceID(String instanceID) {
+			this.instanceID = instanceID;
+		}
+    	
+    	
     }
 }

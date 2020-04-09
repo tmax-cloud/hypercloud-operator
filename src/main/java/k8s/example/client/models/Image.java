@@ -1,18 +1,12 @@
 package k8s.example.client.models;
 
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
-import k8s.example.client.Constants;
 
-public class Registry {
-	public static String REGISTRY_LOGIN_URL = Constants.CUSTOM_OBJECT_GROUP + "/" + "registry-login-url";
-	
-	public static String REGISTRY_KIND = "Registry";
+public class Image {
 	private String apiVersion = "tmax.io/v1";
-	private String kind = "Registry";
+	private String kind = "Image";
 	private V1ObjectMeta metadata = null;
-	private RegistrySpec spec = null;
-	private RegistryStatus status = null;
-	
+	private ImageSpec spec = null;
 	
 	public String getApiVersion() {
 		return apiVersion;
@@ -35,27 +29,20 @@ public class Registry {
 		this.metadata = metadata;
 	}
 	
-	public RegistrySpec getSpec() {
+	public ImageSpec getSpec() {
 		return spec;
 	}
-	public void setSpec(RegistrySpec spec) {
+	public void setSpec(ImageSpec spec) {
 		this.spec = spec;
 	}
 	
-	public RegistryStatus getStatus() {
-		return status;
-	}
-	public void setStatus(RegistryStatus status) {
-		this.status = status;
-	}
 
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append("class Registry {\n");
+		sb.append("class Image {\n");
 		sb.append("    apiVersion: ").append(toIndentedString(apiVersion)).append("\n");
 		if(metadata != null ) 	sb.append("    metadata: ").append(toIndentedString(metadata.toString())).append("\n");
 		if(spec != null ) 		sb.append("    spec: ").append(toIndentedString(spec.toString())).append("\n");
-		if(status != null ) 	sb.append("    status: ").append(toIndentedString(status.toString())).append("\n");
 		sb.append("}");
 		return sb.toString();
 	}

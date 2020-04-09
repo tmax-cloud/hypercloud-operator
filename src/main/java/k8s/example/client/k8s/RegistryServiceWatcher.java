@@ -47,7 +47,9 @@ public class RegistryServiceWatcher extends Thread {
 				try {
 					V1Service service = response.object;
 					
-					if( service != null) {
+					if( service != null
+							&& Integer.parseInt(service.getMetadata().getResourceVersion()) > Integer.parseInt(latestResourceVersion)) {
+						
 						latestResourceVersion = response.object.getMetadata().getResourceVersion();
 						String eventType = response.type.toString();
 						logger.info("[RegistryServiceWatcher] Registry Service " + eventType + "\n");

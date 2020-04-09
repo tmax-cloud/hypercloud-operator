@@ -4,10 +4,13 @@ public class Constants {
 	public static final String ISSUER = "Tmax-ProAuth-WebHook";
 	public static final String ACCESS_TOKEN_SECRET_KEY = "Access-Token-Secret-Key";
 	public static final String REFRESH_TOKEN_SECRET_KEY = "Refresh-Token-Secret-Key";
+
+	public static final String K8S_PREFIX = "hpcd-";
 	
 	public static final String TEMPLATE_NAMESPACE = "hypercloud4-system";
 	public static final String DEFAULT_NAMESPACE = "default";
 	public static final String SYSTEM_ENV_CATALOG_NAMESPACE = "CATALOG_NAMESPACE";
+	public static final String REGISTRY_NAMESPACE = "hypercloud4-system";
 
 	public static final String CUSTOM_OBJECT_GROUP = "tmax.io";
 	public static final String CUSTOM_OBJECT_VERSION = "v1";
@@ -18,6 +21,7 @@ public class Constants {
 	public static final String CUSTOM_OBJECT_PLURAL_CLIENT = "clients";
 	public static final String CUSTOM_OBJECT_KIND_TEMPLATE_INSTANCE = "TemplateInstance";
 	public static final String CUSTOM_OBJECT_PLURAL_REGISTRY = "registries";
+	public static final String CUSTOM_OBJECT_PLURAL_IMAGE = "images";
 	public static final String CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM = "namespaceclaims";
 	public static final String CUSTOM_OBJECT_PLURAL_RESOURCEQUOTACLAIM = "resourcequotaclaims";
 	public static final String CUSTOM_OBJECT_PLURAL_ROLEBINDINGCLAIM = "rolebindingclaims";
@@ -29,7 +33,8 @@ public class Constants {
 
 	public static final String RBAC_API_GROUP = "rbac.authorization.k8s.io";
 
-
+	// HTTPS REQUEST URL
+	public static final String HTTPS_SCHEME_PREFIX = "https://";
 	
 	public static final String CLUSTER_ROLE_NAMESPACE_OWNER = "namespace-owner";
 	public static final String CLUSTER_ROLE_NAMESPACE_USER = "namespace-user";
@@ -48,7 +53,9 @@ public class Constants {
 	public static final String ROLE_OWNER = "namespace-owner";
 	public static final String ROLE_USER = "namespace-user";
 
-	public static final String K8S_PREFIX = "hpcd-";
+	// Registry
+	public static final String REGISTRY_CONFIG_MAP_NAME = "registry-config";
+	
 	public static final String K8S_REGISTRY_PREFIX = "registry-";
 	public static final String REGISTRY_CPU_STRING = "0.2";
 	public static final String REGISTRY_MEMORY_STRING = "512Mi";
@@ -157,4 +164,6 @@ public class Constants {
 	// Template Parameter Data Type
 	public static final String TEMPLATE_DATA_TYPE_NUMBER = "number";
 	public static final String TEMPLATE_DATA_TYPE_STRING = "string";
+	
+	
 }

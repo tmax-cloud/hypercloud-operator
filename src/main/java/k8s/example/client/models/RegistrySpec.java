@@ -5,6 +5,7 @@ public class RegistrySpec {
 	private String description = null;
 	private String loginId = null;
 	private String loginPassword = null;
+	private String configMapName = null;
 	private RegistryService service = null;
 	private RegistryPVC persistentVolumeClaim = null;
 
@@ -32,6 +33,12 @@ public class RegistrySpec {
 	public void setLoginPassword(String loginPassword) {
 		this.loginPassword = loginPassword;
 	}
+	public String getConfigMapName() {
+		return configMapName;
+	}
+	public void setConfigMapName(String configMapName) {
+		this.configMapName = configMapName;
+	}
 	public RegistryService getService() {
 		return service;
 	}
@@ -44,6 +51,7 @@ public class RegistrySpec {
 	public void setPersistentVolumeClaim(RegistryPVC persistentVolumeClaim) {
 		this.persistentVolumeClaim = persistentVolumeClaim;
 	}
+	
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("class RegistrySpec {\n");
@@ -51,6 +59,7 @@ public class RegistrySpec {
 		sb.append("    description: ").append(toIndentedString(description)).append("\n");
 		sb.append("    loginId: ").append(toIndentedString(loginId)).append("\n");
 		sb.append("    loginPassword: ").append(toIndentedString(loginPassword)).append("\n");
+		sb.append("    configMapName: ").append(toIndentedString(configMapName)).append("\n");
 		sb.append("    service: ").append(toIndentedString(service)).append("\n");
 		sb.append("    persistentVolumeClaim: ").append(toIndentedString(persistentVolumeClaim)).append("\n");
 		sb.append("}");
