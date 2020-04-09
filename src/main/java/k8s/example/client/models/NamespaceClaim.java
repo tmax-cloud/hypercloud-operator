@@ -10,7 +10,14 @@ public class NamespaceClaim {
 	private V1ObjectMeta metadata = null;
 	private V1ResourceQuotaSpec spec = null;
 	private ClaimStatus status = null;
-
+	private String operatorStartTime = null;
+	
+	public String getOperatorStartTime() {
+		return operatorStartTime;
+	}
+	public void setOperatorStartTime(String operatorStartTime) {
+		this.operatorStartTime = operatorStartTime;
+	}
 	public String getApiVersion() {
 		return apiVersion;
 	}

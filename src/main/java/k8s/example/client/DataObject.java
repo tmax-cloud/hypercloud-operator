@@ -61,16 +61,19 @@ public class DataObject {
     	private V1ObjectMeta metadata;
     	private User userInfo;
     	private String status;
+    	private String operatorStartTime;
     	
     	public String getApiVersion() { return apiVersion; }
     	public String getKind() { return kind; }
     	public V1ObjectMeta getMetadata() { return metadata; }
     	public User getUserInfo() { return userInfo; }
     	public String getStatus() { return status; }
-    	
+    	public String getOperatorStartTime() { return operatorStartTime; }
+
     	public void setMetadata(V1ObjectMeta metadata) { this.metadata = metadata; }
     	public void setUserInfo(User userInfo) { this.userInfo = userInfo; }
     	public void setStatus(String status) { this.status = status; }
+    	public void setOperatorStartTime(String operatorStartTime) { this.operatorStartTime = operatorStartTime; }
     }
     
     public static class User {

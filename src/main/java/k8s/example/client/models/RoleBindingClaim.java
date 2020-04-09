@@ -15,7 +15,16 @@ public class RoleBindingClaim {
 	private List<V1Subject> subjects = null;
 	private V1RoleRef roleRef = null;
 	private ClaimStatus status = null;
+	private String operatorStartTime = null;
 	
+	public String getOperatorStartTime() {
+		return operatorStartTime;
+	}
+
+	public void setOperatorStartTime(String operatorStartTime) {
+		this.operatorStartTime = operatorStartTime;
+	}
+
 	public String getApiVersion() {
 		return apiVersion;
 	}
