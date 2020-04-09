@@ -739,6 +739,27 @@ public class K8sApiCaller {
         }
     }
     
+    public static void deleteUser(String userName) throws Exception {
+    	try {
+    		V1DeleteOptions body = new V1DeleteOptions();
+    		
+        	customObjectApi.deleteClusterCustomObject(
+        			Constants.CUSTOM_OBJECT_GROUP,
+					Constants.CUSTOM_OBJECT_VERSION,
+					Constants.CUSTOM_OBJECT_PLURAL_USER,
+					userName, 
+					body, 0, null, null);
+        } catch (ApiException e) {
+        	logger.info("Response body: " + e.getResponseBody());
+        	e.printStackTrace();
+        	throw e;
+        } catch (Exception e) {
+        	logger.info("Exception message: " + e.getMessage());
+        	e.printStackTrace();
+        	throw e;
+        }
+    }
+    
     public static void saveClient(Client clientInfo) throws Exception {
     	
     	try {
@@ -3252,6 +3273,36 @@ public class K8sApiCaller {
 			throw e;
 		}
 	}
+	
+    public static void deleteClusterRole(String name) throws Exception {
+    	try {
+    		V1DeleteOptions body = new V1DeleteOptions();
+    		rbacApi.deleteClusterRole(name, null, null, null, null, null, body);       	
+        } catch (ApiException e) {
+        	logger.info("Response body: " + e.getResponseBody());
+        	e.printStackTrace();
+        	throw e;
+        } catch (Exception e) {
+        	logger.info("Exception message: " + e.getMessage());
+        	e.printStackTrace();
+        	throw e;
+        }
+    }
+    
+    public static void deleteClusterRoleBinding(String name) throws Exception {
+    	try {
+    		V1DeleteOptions body = new V1DeleteOptions();		
+    		rbacApi.deleteClusterRoleBinding(name, null, null, null, null, null, body);
+        } catch (ApiException e) {
+        	logger.info("Response body: " + e.getResponseBody());
+        	e.printStackTrace();
+        	throw e;
+        } catch (Exception e) {
+        	logger.info("Exception message: " + e.getMessage());
+        	e.printStackTrace();
+        	throw e;
+        }
+    }
 	/**
 	 * END method for Namespace Claim Controller by seonho_choi
 	 * DO-NOT-DELETE
@@ -3488,6 +3539,42 @@ public class K8sApiCaller {
         	throw e;
         }
 		
+	}
+	
+	public static List < String > deleteBlockedUser() throws Exception {
+		List < String > deletedUserIdList = null;
+		try {
+			List < UserCR > userList = listUser();
+			if ( userList != null ) {
+				for( UserCR user : userList) {
+					if ( user.getStatus().equalsIgnoreCase(Constants.USER_STATUS_BLOCKED) ) {
+						deleteUser( user.getMetadata().getName() );
+						logger.info(  " Bloced User [ " + user.getMetadata().getName() + " ] delete Success in k8s");
+
+						deleteClusterRole( user.getMetadata().getName() );
+//						logger.info(  " Cluster Role [ " + user.getMetadata().getName() + " ] delete Success in k8s");
+
+						deleteClusterRoleBinding( user.getMetadata().getName() );
+//						logger.info(  " Cluster RoleBindning [ " + user.getMetadata().getName() + " ] delete Success in k8s");
+
+						if ( deletedUserIdList == null ) deletedUserIdList = new ArrayList<>();
+						deletedUserIdList.add( user.getMetadata().getName() );
+					}
+				}
+			}
+        } catch (ApiException e) {
+        	logger.info("Response body: " + e.getResponseBody());
+        	e.printStackTrace();
+        	throw e;
+        } catch (Exception e) {
+        	logger.info("Exception message: " + e.getMessage());
+        	e.printStackTrace();
+        	throw e;
+        }
+		
+		if ( deletedUserIdList == null ) logger.info(  " No Blocked User to Delete !!");
+
+		return deletedUserIdList;
 	}
 	
 	
