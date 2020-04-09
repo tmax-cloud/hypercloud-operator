@@ -3,11 +3,19 @@ package k8s.example.client.models;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
 
 public class Image {
+	private String operatorStartTime = null;
 	private String apiVersion = "tmax.io/v1";
 	private String kind = "Image";
 	private V1ObjectMeta metadata = null;
 	private ImageSpec spec = null;
 	
+	
+	public String getOperatorStartTime() {
+		return operatorStartTime;
+	}
+	public void setOperatorStartTime(String operatorStartTime) {
+		this.operatorStartTime = operatorStartTime;
+	}
 	public String getApiVersion() {
 		return apiVersion;
 	}
