@@ -23,8 +23,6 @@ spec:
       type: object
       required: [spec]
       properties:
-        operatorStartTime:
-          type: string
         spec:
           type: object
           required: [name, versions, registry]

@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: yun-pod
+  name: tmax-pod
   namespace: hypercloud-system
   labels:
     app: myapp

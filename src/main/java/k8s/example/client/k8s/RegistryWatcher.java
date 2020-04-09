@@ -7,6 +7,8 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.gson.reflect.TypeToken;
 
@@ -60,6 +62,11 @@ public class RegistryWatcher extends Thread {
 						if( registry != null
 								&& Integer.parseInt(registry.getMetadata().getResourceVersion()) > Integer.parseInt(latestResourceVersion)) {
 							
+							if( !K8sApiCaller.isCurrentRegistry(registry) ) {
+								logger.info("This registry event does not belong to the current registry.");
+								throw new Exception("This registry event does not belong to the current registry.");
+							}
+							
 							latestResourceVersion = response.object.getMetadata().getResourceVersion();
 							String eventType = response.type.toString();
 							logger.info("====================== Registry " + eventType + " ====================== \n");
@@ -79,7 +86,7 @@ public class RegistryWatcher extends Thread {
 								}
 								
 								String beforeJson = registry.getMetadata().getAnnotations().get(Constants.LAST_CUSTOM_RESOURCE);
-								logger.info("beforeJson = " + beforeJson);
+//								logger.info("beforeJson = " + beforeJson);
 								if( beforeJson == null) {
 									K8sApiCaller.updateRegistryAnnotationLastCR(registry);
 									break;
@@ -166,7 +173,7 @@ public class RegistryWatcher extends Thread {
 
 								}
 
-								logger.info("afterJson = " + Util.toJson(registry).toString());
+//								logger.info("afterJson = " + Util.toJson(registry).toString());
 								JsonNode diff = Util.jsonDiff(beforeJson, Util.toJson(registry).toString());
 								logger.info("diff: " + diff.toString());
 
@@ -250,4 +257,6 @@ public class RegistryWatcher extends Thread {
 		
 		return statusMap;
 	}
+	
+	
 }
