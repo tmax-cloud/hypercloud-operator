@@ -1513,23 +1513,39 @@ public class K8sApiCaller {
 			
 			// ---- Create Config Map
 			boolean regConfigExist = true;
-			String configMapName = Constants.K8S_PREFIX + registry.getMetadata().getName();
-			try {
-				V1ConfigMap regConfig = api.readNamespacedConfigMap(Constants.REGISTRY_CONFIG_MAP_NAME, Constants.REGISTRY_NAMESPACE, null, null, null);
-				
-				V1ConfigMap configMap = new V1ConfigMap();
-				V1ObjectMeta metadata = new V1ObjectMeta();
-				metadata.setName(configMapName);
-				metadata.setNamespace(namespace);
-				configMap.setMetadata(metadata);
-				configMap.setData(regConfig.getData());
-				
-				api.createNamespacedConfigMap(namespace, configMap, null, null, null);
-			} catch (ApiException e) {
-				logger.info(e.getResponseBody());
-				regConfigExist = false;
+			String configMapName = registry.getSpec().getCustomConfigYml();
+			
+			if( StringUtil.isNotEmpty(configMapName)) {
+				try {
+					V1ConfigMap regConfig = api.readNamespacedConfigMap(configMapName, namespace, null, null, null);
+					
+					logger.info("== customConfigYaml ==\n" + regConfig.toString());
+				} catch (ApiException e) {
+					logger.info(e.getResponseBody());
+					regConfigExist = false;
+				}
 			}
 			
+			if( StringUtil.isEmpty(configMapName) || !regConfigExist ) {
+				configMapName = Constants.K8S_PREFIX + registry.getMetadata().getName();
+				try {
+					V1ConfigMap regConfig = api.readNamespacedConfigMap(Constants.REGISTRY_CONFIG_MAP_NAME, Constants.REGISTRY_NAMESPACE, null, null, null);
+					
+					V1ConfigMap configMap = new V1ConfigMap();
+					V1ObjectMeta metadata = new V1ObjectMeta();
+					
+					metadata.setName(configMapName);
+					metadata.setNamespace(namespace);
+					metadata.setOwnerReferences(ownerRefs);
+					configMap.setMetadata(metadata);
+					configMap.setData(regConfig.getData());
+					
+					api.createNamespacedConfigMap(namespace, configMap, null, null, null);
+				} catch (ApiException e) {
+					logger.info(e.getResponseBody());
+					regConfigExist = false;
+				}
+			}
 			
 
 			// ----- Create Registry Replica Set
@@ -2148,10 +2164,11 @@ public class K8sApiCaller {
 			logger.info(e.getResponseBody());
 			throw e;
 		}
+		
 		Registry registry = null;
 		try {
 			registry = mapper.readValue(gson.toJson(response), Registry.class);
-		} catch(JsonParseException | JsonMappingException  e) {
+		} catch(JsonParseException | JsonMappingException e) {
 			logger.info(e.getMessage());
 		} 
 		
@@ -2530,6 +2547,35 @@ public class K8sApiCaller {
 				throw e;
 			}
 		}
+	}
+	
+	public static boolean isCurrentRegistry(Registry registry) throws ApiException, IOException {
+		String namespace = registry.getMetadata().getNamespace();
+		String registryName = registry.getMetadata().getName();
+		String existRegistryUID = null;
+		
+		Object response = null;
+		try {
+			response = customObjectApi.getNamespacedCustomObject(
+					Constants.CUSTOM_OBJECT_GROUP, 
+					Constants.CUSTOM_OBJECT_VERSION, 
+					namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registryName);
+		}catch(ApiException e) {
+			logger.info(e.getResponseBody());
+			throw e;
+		}
+		
+		Registry existRegistry = null;
+		try {
+			existRegistry = mapper.readValue(gson.toJson(response), Registry.class);
+			existRegistryUID = existRegistry.getMetadata().getUid();
+			logger.info("EXIST REGISTRY UID: " + existRegistryUID);
+		} catch(JsonParseException | JsonMappingException e) {
+			logger.info(e.getMessage());
+			throw e;
+		}
+		
+		return registry.getMetadata().getUid().equals(existRegistryUID);
 	}
 	
 	public static List<Image> getAllImageData(Registry registry) throws ApiException, Exception {
@@ -2937,7 +2983,19 @@ public class K8sApiCaller {
 			Map<String, String> labels = new HashMap<>();
 			labels.put("registry", imageRegistry);
 			metadata.setLabels(labels);
-
+			
+			List<V1OwnerReference> ownerRefs = new ArrayList<>();
+			V1OwnerReference ownerRef = new V1OwnerReference();
+			
+			ownerRef.setApiVersion(registry.getApiVersion());
+			ownerRef.setBlockOwnerDeletion(Boolean.TRUE);
+			ownerRef.setController(Boolean.TRUE);
+			ownerRef.setKind(registry.getKind());
+			ownerRef.setName(registry.getMetadata().getName());
+			ownerRef.setUid(registry.getMetadata().getUid());
+			ownerRefs.add(ownerRef);
+			
+			metadata.setOwnerReferences(ownerRefs);
 			image.setMetadata(metadata);
 
 			ImageSpec spec = new ImageSpec();
@@ -3060,6 +3118,19 @@ public class K8sApiCaller {
 				labels.put("registry", imageRegistry);
 				metadata.setLabels(labels);
 
+				List<V1OwnerReference> ownerRefs = new ArrayList<>();
+				V1OwnerReference ownerRef = new V1OwnerReference();
+				
+				ownerRef.setApiVersion(registry.getApiVersion());
+				ownerRef.setBlockOwnerDeletion(Boolean.TRUE);
+				ownerRef.setController(Boolean.TRUE);
+				ownerRef.setKind(registry.getKind());
+				ownerRef.setName(registry.getMetadata().getName());
+				ownerRef.setUid(registry.getMetadata().getUid());
+				ownerRefs.add(ownerRef);
+				
+				metadata.setOwnerReferences(ownerRefs);
+				
 				image.setMetadata(metadata);
 
 				ImageSpec spec = new ImageSpec();

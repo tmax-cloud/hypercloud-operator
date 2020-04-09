@@ -7,6 +7,8 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.gson.reflect.TypeToken;
 
@@ -59,6 +61,10 @@ public class RegistryWatcher extends Thread {
 						
 						if( registry != null
 								&& Integer.parseInt(registry.getMetadata().getResourceVersion()) > Integer.parseInt(latestResourceVersion)) {
+							
+							if( !K8sApiCaller.isCurrentRegistry(registry) ) {
+								throw new Exception("This registry event does not belong to the current registry.");
+							}
 							
 							latestResourceVersion = response.object.getMetadata().getResourceVersion();
 							String eventType = response.type.toString();
@@ -250,4 +256,6 @@ public class RegistryWatcher extends Thread {
 		
 		return statusMap;
 	}
+	
+	
 }
