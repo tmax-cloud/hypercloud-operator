@@ -63,6 +63,7 @@ public class RegistryWatcher extends Thread {
 								&& Integer.parseInt(registry.getMetadata().getResourceVersion()) > Integer.parseInt(latestResourceVersion)) {
 							
 							if( !K8sApiCaller.isCurrentRegistry(registry) ) {
+								logger.info("This registry event does not belong to the current registry.");
 								throw new Exception("This registry event does not belong to the current registry.");
 							}
 							
@@ -85,7 +86,7 @@ public class RegistryWatcher extends Thread {
 								}
 								
 								String beforeJson = registry.getMetadata().getAnnotations().get(Constants.LAST_CUSTOM_RESOURCE);
-								logger.info("beforeJson = " + beforeJson);
+//								logger.info("beforeJson = " + beforeJson);
 								if( beforeJson == null) {
 									K8sApiCaller.updateRegistryAnnotationLastCR(registry);
 									break;
@@ -172,7 +173,7 @@ public class RegistryWatcher extends Thread {
 
 								}
 
-								logger.info("afterJson = " + Util.toJson(registry).toString());
+//								logger.info("afterJson = " + Util.toJson(registry).toString());
 								JsonNode diff = Util.jsonDiff(beforeJson, Util.toJson(registry).toString());
 								logger.info("diff: " + diff.toString());
 

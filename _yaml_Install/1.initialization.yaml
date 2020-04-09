@@ -418,8 +418,6 @@ spec:
       type: object
       required: [spec]
       properties:
-        operatorStartTime:
-          type: string
         spec:
           type: object
           required: [image, loginId, loginPassword, service, persistentVolumeClaim]
@@ -430,9 +428,12 @@ spec:
             description:
               type: string
             loginId:
-               type: string
+              type: string
             loginPassword:
-               type: string
+              type: string
+            customConfigYml:
+              type: string
+              description: "The name of the configmap where the registry config.yml content"
             service:
               type: object
               required: [type]
@@ -467,29 +468,29 @@ spec:
         status:
           type: object
           properties:
-             conditions:
-               type: array
-               items:
-                 type: object
-                 required: [type]
-                 properties:
-                   lastTrasnsitionTime:
-                     format: date-time
-                     type: string
-                   message:
-                     type: string
-                   reason:
-                     type: string
-                   status:
-                     type: string
-                   type:
-                     type: string
-             phase:
-               type: string
-             message:
-               type: string
-             reason:
-               type: string
+            conditions:
+              type: array
+              items:
+                type: object
+                required: [type]
+                properties:
+                  lastTrasnsitionTime:
+                    format: date-time
+                    type: string
+                  message:
+                    type: string
+                  reason:
+                    type: string
+                  status:
+                    type: string
+                  type:
+                    type: string
+            phase:
+              type: string
+            message:
+              type: string
+            reason:
+              type: string
   subresources:
     status: {}
   additionalPrinterColumns:
@@ -869,8 +870,6 @@ spec:
       type: object
       required: [spec]
       properties:
-        operatorStartTime:
-          type: string
         spec:
           type: object
           required: [name, versions, registry]
