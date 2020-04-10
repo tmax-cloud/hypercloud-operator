@@ -9,8 +9,8 @@ version=4.1.0.0
 fi
 
 # destination directory
-latestDir="../_yaml_CRD/latest"
-nextDir="../_yaml_CRD/$version"
+latestDir="_yaml_CRD/latest"
+nextDir="_yaml_CRD/$version"
 
 echo "next crd directory : $nextDir"
 
