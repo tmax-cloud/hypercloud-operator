@@ -6,8 +6,7 @@ node {
 	def imageBuildHome = "/root/HyperCloud-image-build/hypercloud4-operator"
 
 	def version = "${params.majorVersion}.${params.minorVersion}.${params.tinyVersion}.${params.hotfixVersion}"
-	def preHotfixVersion = ${params.hotfixVersion} - 1
-	def preVersion = "${params.majorVersion}.${params.minorVersion}.${params.tinyVersion}.${preHotfixVersion}"
+	def preVersion = "${params.majorVersion}.${params.minorVersion}.${params.tinyVersion}.${params.preHotfixVersion}"
 	def imageTag = "b${version}"
 	def binaryHome = "${hcBuildDir}/build"
 	def scriptHome = "${hcBuildDir}/scripts"
@@ -23,7 +22,7 @@ node {
 			credentialsId: '${userName}',
 			url: "http://${gitBuildAddress}"
 		}
-		gradleDoBuild()
+		gradleDoBuild("${hcBuildDir}")
     }
 
     stage('file home copy') {
@@ -34,12 +33,12 @@ node {
     }
     
 	stage('make crd directory') {
-		sh "sudo ./${scriptHome}/hypercloud-make-crd-yaml.sh ${version}"
+		sh "sudo sh ${scriptHome}/hypercloud-make-crd-yaml.sh ${version}"
 		sh "sudo cp -r ${hcBuildDir}/_yaml_CRD/${version} ${imageBuildHome}/hypercloud4-operator/_yaml_CRD"
 	}
     
 	stage('make change log'){
-		sh "sudo ./${scriptHome}/hypercloud-make-changelog.sh ${version} ${preVersion}"
+		sh "sudo sh ${scriptHome}/hypercloud-make-changelog.sh ${version} ${preVersion}"
 	}
 	
 	stage('build & push image'){
@@ -47,7 +46,7 @@ node {
 		sh "sudo docker push 192.168.6.110:5000/hypercloud4-operator:${imageTag}"
 	}
 	
-	stage('sql-integrated'){
+	stage('git commit & push'){
 		dir ("${hcBuildDir}") {
 			sh "git checkout ${params.buildBranch}"
 
@@ -75,6 +74,6 @@ node {
 	}	
 }
 
-void gradleDoBuild() {
+void gradleDoBuild(dirPath) {
     sh "./gradlew clean doBuild"
 }
