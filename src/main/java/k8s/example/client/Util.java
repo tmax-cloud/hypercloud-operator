@@ -64,9 +64,9 @@ public class Util {
         resp.addHeader("Access-Control-Allow-Headers", "X-Requested-With");
         resp.addHeader("Access-Control-Allow-Headers", "Accept");
         resp.addHeader("Access-Control-Allow-Headers", "Authorization");
-        resp.addHeader("Access-Control-Allow-Headers", "Content-Type");
         resp.addHeader("Access-Control-Allow-Headers", "Referer");
-        resp.addHeader("Access-Control-Allow-Headers", "User-Agent");
+        resp.addHeader("Access-Control-Allow-Headers", "User-Agent");\
+        resp.addHeader("Access-Control-Allow-Headers", "Content-Type");
 		return resp;
     }
     
