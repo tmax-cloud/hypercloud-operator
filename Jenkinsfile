@@ -2,14 +2,12 @@ node {
 	def gitBaseAddress = "192.168.1.150:10080"
 	def gitBuildAddress = "${gitBaseAddress}/hypercloud/hypercloud-operator.git"
 	
-	def hcBuildDir = "/var/lib/jenkins/workspace/hypercloud-3.1"
-	def imageBuildHome = "/root/HyperCloud-image-build/application-patch-image"
+	def hcBuildDir = "/var/lib/jenkins/workspace/hypercloud4-operator"
+	def imageBuildHome = "/root/HyperCloud-image-build/hypercloud4-operator"
 
 	def version = "${params.majorVersion}.${params.minorVersion}.${params.tinyVersion}.${params.hotfixVersion}"
 	def imageTag = "b${version}"
-	def globalVersion = "HyperCloud-server:b${version}"
-	def poHome = "${hcBuildDir}/build/base_po_home"
-	def watcherHome = "${hcBuildDir}/build/k8swatcher"
+	def binaryHome = "${hcBuildDir}/build"
 			
 	def userName = "seonho_choi"
 	def userEmail = "seonho_choi@tmax.co.kr"
@@ -22,14 +20,14 @@ node {
 			credentialsId: '${userName}',
 			url: "http://${gitBuildAddress}"
 		}
-		gradleMakeHome("${hcBuildDir}", "${version}")
+		gradleDoBuild("${hcBuildDir}", "${version}")
     }
 
     stage('file home copy') {
-		sh "sudo rm -rf ${imageBuildHome}/base_po_home/"
-		sh "sudo rm -rf ${imageBuildHome}/k8swatcher/"
-		sh "sudo cp -r ${poHome} ${imageBuildHome}/base_po_home"
-		sh "sudo cp -r ${watcherHome} ${imageBuildHome}/k8swatcher"
+		sh "sudo rm -rf ${imageBuildHome}/hypercloud4-operator/"
+		sh "sudo rm -f ${imageBuildHome}/start.sh"
+		sh "sudo cp -r ${binaryHome}/hypercloud4-operator ${imageBuildHome}/hypercloud4-operator"
+		sh "sudo cp ${binaryHome}/start.sh ${imageBuildHome}/start.sh"
     }
     
 	stage('sql-merge') {
@@ -72,20 +70,7 @@ node {
 			sh "git pull origin ${params.buildBranch}"
 		}	
 	}	
-    
-	stage('send file to FTP'){
-		dir ("${hcBuildDir}") {
-			sh "sudo tar -cvf ${imageBuildHome}/po_tar/hyper-cloud-${version}.tar ${imageBuildHome}/base_po_home/ ${imageBuildHome}/k8swatcher/"
-			sh "sudo sshpass -p 'ck-ftp' scp -o StrictHostKeyChecking=no ${imageBuildHome}/po_tar/hyper-cloud-${version}.tar ck-ftp@192.168.1.150:/home/ck-ftp/binary/hyper-cloud-server"
-			sh "sudo sshpass -p 'ck-ftp' scp -o StrictHostKeyChecking=no ${hcBuildDir}/_api_swagger/broker_api.yaml ck-ftp@192.168.1.150:/home/ck-ftp/api/3.1/hypercloud-broker"
-			sh "sudo sshpass -p 'ck-ftp' scp -o StrictHostKeyChecking=no ${hcBuildDir}/_api_swagger/provider_api.yaml ck-ftp@192.168.1.150:/home/ck-ftp/api/3.1/hypercloud-provider"
-			sh "sudo sshpass -p 'ck-ftp' scp -o StrictHostKeyChecking=no ${hcBuildDir}/_api_swagger/consumer_api.yaml ck-ftp@192.168.1.150:/home/ck-ftp/api/3.1/hypercloud-consumer"
-			sh "sudo sshpass -p 'ck-ftp' scp -o StrictHostKeyChecking=no ${imageBuildHome}/base_po_home/sql/prozone/integrated/integrated_create.sql ck-ftp@192.168.1.150:/home/ck-ftp/sql/3.1/hyper-cloud"
-			sh "sudo sshpass -p 'ck-ftp' scp -o StrictHostKeyChecking=no ${imageBuildHome}/base_po_home/sql/prozone/integrated/integrated_update.sql ck-ftp@192.168.1.150:/home/ck-ftp/sql/3.1/hyper-cloud"
-			sh "sudo sshpass -p 'ck-ftp' scp -o StrictHostKeyChecking=no ${imageBuildHome}/base_po_home/sql/prozone/integrated/integrated_rollback.sql ck-ftp@192.168.1.150:/home/ck-ftp/sql/3.1/hyper-cloud"
-		}	
-	}    
 }
-void gradleMakeHome(dirPath,version) {
-    sh "./gradlew clean makeHome -PbuildVersion=${version}"
+void gradleDoBuild(dirPath,version) {
+    sh "./gradlew clean doBuild -PbuildVersion=${version}"
 }
