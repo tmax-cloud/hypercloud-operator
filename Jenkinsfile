@@ -37,9 +37,9 @@ node {
 		sh "sudo cp -r ${hcBuildDir}/_yaml_CRD/${version} ${imageBuildHome}/hypercloud4-operator/_yaml_CRD"
 	}
     
-	stage('make change log'){
+	/*stage('make change log'){
 		sh "sudo sh ${scriptHome}/hypercloud-make-changelog.sh ${version} ${preVersion}"
-	}
+	}*/
 	
 	stage('build & push image'){
 		sh "sudo docker build --tag 192.168.6.110:5000/hypercloud4-operator:${imageTag} ${imageBuildHome}/"
@@ -68,8 +68,8 @@ node {
 			sh "git reset --hard origin/${params.buildBranch}"
 			sh "git pull origin ${params.buildBranch}"
 			
-			sh "git tag v${version}"
-			sh "git push origin tag v${version}"
+			//sh "git tag v${version}"
+			//sh "git push origin tag v${version}"
 		}	
 	}	
 }
