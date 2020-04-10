@@ -8,7 +8,8 @@ node {
 	def version = "${params.majorVersion}.${params.minorVersion}.${params.tinyVersion}.${params.hotfixVersion}"
 	def imageTag = "b${version}"
 	def binaryHome = "${hcBuildDir}/build"
-			
+	def scriptHome = "${hcBuildDir}/scripts"
+		
 	def userName = "seonho_choi"
 	def userEmail = "seonho_choi@tmax.co.kr"
 
@@ -20,7 +21,7 @@ node {
 			credentialsId: '${userName}',
 			url: "http://${gitBuildAddress}"
 		}
-		gradleDoBuild("${hcBuildDir}", "${version}")
+		gradleDoBuild()
     }
 
     stage('file home copy') {
@@ -30,10 +31,10 @@ node {
 		sh "sudo cp ${binaryHome}/start.sh ${imageBuildHome}/start.sh"
     }
     
-	stage('sql-merge') {
-		sh "sudo sh ${imageBuildHome}/sql_scripts/integrated_update.sh ${version}"
-		sh "sudo sh ${imageBuildHome}/sql_scripts/integrated_rollback.sh ${version}"
-	}    
+	stage('make crd directory') {
+		sh "sudo ./${scriptHome}/hypercloud-make-crd-yaml.sh ${version}"
+		sh "sudo cp -r ${hcBuildDir}/_yaml_CRD/${version} ${binaryHome}/hypercloud4-operator/_yaml_CRD"
+	}
     
 	stage('image build & push'){
 		sh "sudo docker build --tag 192.168.6.110:5000/hyper-cloud-server:${imageTag} ${imageBuildHome}/"
@@ -71,6 +72,6 @@ node {
 		}	
 	}	
 }
-void gradleDoBuild(dirPath,version) {
-    sh "./gradlew clean doBuild -PbuildVersion=${version}"
+void gradleDoBuild() {
+    sh "./gradlew clean doBuild"
 }
