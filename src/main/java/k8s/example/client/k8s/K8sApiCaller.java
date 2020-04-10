@@ -3852,6 +3852,45 @@ public class K8sApiCaller {
 		}
 	}
 	
+	public static void updateNamespace( NamespaceClaim claim ) throws Throwable {
+		logger.info( "[K8S ApiCaller] Update Namespace Start" );
+		
+		V1Namespace namespace = new V1Namespace();
+		V1ObjectMeta namespaceMeta = new V1ObjectMeta();
+		Map<String,String> label = new HashMap<>();
+		label.put( "fromClaim", claim.getMetadata().getName() );
+		namespaceMeta.setLabels( label );
+		namespaceMeta.setName( claim.getResourceName() );
+		namespace.setMetadata( namespaceMeta );
+
+		V1Namespace namespaceResult;
+		try {
+			namespaceResult = api.replaceNamespace( claim.getResourceName(), namespace, null, null, null );
+		} catch (ApiException e) {
+			logger.info( e.getResponseBody() );
+			throw e;
+		}
+		
+		V1ResourceQuota quota = new V1ResourceQuota();
+		V1ObjectMeta quotaMeta = new V1ObjectMeta();
+		quotaMeta.setName( claim.getResourceName()  );
+		quotaMeta.setNamespace( claim.getResourceName() );
+		Map<String,String> quotaLabel = new HashMap<>();
+		quotaLabel.put( "fromClaim", claim.getMetadata().getName() );
+		quotaMeta.setLabels( quotaLabel );
+		V1ResourceQuotaSpec spec = claim.getSpec();
+		quota.setMetadata( quotaMeta );
+		quota.setSpec( spec );
+		
+		V1ResourceQuota quotaResult;
+		try {
+			quotaResult = api.replaceNamespacedResourceQuota( claim.getResourceName(), claim.getResourceName(), quota, null, null, null );
+		} catch (ApiException e) {
+			logger.info( e.getResponseBody() );
+			throw e;
+		}
+	}
+	
 	public static void createResourceQuota( NamespaceClaim claim ) throws Throwable {
 		logger.info( "[K8S ApiCaller] Create Resource Quota Start" );
 		
@@ -3882,6 +3921,9 @@ public class K8sApiCaller {
 		V1ObjectMeta quotaMeta = new V1ObjectMeta();
 		quotaMeta.setName( claim.getResourceName() );
 		quotaMeta.setNamespace( claim.getMetadata().getNamespace() );
+		Map<String,String> quotaLabel = new HashMap<>();
+		quotaLabel.put( "fromClaim", claim.getMetadata().getName() );
+		quotaMeta.setLabels( quotaLabel );
 		V1ResourceQuotaSpec spec = claim.getSpec();
 		quota.setMetadata( quotaMeta );
 		quota.setSpec( spec );
@@ -3967,6 +4009,25 @@ public class K8sApiCaller {
 		
 		try {
 			rbacApi.createNamespacedRoleBinding( claim.getMetadata().getNamespace(), roleBinding, null, null, null);
+		} catch (ApiException e) {
+			logger.info( e.getResponseBody() );
+			throw e;
+		}
+	}
+	
+	public static void updateRoleBinding( RoleBindingClaim claim ) throws Throwable {
+		logger.info( "[K8S ApiCaller] Update Role Binding Start" );
+				
+		V1RoleBinding roleBinding = new V1RoleBinding();
+		V1ObjectMeta roleBindingMeta = new V1ObjectMeta();
+		roleBindingMeta.setName( claim.getResourceName() );
+		roleBindingMeta.setNamespace( claim.getMetadata().getNamespace() );
+		roleBinding.setMetadata( roleBindingMeta );
+		roleBinding.setSubjects( claim.getSubjects() );
+		roleBinding.setRoleRef( claim.getRoleRef() );
+		
+		try {
+			rbacApi.replaceNamespacedRoleBinding( claim.getResourceName(), claim.getMetadata().getNamespace(), roleBinding, null, null, null);
 		} catch (ApiException e) {
 			logger.info( e.getResponseBody() );
 			throw e;
