@@ -2,15 +2,15 @@ node {
 	def gitBaseAddress = "192.168.1.150:10080"
 	def gitBuildAddress = "${gitBaseAddress}/hypercloud/hypercloud-operator.git"
 	
-	def hcBuildDir = "/var/lib/jenkins/workspace/hypercloud-3.1"
-	def imageBuildHome = "/root/HyperCloud-image-build/application-patch-image"
+	def hcBuildDir = "/var/lib/jenkins/workspace/hypercloud4-operator"
+	def imageBuildHome = "/root/HyperCloud-image-build/hypercloud4-operator"
 
 	def version = "${params.majorVersion}.${params.minorVersion}.${params.tinyVersion}.${params.hotfixVersion}"
+	def preVersion = "${params.majorVersion}.${params.minorVersion}.${params.tinyVersion}.${params.preHotfixVersion}"
 	def imageTag = "b${version}"
-	def globalVersion = "HyperCloud-server:b${version}"
-	def poHome = "${hcBuildDir}/build/base_po_home"
-	def watcherHome = "${hcBuildDir}/build/k8swatcher"
-			
+	def binaryHome = "${hcBuildDir}/build"
+	def scriptHome = "${hcBuildDir}/scripts"
+		
 	def userName = "seonho_choi"
 	def userEmail = "seonho_choi@tmax.co.kr"
 
@@ -22,27 +22,31 @@ node {
 			credentialsId: '${userName}',
 			url: "http://${gitBuildAddress}"
 		}
-		gradleMakeHome("${hcBuildDir}", "${version}")
+		gradleDoBuild("${hcBuildDir}")
     }
 
     stage('file home copy') {
-		sh "sudo rm -rf ${imageBuildHome}/base_po_home/"
-		sh "sudo rm -rf ${imageBuildHome}/k8swatcher/"
-		sh "sudo cp -r ${poHome} ${imageBuildHome}/base_po_home"
-		sh "sudo cp -r ${watcherHome} ${imageBuildHome}/k8swatcher"
+		sh "sudo rm -rf ${imageBuildHome}/hypercloud4-operator/"
+		sh "sudo rm -f ${imageBuildHome}/start.sh"
+		sh "sudo cp -r ${binaryHome}/hypercloud4-operator ${imageBuildHome}/hypercloud4-operator"
+		sh "sudo cp ${binaryHome}/start.sh ${imageBuildHome}/start.sh"
     }
     
-	stage('sql-merge') {
-		sh "sudo sh ${imageBuildHome}/sql_scripts/integrated_update.sh ${version}"
-		sh "sudo sh ${imageBuildHome}/sql_scripts/integrated_rollback.sh ${version}"
-	}    
+	stage('make crd directory') {
+		sh "sudo sh ${scriptHome}/hypercloud-make-crd-yaml.sh ${version}"
+		sh "sudo cp -r ${hcBuildDir}/_yaml_CRD/${version} ${imageBuildHome}/hypercloud4-operator/_yaml_CRD"
+	}
     
-	stage('image build & push'){
-		sh "sudo docker build --tag 192.168.6.110:5000/hyper-cloud-server:${imageTag} ${imageBuildHome}/"
-		sh "sudo docker push 192.168.6.110:5000/hyper-cloud-server:${imageTag}"
+	stage('make change log'){
+		sh "sudo sh ${scriptHome}/hypercloud-make-changelog.sh ${version} ${preVersion}"
 	}
 	
-	stage('sql-integrated'){
+	stage('build & push image'){
+		sh "sudo docker build --tag 192.168.6.110:5000/hypercloud4-operator:${imageTag} ${imageBuildHome}/"
+		sh "sudo docker push 192.168.6.110:5000/hypercloud4-operator:${imageTag}"
+	}
+	
+	stage('git commit & push'){
 		dir ("${hcBuildDir}") {
 			sh "git checkout ${params.buildBranch}"
 
@@ -54,38 +58,22 @@ node {
 			sh "git reset --hard origin/${params.buildBranch}"
 			sh "git pull origin ${params.buildBranch}"
 
-			sh "sudo cp ${imageBuildHome}/base_po_home/sql/prozone/integrated/integrated_create.sql ${hcBuildDir}/_base-po-home/sql/prozone/integrated/integrated_create.sql"
-			sh "sudo cp ${imageBuildHome}/base_po_home/sql/prozone/integrated/integrated_update.sql ${hcBuildDir}/_base-po-home/sql/prozone/integrated/integrated_update.sql"
-			sh "sudo cp ${imageBuildHome}/base_po_home/sql/prozone/integrated/integrated_rollback.sql ${hcBuildDir}/_base-po-home/sql/prozone/integrated/integrated_rollback.sql"
-			sh "sudo cp ${imageBuildHome}/base_po_home/sql/prozone/temp/temp_rollback.sql ${hcBuildDir}/_base-po-home/sql/prozone/temp/temp_rollback.sql"
-			sh "sudo cp ${imageBuildHome}/base_po_home/sql/prozone/temp/temp_update.sql ${hcBuildDir}/_base-po-home/sql/prozone/temp/temp_update.sql"
+			sh "git add -A"
 
-			sh "git add ."
-
-			sh (script:'git commit -m "[SQL-Integrated] Hyper Cloud - ${version} Integrated SQL" || true')
-
+			sh (script:'git commit -m "[Version-Up] make changelog & make new crd directory" || true')
 
 			sh "sudo git push -u origin +${params.buildBranch}"
 
 			sh "git fetch --all"
 			sh "git reset --hard origin/${params.buildBranch}"
 			sh "git pull origin ${params.buildBranch}"
+			
+			sh "git tag v${version}"
+			sh "git push origin tag v${version}"
 		}	
 	}	
-    
-	stage('send file to FTP'){
-		dir ("${hcBuildDir}") {
-			sh "sudo tar -cvf ${imageBuildHome}/po_tar/hyper-cloud-${version}.tar ${imageBuildHome}/base_po_home/ ${imageBuildHome}/k8swatcher/"
-			sh "sudo sshpass -p 'ck-ftp' scp -o StrictHostKeyChecking=no ${imageBuildHome}/po_tar/hyper-cloud-${version}.tar ck-ftp@192.168.1.150:/home/ck-ftp/binary/hyper-cloud-server"
-			sh "sudo sshpass -p 'ck-ftp' scp -o StrictHostKeyChecking=no ${hcBuildDir}/_api_swagger/broker_api.yaml ck-ftp@192.168.1.150:/home/ck-ftp/api/3.1/hypercloud-broker"
-			sh "sudo sshpass -p 'ck-ftp' scp -o StrictHostKeyChecking=no ${hcBuildDir}/_api_swagger/provider_api.yaml ck-ftp@192.168.1.150:/home/ck-ftp/api/3.1/hypercloud-provider"
-			sh "sudo sshpass -p 'ck-ftp' scp -o StrictHostKeyChecking=no ${hcBuildDir}/_api_swagger/consumer_api.yaml ck-ftp@192.168.1.150:/home/ck-ftp/api/3.1/hypercloud-consumer"
-			sh "sudo sshpass -p 'ck-ftp' scp -o StrictHostKeyChecking=no ${imageBuildHome}/base_po_home/sql/prozone/integrated/integrated_create.sql ck-ftp@192.168.1.150:/home/ck-ftp/sql/3.1/hyper-cloud"
-			sh "sudo sshpass -p 'ck-ftp' scp -o StrictHostKeyChecking=no ${imageBuildHome}/base_po_home/sql/prozone/integrated/integrated_update.sql ck-ftp@192.168.1.150:/home/ck-ftp/sql/3.1/hyper-cloud"
-			sh "sudo sshpass -p 'ck-ftp' scp -o StrictHostKeyChecking=no ${imageBuildHome}/base_po_home/sql/prozone/integrated/integrated_rollback.sql ck-ftp@192.168.1.150:/home/ck-ftp/sql/3.1/hyper-cloud"
-		}	
-	}    
 }
-void gradleMakeHome(dirPath,version) {
-    sh "./gradlew clean makeHome -PbuildVersion=${version}"
+
+void gradleDoBuild(dirPath) {
+    sh "./gradlew clean doBuild"
 }

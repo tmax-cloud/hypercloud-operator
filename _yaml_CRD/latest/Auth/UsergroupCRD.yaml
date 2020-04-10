@@ -3,7 +3,7 @@ kind: CustomResourceDefinition
 metadata:
   name: usergroups.tmax.io
   annotations:
-    operator.version: ${latest}
+    operator.version: %latest%
 spec:
   group: tmax.io
   versions:
