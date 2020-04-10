@@ -1,5 +1,5 @@
 
-1-1. /hypercloud-operator/_yaml_Install/1.initialization.yaml 실행
+1-1. http://192.168.1.150:10080/hypercloud/hypercloud-operator/blob/master/_yaml_Install/1.initialization.yaml 실행
 
 1-2. HyperCloud CRDs Definition Yaml 적용
 	- Auth/UserCRD.yaml
@@ -13,18 +13,16 @@
 	- Template/TemplateCRD_v1beta1.yaml
 	- Template/TemplateInstanceCRD_v1beta1.yaml
 
-2. /hypercloud-operator/_yaml_Install/2.mysql-settings.yaml 실행
+2. http://192.168.1.150:10080/hypercloud/hypercloud-operator/blob/master/_yaml_Install/2.mysql-settings.yaml 실행
 
-3. /hypercloud-operator/_yaml_Install/3.mysql-create.yaml 실행
+3. http://192.168.1.150:10080/hypercloud/hypercloud-operator/blob/master/_yaml_Install/3.mysql-create.yaml 실행
 
-4. /hypercloud-operator/_yaml_Install/4.hypercloud4-operator.yaml 실행
+4. http://192.168.1.150:10080/hypercloud/hypercloud-operator/blob/master/_yaml_Install/4.hypercloud4-operator.yaml 실행
 
-5. /hypercloud-operator/_yaml_Install/5.secret-watcher.yaml 실행
+5. http://192.168.1.150:10080/hypercloud/hypercloud-operator/blob/master/_yaml_Install/5.secret-watcher.yaml 실행
 
-6. /hypercloud-operator/_yaml_Install/6.default-auth-object-init.yaml 실행
+6. http://192.168.1.150:10080/hypercloud/hypercloud-operator/blob/master/_yaml_Install/6.default-auth-object-init.yaml 실행
 
-7. authenticate webhook 설정
-    - webhook-config 에 HYPERCLOUD_IP 치환
-    - /etc/kubernetes/pki directory 에 webhook-config 복사
-	- kube api-server manifest 설정에 아래 문구 추가
-	- "--authentication-token-webhook-config-file=/etc/kubernetes/pki/webhook-config"
+7. authenticate webhook 설정 (http://192.168.1.150:10080/hypercloud/hypercloud-operator/wikis/WebHook-Guide)
+
+
