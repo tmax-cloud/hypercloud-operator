@@ -1,6 +1,9 @@
 package k8s.example.client.handler;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -24,6 +27,7 @@ import k8s.example.client.DataObject.TokenCR;
 import k8s.example.client.DataObject.TokenReview;
 import k8s.example.client.DataObject.TokenReviewStatus;
 import k8s.example.client.DataObject.TokenReviewUser;
+import k8s.example.client.DataObject.UserCR;
 import k8s.example.client.Util;
 import k8s.example.client.k8s.K8sApiCaller;
 
@@ -50,7 +54,7 @@ public class AuthHandler extends GeneralHandler {
 			String token = element.getAsJsonObject().get( "spec" ).getAsJsonObject().get( "token" ).getAsString();
 			
 			//logger.info( "  Token: " + token );
-			if ( !token.isEmpty() && token.equals( Constants.MASTER_TOKEN )) return Util.setCors( NanoHTTPD.newFixedLengthResponse( createAuthResponse( true, Constants.MASTER_USER_ID ) ) );
+			if ( !token.isEmpty() && token.equals( Constants.MASTER_TOKEN )) return Util.setCors( NanoHTTPD.newFixedLengthResponse( createAuthResponse( true, Constants.MASTER_USER_ID, null ) ) );
 			
 			// Verify access token	
 			JWTVerifier verifier = JWT.require(Algorithm.HMAC256(Constants.ACCESS_TOKEN_SECRET_KEY)).build();
@@ -63,6 +67,22 @@ public class AuthHandler extends GeneralHandler {
 			logger.info( "  User ID: " + userId );
 			logger.info( "  Token ID: " + tokenId );
 			
+			// UserGroup GET	
+			List < String > userGroupNameList = null;
+			UserCR user = K8sApiCaller.getUser(userId.replace("@", "-"));
+			if (user.getMetadata().getLabels()!= null ) {
+				Iterator<String> iter = user.getMetadata().getLabels().keySet().iterator();
+				 while(iter.hasNext()) {
+					String userGroupName = iter.next();
+					if( userGroupName.startsWith("group-")) {
+						if (userGroupNameList == null) userGroupNameList = new ArrayList<>();
+						userGroupNameList.add(userGroupName.substring(6));
+						logger.info( "  User Group Name: " + userGroupName.substring(6) );
+
+					}	
+				}
+			}	
+			
 			if(verifyAccessToken(token, userId, tokenId, issuer)) {
 				logger.info( "  Authentication success" );
 				authResult = true;
@@ -71,7 +91,7 @@ public class AuthHandler extends GeneralHandler {
 				authResult = false;
 			}
 			
-			response = createAuthResponse( authResult, userId );
+			response = createAuthResponse( authResult, userId, userGroupNameList );
 		} catch (Exception e) {
 			//logger.info("Exception message: " + e.getMessage());
 			e.printStackTrace();
@@ -98,7 +118,7 @@ public class AuthHandler extends GeneralHandler {
 		return result;
 	}
 	
-	private String createAuthResponse( boolean authResult, String userId ) {
+	private String createAuthResponse( boolean authResult, String userId, List<String> groups ) {
 		
 		/*
 		 * RESPONSE TRUE EXAMPLE
@@ -145,7 +165,9 @@ public class AuthHandler extends GeneralHandler {
 			TokenReviewUser trUser = new TokenReviewUser();
 			trUser.setUsername(userId);
 //			trUser.setUid("uid-xxxx");
-			
+			if (groups != null) {
+				trUser.setGroups(groups);	
+			}
 			trStatus.setUser(trUser);
 		} 
 		

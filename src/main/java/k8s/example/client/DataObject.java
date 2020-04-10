@@ -169,7 +169,9 @@ public class DataObject {
     public static class TokenReviewUser {
     	private String username;
     	private String uid;
+    	private List<String> groups;
     	
+    	public void setGroups (List<String> groups) { this.groups = groups;}
     	public void setUsername(String username) { this.username = username; }    	
     	public void setUid(String uid)	{ this.uid = uid; }
     }

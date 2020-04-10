@@ -46,6 +46,7 @@ public class Constants {
 	public static final int REFRESH_TOKEN_EXP_TIME = 604800; // 7 days
 	
 	public static final String CLAIM_USER_ID = "id";
+	public static final String CLAIM_USER_GROUP_NAME = "groupName";
 	public static final String CLAIM_TOKEN_ID = "tokenId";
 	public static final String CLAIM_ROLE = "role";
 	
