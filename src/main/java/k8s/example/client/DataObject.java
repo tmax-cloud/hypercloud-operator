@@ -76,6 +76,28 @@ public class DataObject {
     	public void setOperatorStartTime(String operatorStartTime) { this.operatorStartTime = operatorStartTime; }
     }
     
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class UserGroupCR {
+    	private String apiVersion = "tmax.io/v1";
+    	private String kind = "Usergroup";
+    	private V1ObjectMeta metadata;
+    	private UserGroup userGroupInfo;
+    	private String status;
+    	private String operatorStartTime;
+    	
+    	public String getApiVersion() { return apiVersion; }
+    	public String getKind() { return kind; }
+    	public V1ObjectMeta getMetadata() { return metadata; }
+    	public UserGroup getUserGroupInfo() { return userGroupInfo; }
+    	public String getStatus() { return status; }
+    	public String getOperatorStartTime() { return operatorStartTime; }
+
+    	public void setMetadata(V1ObjectMeta metadata) { this.metadata = metadata; }
+    	public void setUserGroupInfo(UserGroup userGroupInfo) { this.userGroupInfo = userGroupInfo; }
+    	public void setStatus(String status) { this.status = status; }
+    	public void setOperatorStartTime(String operatorStartTime) { this.operatorStartTime = operatorStartTime; }
+    }
+    
     public static class User {
     	private String name;
     	private String id;    	
@@ -106,6 +128,23 @@ public class DataObject {
     	public void setPasswordSalt(String passwordSalt) { this.passwordSalt = passwordSalt; }
     	public void setEmail(String email) { this.email = email; }
     	public void setPhone(String phone) { this.phone = phone; }
+    	public void setDepartment(String department) { this.department = department; }
+    	public void setPosition(String position) { this.position = position; }
+    	public void setDescription(String description) { this.description = description; }
+    }
+    
+    public static class UserGroup {
+    	private String name;
+    	private String department;
+    	private String position;
+    	private String description;
+    	
+    	public String getName() { return name; }
+    	public String getDepartment() { return department; }
+    	public String getPosition() { return position; }
+    	public String getDescription() { return description; }
+    	
+    	public void setName(String name) { this.name = name; }
     	public void setDepartment(String department) { this.department = department; }
     	public void setPosition(String position) { this.position = position; }
     	public void setDescription(String description) { this.description = description; }

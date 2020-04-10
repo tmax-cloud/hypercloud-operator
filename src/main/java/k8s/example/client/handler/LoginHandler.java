@@ -75,7 +75,7 @@ public class LoginHandler extends GeneralHandler {
 		    		logger.info( "  App Name: " + appNameRequestParameter );  
 	        	}
 	    				   		
-	        	if (System.getenv( "PROAUTH_EXIST" ) != null) {   		
+	        	if (System.getenv( "PROAUTH_EXIST" ) != null) {   // 그대로 아이디 비번 구분 X		//TODO
 	        		if( System.getenv( "PROAUTH_EXIST" ).equalsIgnoreCase("1")) {
 	        			
 	    	    		logger.info( "  [[ Integrated OAuth System! ]] " );
@@ -98,6 +98,8 @@ public class LoginHandler extends GeneralHandler {
 	        		}
 	    	    } 
 	        	if (System.getenv( "PROAUTH_EXIST" ) == null || !System.getenv( "PROAUTH_EXIST" ).equalsIgnoreCase("1") ){	
+	        		// 그대로 아이디 비번 오류 구분O  //TODO
+	        		// TODO 추가 요건: 동일 계정에 대해서 10번 로그인 실패시, 계정 잠금 --> 무조건 비밀번호 재설정  ( 4/30 요건 )
 	        		
 	        		logger.info( "  [[ OpenAuth System! ]]" );  			
 		    		// Get user info
