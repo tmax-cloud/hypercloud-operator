@@ -83,9 +83,7 @@ public class RoleBindingClaimController extends Thread {
 									} else if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && !K8sApiCaller.roleBindingAlreadyExist( resourceName, claimNamespace ) ) {
 										K8sApiCaller.createRoleBinding( claim );
 										replaceRbcStatus( claimName, Constants.CLAIM_STATUS_SUCCESS, "rolebinding create success.", claimNamespace );
-									} else if ( status.equals( Constants.CLAIM_STATUS_REJECT )) {
-										replaceRbcStatus( claimName, Constants.CLAIM_STATUS_AWAITING, "wait for admin permission", claimNamespace );
-									}
+									} 
 									break;
 								case Constants.EVENT_TYPE_DELETED : 
 									// Nothing to do

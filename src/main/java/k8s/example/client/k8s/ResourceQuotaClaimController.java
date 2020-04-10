@@ -81,9 +81,7 @@ public class ResourceQuotaClaimController extends Thread {
 									} else if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && !K8sApiCaller.resourcequotaAlreadyExist( resourceName, claimNamespace ) ) {
 										K8sApiCaller.createResourceQuota( claim );
 										replaceRqcStatus( claimName, Constants.CLAIM_STATUS_SUCCESS, "resource quota create success.", claimNamespace );
-									} else if ( status.equals( Constants.CLAIM_STATUS_REJECT )) {
-										replaceRqcStatus( claimName, Constants.CLAIM_STATUS_AWAITING, "wait for admin permission", claimNamespace );	
-									}
+									} 
 									break;
 								case Constants.EVENT_TYPE_DELETED : 
 									// Nothing to do
