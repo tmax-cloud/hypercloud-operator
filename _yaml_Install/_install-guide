@@ -3,6 +3,7 @@
 
 1-2. HyperCloud CRDs Definition Yaml 적용
 	- Auth/UserCRD.yaml
+	- Auth/UsergroupCRD.yaml
 	- Auth/TokenCRD.yaml
 	- Auth/ClientCRD.yaml
 	- Claim/NamespaceClaimCRD.yaml
