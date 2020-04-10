@@ -1,5 +1,17 @@
 
-1. /hypercloud-operator/_yaml_Install/1.initialization.yaml 실행
+1-1. /hypercloud-operator/_yaml_Install/1.initialization.yaml 실행
+
+1-2. HyperCloud CRDs Definition Yaml 적용
+	- Auth/UserCRD.yaml
+	- Auth/TokenCRD.yaml
+	- Auth/ClientCRD.yaml
+	- Claim/NamespaceClaimCRD.yaml
+	- Claim/ResourceQuotaClaimCRD.yaml
+	- Claim/RoleBindingClaimCRD.yaml
+	- Registry/RegistryCRD.yaml
+	- Registry/ImageCRD.yaml
+	- Template/TemplateCRD_v1beta1.yaml
+	- Template/TemplateInstanceCRD_v1beta1.yaml
 
 2. /hypercloud-operator/_yaml_Install/2.mysql-settings.yaml 실행
 
