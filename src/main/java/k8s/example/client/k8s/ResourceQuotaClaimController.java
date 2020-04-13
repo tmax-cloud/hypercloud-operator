@@ -66,12 +66,8 @@ public class ResourceQuotaClaimController extends Thread {
 							claimNamespace = claim.getMetadata().getNamespace();
 							switch( eventType ) {
 								case Constants.EVENT_TYPE_ADDED :
-									if ( K8sApiCaller.resourcequotaAlreadyExist( resourceName, claimNamespace ) ) {
-										replaceRqcStatus( claimName, Constants.CLAIM_STATUS_REJECT, "Duplicated ResourceQuota Name", claimNamespace );
-									} else {
-										// Patch Status to Awaiting
-										replaceRqcStatus( claimName, Constants.CLAIM_STATUS_AWAITING, "wait for admin permission", claimNamespace );	
-									}					
+									// Patch Status to Awaiting
+									replaceRqcStatus( claimName, Constants.CLAIM_STATUS_AWAITING, "wait for admin permission", claimNamespace );				
 									break;
 								case Constants.EVENT_TYPE_MODIFIED : 
 									String status = getClaimStatus( claimName, claimNamespace );

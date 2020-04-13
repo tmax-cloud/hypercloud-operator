@@ -68,12 +68,8 @@ public class RoleBindingClaimController extends Thread {
 							claimNamespace = claim.getMetadata().getNamespace();
 							switch( eventType ) {
 								case Constants.EVENT_TYPE_ADDED : 
-									if ( K8sApiCaller.roleBindingAlreadyExist( resourceName, claimNamespace ) ) {
-										replaceRbcStatus( claimName, Constants.CLAIM_STATUS_REJECT, "Duplicated RoleBinding Name", claimNamespace );
-									} else {
-										// Patch Status to Awaiting
-										replaceRbcStatus( claimName, Constants.CLAIM_STATUS_AWAITING, "wait for admin permission", claimNamespace );
-									}
+									// Patch Status to Awaiting
+									replaceRbcStatus( claimName, Constants.CLAIM_STATUS_AWAITING, "wait for admin permission", claimNamespace );
 									break;
 								case Constants.EVENT_TYPE_MODIFIED : 
 									String status = getClaimStatus( claimName, claimNamespace );
