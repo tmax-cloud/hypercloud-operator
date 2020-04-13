@@ -1,6 +1,30 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.0.12 start -------------------->
+
+## HyperCloudServer_4.1.0.12 (2020년 04월 13일 월 오후  2:06:47)
+
+### Added
+
+### Changed
+  - [mod] user CRD 에 usergroup 예시 추가 by taegeon_woo
+  - [mod] guide_usergroup 추가 by taegeon_woo
+  - [mod] userGroup 구현완료 by taegeon_woo
+  - [mod] cors Access-Control-Allow-Headers 복수개 적용 되도록 변경 by taegeon_woo
+  - [mod] userGroup CRD 추가 by taegeon_woo
+  - [mod] 1.initialization.yaml 에서 CRD 적용 yaml 들 제거 및 install_guide 수정 by seonho_choi
+  - [mod] claim 관련 정책 변경 : 사용자는 awaiting 일때만 edit 가능 by taegeon_woo
+  - [mod] latest crd 치환용 버전 명 일괄 변경 by seonho_choi
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.0.12 end --------------------->
+
 <!-------------------- v4.1.0.11 start -------------------->
 
 ## HyperCloudServer_4.1.0.11 (2020년 04월  9일 목 오후  4:37:39)
