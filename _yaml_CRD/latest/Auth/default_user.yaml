@@ -4,6 +4,7 @@ metadata:
   name: example-tmax.co.kr
   labels: 
     encrypted: f
+    #group-"userGroupName": t
 userInfo:
   name: example
   password: "example"
