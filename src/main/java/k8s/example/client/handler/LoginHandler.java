@@ -30,6 +30,7 @@ import k8s.example.client.DataObject.Token;
 import k8s.example.client.DataObject.UserCR;
 import k8s.example.client.ErrorCode;
 import k8s.example.client.Main;
+import k8s.example.client.StringUtil;
 import k8s.example.client.Util;
 import k8s.example.client.k8s.K8sApiCaller;
 import k8s.example.client.k8s.OAuthApiCaller;
@@ -64,8 +65,9 @@ public class LoginHandler extends GeneralHandler {
 	    		logger.info( "  User Password: " + loginInDO.getPassword() );
 	    		
 	    		// Validate
-	    		if (loginInDO.getId() == null ) 	throw new Exception(ErrorCode.USER_ID_EMPTY);
-	    		if (loginInDO.getPassword() == null ) 	throw new Exception(ErrorCode.USER_PASSWORD_EMPTY);
+	    		if (StringUtil.isEmpty(loginInDO.getId())) 	throw new Exception(ErrorCode.USER_ID_EMPTY);
+	    		if (StringUtil.isEmpty(loginInDO.getPassword()) || loginInDO.getPassword().equalsIgnoreCase(Constants.EMPTY_PASSWORD) ) 
+	    			throw new Exception(ErrorCode.USER_PASSWORD_EMPTY);
 	    		
 	    		// Get Client ID
 	    		if (session.getParameters().get("clientId") != null ) clientIdRequestParameter = session.getParameters().get("clientId").get(0);
@@ -91,8 +93,8 @@ public class LoginHandler extends GeneralHandler {
 		    	    		status = Status.OK; 
 	    	    		} else {
 	    	    			logger.info("  Login failed by ProAuth.");		    			
-			    			status = Status.OK; //ui요청
-			    			outDO = Constants.LOGIN_FAILED;
+			    			status = Status.BAD_REQUEST; 
+			    			outDO = loginOut.get("reason").toString().replaceAll("\"", ""); ;
 	    	    		}
 	    	    		
 	        		}
@@ -108,40 +110,47 @@ public class LoginHandler extends GeneralHandler {
 		    		String encryptedPassword = Util.Crypto.encryptSHA256(loginInDO.getPassword() + loginInDO.getId() + user.getUserInfo().getPasswordSalt());
 		    		logger.info("  DB password: " + user.getUserInfo().getPassword() + " / Input password: " + encryptedPassword);
 		    		
-		    		if(user.getUserInfo().getPassword().equals(encryptedPassword)) {
-		    			logger.info(" Login success ");
-		    			
-		    			status = Status.OK;
-		    			
-		    			// Make token & refresh token
-		    			String tokenId = UUID.randomUUID().toString();
-		    			
-		    			Builder tokenBuilder = JWT.create().withIssuer(Constants.ISSUER)
-								.withExpiresAt(Util.getDateFromSecond(Constants.ACCESS_TOKEN_EXP_TIME))
-								.withClaim(Constants.CLAIM_USER_ID, loginInDO.getId())
-		    					.withClaim(Constants.CLAIM_TOKEN_ID, tokenId);
-		    			
-		    			if ( K8sApiCaller.verifyAdmin(loginInDO.getId()) ) {
-		    				logger.info("ADMIN!!!");
-		    				tokenBuilder.withClaim( Constants.CLAIM_ROLE, Constants.ROLE_ADMIN );
-		    			} else {
-		    				logger.info("USER!!!");
-		    				tokenBuilder.withClaim( Constants.CLAIM_ROLE, Constants.ROLE_USER );
-		    			}
-		    			
-		    			accessToken = tokenBuilder.sign(Algorithm.HMAC256(Constants.ACCESS_TOKEN_SECRET_KEY));
-		    			tokenBuilder = JWT.create().withIssuer(Constants.ISSUER)
-		    					.withExpiresAt(Util.getDateFromSecond(Constants.REFRESH_TOKEN_EXP_TIME));
-		    			refreshToken = tokenBuilder.sign(Algorithm.HMAC256(Constants.REFRESH_TOKEN_SECRET_KEY));
-	
-		    			// Save tokens in token CR
-		            	K8sApiCaller.saveToken(userId, tokenId, Util.Crypto.encryptSHA256(accessToken), Util.Crypto.encryptSHA256(refreshToken));
+		    		if (user.getUserInfo().getPassword() !=null ) {
+		    			if(user.getUserInfo().getPassword().equals(encryptedPassword)) {
+			    			logger.info(" Login success ");
+			    			
+			    			status = Status.OK;
+			    			
+			    			// Make token & refresh token
+			    			String tokenId = UUID.randomUUID().toString();
+			    			
+			    			Builder tokenBuilder = JWT.create().withIssuer(Constants.ISSUER)
+									.withExpiresAt(Util.getDateFromSecond(Constants.ACCESS_TOKEN_EXP_TIME))
+									.withClaim(Constants.CLAIM_USER_ID, loginInDO.getId())
+			    					.withClaim(Constants.CLAIM_TOKEN_ID, tokenId);
+			    			
+			    			if ( K8sApiCaller.verifyAdmin(loginInDO.getId()) ) {
+			    				logger.info("ADMIN!!!");
+			    				tokenBuilder.withClaim( Constants.CLAIM_ROLE, Constants.ROLE_ADMIN );
+			    			} else {
+			    				logger.info("USER!!!");
+			    				tokenBuilder.withClaim( Constants.CLAIM_ROLE, Constants.ROLE_USER );
+			    			}
+			    			
+			    			accessToken = tokenBuilder.sign(Algorithm.HMAC256(Constants.ACCESS_TOKEN_SECRET_KEY));
+			    			tokenBuilder = JWT.create().withIssuer(Constants.ISSUER)
+			    					.withExpiresAt(Util.getDateFromSecond(Constants.REFRESH_TOKEN_EXP_TIME));
+			    			refreshToken = tokenBuilder.sign(Algorithm.HMAC256(Constants.REFRESH_TOKEN_SECRET_KEY));
+		
+			    			// Save tokens in token CR
+			            	K8sApiCaller.saveToken(userId, tokenId, Util.Crypto.encryptSHA256(accessToken), Util.Crypto.encryptSHA256(refreshToken));
+			    		} else {
+			    			logger.info("  Login fail. Wrong password.");
+			    			
+			    			status = Status.BAD_REQUEST; 
+			    			outDO = Constants.LOGIN_FAILED;
+			    		}
 		    		} else {
-		    			logger.info("  Login fail. Wrong password.");
-		    			
-		    			status = Status.OK; //ui요청
+		    			logger.info("  Login fail. Check if the user is belong to Integrated Auth User");
+		    			status = Status.BAD_REQUEST; 
 		    			outDO = Constants.LOGIN_FAILED;
 		    		}
+		    		
 	        	}
 	    		
             	// Get Redirect URI if Exists
@@ -166,17 +175,7 @@ public class LoginHandler extends GeneralHandler {
             		sb.append( "&rt=" + refreshToken );
         			logger.info("Redirect URI : " + sb.toString());
         			outDO = sb.toString();
-            	} else {
-            		// Make outDO
-        			Token loginOutDO = new Token();
-        			loginOutDO.setAccessToken(accessToken);
-        			loginOutDO.setRefreshToken(refreshToken);
-        			logger.info("  Access token: " + accessToken);
-        			logger.info("  Refresh token: " + refreshToken);
-        			
-        			Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        			outDO = gson.toJson(loginOutDO).toString();
-            	}		   			
+            	} 		   			
 	    		 
 			} catch (ApiException e) {
 				logger.info( "Exception message: " + e.getResponseBody() );
@@ -184,7 +183,7 @@ public class LoginHandler extends GeneralHandler {
 				
 				if (e.getResponseBody().contains("NotFound")) {
 					logger.info( "  Login fail. User not exist." );
-					status = Status.OK; //ui요청
+					status = Status.BAD_REQUEST; //ui요청
 					outDO = Constants.LOGIN_FAILED;
 				} else {
 					logger.info( "Response body: " + e.getResponseBody() );
@@ -201,17 +200,30 @@ public class LoginHandler extends GeneralHandler {
 				outDO = Constants.LOGIN_FAILED;
 			}
 			
-			if (status.equals(Status.UNAUTHORIZED)) {
+			
+			// Make OutDO
+			if (status.equals(Status.OK)){
+        		// Make outDO
+    			Token loginOutDO = new Token();
+    			loginOutDO.setAccessToken(accessToken);
+    			loginOutDO.setRefreshToken(refreshToken);
+    			logger.info("  Access token: " + accessToken);
+    			logger.info("  Refresh token: " + refreshToken);
+    			
+    			Gson gson = new GsonBuilder().setPrettyPrinting().create();
+    			outDO = gson.toJson(loginOutDO).toString();
+        	} else if (status.equals(Status.UNAUTHORIZED)) {
 				//Make OutDO
 				CommonOutDO out = new CommonOutDO();
-				out.setStatus(Constants.LOGIN_SUCCESS);
+				out.setStatus(Constants.LOGIN_FAILED);
 				out.setMsg(outDO);
 				Gson gson = new GsonBuilder().setPrettyPrinting().create();
 				outDO = gson.toJson(out).toString();
 				
-			} else if ( status.equals(Status.OK) && outDO.equals(Constants.LOGIN_FAILED)) { 
+			} else if ( status.equals(Status.BAD_REQUEST)) { 
 				CommonOutDO out = new CommonOutDO();
 				out.setMsg(outDO);
+    			status = Status.OK; //ui요청
 				Gson gson = new GsonBuilder().setPrettyPrinting().create();
 				outDO = gson.toJson(out).toString();
 			}	

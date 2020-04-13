@@ -115,6 +115,7 @@ public class Constants {
 	public static final String LOGOUT_FAILED = "Log Out Failed, Token is not Exist or Valid";
 	public static final String REFRESH_FAILED = "Refresh Failed, Refresh Token is not Valid";
 	public static final String PASSWORD_CHANGE_FAILED = "Password Change Failed";
+	public static final String EMPTY_PASSWORD = "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e";
 	
 	// User Status
 	public static final String USER_STATUS_BLOCKED = "blocked";
