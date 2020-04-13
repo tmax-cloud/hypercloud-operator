@@ -2,7 +2,8 @@ package k8s.example.client;
 
 public class Constants {
 	public static final String ISSUER = "Tmax-ProAuth-WebHook";
-	public static final String ACCESS_TOKEN_SECRET_KEY = "Access-Token-Secret-Key";
+//	public static final String ACCESS_TOKEN_SECRET_KEY = "Access-Token-Secret-Key";
+	public static final String ACCESS_TOKEN_SECRET_KEY = "ProAuth_Secret";
 	public static final String REFRESH_TOKEN_SECRET_KEY = "Refresh-Token-Secret-Key";
 
 	public static final String K8S_PREFIX = "hpcd-";
