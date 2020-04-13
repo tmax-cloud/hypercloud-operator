@@ -69,7 +69,7 @@ node {
 			sh "git pull origin ${params.buildBranch}"
 			
 			sh "git tag v${version}"
-			sh "git push origin tag v${version}"
+			sh "git push origin v${version}"
 		}	
 	}	
 }
