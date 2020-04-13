@@ -21,6 +21,7 @@ echo "!!!changelog file exist"
 mv $output $backup
 fi
 
+echo "workdir: `pwd`"
 echo "!!!make changelog for $version"
 echo "!!!prev version: $prev_version"
 

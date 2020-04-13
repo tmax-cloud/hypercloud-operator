@@ -1,6 +1,25 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.0.13 start -------------------->
+
+## HyperCloudServer_4.1.0.13 (2020년 04월 13일 월 오후  4:05:04)
+
+### Added
+
+### Changed
+  - [mod] claim 관련 정책 변경 ( duplicated name 삭제 ) by taegeon_woo
+  - [mod] hypercloud Integrated Auth  설치 메뉴얼 추가 by taegeon_woo
+  - [mod] integrated AUth 환경 로그인 오류메시지 변경 by taegeon_woo
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.0.13 end --------------------->
+
 <!-------------------- v4.1.0.12 start -------------------->
 
 ## HyperCloudServer_4.1.0.12 (2020년 04월 13일 월 오후  2:06:47)
