@@ -7,7 +7,9 @@ info:
     email: "ck2_3@tmax.co.kr"
 servers:
 - url: http://192.168.6.211:28677
-  description: Test Server
+  description: Test Server ( Open Auth )
+- url: http://192.168.6.149:28677
+  description: Test Server ( Integrated Auth )
 
 # common parameters
 components:
