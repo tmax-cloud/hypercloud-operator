@@ -44,8 +44,8 @@ spec:
           requests:
             cpu: "1"
             memory: "1Gi"
-      nodeSelector:
-        kubernetes.io/hostname: master-1
+      #nodeSelector:
+       # kubernetes.io/hostname: master-1
       serviceAccountName: proauth-admin
       volumes:
       - name: proauth-server-mnt
