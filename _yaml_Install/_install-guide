@@ -18,12 +18,16 @@
 
 3. http://192.168.1.150:10080/hypercloud/hypercloud-operator/blob/master/_yaml_Install/3.mysql-create.yaml 실행
 
-4. http://192.168.1.150:10080/hypercloud/hypercloud-operator/blob/master/_yaml_Install/4.hypercloud4-operator.yaml 실행
+4. http://192.168.1.150:10080/hypercloud/hypercloud-operator/blob/master/_yaml_Install/4.proauth-db.yaml 실행
 
-5. http://192.168.1.150:10080/hypercloud/hypercloud-operator/blob/master/_yaml_Install/5.secret-watcher.yaml 실행
+5. http://192.168.1.150:10080/hypercloud/hypercloud-operator/blob/master/_yaml_Install/5.proauth-server.yaml 실행
 
-6. http://192.168.1.150:10080/hypercloud/hypercloud-operator/blob/master/_yaml_Install/6.default-auth-object-init.yaml 실행
+6. http://192.168.1.150:10080/hypercloud/hypercloud-operator/blob/master/_yaml_Install/6.hypercloud4-operator.yaml 실행
 
-7. authenticate webhook 설정 (http://192.168.1.150:10080/hypercloud/hypercloud-operator/wikis/WebHook-Guide)
+7. http://192.168.1.150:10080/hypercloud/hypercloud-operator/blob/master/_yaml_Install/7.secret-watcher.yaml 실행
+
+8. http://192.168.1.150:10080/hypercloud/hypercloud-operator/blob/master/_yaml_Install/8.default-auth-object-init.yaml 실행
+
+9. authenticate webhook 설정 (http://192.168.1.150:10080/hypercloud/hypercloud-operator/wikis/WebHook-Guide)
 
 

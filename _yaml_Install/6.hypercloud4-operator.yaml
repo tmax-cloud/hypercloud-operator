@@ -57,7 +57,9 @@ spec:
         - name: CATALOG_NAMESPACE
           value: default
         - name: TZ
-          value: Asia/Seoul        
+          value: Asia/Seoul       
+        - name: PROAUTH_EXIST    
+          value: "1"   #If, OpenAuth set "0"
         ports:
         - containerPort: 28677
         resources:
