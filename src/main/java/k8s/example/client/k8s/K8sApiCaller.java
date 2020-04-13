@@ -4359,7 +4359,8 @@ public class K8sApiCaller {
     		// Truncate PW 
     		userCR.getUserInfo().setPassword(null);
     		
-    		userCR.setStatus("blocked");
+    		userCR.setStatus("active"); //FIXME : UI 연동 테스트 후 삭제 예정
+//    		userCR.setStatus("blocked");
        	
         	// Make body
         	JSONParser parser = new JSONParser();        	

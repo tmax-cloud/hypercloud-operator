@@ -115,7 +115,7 @@ public class UserHandler extends GeneralHandler {
     		logger.info( "  accessToken : " + accessToken );
 
     		// Send E-mail to User
-    		sendMail(userInDO.getEmail(), accessToken, null);
+//    		sendMail(userInDO.getEmail(), accessToken, null); //FIXME : UI 연동 테스트 후 주석 풀어줘야함
 			status = Status.CREATED;
     		outDO = "User Create Success";
     		  		
