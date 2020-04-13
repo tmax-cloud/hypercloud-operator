@@ -49,8 +49,8 @@ spec:
       serviceAccountName: proauth-admin
       volumes:
       - name: proauth-server-mnt
-        hostPath:
-          path: /root/proauth/mnt
+       # hostPath:
+        #  path: /root/proauth/mnt
 
 ---
 
