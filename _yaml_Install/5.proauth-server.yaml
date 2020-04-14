@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: proauth-server
-        image: 192.168.6.110:5000/proauth_server:3.6.25
+        image: 192.168.6.110:5000/proauth_server:3.6.27
         imagePullPolicy: Always
         volumeMounts:
         - name: proauth-server-mnt
@@ -44,13 +44,10 @@ spec:
           requests:
             cpu: "1"
             memory: "1Gi"
-      nodeSelector:
-        kubernetes.io/hostname: master-1
+      #nodeSelector:
+       # kubernetes.io/hostname: master-1
       serviceAccountName: proauth-admin
-      volumes:
-      - name: proauth-server-mnt
-        hostPath:
-          path: /root/proauth/mnt
+
 
 ---
 

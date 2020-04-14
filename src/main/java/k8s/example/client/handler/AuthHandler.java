@@ -14,6 +14,7 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import fi.iki.elonen.NanoHTTPD;
@@ -30,6 +31,7 @@ import k8s.example.client.DataObject.TokenReviewUser;
 import k8s.example.client.DataObject.UserCR;
 import k8s.example.client.Util;
 import k8s.example.client.k8s.K8sApiCaller;
+import k8s.example.client.k8s.OAuthApiCaller;
 
 public class AuthHandler extends GeneralHandler {
     private Logger logger = Main.logger;
@@ -52,21 +54,54 @@ public class AuthHandler extends GeneralHandler {
 			JsonParser parser = new JsonParser();
 			JsonElement element = parser.parse( body.get( "postData" ) );
 			String token = element.getAsJsonObject().get( "spec" ).getAsJsonObject().get( "token" ).getAsString();
+			String issuer = null;
+			String userId = null;
+			
 			
 			//logger.info( "  Token: " + token );
 			if ( !token.isEmpty() && token.equals( Constants.MASTER_TOKEN )) return Util.setCors( NanoHTTPD.newFixedLengthResponse( createAuthResponse( true, Constants.MASTER_USER_ID, null ) ) );
-			
-			// Verify access token	
-			JWTVerifier verifier = JWT.require(Algorithm.HMAC256(Constants.ACCESS_TOKEN_SECRET_KEY)).build();
-			DecodedJWT jwt = verifier.verify(token);
-			
-			String issuer = jwt.getIssuer();
-			String userId = jwt.getClaims().get(Constants.CLAIM_USER_ID).asString();
-			String tokenId = jwt.getClaims().get(Constants.CLAIM_TOKEN_ID).asString();
-			logger.info( "  Issuer: " + issuer );
-			logger.info( "  User ID: " + userId );
-			logger.info( "  Token ID: " + tokenId );
-			
+			logger.info( "  Token: " + token );
+
+        	if (System.getenv( "PROAUTH_EXIST" ) != null) { 
+        		if( System.getenv( "PROAUTH_EXIST" ).equalsIgnoreCase("1")) {
+    	    		logger.info( "  [[ Integrated OAuth System! ]] " );
+    	    		JsonObject webHookOutDO = OAuthApiCaller.webHookAuthenticate(token);
+    	    		if( webHookOutDO.get("status").getAsJsonObject().get("authenticated").toString().equalsIgnoreCase("true") ) {
+        				logger.info( "  Authentication success" );
+    	    			userId = webHookOutDO.get("status").getAsJsonObject().get("user").getAsJsonObject().get("username").toString().replaceAll("\"", "");
+        				authResult = true;
+    	    		} else {
+    	    			logger.info( "  Authentication fail" );
+        				authResult = false;
+    	    		}
+        		}
+        	}
+        	
+        	
+        	if (System.getenv( "PROAUTH_EXIST" ) == null || !System.getenv( "PROAUTH_EXIST" ).equalsIgnoreCase("1") ){	
+        		logger.info( "  [[ OpenAuth System! ]]" );  			
+
+        		// Verify access token	
+    			JWTVerifier verifier = JWT.require(Algorithm.HMAC256(Constants.ACCESS_TOKEN_SECRET_KEY)).build();
+    			DecodedJWT jwt = verifier.verify(token);
+    			
+    			issuer = jwt.getIssuer();
+    			userId = jwt.getClaims().get(Constants.CLAIM_USER_ID).asString();
+    			String tokenId = jwt.getClaims().get(Constants.CLAIM_TOKEN_ID).asString();
+    			logger.info( "  Issuer: " + issuer );
+    			logger.info( "  User ID: " + userId );
+    			logger.info( "  Token ID: " + tokenId );
+    			
+    			if(verifyAccessToken(token, userId, tokenId, issuer)) {
+    				logger.info( "  Authentication success" );
+    				authResult = true;
+    			} else {
+    				logger.info( "  Authentication fail" );
+    				authResult = false;
+    			}
+    			
+        	}
+
 			// UserGroup GET	
 			List < String > userGroupNameList = null;
 			UserCR user = K8sApiCaller.getUser(userId.replace("@", "-"));
@@ -82,14 +117,6 @@ public class AuthHandler extends GeneralHandler {
 					}	
 				}
 			}	
-			
-			if(verifyAccessToken(token, userId, tokenId, issuer)) {
-				logger.info( "  Authentication success" );
-				authResult = true;
-			} else {
-				logger.info( "  Authentication fail" );
-				authResult = false;
-			}
 			
 			response = createAuthResponse( authResult, userId, userGroupNameList );
 		} catch (Exception e) {

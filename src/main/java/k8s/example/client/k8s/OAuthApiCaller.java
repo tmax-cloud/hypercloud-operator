@@ -242,6 +242,32 @@ public class OAuthApiCaller {
 			}	
 		}	
 	}
+
+	public static JsonObject webHookAuthenticate(String token) throws IOException {
+		logger.info( " [OAuth] WebHook Authenticate Service Start" );
+		
+		logger.info(" AcccessToken : " + token);	
+				
+		JsonObject webHookInDO = new JsonObject();		
+		JsonObject spec = new JsonObject();		
+		spec.addProperty("token", token);
+		webHookInDO.add("spec", spec);
+				
+		Gson gson = new Gson();		
+	    String json = gson.toJson(webHookInDO);
+	    
+	    //PUT svc
+	    Request request = new Request.Builder()
+	    		.url(setAuthURL( Constants.SERVICE_NAME_WEBHOOK_SAMPLE )).post(RequestBody.create(MediaType.parse("application/json"), json)).build();
+	    
+		Response response = client.newCall(request).execute();
+		String result = response.body().string();
+		logger.info("result : " + result);
+
+	    JsonObject webHookOutDO = gson.fromJson(result, JsonObject.class);
+	    return webHookOutDO; 
+	
+	}
 	
 //	public static ContextDataObject makeUserCreateInDO( UserDO userInDO ) throws ProObjectException {
 //		ContextDataObject userCreateIn = new ContextDataObject();

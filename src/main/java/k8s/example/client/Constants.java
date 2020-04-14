@@ -2,7 +2,8 @@ package k8s.example.client;
 
 public class Constants {
 	public static final String ISSUER = "Tmax-ProAuth-WebHook";
-	public static final String ACCESS_TOKEN_SECRET_KEY = "Access-Token-Secret-Key";
+//	public static final String ACCESS_TOKEN_SECRET_KEY = "Access-Token-Secret-Key";
+	public static final String ACCESS_TOKEN_SECRET_KEY = "ProAuth_Secret";
 	public static final String REFRESH_TOKEN_SECRET_KEY = "Refresh-Token-Secret-Key";
 
 	public static final String K8S_PREFIX = "hpcd-";
@@ -170,6 +171,7 @@ public class Constants {
 	public static final String SERVICE_NAME_OAUTH_AUTHENTICATE_DELETE = "proauth/oauth/authenticate";
 	public static final String SERVICE_NAME_OAUTH_AUTHENTICATE_UPDATE = "proauth/oauth/authenticate";
 	public static final String SERVICE_NAME_SET_PASSWORD_SERVICE = "proauth/oauth/setPassword";
+	public static final String SERVICE_NAME_WEBHOOK_SAMPLE = "proauth/oauth/webhook-authenticate";
 	
 	// Template Parameter Data Type
 	public static final String TEMPLATE_DATA_TYPE_NUMBER = "number";
