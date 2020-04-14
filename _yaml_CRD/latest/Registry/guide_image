@@ -5,7 +5,7 @@
 	- Image Custom Resource의 metadata.name은 {IMAGE_NAME}.{REGISTRY_NAME}으로 만들어진다.
 		- k8s의 naming convention( [a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)* )과 
 		  docker image naming convetion( [a-z0-9]+(?:[._-][a-z0-9]+)* & path 구분기호(/) 추가 가능 )
-		   을 맞춰주기 위해 {IMAGE_NAME}에 '/', '_' 문자가 있을경우 '--' 문자로 치환한다.
+		   을 맞춰주기 위해 {IMAGE_NAME}에 '/', '_' 문자가 있을경우 각각 '-s-', '-u-' 문자로 치환한다.
 		- 실제 이미지 이름은 Image Custom Resource의 spec.name을 참고
 	
 # 필수 요구 사항

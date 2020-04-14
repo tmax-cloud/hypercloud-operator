@@ -61,12 +61,6 @@ public class RegistryWatcher extends Thread {
 						
 						if( registry != null
 								&& Integer.parseInt(registry.getMetadata().getResourceVersion()) > Integer.parseInt(latestResourceVersion)) {
-							
-							if( !K8sApiCaller.isCurrentRegistry(registry) ) {
-								logger.info("This registry event does not belong to the current registry.");
-								throw new Exception("This registry event does not belong to the current registry.");
-							}
-							
 							latestResourceVersion = response.object.getMetadata().getResourceVersion();
 							String eventType = response.type.toString();
 							logger.info("====================== Registry " + eventType + " ====================== \n");
