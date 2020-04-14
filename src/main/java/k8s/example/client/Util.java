@@ -92,4 +92,9 @@ public class Util {
 		
 		return json;
 	}
+    
+    public static String parseImageName(String imageName) {
+    	return imageName.replaceAll("[/]", "-s-").replaceAll("[_]", "-u-");
+    }
+    
 }
