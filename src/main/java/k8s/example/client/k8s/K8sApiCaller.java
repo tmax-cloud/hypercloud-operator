@@ -1431,7 +1431,7 @@ public class K8sApiCaller {
 					configMap.setData(regConfig.getData());
 					
 					V1ConfigMap result = api.createNamespacedConfigMap(namespace, configMap, null, null, null);
-					logger.info("result: " + result.toString());
+					logger.info("createNamespacedConfigMap result: " + result.toString());
 					regConfigExist = true;
 				} catch (ApiException e) {
 					logger.info(e.getResponseBody());
@@ -1721,8 +1721,9 @@ public class K8sApiCaller {
 
 			try {
 				logger.info("Create ReplicaSet");
-				appApi.createNamespacedReplicaSet(namespace, rsBuilder.build(),
+				V1ReplicaSet result = appApi.createNamespacedReplicaSet(namespace, rsBuilder.build(),
 						null, null, null);
+				logger.info("createNamespacedReplicaSet result: " + result.toString());
 			} catch (ApiException e) {
 				logger.info("Create Replicaset Failed");
 				logger.info(e.getResponseBody());
@@ -1986,12 +1987,14 @@ public class K8sApiCaller {
 
 		try {
 			
-		customObjectApi.replaceNamespacedCustomObject(
+			Object result = customObjectApi.replaceNamespacedCustomObject(
 				Constants.CUSTOM_OBJECT_GROUP,
 				Constants.CUSTOM_OBJECT_VERSION,
 				namespace,
 				Constants.CUSTOM_OBJECT_PLURAL_REGISTRY,
 				registryId, registry);
+			logger.info("replaceNamespacedCustomObject result: " + result.toString());
+			
 		}catch(ApiException e) {
 			logger.info(e.getResponseBody());
 			throw e;
@@ -2022,12 +2025,14 @@ public class K8sApiCaller {
 		registry.getMetadata().setAnnotations(annotations);
 
 		try {
-		customObjectApi.replaceNamespacedCustomObject(
+			Object result = customObjectApi.replaceNamespacedCustomObject(
 				Constants.CUSTOM_OBJECT_GROUP,
 				Constants.CUSTOM_OBJECT_VERSION,
 				namespace,
 				Constants.CUSTOM_OBJECT_PLURAL_REGISTRY,
 				registryId, registry);
+
+		logger.info("replaceNamespacedCustomObject result: " + result.toString());
 		}catch(ApiException e) {
 			logger.info(e.getResponseBody());
 			throw e;
@@ -2052,6 +2057,8 @@ public class K8sApiCaller {
 					Constants.CUSTOM_OBJECT_GROUP, 
 					Constants.CUSTOM_OBJECT_VERSION, 
 					namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registryName);
+			logger.info("getNamespacedCustomObject result: " + response.toString());
+			
 		}catch(ApiException e) {
 			logger.info(e.getResponseBody());
 			throw e;
@@ -2146,12 +2153,25 @@ public class K8sApiCaller {
 			if(reason == null) reason = "";
 			logger.info("registry pod state's reason: " + reason);
 
-			Object response = customObjectApi.getNamespacedCustomObject(
-					Constants.CUSTOM_OBJECT_GROUP, 
-					Constants.CUSTOM_OBJECT_VERSION, 
-					namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registryName);
-
-			Registry registry = mapper.readValue(gson.toJson(response), Registry.class);
+			Object response = null;
+			try {
+				response = customObjectApi.getNamespacedCustomObject(
+						Constants.CUSTOM_OBJECT_GROUP, 
+						Constants.CUSTOM_OBJECT_VERSION, 
+						namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registryName);
+				logger.info("getNamespacedCustomObject result: " + response.toString());
+				
+			}catch(ApiException e) {
+				logger.info(e.getResponseBody());
+				throw e;
+			}
+			
+			Registry registry = null;
+			try {
+				registry = mapper.readValue(gson.toJson(response), Registry.class);
+			} catch(JsonParseException | JsonMappingException e) {
+				logger.info(e.getMessage());
+			} 
 			
 			logger.info("REGISTRY RESOURCE VERSION: " + registry.getMetadata().getResourceVersion());
 			logger.info("REGISTRY UID: " + registry.getMetadata().getUid());
@@ -2260,6 +2280,7 @@ public class K8sApiCaller {
 					Constants.CUSTOM_OBJECT_GROUP, 
 					Constants.CUSTOM_OBJECT_VERSION, 
 					namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registryName);
+			logger.info("getNamespacedCustomObject result: " + response.toString());
 		}catch(ApiException e) {
 			logger.info(e.getResponseBody());
 			throw e;
@@ -2322,7 +2343,7 @@ public class K8sApiCaller {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public static void updateRegistryStatus(V1Secret secret, String eventType) throws ApiException {
+	public static void updateRegistryStatus(V1Secret secret, String eventType) throws ApiException, IOException {
 		logger.info( "[K8S ApiCaller] updateRegistryStatus(V1Secret, String) Start" );
 		String registryName = "";
 		String registryPrefix = secret.getType().equals(Constants.K8S_SECRET_TYPE_DOCKER_CONFIG_JSON) 
@@ -2335,16 +2356,25 @@ public class K8sApiCaller {
 		registryName = registryName.substring(registryPrefix.length());
 		logger.info("registry name: " + registryName);
 		
-		Object response = customObjectApi.getNamespacedCustomObject(
-				Constants.CUSTOM_OBJECT_GROUP, 
-				Constants.CUSTOM_OBJECT_VERSION, 
-				namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registryName);
+		Object response = null;
+		try {
+			response = customObjectApi.getNamespacedCustomObject(
+					Constants.CUSTOM_OBJECT_GROUP, 
+					Constants.CUSTOM_OBJECT_VERSION, 
+					namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registryName);
+			logger.info("getNamespacedCustomObject result: " + response.toString());
+			
+		}catch(ApiException e) {
+			logger.info(e.getResponseBody());
+			throw e;
+		}
+		
 		Registry registry = null;
 		try {
 			registry = mapper.readValue(gson.toJson(response), Registry.class);
-		} catch( IOException e) {
+		} catch(JsonParseException | JsonMappingException e) {
 			logger.info(e.getMessage());
-		}
+		} 
 		
 		logger.info("REGISTRY RESOURCE VERSION: " + registry.getMetadata().getResourceVersion());
 		logger.info("REGISTRY UID: " + registry.getMetadata().getUid());
@@ -2492,7 +2522,10 @@ public class K8sApiCaller {
 		}catch(ApiException e) {
 			logger.info(e.getResponseBody());
 			throw e;
-		}
+		}catch(JsonParseException | JsonMappingException e) {
+			logger.info(e.getMessage());
+			throw e;
+		} 
 		
 		return imageList;
 	}
@@ -2519,9 +2552,10 @@ public class K8sApiCaller {
 			}
 		} catch (ApiException e) {
 			logger.info("Response body: " + e.getResponseBody());
-		} catch (Exception e) {
-			logger.info("Exception: " + e.getMessage());
-		}
+		} catch(JsonParseException | JsonMappingException e) {
+			logger.info(e.getMessage());
+			throw e;
+		} 
 	}
 	
 	public static void syncImageList(Registry registry) throws ApiException, Exception {
@@ -2744,8 +2778,8 @@ public class K8sApiCaller {
 		
 		logger.info("imageName: " + imageName);
 		logger.info("imageRegistry: " + imageRegistry);
-		
-		String imageCRName = imageName + "." + imageRegistry;
+
+		String imageCRName = imageName.replaceAll("[/_]", "--") + "." + imageRegistry;
 		
 		try {
 			Object response = customObjectApi.getNamespacedCustomObject(
@@ -2787,12 +2821,13 @@ public class K8sApiCaller {
 			patchArray.add(patchContent);
 
 			try {
-				customObjectApi.patchNamespacedCustomObject(
+				Object result = customObjectApi.patchNamespacedCustomObject(
 						Constants.CUSTOM_OBJECT_GROUP,
 						Constants.CUSTOM_OBJECT_VERSION,
 						namespace,
 						Constants.CUSTOM_OBJECT_PLURAL_IMAGE,
 						imageCRName, patchArray);
+				logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
 			}catch(ApiException e) {
 				logger.info(e.getResponseBody());
 				throw e;
@@ -2813,8 +2848,8 @@ public class K8sApiCaller {
 		
 		logger.info("imageName: " + imageName);
 		logger.info("imageRegistry: " + imageRegistry);
-		
-		String imageCRName = imageName + "." + imageRegistry;
+
+		String imageCRName = imageName.replaceAll("[/_]", "--") + "." + imageRegistry;
 		
 		try {
 			Object response = customObjectApi.getNamespacedCustomObject(
@@ -2854,12 +2889,13 @@ public class K8sApiCaller {
 		patchArray.add(patchContent);
 
 		try {
-			customObjectApi.patchNamespacedCustomObject(
+			Object result = customObjectApi.patchNamespacedCustomObject(
 					Constants.CUSTOM_OBJECT_GROUP,
 					Constants.CUSTOM_OBJECT_VERSION,
 					namespace,
 					Constants.CUSTOM_OBJECT_PLURAL_IMAGE,
 					imageCRName, patchArray);
+			logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
 		}catch(ApiException e) {
 			logger.info(e.getResponseBody());
 		}
@@ -2873,16 +2909,17 @@ public class K8sApiCaller {
 
 		logger.info("imageName: " + imageName);
 		logger.info("imageRegistry: " + imageRegistry);
-		
-		String imageCRName = imageName + "." + imageRegistry;
+
+		String imageCRName = imageName.replaceAll("[/_]", "--") + "." + imageRegistry;
 		try {
-			customObjectApi.deleteNamespacedCustomObject(
+			Object result = customObjectApi.deleteNamespacedCustomObject(
 					Constants.CUSTOM_OBJECT_GROUP, 
 					Constants.CUSTOM_OBJECT_VERSION,
 					namespace, 
 					Constants.CUSTOM_OBJECT_PLURAL_IMAGE,
 					imageCRName, new V1DeleteOptions(), null, null, null);
-			
+
+			logger.info("deleteNamespacedCustomObject result: " + result.toString());
 		} catch (ApiException e) {
 			logger.info(e.getResponseBody());
 		}
@@ -2897,8 +2934,9 @@ public class K8sApiCaller {
 		
 		try {
 			image = new Image();
+			String imageCRName = imageName.replaceAll("[/_]", "--") + "." + imageRegistry;
 			V1ObjectMeta metadata = new V1ObjectMeta();
-			metadata.setName(imageName + "." + imageRegistry);
+			metadata.setName(imageCRName);
 			metadata.setNamespace(namespace);
 
 			Map<String, String> labels = new HashMap<>();
@@ -2930,12 +2968,13 @@ public class K8sApiCaller {
 			spec.setRegistry(imageRegistry);
 			image.setSpec(spec);
 
-			customObjectApi.createNamespacedCustomObject(
+			Object result = customObjectApi.createNamespacedCustomObject(
 					Constants.CUSTOM_OBJECT_GROUP, 
 					Constants.CUSTOM_OBJECT_VERSION,
 					namespace, 
 					Constants.CUSTOM_OBJECT_PLURAL_IMAGE, 
 					image, null);
+			logger.info("createNamespacedCustomObject result: " + result.toString());
 		}catch(ApiException e) {
 			logger.info(e.getResponseBody());
 		}
@@ -2958,8 +2997,8 @@ public class K8sApiCaller {
 		logger.info("imageName: " + imageName);
 		logger.info("imageVersion: " + imageVersion);
 		logger.info("imageRegistry: " + imageRegistry);
-		
-		String imageCRName = imageName + "." + imageRegistry;
+
+		String imageCRName = imageName.replaceAll("[/_]", "--") + "." + imageRegistry;
 		
 //		if( StringUtil.isEmpty(imageRegistry)) {
 //			StringBuilder sb = new StringBuilder();
@@ -3011,12 +3050,13 @@ public class K8sApiCaller {
 				patchArray.add(patchContent);
 
 				try {
-					customObjectApi.patchNamespacedCustomObject(
+					Object result = customObjectApi.patchNamespacedCustomObject(
 							Constants.CUSTOM_OBJECT_GROUP,
 							Constants.CUSTOM_OBJECT_VERSION,
 							namespace,
 							Constants.CUSTOM_OBJECT_PLURAL_IMAGE,
 							imageCRName, patchArray);
+					logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
 				}catch(ApiException e) {
 					logger.info(e.getResponseBody());
 					throw e;
@@ -3031,7 +3071,7 @@ public class K8sApiCaller {
 			try {
 				image = new Image();
 				V1ObjectMeta metadata = new V1ObjectMeta();
-				metadata.setName(imageName + "." + imageRegistry);
+				metadata.setName(imageCRName);
 				metadata.setNamespace(namespace);
 
 				Map<String, String> labels = new HashMap<>();
@@ -3061,12 +3101,13 @@ public class K8sApiCaller {
 				spec.setRegistry(imageRegistry);
 				image.setSpec(spec);
 
-				customObjectApi.createNamespacedCustomObject(
+				Object result = customObjectApi.createNamespacedCustomObject(
 						Constants.CUSTOM_OBJECT_GROUP, 
 						Constants.CUSTOM_OBJECT_VERSION,
 						namespace, 
 						Constants.CUSTOM_OBJECT_PLURAL_IMAGE, 
 						image, null);
+				logger.info("createNamespacedCustomObject result: " + result.toString());
 			}catch(ApiException e) {
 				logger.info(e.getResponseBody());
 			}
@@ -3089,13 +3130,16 @@ public class K8sApiCaller {
 		logger.info("imageVersion: " + imageVersion);
 		logger.info("imageRegistry: " + imageRegistry);
 		
+		String imageCRName = imageName.replaceAll("[/_]", "--") + "." + imageRegistry;
+		
 		try {
-			customObjectApi.deleteNamespacedCustomObject(
+			Object result = customObjectApi.deleteNamespacedCustomObject(
 					Constants.CUSTOM_OBJECT_GROUP, 
 					Constants.CUSTOM_OBJECT_VERSION, 
 					namespace,
 					Constants.CUSTOM_OBJECT_PLURAL_IMAGE, 
-					imageName + "." + imageVersion + "." + imageRegistry, new V1DeleteOptions(), null, null, null);
+					imageCRName, new V1DeleteOptions(), null, null, null);
+			logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
 					
 		}catch(ApiException e) {
 			logger.info(e.getResponseBody());
