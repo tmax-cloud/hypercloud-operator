@@ -41,7 +41,7 @@ spec:
           name: proauth-data
         env:
         - name: TCS_INSTALL
-          value: "0"
+          value: "1"   # For first Time, set "1" -> From Second Time, set "0"
         - name: TCS_MAX_SESSCNT
           value: "100"
         - name: TCS_SID
@@ -68,7 +68,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: proauth-service
+  name: proauth-db-service
   namespace: proauth-system
 spec:
   ports:

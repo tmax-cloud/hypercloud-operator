@@ -44,8 +44,8 @@ spec:
           requests:
             cpu: "1"
             memory: "1Gi"
-      #nodeSelector:
-       # kubernetes.io/hostname: master-1
+      nodeSelector:
+        kubernetes.io/hostname: master-1   # Node Name  ( must Match with the node the proauth db pod generate )
       serviceAccountName: proauth-admin
 
 
