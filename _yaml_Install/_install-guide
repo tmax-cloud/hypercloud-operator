@@ -20,7 +20,7 @@
 
 4. http://192.168.1.150:10080/hypercloud/hypercloud-operator/blob/master/_yaml_Install/4.proauth-db.yaml 실행
 
-5. http://192.168.1.150:10080/hypercloud/hypercloud-operator/blob/master/_yaml_Install/5.proauth-server.yaml 실행
+5. http://192.168.1.150:10080/hypercloud/hypercloud-operator/blob/master/_yaml_Install/5.proauth-server.yaml 실행 ( node Selector 설정 : proauth db pod와 같은 node로 설정 )
 
 6. http://192.168.1.150:10080/hypercloud/hypercloud-operator/blob/master/_yaml_Install/6.hypercloud4-operator.yaml 실행
 
