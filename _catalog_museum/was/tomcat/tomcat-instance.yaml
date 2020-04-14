@@ -8,7 +8,17 @@ spec:
     metadata:
       name: tomcat-cicd-template
     parameters:
-    - name: PIPELINE_NAME
-      value: tomcat-cicd-pipeline
+    - name: APP_NAME
+      value: tomcat-sample-app
     - name: NAMESPACE
       value: default
+    - name: SERVICE_ACCOUNT_NAME
+      value: tutorial-service
+    - name: GIT_URL
+      value: https://github.com/cqbqdd11519/TomcatMavenApp
+    - name: GIT_REV
+      value: master
+    - name: IMAGE_URL
+      value: 192.168.6.110:5000/tomcat-sample:latest
+    - name: WAS_PORT
+      value: 8080
