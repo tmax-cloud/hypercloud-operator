@@ -569,7 +569,7 @@ public class K8sApiCaller {
 			JsonObject respJson = (JsonObject) new JsonParser().parse((new Gson()).toJson(response));
 
         	mapper.registerModule(new JodaModule());
-			userList = mapper.readValue((new Gson()).toJson(respJson.get("items")), new TypeReference<ArrayList<UserCR>>() {});
+        	if (respJson.get("items")!= null) userList = mapper.readValue((new Gson()).toJson(respJson.get("items")), new TypeReference<ArrayList<UserCR>>() {});
 
         } catch (ApiException e) {
         	logger.info("Response body: " + e.getResponseBody());
