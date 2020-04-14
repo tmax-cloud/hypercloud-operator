@@ -27,6 +27,9 @@
       * 위의 예시는 "admin"을 해쉬 하고 소문자로 만든 결과이다.
   5) admin-tmax.co.kr / admin 으로 기존의 ui로 접속이 가능해진다.
   
-8. admin-tmax.co.kr User에 관한 role, rolebinding이 그대로 살아 있으므로 같은 권한으로 이용이 가능해진다.  
+8. 이제 userID와 mail 의 형식이 분리 되었으므로 기존에 만들어진 roleBinding subjects에 User정보를 admin@tmax.co.kr --> admin-tmax.co.kr로 userID와 맞춰준다. 
+
+9. admin-tmax.co.kr User에 관한 role, rolebinding이 그대로 살아 있으므로 같은 권한으로 이용이 가능해진다. 
+  
 
 
