@@ -1,6 +1,33 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.0.14 start -------------------->
+
+## HyperCloudServer_4.1.0.14 (2020년 04월 14일 화 오후  2:41:08)
+
+### Added
+
+### Changed
+  - [mod] Image Tag 중복 제거 by sukhee_yun
+  - [mod] proauth-server.yaml수정 by taegeon_woo
+  - [mod] WAS Catalog museum 템플릿 수정 by Sunghyun Kim
+  - [mod] rolebinding user 형식 변경 by taegeon_woo
+  - [mod] admin 계정 rolebinding수정 by taegeon_woo
+  - [mod] rolebinding 수정 가이드 추가 by taegeon_woo
+  - [mod] 통합 Auth 전환 가이드 by taegeon_woo
+  - [mod] ProAuth 설치 가이드 보완 by taegeon_woo
+  - [mod] NameSpaceHandler.java 분기처리 by taegeon_woo
+  - [mod] proauth 업데이트 to 27 버전 by taegeon_woo
+
+### Fixed
+  - [ims][222564] Registry에 push한 이미지 이름에 path기호('/')가 있을 경우 Image CR 생성 안되는 버그 수정(수정된 guide_image 파일 참고) by sukhee_yun
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.0.14 end --------------------->
+
 <!-------------------- v4.1.0.13 start -------------------->
 
 ## HyperCloudServer_4.1.0.13 (2020년 04월 13일 월 오후  4:05:04)
