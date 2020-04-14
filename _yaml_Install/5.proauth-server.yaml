@@ -21,9 +21,6 @@ spec:
       - name: proauth-server
         image: 192.168.6.110:5000/proauth_server:3.6.27
         imagePullPolicy: Always
-        volumeMounts:
-        - name: proauth-server-mnt
-          mountPath: /home/tmax/proobject7
         env:    
         - name: DBMS_IP
           valueFrom:
@@ -44,8 +41,8 @@ spec:
           requests:
             cpu: "1"
             memory: "1Gi"
-      #nodeSelector:
-       # kubernetes.io/hostname: master-1
+      nodeSelector:
+        kubernetes.io/hostname: master-1   # Node Name  ( must Match with the node the proauth db pod generate )
       serviceAccountName: proauth-admin
 
 
