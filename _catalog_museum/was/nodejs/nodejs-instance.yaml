@@ -8,7 +8,17 @@ spec:
     metadata:
       name: nodejs-cicd-template
     parameters:
-    - name: PIPELINE_NAME
-      value: nodejs-cicd-pipeline
+    - name: APP_NAME
+      value: nodejs-sample-app
     - name: NAMESPACE
       value: default
+    - name: SERVICE_ACCOUNT_NAME
+      value: tutorial-service
+    - name: GIT_URL
+      value: https://github.com/nodeshift-starters/nodejs-rest-http
+    - name: GIT_REV
+      value: master
+    - name: IMAGE_URL
+      value: 192.168.6.110:5000/nodejs-sample:latest
+    - name: WAS_PORT
+      value: 8080
