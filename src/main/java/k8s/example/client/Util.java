@@ -94,7 +94,7 @@ public class Util {
 	}
     
     public static String parseImageName(String imageName) {
-    	return imageName.replaceAll("[/]", "-s-").replaceAll("[.]", "-u-");
+    	return imageName.replaceAll("[/]", "-s-").replaceAll("[_]", "-u-");
     }
     
 }
