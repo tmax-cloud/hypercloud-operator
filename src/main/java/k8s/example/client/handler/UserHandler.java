@@ -5,9 +5,11 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.mail.Message;
@@ -146,6 +148,21 @@ public class UserHandler extends GeneralHandler {
 	public Response get( UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
 		logger.info("***** GET /User Id Find");
 		
+		
+		
+		
+		String decodedFromUtf8 = new String("가나다라마바사");
+		logger.info(decodedFromUtf8);
+		Map<String, String> envMap = System.getenv();
+		Set<String> key = envMap.keySet();
+		Iterator it = key.iterator();
+		while(it.hasNext()) {
+			String envkey = it.next().toString();
+			logger.info( "key : " + envkey + "||| " + "value : " +  envMap.get(envkey));
+		}
+		
+		
+		
 		List < UserCR > userCRList = null;
 		IStatus status = null;
 		String outDO = null; 
@@ -256,8 +273,8 @@ public class UserHandler extends GeneralHandler {
 			}		
 			break;	
 		}	
-		
-		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO));
+		outDO ="가나다라마바사";
+		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status,"text/plain; charset=utf-8" , outDO));
 	}
 	
 	public Response put( UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
