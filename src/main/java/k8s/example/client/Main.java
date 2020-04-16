@@ -37,11 +37,17 @@ public class Main {
 			// Start UserDelete
 			logger.info("[Main] Start User Delete per Week");
 			startUserDeleteTimer();
-			
-			// Start Controllers
+
 			logger.info("[Main] Init & start K8S watchers");
-			K8sApiCaller.initK8SClient();
-			K8sApiCaller.startWatcher(); // Infinite loop
+			while (true) {
+				try {
+					// Start Controllers
+					K8sApiCaller.initK8SClient();
+					K8sApiCaller.startWatcher(); // Infinite loop
+				}catch( Exception e ) {
+					logger.info("[Main] Init & restart K8S watchers");
+				}
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
