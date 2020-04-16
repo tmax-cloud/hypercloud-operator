@@ -22,6 +22,7 @@ public class ErrorCode {
 	public static final String USER_ALTER_PASSWORD_EMPTY = "User Alter Password is empty";
 	public static final String USER_MAIL_EMPTY = "User Mail is empty";
 	public static final String USER_DELETE_FAILED = "User Delete Failed";
+	public static final String INVALID_TOKEN_EXPIRED_TIME = "Invalid Token Expired Time";
 
 	
 }

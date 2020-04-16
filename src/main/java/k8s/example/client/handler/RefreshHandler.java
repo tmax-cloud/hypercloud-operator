@@ -26,6 +26,7 @@ import k8s.example.client.Constants;
 import k8s.example.client.Main;
 import k8s.example.client.DataObject.Token;
 import k8s.example.client.DataObject.TokenCR;
+import k8s.example.client.ErrorCode;
 import k8s.example.client.Util;
 import k8s.example.client.k8s.K8sApiCaller;
 import k8s.example.client.k8s.OAuthApiCaller;
@@ -55,6 +56,10 @@ public class RefreshHandler extends GeneralHandler {
 			logger.info( "  Access token: " + refreshInDO.getAccessToken() );
     		logger.info( "  Refresh token: " + refreshInDO.getRefreshToken() );
     		
+    		if ( atExpireTimeSec < 1 || atExpireTimeSec >720 ) throw new Exception(ErrorCode.INVALID_TOKEN_EXPIRED_TIME);
+    		atExpireTimeSec = (refreshInDO.getAtExpireTime() == 0)?  Constants.ACCESS_TOKEN_EXP_TIME : refreshInDO.getAtExpireTime() * 60;
+			logger.info( "  AT Expire Time : " +  atExpireTimeSec/60  + " min");
+			
     		// Integrated Auth or OpenAuth
     		if (System.getenv( "PROAUTH_EXIST" ) != null) {   		
         		if( System.getenv( "PROAUTH_EXIST" ).equalsIgnoreCase("1")) {
@@ -110,10 +115,7 @@ public class RefreshHandler extends GeneralHandler {
     				logger.info( "  Refresh success" );	
     				status = Status.OK;
     				
-    				// Make a new access token
-    				atExpireTimeSec = (refreshInDO.getAtExpireTime() == 0)?  Constants.ACCESS_TOKEN_EXP_TIME : refreshInDO.getAtExpireTime() * 60;
-    				logger.info( "  AT Expire Time : " +  atExpireTimeSec/60  + " min");	
-    				
+    				// Make a new access token	  				
     				Builder tokenBuilder = JWT.create().withIssuer(Constants.ISSUER)
     						.withExpiresAt(Util.getDateFromSecond(atExpireTimeSec))
     						.withClaim(Constants.CLAIM_USER_ID, userId)

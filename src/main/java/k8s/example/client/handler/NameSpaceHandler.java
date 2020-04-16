@@ -60,7 +60,6 @@ public class NameSpaceHandler extends GeneralHandler {
     		if (System.getenv( "PROAUTH_EXIST" ) != null) { 
         		if( System.getenv( "PROAUTH_EXIST" ).equalsIgnoreCase("1")) {
         			logger.info( "  [[ Integrated OAuth System! ]] " );
-        			logger.info( "  [[ Integrated OAuth System! ]] " );
     	    		JsonObject webHookOutDO = OAuthApiCaller.webHookAuthenticate(accessToken);
     	    		if( webHookOutDO.get("status").getAsJsonObject().get("authenticated").toString().equalsIgnoreCase("true") ) {
     	    			userId = webHookOutDO.get("status").getAsJsonObject().get("user").getAsJsonObject().get("username").toString().replaceAll("\"", "");
@@ -69,9 +68,11 @@ public class NameSpaceHandler extends GeneralHandler {
         				status = Status.OK;
 
         				// Limit 
-        				if( limit != null ) {
-        					nsList.setItems( nsList.getItems().stream().limit(Integer.parseInt(limit)).collect(Collectors.toList()));		
-        				}
+        				if( nsList!= null) {
+        					if( limit != null ) {
+            					nsList.setItems( nsList.getItems().stream().limit(Integer.parseInt(limit)).collect(Collectors.toList()));		
+            				}
+        				}				
     	    		} else {
     	    			logger.info( "  Authentication fail" );
     	    			logger.info( "  Token is not valid" );
@@ -98,11 +99,12 @@ public class NameSpaceHandler extends GeneralHandler {
     				nsList = K8sApiCaller.getAccessibleNS(userId);
     				status = Status.OK;
 
-    				// Limit 
-    				if( limit != null ) {
-    					nsList.setItems( nsList.getItems().stream().limit(Integer.parseInt(limit)).collect(Collectors.toList()));		
-    				}
-    				
+    				// Limit
+    				if( nsList!= null) {
+    					if( limit != null ) {
+        					nsList.setItems( nsList.getItems().stream().limit(Integer.parseInt(limit)).collect(Collectors.toList()));		
+        				}
+    				} 
     			} else {
     				logger.info( "  Token is not valid" );
     				status = Status.UNAUTHORIZED;
@@ -111,10 +113,14 @@ public class NameSpaceHandler extends GeneralHandler {
     		}
 
 			// Make outDO					
-			Gson gson = new GsonBuilder().setPrettyPrinting().create();
-			outDO = gson.toJson( nsList ).toString();
-	
-
+    		if( nsList!=null ) {
+    			Gson gson = new GsonBuilder().setPrettyPrinting().create();
+    			outDO = gson.toJson( nsList ).toString();
+    		} else {
+    			status = Status.FORBIDDEN;
+    			outDO = "Cannot Access Any NameSpace";
+    		}
+			
 		} catch (ApiException e) {
 			logger.info( "Exception message: " + e.getMessage() );
 			outDO = "Get NameSpace List failed.";

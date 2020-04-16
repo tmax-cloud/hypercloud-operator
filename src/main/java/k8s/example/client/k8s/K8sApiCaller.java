@@ -4235,6 +4235,7 @@ public class K8sApiCaller {
 		return uid;
 	}
 
+	@SuppressWarnings("null")
 	public static V1NamespaceList getAccessibleNS(String userId) throws ApiException {
 		V1NamespaceList nsList = null;//TODO
 		List <String> nsNameList = null;
@@ -4352,8 +4353,7 @@ public class K8sApiCaller {
 							}				
 						}
 					} 	
-				}
-								
+				}		
 				if (nsNameList!=null) {
 					// Stream distinct (중복제거)
 					nsNameList = nsNameList.stream().distinct().collect(Collectors.toList());				
@@ -4362,15 +4362,17 @@ public class K8sApiCaller {
 						if(nsList == null) nsList = new V1NamespaceList();
 						nsList.addItemsItem( api.readNamespace(nsName, "true", false, false) );
 					}
-				}
-				
+				}			
 			}			
 		} catch (ApiException e) {			
 			logger.info(e.getResponseBody());
 			throw e;
 		}		
-		for (V1Namespace ns : nsList.getItems()) {
-			logger.info(" [ Accessible NameSpace ] : " + ns.getMetadata().getName() );		
+		
+		if ( nsList != null ) {
+			for (V1Namespace ns : nsList.getItems()) {
+				logger.info(" [ Accessible NameSpace ] : " + ns.getMetadata().getName() );		
+			}
 		}
 		return nsList;
 	}

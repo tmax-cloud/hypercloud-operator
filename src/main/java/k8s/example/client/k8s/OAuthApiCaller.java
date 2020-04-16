@@ -181,6 +181,31 @@ public class OAuthApiCaller {
 	    return authenticateUpdateOut; 
 	}
 	
+	public static JsonObject ConfigurationUpdate( String key, String value ) throws IOException {
+		logger.info( " [OAuth] ConfigurationUpdate Service Start" );
+	
+		logger.info(" key : " + key);	
+		logger.info(" value : " + value);	
+		
+		JsonObject ConfigurationUpdateInDO = new JsonObject();		
+		ConfigurationUpdateInDO.addProperty("key", key);
+		ConfigurationUpdateInDO.addProperty("value", value);
+				
+		Gson gson = new Gson();		
+	    String json = gson.toJson(ConfigurationUpdateInDO);
+	    
+	    //PUT svc
+	    Request request = new Request.Builder()
+	    		.url(setAuthURL( Constants.SERVICE_NAME_OAUTH_CONFIGURATION_UPDATE )).put(RequestBody.create(MediaType.parse("application/json"), json)).build();
+	    
+		Response response = client.newCall(request).execute();
+		String result = response.body().string();
+		logger.info("result : " + result);
+
+	    JsonObject ConfigurationUpdateOut = gson.fromJson(result, JsonObject.class);
+	    return ConfigurationUpdateOut; 
+	}
+	
 	public static JsonObject SetPasswordService( String token, String id,  String alterPassword ) throws IOException {
 		logger.info( "[OAuth] Password Change Service Start" );
 	

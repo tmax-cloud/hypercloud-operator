@@ -170,6 +170,7 @@ public class Constants {
 	public static final String SERVICE_NAME_OAUTH_AUTHENTICATE_CREATE = "proauth/oauth/authenticate";
 	public static final String SERVICE_NAME_OAUTH_AUTHENTICATE_DELETE = "proauth/oauth/authenticate";
 	public static final String SERVICE_NAME_OAUTH_AUTHENTICATE_UPDATE = "proauth/oauth/authenticate";
+	public static final String SERVICE_NAME_OAUTH_CONFIGURATION_UPDATE = "proauth/oauth/configuration";
 	public static final String SERVICE_NAME_SET_PASSWORD_SERVICE = "proauth/oauth/setPassword";
 	public static final String SERVICE_NAME_WEBHOOK_SAMPLE = "proauth/oauth/webhook-authenticate";
 	
