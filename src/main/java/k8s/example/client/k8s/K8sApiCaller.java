@@ -3680,7 +3680,7 @@ public class K8sApiCaller {
 				template.setParameters(parameters);
 			} else {
 				String planName = inDO.getPlan_id();
-				Object planResponse = customObjectApi.getNamespacedCustomObject("servicecatalog.k8s.io", "v1beta1", inDO.getContext().getNamespace(), "serviceplans", planName);
+				Object planResponse = customObjectApi.getClusterCustomObject("servicecatalog.k8s.io", "v1beta1", "serviceplans", planName);
 				GetPlanDO plan = mapper.readValue(gson.toJson(planResponse), GetPlanDO.class);
 				if(plan.getSpec().getInstanceCreateParameterSchema() != null) {
 					for(String key : plan.getSpec().getInstanceCreateParameterSchema().keySet()) {
