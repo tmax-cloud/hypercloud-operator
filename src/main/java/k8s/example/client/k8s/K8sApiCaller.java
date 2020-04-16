@@ -4322,7 +4322,7 @@ public class K8sApiCaller {
 			//2. Check if ClusterRole has NameSpace GET rule 
 			if (clusterRoleList != null) {
 				for ( String clusterRoleName : clusterRoleList ) {
-					logger.info("User [ " + userId + " ] has Role ["  + clusterRoleName + " ]");
+					logger.info("User [ " + userId + " ] has ClusterRole ["  + clusterRoleName + " ]");
 					V1ClusterRole clusterRole = rbacApi.readClusterRole(clusterRoleName, "true");
 					List<V1PolicyRule> rules = clusterRole.getRules();
 					if ( rules != null) {
@@ -4332,7 +4332,7 @@ public class K8sApiCaller {
 									logger.info("clusterRoleName : " + clusterRoleName );
 									if( rule.getVerbs()!=null) {
 										if (rule.getVerbs().contains("list") || rule.getVerbs().contains("*")){
-											if ( rule.getResourceNames()!= null ) {
+											if ( rule.getResourceNames() == null || rule.getResourceNames().size() == 0) {
 												clusterRoleFlag = true;
 											} else {
 												for (String nsName : rule.getResourceNames()) {
