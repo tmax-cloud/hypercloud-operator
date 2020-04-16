@@ -4273,7 +4273,14 @@ public class K8sApiCaller {
 									logger.info("clusterRoleName : " + clusterRoleName );
 									if( rule.getVerbs()!=null) {
 										if (rule.getVerbs().contains("list") || rule.getVerbs().contains("*")){
-											clusterRoleFlag = true;
+											if ( rule.getResourceNames()!= null ) {
+												clusterRoleFlag = true;
+											} else {
+												for (String nsName : rule.getResourceNames()) {
+													if(nsNameList == null) nsNameList = new ArrayList<>();
+													nsNameList.add(nsName);
+												}
+											}
 										}
 									}	
 								}
