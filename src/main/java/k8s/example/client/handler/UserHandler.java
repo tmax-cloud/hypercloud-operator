@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.UUID;
 
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -43,7 +42,6 @@ import k8s.example.client.DataObject.UserCR;
 import k8s.example.client.ErrorCode;
 import k8s.example.client.Main;
 import k8s.example.client.Util;
-import k8s.example.client.Util.Crypto;
 import k8s.example.client.k8s.K8sApiCaller;
 import k8s.example.client.k8s.OAuthApiCaller;
 import k8s.example.client.metering.util.SimpleUtil;
@@ -278,8 +276,7 @@ public class UserHandler extends GeneralHandler {
 			}		
 			break;	
 		}	
-		outDO ="가나다라마바사";
-		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status,"text/plain; charset=utf-8" , outDO));
+		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML , outDO));
 	}
 	
 	public Response put( UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
