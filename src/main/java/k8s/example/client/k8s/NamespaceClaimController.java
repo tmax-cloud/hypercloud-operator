@@ -66,8 +66,12 @@ public class NamespaceClaimController extends Thread {
 							
 							switch( eventType ) {
 								case Constants.EVENT_TYPE_ADDED : 
+									if ( K8sApiCaller.namespaceAlreadyExist( resourceName ) ) {
+										replaceNscStatus( claimName, Constants.CLAIM_STATUS_REJECT, "Duplicated NameSpaceName" );
+									} else {
 									// Patch Status to Awaiting
 									replaceNscStatus( claimName, Constants.CLAIM_STATUS_AWAITING, "wait for admin permission" );
+									}
 									break;
 								case Constants.EVENT_TYPE_MODIFIED : 
 									String status = getClaimStatus( claimName );		
