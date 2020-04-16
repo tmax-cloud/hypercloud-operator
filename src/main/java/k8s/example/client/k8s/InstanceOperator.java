@@ -158,37 +158,38 @@ public class InstanceOperator extends Thread {
 		        				for(JsonNode object : templateObjs) {
 			        				String objStr = object.toString();
 			        				//logger.info("[Instance Operator] Template Object : " + objStr);
-			        				
-			        				for(JsonNode parameter : parameters) {
-				        				String paramName = null;
-				        				String paramValue = null;
-				        				if(parameter.has("name") && parameter.has("value")) {
-				        					paramName = parameter.get("name").asText();
-					        				paramValue = parameter.get("value").asText();
-				        				}
-				        				String dataType = existParameter( objectToJsonNode(template).get("parameters"), paramName );
-				        				if ( objectToJsonNode(template).get("parameters") != null && dataType != null ) {
-				        					
-				        					if (dataType.equals(Constants.TEMPLATE_DATA_TYPE_NUMBER)) {
-				        						String replaceString = "\"${" + paramName + "}\"";
-				        						if( objStr.contains( replaceString ) ) {
-						        					logger.info("[Instance Operator] Parameter Number Name to be replaced : " + replaceString);
-							        				logger.info("[Instance Operator] Parameter Number Value to be replaced : " + paramValue);
+			        				if ( parameters != null ) {
+			        					for(JsonNode parameter : parameters) {
+					        				String paramName = null;
+					        				String paramValue = null;
+					        				if(parameter.has("name") && parameter.has("value")) {
+					        					paramName = parameter.get("name").asText();
+						        				paramValue = parameter.get("value").asText();
+					        				}
+					        				String dataType = existParameter( objectToJsonNode(template).get("parameters"), paramName );
+					        				if ( objectToJsonNode(template).get("parameters") != null && dataType != null ) {
+					        					
+					        					if (dataType.equals(Constants.TEMPLATE_DATA_TYPE_NUMBER)) {
+					        						String replaceString = "\"${" + paramName + "}\"";
+					        						if( objStr.contains( replaceString ) ) {
+							        					logger.info("[Instance Operator] Parameter Number Name to be replaced : " + replaceString);
+								        				logger.info("[Instance Operator] Parameter Number Value to be replaced : " + paramValue);
+							        					objStr = objStr.replace( replaceString, paramValue );
+							        				}
+					        					}
+					        					
+					        					String replaceString = "${" + paramName + "}";
+					        					if( objStr.contains( replaceString ) ) {
+						        					logger.info("[Instance Operator] Parameter Name to be replaced : " + replaceString);
+							        				logger.info("[Instance Operator] Parameter Value to be replaced : " + paramValue);
 						        					objStr = objStr.replace( replaceString, paramValue );
 						        				}
-				        					}
-				        					
-				        					String replaceString = "${" + paramName + "}";
-				        					if( objStr.contains( replaceString ) ) {
-					        					logger.info("[Instance Operator] Parameter Name to be replaced : " + replaceString);
-						        				logger.info("[Instance Operator] Parameter Value to be replaced : " + paramValue);
-					        					objStr = objStr.replace( replaceString, paramValue );
+					        					
+					        					
 					        				}
-				        					
-				        					
-				        				}
-				        			}
-
+					        			}
+			        				}
+			        				
 			        				String[] splitStr = objStr.split("\"metadata\":\\{");
 			        				StringBuilder sb = new StringBuilder();
 			        				sb.append("\"ownerReferences\": [{\"apiVersion\": \"v1\",\"blockOwnerDeletion\": true,\"controller\": true,\"kind\": \"TemplateInstance\",");
