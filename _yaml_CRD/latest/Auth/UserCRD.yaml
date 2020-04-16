@@ -59,6 +59,9 @@ spec:
             description:
               type: string
               description: description
+            profile:
+              type: string
+              description: user's profile picture
         status:
           type: string
           description: Status defines whether the user is active or blocked
