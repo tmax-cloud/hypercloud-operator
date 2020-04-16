@@ -1,6 +1,7 @@
 package k8s.example.client.handler;
 
 import java.io.FileInputStream;
+import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
@@ -148,11 +149,17 @@ public class UserHandler extends GeneralHandler {
 	public Response get( UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
 		logger.info("***** GET /User Id Find");
 		
-		
-		
-		
 		String decodedFromUtf8 = new String("가나다라마바사");
-		logger.info(decodedFromUtf8);
+		byte text[] = decodedFromUtf8.getBytes();
+		String testVal;
+		try {
+			testVal = new String(text, "UTF-8");
+			logger.info(testVal);
+		} catch (UnsupportedEncodingException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
 		Map<String, String> envMap = System.getenv();
 		Set<String> key = envMap.keySet();
 		Iterator it = key.iterator();
@@ -160,8 +167,6 @@ public class UserHandler extends GeneralHandler {
 			String envkey = it.next().toString();
 			logger.info( "key : " + envkey + "||| " + "value : " +  envMap.get(envkey));
 		}
-		
-		
 		
 		List < UserCR > userCRList = null;
 		IStatus status = null;
