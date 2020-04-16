@@ -1,4 +1,4 @@
-FROM 192.168.6.110:5000/hypercloud4-operator:b4.0.0.0
+FROM 192.168.6.110:5000/alpine_with_encoding:3.9
 
 LABEL maintainer="seonho_choi@tmax.co.kr"
 

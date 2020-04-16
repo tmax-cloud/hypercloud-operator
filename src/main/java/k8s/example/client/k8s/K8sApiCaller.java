@@ -313,6 +313,11 @@ public class K8sApiCaller {
 		logger.info("Start user watcher");
 		UserWatcher userWatcher = new UserWatcher(k8sClient, customObjectApi, String.valueOf(userLatestResourceVersion));
 		userWatcher.start();
+		
+		// Start userDelete watch
+		logger.info("Start userDelete watcher");
+		UserDeleteWatcher userDeleteWatcher = new UserDeleteWatcher(k8sClient, customObjectApi, String.valueOf(userLatestResourceVersion));
+		userDeleteWatcher.start();
 
 		// Start registry watch
 		logger.info("Start registry watcher");
@@ -381,6 +386,15 @@ public class K8sApiCaller {
 					userWatcher.interrupt();
 					userWatcher = new UserWatcher(k8sClient, customObjectApi, userLatestResourceVersionStr);
 					userWatcher.start();
+				}
+				
+				
+				if(!userDeleteWatcher.isAlive()) {
+					String userLatestResourceVersionStr = UserWatcher.getLatestResourceVersion();
+					logger.info("User Delete watcher is not alive. Restart user delete watcher! (Latest resource version: " + userLatestResourceVersionStr + ")");
+					userDeleteWatcher.interrupt();
+					userDeleteWatcher = new UserDeleteWatcher(k8sClient, customObjectApi, userLatestResourceVersionStr);
+					userDeleteWatcher.start();
 				}
 	
 				
