@@ -39,15 +39,9 @@ public class Main {
 			startUserDeleteTimer();
 
 			logger.info("[Main] Init & start K8S watchers");
-			while (true) {
-				try {
-					// Start Controllers
-					K8sApiCaller.initK8SClient();
-					K8sApiCaller.startWatcher(); // Infinite loop
-				}catch( Exception e ) {
-					logger.info("[Main] Init & restart K8S watchers");
-				}
-			}
+			// Start Controllers
+			K8sApiCaller.initK8SClient();
+			K8sApiCaller.startWatcher(); // Infinite loop
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
