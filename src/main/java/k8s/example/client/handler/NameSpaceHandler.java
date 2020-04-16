@@ -118,7 +118,11 @@ public class NameSpaceHandler extends GeneralHandler {
     			outDO = gson.toJson( nsList ).toString();
     		} else {
     			status = Status.FORBIDDEN;
+    			JsonObject result = new JsonObject();
     			outDO = "Cannot Access Any NameSpace";
+    			result.addProperty("message", outDO);
+    			Gson gson = new Gson();		
+    		    outDO = gson.toJson(result);		
     		}
 			
 		} catch (ApiException e) {
