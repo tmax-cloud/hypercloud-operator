@@ -138,7 +138,7 @@ public class NameSpaceHandler extends GeneralHandler {
 			status = Status.BAD_REQUEST;
 		}
 		
-		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO));
+		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status, "application/json", outDO));
     }
 	
 	@Override
