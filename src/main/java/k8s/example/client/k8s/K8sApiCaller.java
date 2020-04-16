@@ -503,66 +503,7 @@ public class K8sApiCaller {
 			}catch( Exception e ) {
 				StringWriter sw = new StringWriter();
 				e.printStackTrace(new PrintWriter(sw));
-				logger.info(sw.toString());
-				
-				if( userWatcher != null) {
-					userWatcher.interrupt();
-					logger.info("userWatcher interrupted!!");
-				}
-				if( userDeleteWatcher != null) {
-					userDeleteWatcher.interrupt();
-					logger.info("userDeleteWatcher interrupted!!");
-				}
-				if( registryWatcher != null) {
-					registryWatcher.interrupt();
-					logger.info("registryWatcher interrupted!!");
-				}
-				if( registryReplicaSetWatcher != null) {
-					registryReplicaSetWatcher.interrupt();
-					logger.info("registryReplicaSetWatcher interrupted!!");
-				}
-				if( registryPodWatcher != null) {
-					registryPodWatcher.interrupt();
-					logger.info("registryPodWatcher interrupted!!");
-				}
-				if( registryServiceWatcher != null) {
-					registryServiceWatcher.interrupt();
-					logger.info("registryServiceWatcher interrupted!!");
-				}
-				if( registryCertSecretWatcher != null) {
-					registryCertSecretWatcher.interrupt();
-					logger.info("registryCertSecretWatcher interrupted!!");
-				}
-				if( registryDockerSecretWatcher != null) {
-					registryDockerSecretWatcher.interrupt();
-					logger.info("registryDockerSecretWatcher interrupted!!");
-				}
-				if( imageWatcher != null) 	{
-					imageWatcher.interrupt();
-					logger.info("imageWatcher interrupted!!");
-				}
-				if( templateOperator != null) {
-					templateOperator.interrupt();
-					logger.info("templateOperator interrupted!!");
-				}
-				if( instanceOperator != null) {
-					instanceOperator.interrupt();
-					logger.info("instanceOperator interrupted!!");
-				}
-				if( nscOperator != null) {
-					nscOperator.interrupt();
-					logger.info("nscOperator interrupted!!");
-				}
-				if( rqcOperator != null) {
-					rqcOperator.interrupt();
-					logger.info("rqcOperator interrupted!!");
-				}
-				if( rbcOperator != null) {
-					rbcOperator.interrupt();
-					logger.info("rbcOperator interrupted!!");
-				}
-				
-				throw e;
+				logger.info(sw.toString());		
 			}
 			
 			Thread.sleep(10000); // Period: 10 sec
