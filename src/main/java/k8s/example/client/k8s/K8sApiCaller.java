@@ -3753,7 +3753,7 @@ public class K8sApiCaller {
 					parameters.add(parameter);
 				}
 				template.setParameters(parameters);
-			} else {
+			} /*else {
 				String planName = inDO.getPlan_id();
 				Object planResponse = customObjectApi.getClusterCustomObject("servicecatalog.k8s.io", "v1beta1", "clusterserviceplans", planName);
 				GetPlanDO plan = mapper.readValue(gson.toJson(planResponse), GetPlanDO.class);
@@ -3766,7 +3766,7 @@ public class K8sApiCaller {
 					}
 				}
 				template.setParameters(parameters);
-			}
+			}*/
 			
 			spec.setTemplate(template);
 			instance.setSpec(spec);
