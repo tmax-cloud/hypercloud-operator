@@ -1,6 +1,11 @@
 package k8s.example.client.handler;
 
+import java.io.FileInputStream;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.charset.Charset;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -57,33 +62,115 @@ public class EmailHandler extends GeneralHandler {
     		if ( userCRList != null ) {
         		for(UserCR userCR : userCRList) {
         			User user = userCR.getUserInfo();
-        			if ( user.getEmail().equalsIgnoreCase(userInDO.getEmail())) throw new Exception(ErrorCode.USER_MAIL_DUPLICATED);
+        			if ( user.getEmail().equalsIgnoreCase( userInDO.getEmail() )) throw new Exception( ErrorCode.USER_MAIL_DUPLICATED );
         		}
     		}		
 
     		// Issue VerifyCode
     		String verifyCode = Util.numberGen(4, 1);
-    		logger.info( "  verifyCode: " + verifyCode );
+    		logger.info( " verifyCode: " + verifyCode );
 
     		// Send E-mail to User
-    		Util.sendMail(userInDO.getEmail(), verifyCode); 
+    		Util.sendMail( userInDO.getEmail(), verifyCode ); 
     		
     		// Insert VerifyCode into Secret
     		try {
     			Map<String, String> returnMap = K8sApiCaller.readSecret(Constants.TEMPLATE_NAMESPACE, Constants.K8S_PREFIX + Constants.SECRET_VERIFICATAION_CODE);
     			Map<String, String> patchMap = new HashMap<>();
-    			patchMap.put(userInDO.getEmail(), verifyCode);
+    			patchMap.put(userInDO.getEmail().replaceAll("@", "-"), verifyCode);
     			K8sApiCaller.patchSecret(Constants.TEMPLATE_NAMESPACE, patchMap, Constants.SECRET_VERIFICATAION_CODE, null);
     		} catch ( ApiException e) {
     			logger.info( "Exception message: " + e.getResponseBody() );
     			e.printStackTrace();
     			Map<String, String> patchMap = new HashMap<>();
-    			patchMap.put(userInDO.getEmail(), verifyCode);
+    			patchMap.put(userInDO.getEmail().replaceAll("@", "-"), verifyCode);
     			K8sApiCaller.createSecret(Constants.TEMPLATE_NAMESPACE, patchMap, Constants.SECRET_VERIFICATAION_CODE, null, null, null);
     		}
 			status = Status.CREATED;
     		outDO = "User Email Authenticate Code Send Success";
     		  		
+		} catch (ApiException e) {
+			logger.info( "Exception message: " + e.getResponseBody() );
+			e.printStackTrace();
+			
+			status = Status.UNAUTHORIZED;
+			outDO = Constants.USER_EMAIL_VERIFICATION_NUMBER_SEND_FAIL;
+			
+		} catch (Exception e) {
+			logger.info( "Exception message: " + e.getMessage() );
+
+			e.printStackTrace();
+			status = Status.UNAUTHORIZED;
+			outDO = Constants.USER_EMAIL_VERIFICATION_NUMBER_SEND_FAIL;
+			
+		} catch (Throwable e) {
+			logger.info( "Exception message: " + e.getMessage() );
+			e.printStackTrace();
+			status = Status.UNAUTHORIZED;
+			outDO = Constants.USER_EMAIL_VERIFICATION_NUMBER_SEND_FAIL;
+		}
+		
+		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO));
+    }
+	
+	public Response put( UriResource uriResource, Map<String, String> urlParams, IHTTPSession session ) {
+		logger.info("***** put/Email");
+		logger.info(" User Email Verify Service Start ");
+
+		IStatus status = null;
+		String outDO = null; 
+		User userInDO = null;
+
+		Map<String, String> body = new HashMap<String, String>();
+        try {
+			session.parseBody( body );
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+        try {
+			String bodyStr = readFile(body.get("content"), Integer.valueOf(session.getHeaders().get("content-length")));
+			logger.info("Body: " + bodyStr);	
+			userInDO = new ObjectMapper().readValue(bodyStr, User.class);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        
+		try {
+			// Read inDO
+    		logger.info( "  User E-Mail: " + userInDO.getEmail() );
+    		logger.info( "  User VerifyCode: " + userInDO.getVerifyCode() );
+			boolean flag = false;
+    		Map<String, String> returnMap = K8sApiCaller.readSecret(Constants.TEMPLATE_NAMESPACE, Constants.K8S_PREFIX + Constants.SECRET_VERIFICATAION_CODE);
+    		if (returnMap.size() != 0) {
+    			Iterator<String> keyset = returnMap.keySet().iterator();
+        		while( keyset.hasNext() ) {
+        			String key = keyset.next().toString();
+//        			logger.info("key: " + key);	
+        			if ( key.equalsIgnoreCase(userInDO.getEmail().replaceAll("@", "-"))) {
+//            			logger.info("userInDO.getEmail(): " + userInDO.getEmail());	
+//            			logger.info("userInDO.getVerifyCode(): " + userInDO.getVerifyCode());	
+//            			logger.info("returnMap.get(key)): " + returnMap.get(key));	
+        				if (returnMap.get(key).equalsIgnoreCase(userInDO.getVerifyCode())) {
+        					flag = true;
+        				}
+        			}
+        		}
+    		}
+    		
+    		if (flag) {
+    			status = Status.OK;
+        		outDO = "User Email Verify Success";
+        		// Delete Secret Key value
+        		Map<String, String> patchMap = new HashMap<>();
+    			patchMap.put(userInDO.getEmail().replaceAll("@", "-"), "");
+        		K8sApiCaller.patchSecret(Constants.TEMPLATE_NAMESPACE, patchMap, Constants.SECRET_VERIFICATAION_CODE, null);
+    		}else {
+    			status = Status.UNAUTHORIZED;
+    			outDO = "Verification Number is Wrong";
+    		}
+    		
 		} catch (ApiException e) {
 			logger.info( "Exception message: " + e.getResponseBody() );
 			e.printStackTrace();
@@ -103,16 +190,43 @@ public class EmailHandler extends GeneralHandler {
 			e.printStackTrace();
 			status = Status.UNAUTHORIZED;
 			outDO = Constants.USER_EMAIL_VERIFY_FAIL;
-		}
-		
+		}	
 		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO));
-    }
+
+	}
 
 	@Override
     public Response other(
       String method, UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
-		logger.info("***** OPTIONS /User");
+		logger.info("***** OPTIONS /Email");
 		
 		return Util.setCors(NanoHTTPD.newFixedLengthResponse(""));
     }
+	
+	private String readFile(String path, Integer length) {
+		Charset charset = Charset.defaultCharset();
+		String bodyStr = "";
+		int byteCount;
+		try {
+			ByteBuffer buf = ByteBuffer.allocate(Integer.valueOf(length));
+			FileInputStream fis = new FileInputStream(path);
+			FileChannel dest = fis.getChannel();
+			
+			while(true) {
+				byteCount = dest.read(buf);
+				if(byteCount == -1) {
+					break;
+				} else {
+					buf.flip();
+					bodyStr += charset.decode(buf).toString();
+					buf.clear();
+				}
+			}
+			dest.close();
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		return bodyStr;
+	}
 }

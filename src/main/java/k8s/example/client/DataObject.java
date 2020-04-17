@@ -110,6 +110,7 @@ public class DataObject {
     	private String position;
     	private String description;
     	private String profile;
+    	private String verifyCode;
     	
     	public String getId() { return id; }
     	public String getName() { return name; }
@@ -122,6 +123,7 @@ public class DataObject {
     	public String getPosition() { return position; }
     	public String getDescription() { return description; }
     	public String getProfile() { return profile; }
+    	public String getVerifyCode() { return verifyCode; }
     	
     	public void setId(String id) { this.id = id; }
     	public void setName(String name) { this.name = name; }
@@ -133,7 +135,8 @@ public class DataObject {
     	public void setDepartment(String department) { this.department = department; }
     	public void setPosition(String position) { this.position = position; }
     	public void setDescription(String description) { this.description = description; }
-    	public void setProfile(String profile) { this.description = profile; }
+    	public void setProfile(String profile) { this.profile = profile; }
+    	public void setVerifyCode(String verifyCode) { this.verifyCode = verifyCode; }
     }
     
     public static class UserGroup {

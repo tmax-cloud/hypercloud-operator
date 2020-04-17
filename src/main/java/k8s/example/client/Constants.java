@@ -163,6 +163,7 @@ public class Constants {
 	public static final String USER_PASSWORD_FIND_SUCCESS = "User Password Change & Send Email Success";
 	public static final String USER_PASSWORD_FIND_FAILED = "User Password Change & Send Email Failed";
 	public static final String USER_ID_FIND_FAILED = "User ID Find Failed";
+	public static final String USER_EMAIL_VERIFICATION_NUMBER_SEND_FAIL = "User Email verification number send service fail";
 	public static final String USER_EMAIL_VERIFY_FAIL = "User Email verify service fail";
 	public static final String SERVICE_NAME_OAUTH_USER_LIST = "proauth/oauth/usersList";
 	public static final String SERVICE_NAME_OAUTH_USER_DETAIL = "proauth/oauth/user-details/";
