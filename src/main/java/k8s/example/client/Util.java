@@ -149,7 +149,7 @@ public class Util {
 		
 		logger.info( " Mail Body : "  + content );
 		body = content;
-		if (body!=null) mimeMessage.setText( MimeUtility.encodeText(content,  charSetUtf, "B") );
+		if (body!=null) mimeMessage.setText( MimeUtility.encodeText(content,  charSetUtf, "B") ); //FIXME
 		logger.info( " Ready to Send Mail to " + recipient);
 		try {
 			//Send Mail
