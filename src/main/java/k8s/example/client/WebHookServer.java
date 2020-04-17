@@ -9,6 +9,7 @@ import fi.iki.elonen.router.RouterNanoHTTPD;
 import k8s.example.client.handler.AuthClientHandler;
 import k8s.example.client.handler.AuthHandler;
 import k8s.example.client.handler.CatalogHandler;
+import k8s.example.client.handler.EmailHandler;
 import k8s.example.client.handler.LoginHandler;
 import k8s.example.client.handler.LoginPageHandler;
 import k8s.example.client.handler.LogoutHandler;
@@ -33,6 +34,7 @@ public class WebHookServer extends RouterNanoHTTPD {
     @Override
     public void addMappings() {
     	addRoute("/user", UserHandler.class);
+    	addRoute("/email", EmailHandler.class);
     	addRoute("/login", LoginHandler.class);
     	addRoute("/logout", LogoutHandler.class);
     	addRoute("/authenticate", AuthHandler.class);

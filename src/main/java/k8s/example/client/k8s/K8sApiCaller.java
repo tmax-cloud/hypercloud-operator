@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -169,7 +170,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class K8sApiCaller {	
+public class K8sApiCaller {
 	private static ApiClient k8sClient;
 	private static CoreV1Api api;
 	private static AppsV1Api appApi;
@@ -180,17 +181,16 @@ public class K8sApiCaller {
 	private static Gson gson = new GsonBuilder().create();
 
 	private static long time = System.currentTimeMillis();
-	
-    private static Logger logger = Main.logger;
-    
+
+	private static Logger logger = Main.logger;
+
 	public static void initK8SClient() throws Exception {
 		k8sClient = Config.fromCluster();
-		//k8sClient.setHttpClient(getHttpClient()); // set network interceptors
+		// k8sClient.setHttpClient(getHttpClient()); // set network interceptors
 		k8sClient.setConnectTimeout(0);
 		k8sClient.setReadTimeout(0);
 		k8sClient.setWriteTimeout(0);
 		Configuration.setDefaultApiClient(k8sClient);
-	
 
 		api = new CoreV1Api();
 		appApi = new AppsV1Api();
@@ -199,7 +199,7 @@ public class K8sApiCaller {
 		templateApi = new CustomResourceApi();
 	}
 
-	public static void startWatcher() throws Exception {    
+	public static void startWatcher() throws Exception {
 		// Get latest resource version
 		logger.info("Get latest resource version");
 
@@ -208,10 +208,13 @@ public class K8sApiCaller {
 
 		try {
 
-			V1ReplicaSetList registryReplicaSetList = appApi.listReplicaSetForAllNamespaces(null, null, null, "app=registry", null, null, null, null, Boolean.FALSE);
-			for(V1ReplicaSet replicaSet : registryReplicaSetList.getItems()) {
+			V1ReplicaSetList registryReplicaSetList = appApi.listReplicaSetForAllNamespaces(null, null, null,
+					"app=registry", null, null, null, null, Boolean.FALSE);
+			for (V1ReplicaSet replicaSet : registryReplicaSetList.getItems()) {
 				int registryReplicaSetResourceVersion = Integer.parseInt(replicaSet.getMetadata().getResourceVersion());
-				registryReplicaSetLatestResourceVersion = (registryReplicaSetLatestResourceVersion >= registryReplicaSetResourceVersion) ? registryReplicaSetLatestResourceVersion : registryReplicaSetResourceVersion;
+				registryReplicaSetLatestResourceVersion = (registryReplicaSetLatestResourceVersion >= registryReplicaSetResourceVersion)
+						? registryReplicaSetLatestResourceVersion
+						: registryReplicaSetResourceVersion;
 			}
 		} catch (Exception e) {
 			logger.info("Exception: " + e.getMessage());
@@ -224,11 +227,14 @@ public class K8sApiCaller {
 		int registryPodLatestResourceVersion = 0;
 
 		try {
-			
-			V1PodList registryPodList = api.listPodForAllNamespaces(null, null, null, "app=registry", null, null, null, null, Boolean.FALSE);
-			for(V1Pod pod : registryPodList.getItems()) {
+
+			V1PodList registryPodList = api.listPodForAllNamespaces(null, null, null, "app=registry", null, null, null,
+					null, Boolean.FALSE);
+			for (V1Pod pod : registryPodList.getItems()) {
 				int registryPodResourceVersion = Integer.parseInt(pod.getMetadata().getResourceVersion());
-				registryPodLatestResourceVersion = (registryPodLatestResourceVersion >= registryPodResourceVersion) ? registryPodLatestResourceVersion : registryPodResourceVersion;
+				registryPodLatestResourceVersion = (registryPodLatestResourceVersion >= registryPodResourceVersion)
+						? registryPodLatestResourceVersion
+						: registryPodResourceVersion;
 			}
 		} catch (Exception e) {
 			logger.info("Exception: " + e.getMessage());
@@ -242,10 +248,13 @@ public class K8sApiCaller {
 
 		try {
 
-			V1ServiceList registryServiceList = api.listServiceForAllNamespaces(null, null, null, "app=registry", null, null, null, null, Boolean.FALSE);
-			for(V1Service service : registryServiceList.getItems()) {
+			V1ServiceList registryServiceList = api.listServiceForAllNamespaces(null, null, null, "app=registry", null,
+					null, null, null, Boolean.FALSE);
+			for (V1Service service : registryServiceList.getItems()) {
 				int registryServiceResourceVersion = Integer.parseInt(service.getMetadata().getResourceVersion());
-				registryServiceLatestResourceVersion = (registryServiceLatestResourceVersion >= registryServiceResourceVersion) ? registryServiceLatestResourceVersion : registryServiceResourceVersion;
+				registryServiceLatestResourceVersion = (registryServiceLatestResourceVersion >= registryServiceResourceVersion)
+						? registryServiceLatestResourceVersion
+						: registryServiceResourceVersion;
 			}
 		} catch (Exception e) {
 			logger.info("Exception: " + e.getMessage());
@@ -259,10 +268,13 @@ public class K8sApiCaller {
 
 		try {
 
-			V1SecretList registryCertSecretList = api.listSecretForAllNamespaces(null, null, null, "secret=cert", null, null, null, null, Boolean.FALSE);
-			for(V1Secret certSecret : registryCertSecretList.getItems()) {
+			V1SecretList registryCertSecretList = api.listSecretForAllNamespaces(null, null, null, "secret=cert", null,
+					null, null, null, Boolean.FALSE);
+			for (V1Secret certSecret : registryCertSecretList.getItems()) {
 				int registryCertSecretResourceVersion = Integer.parseInt(certSecret.getMetadata().getResourceVersion());
-				registryCertSecretLatestResourceVersion = (registryCertSecretLatestResourceVersion >= registryCertSecretResourceVersion) ? registryCertSecretLatestResourceVersion : registryCertSecretResourceVersion;
+				registryCertSecretLatestResourceVersion = (registryCertSecretLatestResourceVersion >= registryCertSecretResourceVersion)
+						? registryCertSecretLatestResourceVersion
+						: registryCertSecretResourceVersion;
 			}
 		} catch (Exception e) {
 			logger.info("Exception: " + e.getMessage());
@@ -276,10 +288,14 @@ public class K8sApiCaller {
 
 		try {
 
-			V1SecretList registryDockerSecretList = api.listSecretForAllNamespaces(null, null, null, "secret=docker", null, null, null, null, Boolean.FALSE);
-			for(V1Secret dockerSecret : registryDockerSecretList.getItems()) {
-				int registryDockerSecretResourceVersion = Integer.parseInt(dockerSecret.getMetadata().getResourceVersion());
-				registryDockerSecretLatestResourceVersion = (registryDockerSecretLatestResourceVersion >= registryDockerSecretResourceVersion) ? registryDockerSecretLatestResourceVersion : registryDockerSecretResourceVersion;
+			V1SecretList registryDockerSecretList = api.listSecretForAllNamespaces(null, null, null, "secret=docker",
+					null, null, null, null, Boolean.FALSE);
+			for (V1Secret dockerSecret : registryDockerSecretList.getItems()) {
+				int registryDockerSecretResourceVersion = Integer
+						.parseInt(dockerSecret.getMetadata().getResourceVersion());
+				registryDockerSecretLatestResourceVersion = (registryDockerSecretLatestResourceVersion >= registryDockerSecretResourceVersion)
+						? registryDockerSecretLatestResourceVersion
+						: registryDockerSecretResourceVersion;
 			}
 		} catch (Exception e) {
 			logger.info("Exception: " + e.getMessage());
@@ -287,241 +303,272 @@ public class K8sApiCaller {
 		}
 
 		logger.info("Registry DockerSecret Latest resource version: " + registryDockerSecretLatestResourceVersion);
-		
-		
-		long userLatestResourceVersion = getLatestResourceVersion( Constants.CUSTOM_OBJECT_PLURAL_USER, false );    	
+
+		long userLatestResourceVersion = getLatestResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_USER, false);
 		logger.info("User Latest resource version: " + userLatestResourceVersion);
-		long registryLatestResourceVersion = getLatestResourceVersion( Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, true );    	
+		long registryLatestResourceVersion = getLatestResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, true);
 		logger.info("Registry Latest resource version: " + registryLatestResourceVersion);
-		long imageLatestResourceVersion = getLatestResourceVersion( Constants.CUSTOM_OBJECT_PLURAL_IMAGE, true );    	
+		long imageLatestResourceVersion = getLatestResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_IMAGE, true);
 		logger.info("Image Latest resource version: " + imageLatestResourceVersion);
-		long templateLatestResourceVersion = getLatestResourceVersion( Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE, true );		
+		long templateLatestResourceVersion = getLatestResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE, true);
 		logger.info("Template Latest resource version: " + templateLatestResourceVersion);
-		long instanceLatestResourceVersion = getLatestResourceVersion( Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, true );			
+		long instanceLatestResourceVersion = getLatestResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE,
+				true);
 		logger.info("Instance Latest resource version: " + instanceLatestResourceVersion);
-		long nscLatestResourceVersion = getLatestResourceVersion( Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, false );
+		long nscLatestResourceVersion = getLatestResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, false);
 		logger.info("Namespace Claim Latest resource version: " + nscLatestResourceVersion);
-		long rqcLatestResourceVersion = getLatestResourceVersion( Constants.CUSTOM_OBJECT_PLURAL_RESOURCEQUOTACLAIM, true );
+		long rqcLatestResourceVersion = getLatestResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_RESOURCEQUOTACLAIM,
+				true);
 		logger.info("ResourceQuota Claim Latest resource version: " + rqcLatestResourceVersion);
-		long rbcLatestResourceVersion = getLatestResourceVersion( Constants.CUSTOM_OBJECT_PLURAL_ROLEBINDINGCLAIM, true );
+		long rbcLatestResourceVersion = getLatestResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_ROLEBINDINGCLAIM, true);
 		logger.info("RoleBinding Claim Latest resource version: " + rbcLatestResourceVersion);
 
 		// Init Registry Image
 		initializeImageList();
-		
+
 		// Start user watch
 		logger.info("Start user watcher");
-		UserWatcher userWatcher = new UserWatcher(k8sClient, customObjectApi, String.valueOf(userLatestResourceVersion));
+		UserWatcher userWatcher = new UserWatcher(k8sClient, customObjectApi,
+				String.valueOf(userLatestResourceVersion));
 		userWatcher.start();
-		
+
 		// Start userDelete watch
 		logger.info("Start userDelete watcher");
-		UserDeleteWatcher userDeleteWatcher = new UserDeleteWatcher(k8sClient, customObjectApi, String.valueOf(userLatestResourceVersion));
+		UserDeleteWatcher userDeleteWatcher = new UserDeleteWatcher(k8sClient, customObjectApi,
+				String.valueOf(userLatestResourceVersion));
 		userDeleteWatcher.start();
 
 		// Start registry watch
 		logger.info("Start registry watcher");
-		RegistryWatcher registryWatcher = new RegistryWatcher(k8sClient, customObjectApi, String.valueOf(registryLatestResourceVersion));
+		RegistryWatcher registryWatcher = new RegistryWatcher(k8sClient, customObjectApi,
+				String.valueOf(registryLatestResourceVersion));
 		registryWatcher.start();
 
 		// Start registry replicaSet watch
 		logger.info("Start registry replica set watcher");
-		RegistryReplicaSetWatcher registryReplicaSetWatcher = new RegistryReplicaSetWatcher(k8sClient, appApi, String.valueOf(registryReplicaSetLatestResourceVersion));
+		RegistryReplicaSetWatcher registryReplicaSetWatcher = new RegistryReplicaSetWatcher(k8sClient, appApi,
+				String.valueOf(registryReplicaSetLatestResourceVersion));
 		registryReplicaSetWatcher.start();
 
 		// Start registry pod watch
 		logger.info("Start registry pod watcher");
-		RegistryPodWatcher registryPodWatcher = new RegistryPodWatcher(k8sClient, api, String.valueOf(registryPodLatestResourceVersion));
+		RegistryPodWatcher registryPodWatcher = new RegistryPodWatcher(k8sClient, api,
+				String.valueOf(registryPodLatestResourceVersion));
 		registryPodWatcher.start();
 
 		// Start registry service watch
 		logger.info("Start registry service watcher");
-		RegistryServiceWatcher registryServiceWatcher = new RegistryServiceWatcher(k8sClient, api, String.valueOf(registryServiceLatestResourceVersion));
+		RegistryServiceWatcher registryServiceWatcher = new RegistryServiceWatcher(k8sClient, api,
+				String.valueOf(registryServiceLatestResourceVersion));
 		registryServiceWatcher.start();
 
 		// Start registry cert secret watch
 		logger.info("Start registry cert secret watcher");
-		RegistryCertSecretWatcher registryCertSecretWatcher = new RegistryCertSecretWatcher(k8sClient, api, String.valueOf(registryCertSecretLatestResourceVersion));
+		RegistryCertSecretWatcher registryCertSecretWatcher = new RegistryCertSecretWatcher(k8sClient, api,
+				String.valueOf(registryCertSecretLatestResourceVersion));
 		registryCertSecretWatcher.start();
 
 		// Start registry docker secret watch
 		logger.info("Start registry docker secret watcher");
-		RegistryDockerSecretWatcher registryDockerSecretWatcher = new RegistryDockerSecretWatcher(k8sClient, api, String.valueOf(registryDockerSecretLatestResourceVersion));
+		RegistryDockerSecretWatcher registryDockerSecretWatcher = new RegistryDockerSecretWatcher(k8sClient, api,
+				String.valueOf(registryDockerSecretLatestResourceVersion));
 		registryDockerSecretWatcher.start();
 
 		// Start image watch
 		logger.info("Start image watcher");
-		ImageWatcher imageWatcher = new ImageWatcher(k8sClient, customObjectApi, String.valueOf(imageLatestResourceVersion));
+		ImageWatcher imageWatcher = new ImageWatcher(k8sClient, customObjectApi,
+				String.valueOf(imageLatestResourceVersion));
 		imageWatcher.start();
 
 		// Start Operator
 		logger.info("Start Template Operator");
 		TemplateOperator templateOperator = new TemplateOperator(k8sClient, templateApi, templateLatestResourceVersion);
 		templateOperator.start();
-		
+
 		logger.info("Start Instance Operator");
 		InstanceOperator instanceOperator = new InstanceOperator(k8sClient, templateApi, instanceLatestResourceVersion);
 		instanceOperator.start();
-		
+
 		// Start NamespaceClaim Controller
 		logger.info("Start NamespaceClaim Controller");
-		NamespaceClaimController nscOperator = new NamespaceClaimController(k8sClient, customObjectApi, nscLatestResourceVersion);
+		NamespaceClaimController nscOperator = new NamespaceClaimController(k8sClient, customObjectApi,
+				nscLatestResourceVersion);
 		nscOperator.start();
-		
+
 		// Start ResourceQuotaClaim Controller
 		logger.info("Start ResourceQuotaClaim Controller");
-		ResourceQuotaClaimController rqcOperator = new ResourceQuotaClaimController(k8sClient, customObjectApi, rqcLatestResourceVersion);
+		ResourceQuotaClaimController rqcOperator = new ResourceQuotaClaimController(k8sClient, customObjectApi,
+				rqcLatestResourceVersion);
 		rqcOperator.start();
-		
+
 		// Start RoleBindingClaim Controller
 		logger.info("Start RoleBindingClaim Controller");
-		RoleBindingClaimController rbcOperator = new RoleBindingClaimController(k8sClient, customObjectApi, rbcLatestResourceVersion);
+		RoleBindingClaimController rbcOperator = new RoleBindingClaimController(k8sClient, customObjectApi,
+				rbcLatestResourceVersion);
 		rbcOperator.start();
 
-		while(true) {
+		while (true) {
 			try {
-				if(!userWatcher.isAlive()) {
+				if (!userWatcher.isAlive()) {
 					String userLatestResourceVersionStr = UserWatcher.getLatestResourceVersion();
-					logger.info("User watcher is not alive. Restart user watcher! (Latest resource version: " + userLatestResourceVersionStr + ")");
+					logger.info("User watcher is not alive. Restart user watcher! (Latest resource version: "
+							+ userLatestResourceVersionStr + ")");
 					userWatcher.interrupt();
 					userWatcher = new UserWatcher(k8sClient, customObjectApi, userLatestResourceVersionStr);
 					userWatcher.start();
 				}
-				
-				
-				if(!userDeleteWatcher.isAlive()) {
+
+				if (!userDeleteWatcher.isAlive()) {
 					String userLatestResourceVersionStr = UserWatcher.getLatestResourceVersion();
-					logger.info("User Delete watcher is not alive. Restart user delete watcher! (Latest resource version: " + userLatestResourceVersionStr + ")");
+					logger.info(
+							"User Delete watcher is not alive. Restart user delete watcher! (Latest resource version: "
+									+ userLatestResourceVersionStr + ")");
 					userDeleteWatcher.interrupt();
 					userDeleteWatcher = new UserDeleteWatcher(k8sClient, customObjectApi, userLatestResourceVersionStr);
 					userDeleteWatcher.start();
 				}
-	
-				
-				if(!registryWatcher.isAlive()) {
+
+				if (!registryWatcher.isAlive()) {
 					String registryLatestResourceVersionStr = RegistryWatcher.getLatestResourceVersion();
-					logger.info("Registry watcher is not alive. Restart registry watcher! (Latest resource version: " + registryLatestResourceVersionStr + ")");
+					logger.info("Registry watcher is not alive. Restart registry watcher! (Latest resource version: "
+							+ registryLatestResourceVersionStr + ")");
 					registryWatcher.interrupt();
 					registryWatcher = new RegistryWatcher(k8sClient, customObjectApi, registryLatestResourceVersionStr);
 					registryWatcher.start();
 				}
-	
-				
-				if(!registryReplicaSetWatcher.isAlive()) {
-					String registryReplicaSetLatestResourceVersionStr = RegistryReplicaSetWatcher.getLatestResourceVersion();
-					logger.info("Registry replicaSet watcher is not alive. Restart registry replica set watcher! (Latest resource version: " + registryReplicaSetLatestResourceVersionStr + ")");
+
+				if (!registryReplicaSetWatcher.isAlive()) {
+					String registryReplicaSetLatestResourceVersionStr = RegistryReplicaSetWatcher
+							.getLatestResourceVersion();
+					logger.info(
+							"Registry replicaSet watcher is not alive. Restart registry replica set watcher! (Latest resource version: "
+									+ registryReplicaSetLatestResourceVersionStr + ")");
 					registryReplicaSetWatcher.interrupt();
-					registryReplicaSetWatcher = new RegistryReplicaSetWatcher(k8sClient, appApi, registryReplicaSetLatestResourceVersionStr);
+					registryReplicaSetWatcher = new RegistryReplicaSetWatcher(k8sClient, appApi,
+							registryReplicaSetLatestResourceVersionStr);
 					registryReplicaSetWatcher.start();
 				}
-				
-				
-				if(!registryPodWatcher.isAlive()) {
+
+				if (!registryPodWatcher.isAlive()) {
 					String registryPodLatestResourceVersionStr = RegistryPodWatcher.getLatestResourceVersion();
-					logger.info("Registry pod watcher is not alive. Restart registry pod watcher! (Latest resource version: " + registryPodLatestResourceVersionStr + ")");
+					logger.info(
+							"Registry pod watcher is not alive. Restart registry pod watcher! (Latest resource version: "
+									+ registryPodLatestResourceVersionStr + ")");
 					registryPodWatcher.interrupt();
 					registryPodWatcher = new RegistryPodWatcher(k8sClient, api, registryPodLatestResourceVersionStr);
 					registryPodWatcher.start();
 				}
-				
-				
-				if(!registryServiceWatcher.isAlive()) {
+
+				if (!registryServiceWatcher.isAlive()) {
 					String registryServiceLatestResourceVersionStr = RegistryServiceWatcher.getLatestResourceVersion();
-					logger.info("Registry service watcher is not alive. Restart registry service watcher! (Latest resource version: " + registryServiceLatestResourceVersionStr + ")");
+					logger.info(
+							"Registry service watcher is not alive. Restart registry service watcher! (Latest resource version: "
+									+ registryServiceLatestResourceVersionStr + ")");
 					registryServiceWatcher.interrupt();
-					registryServiceWatcher = new RegistryServiceWatcher(k8sClient, api, registryServiceLatestResourceVersionStr);
+					registryServiceWatcher = new RegistryServiceWatcher(k8sClient, api,
+							registryServiceLatestResourceVersionStr);
 					registryServiceWatcher.start();
 				}
-				
-				
-				if(!registryCertSecretWatcher.isAlive()) {
-					String registryCertSecretLatestResourceVersionStr = RegistryCertSecretWatcher.getLatestResourceVersion();
-					logger.info("Registry cert secret watcher is not alive. Restart registry cert secret watcher! (Latest resource version: " + registryCertSecretLatestResourceVersionStr + ")");
+
+				if (!registryCertSecretWatcher.isAlive()) {
+					String registryCertSecretLatestResourceVersionStr = RegistryCertSecretWatcher
+							.getLatestResourceVersion();
+					logger.info(
+							"Registry cert secret watcher is not alive. Restart registry cert secret watcher! (Latest resource version: "
+									+ registryCertSecretLatestResourceVersionStr + ")");
 					registryCertSecretWatcher.interrupt();
-					registryCertSecretWatcher = new RegistryCertSecretWatcher(k8sClient, api, registryCertSecretLatestResourceVersionStr);
+					registryCertSecretWatcher = new RegistryCertSecretWatcher(k8sClient, api,
+							registryCertSecretLatestResourceVersionStr);
 					registryCertSecretWatcher.start();
 				}
-				
-				
-				if(!registryDockerSecretWatcher.isAlive()) {
-					String registryDockerSecretLatestResourceVersionStr = RegistryDockerSecretWatcher.getLatestResourceVersion();
-					logger.info("Registry docker secret watcher is not alive. Restart registry docker secret watcher! (Latest resource version: " + registryDockerSecretLatestResourceVersionStr + ")");
+
+				if (!registryDockerSecretWatcher.isAlive()) {
+					String registryDockerSecretLatestResourceVersionStr = RegistryDockerSecretWatcher
+							.getLatestResourceVersion();
+					logger.info(
+							"Registry docker secret watcher is not alive. Restart registry docker secret watcher! (Latest resource version: "
+									+ registryDockerSecretLatestResourceVersionStr + ")");
 					registryDockerSecretWatcher.interrupt();
-					registryDockerSecretWatcher = new RegistryDockerSecretWatcher(k8sClient, api, registryDockerSecretLatestResourceVersionStr);
+					registryDockerSecretWatcher = new RegistryDockerSecretWatcher(k8sClient, api,
+							registryDockerSecretLatestResourceVersionStr);
 					registryDockerSecretWatcher.start();
 				}
-				
-				
-				if(!imageWatcher.isAlive()) {
+
+				if (!imageWatcher.isAlive()) {
 					String imageLatestResourceVersionStr = ImageWatcher.getLatestResourceVersion();
-					logger.info("Image watcher is not alive. Restart image watcher! (Latest resource version: " + imageLatestResourceVersionStr + ")");
+					logger.info("Image watcher is not alive. Restart image watcher! (Latest resource version: "
+							+ imageLatestResourceVersionStr + ")");
 					imageWatcher.interrupt();
 					imageWatcher = new ImageWatcher(k8sClient, customObjectApi, imageLatestResourceVersionStr);
 					imageWatcher.start();
 				}
-				
-				
-				if(!templateOperator.isAlive()) {
+
+				if (!templateOperator.isAlive()) {
 					templateLatestResourceVersion = TemplateOperator.getLatestResourceVersion();
-					logger.info(("Template Operator is not Alive. Restart Operator! (Latest Resource Version: " + templateLatestResourceVersion + ")"));
+					logger.info(("Template Operator is not Alive. Restart Operator! (Latest Resource Version: "
+							+ templateLatestResourceVersion + ")"));
 					templateOperator.interrupt();
 					templateOperator = new TemplateOperator(k8sClient, templateApi, templateLatestResourceVersion);
 					templateOperator.start();
 				}
-				
-				if(!instanceOperator.isAlive()) {
+
+				if (!instanceOperator.isAlive()) {
 					instanceLatestResourceVersion = InstanceOperator.getLatestResourceVersion();
-					logger.info(("Instance Operator is not Alive. Restart Operator! (Latest Resource Version: " + instanceLatestResourceVersion + ")"));
+					logger.info(("Instance Operator is not Alive. Restart Operator! (Latest Resource Version: "
+							+ instanceLatestResourceVersion + ")"));
 					instanceOperator.interrupt();
 					instanceOperator = new InstanceOperator(k8sClient, templateApi, instanceLatestResourceVersion);
 					instanceOperator.start();
 				}
-				
-				if(!nscOperator.isAlive()) {
+
+				if (!nscOperator.isAlive()) {
 					nscLatestResourceVersion = NamespaceClaimController.getLatestResourceVersion();
-					logger.info(("Namespace Claim Controller is not Alive. Restart Controller! (Latest Resource Version: " + nscLatestResourceVersion + ")"));
+					logger.info(
+							("Namespace Claim Controller is not Alive. Restart Controller! (Latest Resource Version: "
+									+ nscLatestResourceVersion + ")"));
 					nscOperator.interrupt();
 					nscOperator = new NamespaceClaimController(k8sClient, customObjectApi, nscLatestResourceVersion);
 					nscOperator.start();
 				}
-				
-				if(!rqcOperator.isAlive()) {
+
+				if (!rqcOperator.isAlive()) {
 					rqcLatestResourceVersion = ResourceQuotaClaimController.getLatestResourceVersion();
-					logger.info(("ResourceQuota Claim Controller is not Alive. Restart Controller! (Latest Resource Version: " + rqcLatestResourceVersion + ")"));
+					logger.info(
+							("ResourceQuota Claim Controller is not Alive. Restart Controller! (Latest Resource Version: "
+									+ rqcLatestResourceVersion + ")"));
 					rqcOperator.interrupt();
-					rqcOperator = new ResourceQuotaClaimController(k8sClient, customObjectApi, rqcLatestResourceVersion);
+					rqcOperator = new ResourceQuotaClaimController(k8sClient, customObjectApi,
+							rqcLatestResourceVersion);
 					rqcOperator.start();
 				}
-				
-				if(!rbcOperator.isAlive()) {
+
+				if (!rbcOperator.isAlive()) {
 					rbcLatestResourceVersion = RoleBindingClaimController.getLatestResourceVersion();
-					logger.info(("RoleBinding Claim Controller is not Alive. Restart Controller! (Latest Resource Version: " + rbcLatestResourceVersion + ")"));
+					logger.info(
+							("RoleBinding Claim Controller is not Alive. Restart Controller! (Latest Resource Version: "
+									+ rbcLatestResourceVersion + ")"));
 					rbcOperator.interrupt();
 					rbcOperator = new RoleBindingClaimController(k8sClient, customObjectApi, rbcLatestResourceVersion);
 					rbcOperator.start();
 				}
-			}catch( Exception e ) {
+			} catch (Exception e) {
 				StringWriter sw = new StringWriter();
 				e.printStackTrace(new PrintWriter(sw));
-				logger.info(sw.toString());		
+				logger.info(sw.toString());
 			}
-			
+
 			Thread.sleep(10000); // Period: 10 sec
-    	}
-		
-		
-    }
-    
-    public static UserCR getUser(String userName) throws Exception {
-    	UserCR user = new UserCR();
-        
-        try {
-        	Object response = customObjectApi.getClusterCustomObject(
-        			Constants.CUSTOM_OBJECT_GROUP,
-					Constants.CUSTOM_OBJECT_VERSION, 
-					Constants.CUSTOM_OBJECT_PLURAL_USER, 
-					userName);
-            JsonObject respJson = (JsonObject) new JsonParser().parse((new Gson()).toJson(response));
+		}
+
+	}
+
+	public static UserCR getUser(String userName) throws Exception {
+		UserCR user = new UserCR();
+
+		try {
+			Object response = customObjectApi.getClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP,
+					Constants.CUSTOM_OBJECT_VERSION, Constants.CUSTOM_OBJECT_PLURAL_USER, userName);
+			JsonObject respJson = (JsonObject) new JsonParser().parse((new Gson()).toJson(response));
 //
 //            V1ObjectMeta metadata = new ObjectMapper().readValue((new Gson()).toJson(respJson.get("metadata")), V1ObjectMeta.class);
 //
@@ -530,307 +577,291 @@ public class K8sApiCaller {
 //
 //            user.setUserInfo(userInfo);
 //            user.setStatus(respJson.get("status").toString());
-            
-            mapper.registerModule(new JodaModule());
-            user = mapper.readValue((new Gson()).toJson(respJson), new TypeReference<UserCR>() {});
-        } catch (ApiException e) {
-        	logger.info("Response body: " + e.getResponseBody());
-        	e.printStackTrace();
-        	throw e;
-        } catch (Exception e) {
-        	logger.info("Exception message: " + e.getMessage());
-        	e.printStackTrace();
-        	throw e;
-        }
-    	
-    	return user;
-    }
-    
-    public static void updateUserMeta(User userInfo) throws Exception {
-        try {
-        	String jsonPatchStr = "["
-        			+ "{\"op\":\"replace\",\"path\":\"/userInfo/name\",\"value\": " + userInfo.getName() + "},"
-        			+ "{\"op\":\"replace\",\"path\":\"/userInfo/department\",\"value\": " + userInfo.getDepartment() + "},"
-        			+ "{\"op\":\"replace\",\"path\":\"/userInfo/position\",\"value\": " + userInfo.getPosition() + "},"
-        			+ "{\"op\":\"replace\",\"path\":\"/userInfo/phone\",\"value\": " + userInfo.getPhone() + "},"
-        			+ "{\"op\":\"replace\",\"path\":\"/userInfo/description\",\"value\": " + userInfo.getDescription() + "}"
-        			+ "]";
+
+			mapper.registerModule(new JodaModule());
+			user = mapper.readValue((new Gson()).toJson(respJson), new TypeReference<UserCR>() {
+			});
+		} catch (ApiException e) {
+			logger.info("Response body: " + e.getResponseBody());
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			logger.info("Exception message: " + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		}
+
+		return user;
+	}
+
+	public static void updateUserMeta(User userInfo) throws Exception {
+		try {
+			String jsonPatchStr = "[" + "{\"op\":\"replace\",\"path\":\"/userInfo/name\",\"value\": "
+					+ userInfo.getName() + "}," + "{\"op\":\"replace\",\"path\":\"/userInfo/department\",\"value\": "
+					+ userInfo.getDepartment() + "},"
+					+ "{\"op\":\"replace\",\"path\":\"/userInfo/position\",\"value\": " + userInfo.getPosition() + "},"
+					+ "{\"op\":\"replace\",\"path\":\"/userInfo/phone\",\"value\": " + userInfo.getPhone() + "},"
+					+ "{\"op\":\"replace\",\"path\":\"/userInfo/description\",\"value\": " + userInfo.getDescription()
+					+ "}" + "]";
 			JsonElement jsonPatch = (JsonElement) new JsonParser().parse(jsonPatchStr);
 
-			customObjectApi.patchClusterCustomObject(
-					Constants.CUSTOM_OBJECT_GROUP,
-					Constants.CUSTOM_OBJECT_VERSION, 
-					Constants.CUSTOM_OBJECT_PLURAL_USER,
-					userInfo.getId(), jsonPatch);
-        } catch (ApiException e) {
-        	logger.info("Response body: " + e.getResponseBody());
-        	e.printStackTrace();
-        	throw e;
-        } catch (Exception e) {
-        	logger.info("Exception message: " + e.getMessage());
-        	e.printStackTrace();
-        	throw e;
-        }
-    }
-    
-    public static List < UserCR > listUser() throws Exception {
-    	List < UserCR > userList = null;     
-        try {
-        	Object response = customObjectApi.listClusterCustomObject(
-					Constants.CUSTOM_OBJECT_GROUP,
-					Constants.CUSTOM_OBJECT_VERSION, 
-					Constants.CUSTOM_OBJECT_PLURAL_USER,
-					null, null, null, null, null, null, null, Boolean.FALSE);
+			customObjectApi.patchClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION,
+					Constants.CUSTOM_OBJECT_PLURAL_USER, userInfo.getId(), jsonPatch);
+		} catch (ApiException e) {
+			logger.info("Response body: " + e.getResponseBody());
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			logger.info("Exception message: " + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		}
+	}
+
+	public static List<UserCR> listUser() throws Exception {
+		List<UserCR> userList = null;
+		try {
+			Object response = customObjectApi.listClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP,
+					Constants.CUSTOM_OBJECT_VERSION, Constants.CUSTOM_OBJECT_PLURAL_USER, null, null, null, null, null,
+					null, null, Boolean.FALSE);
 
 			JsonObject respJson = (JsonObject) new JsonParser().parse((new Gson()).toJson(response));
 
-        	mapper.registerModule(new JodaModule());
-        	if (respJson.get("items")!= null) userList = mapper.readValue((new Gson()).toJson(respJson.get("items")), new TypeReference<ArrayList<UserCR>>() {});
+			mapper.registerModule(new JodaModule());
+			if (respJson.get("items") != null)
+				userList = mapper.readValue((new Gson()).toJson(respJson.get("items")),
+						new TypeReference<ArrayList<UserCR>>() {
+						});
 
-        } catch (ApiException e) {
-        	logger.info("Response body: " + e.getResponseBody());
-        	e.printStackTrace();
-        	throw e;
-        } catch (Exception e) {
-        	logger.info("Exception message: " + e.getMessage());
-        	e.printStackTrace();
-        	throw e;
-        }
-    	
-    	return userList;
-    }
-    
-    public static TokenCR getToken(String tokenName) throws Exception {
-    	TokenCR token = new TokenCR();
-        
-        try {
-        	Object response = customObjectApi.getClusterCustomObject(
-        			Constants.CUSTOM_OBJECT_GROUP,
-					Constants.CUSTOM_OBJECT_VERSION, 
-					Constants.CUSTOM_OBJECT_PLURAL_TOKEN, 
-					tokenName);
-        	
-            JsonObject respJson = (JsonObject) new JsonParser().parse((new Gson()).toJson(response));
-            String accessToken = new ObjectMapper().readValue((new Gson()).toJson(respJson.get("accessToken")), String.class);
-            String refreshToken = new ObjectMapper().readValue((new Gson()).toJson(respJson.get("refreshToken")), String.class);
-            
-            token.setAccessToken(accessToken);
-            token.setRefreshToken(refreshToken);
-        } catch (ApiException e) {
-        	logger.info("Response body: " + e.getResponseBody());
-        	e.printStackTrace();
-        	throw e;
-        } catch (Exception e) {
-        	logger.info("Exception message: " + e.getMessage());
-        	e.printStackTrace();
-        	throw e;
-        }
-    	
-    	return token;
-    }
-    
-    public static Client getClient(Client clientInfo) throws Exception {
-        Client dbClientInfo = new Client();
-        
-        try {
-        	logger.info("Name of Client: " + clientInfo.getAppName() + clientInfo.getClientId());
-        	
-        	Object response = customObjectApi.getClusterCustomObject(
-        			Constants.CUSTOM_OBJECT_GROUP,
-					Constants.CUSTOM_OBJECT_VERSION, 
-					Constants.CUSTOM_OBJECT_PLURAL_CLIENT, 
+		} catch (ApiException e) {
+			logger.info("Response body: " + e.getResponseBody());
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			logger.info("Exception message: " + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		}
+
+		return userList;
+	}
+
+	public static TokenCR getToken(String tokenName) throws Exception {
+		TokenCR token = new TokenCR();
+
+		try {
+			Object response = customObjectApi.getClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP,
+					Constants.CUSTOM_OBJECT_VERSION, Constants.CUSTOM_OBJECT_PLURAL_TOKEN, tokenName);
+
+			JsonObject respJson = (JsonObject) new JsonParser().parse((new Gson()).toJson(response));
+			String accessToken = new ObjectMapper().readValue((new Gson()).toJson(respJson.get("accessToken")),
+					String.class);
+			String refreshToken = new ObjectMapper().readValue((new Gson()).toJson(respJson.get("refreshToken")),
+					String.class);
+
+			token.setAccessToken(accessToken);
+			token.setRefreshToken(refreshToken);
+		} catch (ApiException e) {
+			logger.info("Response body: " + e.getResponseBody());
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			logger.info("Exception message: " + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		}
+
+		return token;
+	}
+
+	public static Client getClient(Client clientInfo) throws Exception {
+		Client dbClientInfo = new Client();
+
+		try {
+			logger.info("Name of Client: " + clientInfo.getAppName() + clientInfo.getClientId());
+
+			Object response = customObjectApi.getClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP,
+					Constants.CUSTOM_OBJECT_VERSION, Constants.CUSTOM_OBJECT_PLURAL_CLIENT,
 					clientInfo.getAppName() + clientInfo.getClientId());
-        	
-            JsonObject respJson = (JsonObject) new JsonParser().parse((new Gson()).toJson(response));
-            JsonObject clientInfoJson = respJson.get("clientInfo").getAsJsonObject();
-            
-            dbClientInfo.setAppName( new ObjectMapper().readValue((new Gson()).toJson(clientInfoJson.get("appName")), String.class) );       
-            dbClientInfo.setClientId( new ObjectMapper().readValue((new Gson()).toJson(clientInfoJson.get("clientId")), String.class));           
-            dbClientInfo.setClientSecret( new ObjectMapper().readValue((new Gson()).toJson(clientInfoJson.get("clientSecret")), String.class) );            
-            dbClientInfo.setOriginUri( new ObjectMapper().readValue((new Gson()).toJson(clientInfoJson.get("originUri")), String.class) );
-            dbClientInfo.setRedirectUri( new ObjectMapper().readValue((new Gson()).toJson(clientInfoJson.get("redirectUri")), String.class) );
-            
-        } catch (ApiException e) {
-        	logger.info("Response body: " + e.getResponseBody());
-        	e.printStackTrace();
-        	throw e;
-        } catch (Exception e) {
-        	logger.info("Exception message: " + e.getMessage());
-        	e.printStackTrace();
-        	throw e;
-        }
-    	
-    	return dbClientInfo;
-    }
-    
-    public static void deleteToken(String tokenName) throws Exception {
-    	try {
-    		V1DeleteOptions body = new V1DeleteOptions();
-    		
-        	customObjectApi.deleteClusterCustomObject(
-        			Constants.CUSTOM_OBJECT_GROUP,
-					Constants.CUSTOM_OBJECT_VERSION,
-					Constants.CUSTOM_OBJECT_PLURAL_TOKEN,
-					tokenName, 
-					body, 0, null, null);
-        } catch (ApiException e) {
-        	logger.info("Response body: " + e.getResponseBody());
-        	e.printStackTrace();
-        	throw e;
-        } catch (Exception e) {
-        	logger.info("Exception message: " + e.getMessage());
-        	e.printStackTrace();
-        	throw e;
-        }
-    }
-    
-    public static void deleteUser(String userName) throws Exception {
-    	try {
-    		V1DeleteOptions body = new V1DeleteOptions();
-    		
-        	customObjectApi.deleteClusterCustomObject(
-        			Constants.CUSTOM_OBJECT_GROUP,
-					Constants.CUSTOM_OBJECT_VERSION,
-					Constants.CUSTOM_OBJECT_PLURAL_USER,
-					userName, 
-					body, 0, null, null);
-        } catch (ApiException e) {
-        	logger.info("Response body: " + e.getResponseBody());
-        	e.printStackTrace();
-        	throw e;
-        } catch (Exception e) {
-        	logger.info("Exception message: " + e.getMessage());
-        	e.printStackTrace();
-        	throw e;
-        }
-    }
-    
-    public static void saveClient(Client clientInfo) throws Exception {
-    	
-    	try {
-    		ClientCR clientCR = new ClientCR();
-    		
-    		// Set name & label
-        	V1ObjectMeta metadata = new V1ObjectMeta();
-        	metadata.setName(clientInfo.getAppName() + clientInfo.getClientId());        	
+
+			JsonObject respJson = (JsonObject) new JsonParser().parse((new Gson()).toJson(response));
+			JsonObject clientInfoJson = respJson.get("clientInfo").getAsJsonObject();
+
+			dbClientInfo.setAppName(
+					new ObjectMapper().readValue((new Gson()).toJson(clientInfoJson.get("appName")), String.class));
+			dbClientInfo.setClientId(
+					new ObjectMapper().readValue((new Gson()).toJson(clientInfoJson.get("clientId")), String.class));
+			dbClientInfo.setClientSecret(new ObjectMapper()
+					.readValue((new Gson()).toJson(clientInfoJson.get("clientSecret")), String.class));
+			dbClientInfo.setOriginUri(
+					new ObjectMapper().readValue((new Gson()).toJson(clientInfoJson.get("originUri")), String.class));
+			dbClientInfo.setRedirectUri(
+					new ObjectMapper().readValue((new Gson()).toJson(clientInfoJson.get("redirectUri")), String.class));
+
+		} catch (ApiException e) {
+			logger.info("Response body: " + e.getResponseBody());
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			logger.info("Exception message: " + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		}
+
+		return dbClientInfo;
+	}
+
+	public static void deleteToken(String tokenName) throws Exception {
+		try {
+			V1DeleteOptions body = new V1DeleteOptions();
+
+			customObjectApi.deleteClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION,
+					Constants.CUSTOM_OBJECT_PLURAL_TOKEN, tokenName, body, 0, null, null);
+		} catch (ApiException e) {
+			logger.info("Response body: " + e.getResponseBody());
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			logger.info("Exception message: " + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		}
+	}
+
+	public static void deleteUser(String userName) throws Exception {
+		try {
+			V1DeleteOptions body = new V1DeleteOptions();
+
+			customObjectApi.deleteClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION,
+					Constants.CUSTOM_OBJECT_PLURAL_USER, userName, body, 0, null, null);
+		} catch (ApiException e) {
+			logger.info("Response body: " + e.getResponseBody());
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			logger.info("Exception message: " + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		}
+	}
+
+	public static void saveClient(Client clientInfo) throws Exception {
+
+		try {
+			ClientCR clientCR = new ClientCR();
+
+			// Set name & label
+			V1ObjectMeta metadata = new V1ObjectMeta();
+			metadata.setName(clientInfo.getAppName() + clientInfo.getClientId());
 //        	Map<String, String> label = new HashMap<>();   있어야할지 판단 안됨
 //        	label.put("client", );
-        	clientCR.setMetadata(metadata);
-        	
-        	// Set ClientInfo
-        	clientCR.setClientInfo(clientInfo);
-       	
-        	// Make body
-        	JSONParser parser = new JSONParser();        	
-        	JSONObject bodyObj = (JSONObject) parser.parse(new Gson().toJson(clientCR));
-        	
-        	customObjectApi.createClusterCustomObject(
-        			Constants.CUSTOM_OBJECT_GROUP,
-					Constants.CUSTOM_OBJECT_VERSION, 
-					Constants.CUSTOM_OBJECT_PLURAL_CLIENT,
-					bodyObj, null);
-        } catch (ApiException e) {
-        	logger.info("Response body: " + e.getResponseBody());
-        	e.printStackTrace();
-        	throw e;
-        } catch (Exception e) {
-        	logger.info("Exception message: " + e.getMessage());
-        	e.printStackTrace();
-        	throw e;
-        }
-    }
-    
-    public static void saveToken(String userId, String tokenId, String accessToken, String refreshToken) throws Exception {
-    	String tokenName = userId + "-" + tokenId;
-    	
-    	try {
-    		TokenCR token = new TokenCR();
-    		
-    		// Set name & label
-        	V1ObjectMeta metadata = new V1ObjectMeta();
-        	metadata.setName(tokenName);        	
-        	Map<String, String> label = new HashMap<>();
-        	label.put("user", userId);
-        	metadata.setLabels(label);        	
-        	token.setMetadata(metadata);
-        	
-        	// Set tokens
-        	token.setAccessToken(accessToken);
-        	token.setRefreshToken(refreshToken);
-        	
-        	// Make body
-        	JSONParser parser = new JSONParser();        	
-        	JSONObject bodyObj = (JSONObject) parser.parse(new Gson().toJson(token));
-        	
-        	customObjectApi.createClusterCustomObject(
-        			Constants.CUSTOM_OBJECT_GROUP,
-					Constants.CUSTOM_OBJECT_VERSION, 
-					Constants.CUSTOM_OBJECT_PLURAL_TOKEN,
-					bodyObj, null);
-        } catch (ApiException e) {
-        	logger.info("Response body: " + e.getResponseBody());
-        	e.printStackTrace();
-        	throw e;
-        } catch (Exception e) {
-        	logger.info("Exception message: " + e.getMessage());
-        	e.printStackTrace();
-        	throw e;
-        }
-    }
-    
-    public static void updateAccessToken(String tokenName, String accessToken) throws Exception {
-        try {
-        	String jsonPatchStr = "[{\"op\":\"replace\",\"path\":\"/accessToken\",\"value\": " + accessToken + "}]";
+			clientCR.setMetadata(metadata);
+
+			// Set ClientInfo
+			clientCR.setClientInfo(clientInfo);
+
+			// Make body
+			JSONParser parser = new JSONParser();
+			JSONObject bodyObj = (JSONObject) parser.parse(new Gson().toJson(clientCR));
+
+			customObjectApi.createClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION,
+					Constants.CUSTOM_OBJECT_PLURAL_CLIENT, bodyObj, null);
+		} catch (ApiException e) {
+			logger.info("Response body: " + e.getResponseBody());
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			logger.info("Exception message: " + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		}
+	}
+
+	public static void saveToken(String userId, String tokenId, String accessToken, String refreshToken)
+			throws Exception {
+		String tokenName = userId + "-" + tokenId;
+
+		try {
+			TokenCR token = new TokenCR();
+
+			// Set name & label
+			V1ObjectMeta metadata = new V1ObjectMeta();
+			metadata.setName(tokenName);
+			Map<String, String> label = new HashMap<>();
+			label.put("user", userId);
+			metadata.setLabels(label);
+			token.setMetadata(metadata);
+
+			// Set tokens
+			token.setAccessToken(accessToken);
+			token.setRefreshToken(refreshToken);
+
+			// Make body
+			JSONParser parser = new JSONParser();
+			JSONObject bodyObj = (JSONObject) parser.parse(new Gson().toJson(token));
+
+			customObjectApi.createClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION,
+					Constants.CUSTOM_OBJECT_PLURAL_TOKEN, bodyObj, null);
+		} catch (ApiException e) {
+			logger.info("Response body: " + e.getResponseBody());
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			logger.info("Exception message: " + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		}
+	}
+
+	public static void updateAccessToken(String tokenName, String accessToken) throws Exception {
+		try {
+			String jsonPatchStr = "[{\"op\":\"replace\",\"path\":\"/accessToken\",\"value\": " + accessToken + "}]";
 			JsonElement jsonPatch = (JsonElement) new JsonParser().parse(jsonPatchStr);
 
-			customObjectApi.patchClusterCustomObject(
-					Constants.CUSTOM_OBJECT_GROUP,
-					Constants.CUSTOM_OBJECT_VERSION, 
-					Constants.CUSTOM_OBJECT_PLURAL_TOKEN,
-					tokenName, jsonPatch);
-        } catch (ApiException e) {
-        	logger.info("Response body: " + e.getResponseBody());
-        	e.printStackTrace();
-        	throw e;
-        } catch (Exception e) {
-        	logger.info("Exception message: " + e.getMessage());
-        	e.printStackTrace();
-        	throw e;
-        }
-    }
-    
-    public static void encryptUserPassword(String userId, String password, UserCR user) throws Exception {
-        try {
-        	// Encrypt password
-        	String passwordSalt = UUID.randomUUID().toString();        	
-        	String encryptedPassword = Util.Crypto.encryptSHA256(password + user.getUserInfo().getEmail() + passwordSalt);
-        	
-        	// Patch user CR
-        	user.getUserInfo().setPassword(encryptedPassword);
-        	user.getUserInfo().setPasswordSalt(passwordSalt);
-        	Map<String, String> label = user.getMetadata().getLabels();
-        	label.put("encrypted", "t");
-        	user.getMetadata().setLabels(label);
-        	
-        	customObjectApi.replaceClusterCustomObject(
-        			Constants.CUSTOM_OBJECT_GROUP,
-					Constants.CUSTOM_OBJECT_VERSION, 
-					Constants.CUSTOM_OBJECT_PLURAL_USER,
-					userId, user);        	
-        } catch (ApiException e) {
-        	logger.info("Response body: " + e.getResponseBody());
-        	e.printStackTrace();
-        	throw e;
-        } catch (Exception e) {
-        	logger.info("Exception message: " + e.getMessage());
-        	e.printStackTrace();
-        	throw e;
-        }
-    }
+			customObjectApi.patchClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION,
+					Constants.CUSTOM_OBJECT_PLURAL_TOKEN, tokenName, jsonPatch);
+		} catch (ApiException e) {
+			logger.info("Response body: " + e.getResponseBody());
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			logger.info("Exception message: " + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		}
+	}
+
+	public static void encryptUserPassword(String userId, String password, UserCR user) throws Exception {
+		try {
+			// Encrypt password
+			String passwordSalt = UUID.randomUUID().toString();
+			String encryptedPassword = Util.Crypto
+					.encryptSHA256(password + user.getUserInfo().getEmail() + passwordSalt);
+
+			// Patch user CR
+			user.getUserInfo().setPassword(encryptedPassword);
+			user.getUserInfo().setPasswordSalt(passwordSalt);
+			Map<String, String> label = user.getMetadata().getLabels();
+			label.put("encrypted", "t");
+			user.getMetadata().setLabels(label);
+
+			customObjectApi.replaceClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION,
+					Constants.CUSTOM_OBJECT_PLURAL_USER, userId, user);
+		} catch (ApiException e) {
+			logger.info("Response body: " + e.getResponseBody());
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			logger.info("Exception message: " + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		}
+	}
+
 	@SuppressWarnings("unchecked")
 	public static void initRegistry(String registryId, Registry registry) throws ApiException {
-		logger.info( "[K8S ApiCaller] initRegistry(String, Registry) Start" );
-		
+		logger.info("[K8S ApiCaller] initRegistry(String, Registry) Start");
+
 		String namespace = registry.getMetadata().getNamespace();
 
 		JSONObject patchStatus = new JSONObject();
@@ -843,97 +874,94 @@ public class K8sApiCaller {
 		JSONObject condition5 = new JSONObject();
 		JSONObject condition6 = new JSONObject();
 		JSONArray patchStatusArray = new JSONArray();
-		
+
 		condition1.put("type", RegistryCondition.Condition.REPLICA_SET.getType());
 		condition1.put("status", RegistryStatus.Status.FALSE.getStatus());
 		conditions.add(condition1);
-		
+
 		condition2.put("type", RegistryCondition.Condition.POD.getType());
 		condition2.put("status", RegistryStatus.Status.FALSE.getStatus());
 		conditions.add(condition2);
-		
+
 		condition3.put("type", RegistryCondition.Condition.CONTAINER.getType());
 		condition3.put("status", RegistryStatus.Status.FALSE.getStatus());
 		conditions.add(condition3);
-		
+
 		condition4.put("type", RegistryCondition.Condition.SERVICE.getType());
 		condition4.put("status", RegistryStatus.Status.FALSE.getStatus());
 		conditions.add(condition4);
-		
+
 		condition5.put("type", RegistryCondition.Condition.SECRET_OPAQUE.getType());
 		condition5.put("status", RegistryStatus.Status.FALSE.getStatus());
 		conditions.add(condition5);
-		
+
 		condition6.put("type", RegistryCondition.Condition.SECRET_DOCKER_CONFIG_JSON.getType());
 		condition6.put("status", RegistryStatus.Status.FALSE.getStatus());
 		conditions.add(condition6);
-		
+
 		status.put("conditions", conditions);
 		status.put("phase", RegistryStatus.StatusPhase.CREATING.getStatus());
 		status.put("message", "Registry is creating. All resources in registry has not yet been created.");
 		status.put("reason", "RegistryNotCreated");
-		
+
 		patchStatus.put("op", "add");
 		patchStatus.put("path", "/status");
 		patchStatus.put("value", status);
 		patchStatusArray.add(patchStatus);
-		
-		try{
-			Object result = customObjectApi.patchNamespacedCustomObjectStatus(
-					Constants.CUSTOM_OBJECT_GROUP, 
-					Constants.CUSTOM_OBJECT_VERSION, 
-					namespace, 
-					Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, 
+
+		try {
+			Object result = customObjectApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP,
+					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY,
 					registry.getMetadata().getName(), patchStatusArray);
 			logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
-		}catch(ApiException e) {
+		} catch (ApiException e) {
 			logger.info(e.getResponseBody());
 			throw e;
 		}
-		
+
 	}
 
 	@SuppressWarnings("unchecked")
 	public static void createRegistry(Registry registry) throws Exception {
-		logger.info( "[K8S ApiCaller] createRegistry(Registry) Start" );
-		
+		logger.info("[K8S ApiCaller] createRegistry(Registry) Start");
+
 		try {
 //			long time = System.currentTimeMillis();
 //			String randomUID = UIDGenerator.getInstance().generate32( registry, 8, time );
-			
+
 			String namespace = registry.getMetadata().getNamespace();
 			String registryId = registry.getMetadata().getName();
 			RegistryService regService = registry.getSpec().getService();
 			String registryIP = "";
 			int registryPort = 0;
-			
+
 			// set default
 			int registrySVCTargetPort = RegistryService.REGISTRY_TARGET_PORT;
-			int registrySVCPort = registry.getSpec().getService().getPort() == 0 ? registrySVCTargetPort :  registry.getSpec().getService().getPort();
+			int registrySVCPort = registry.getSpec().getService().getPort() == 0 ? registrySVCTargetPort
+					: registry.getSpec().getService().getPort();
 			int registrySVCNodePort = regService.getNodePort();
-			
-			if( regService.getType().equals(RegistryService.SVC_TYPE_NODE_PORT) ) {
+
+			if (regService.getType().equals(RegistryService.SVC_TYPE_NODE_PORT)) {
 				// If Registry Node IP is null
-				if( StringUtil.isEmpty(regService.getNodeIP()) ) {
+				if (StringUtil.isEmpty(regService.getNodeIP())) {
 					V1NodeList nodes = api.listNode(null, null, null, null, null, null, null, null, null);
-					for( V1Node node : nodes.getItems() ) {
-						for( V1NodeAddress address : node.getStatus().getAddresses() ) {
-							if( address.getType().equals("InternalIP") ) {
+					for (V1Node node : nodes.getItems()) {
+						for (V1NodeAddress address : node.getStatus().getAddresses()) {
+							if (address.getType().equals("InternalIP")) {
 								registryIP = address.getAddress();
 								logger.info("[registryIP]:" + registryIP);
 								break;
 							}
 						}
-						if( StringUtil.isNotEmpty(registryIP) ) {
+						if (StringUtil.isNotEmpty(registryIP)) {
 							break;
 						}
 					}
-				}
-				else {
+				} else {
 					registryIP = regService.getNodeIP();
 				}
 			}
-			
+
 			// ----- Create Loadbalancer
 			V1Service lb = new V1Service();
 			V1ObjectMeta lbMeta = new V1ObjectMeta();
@@ -942,18 +970,18 @@ public class K8sApiCaller {
 			Map<String, String> selector = new HashMap<String, String>();
 
 			lbMeta.setName(Constants.K8S_PREFIX + registryId);
-			
+
 			logger.info("<Service Label List>");
 			Map<String, String> serviceLabels = new HashMap<String, String>();
 			serviceLabels.put("app", "registry");
 			serviceLabels.put("apps", lbMeta.getName());
-			logger.info("app: registry" );
+			logger.info("app: registry");
 			logger.info("apps: " + lbMeta.getName());
 			lbMeta.setLabels(serviceLabels);
-			
+
 			List<V1OwnerReference> ownerRefs = new ArrayList<>();
 			V1OwnerReference ownerRef = new V1OwnerReference();
-			
+
 			ownerRef.setApiVersion(registry.getApiVersion());
 			ownerRef.setBlockOwnerDeletion(Boolean.TRUE);
 			ownerRef.setController(Boolean.TRUE);
@@ -961,9 +989,9 @@ public class K8sApiCaller {
 			ownerRef.setName(registry.getMetadata().getName());
 			ownerRef.setUid(registry.getMetadata().getUid());
 			ownerRefs.add(ownerRef);
-			
+
 			lbMeta.setOwnerReferences(ownerRefs);
-			
+
 			lb.setMetadata(lbMeta);
 
 			V1ServicePort v1port = new V1ServicePort();
@@ -971,11 +999,11 @@ public class K8sApiCaller {
 			v1port.setPort(registrySVCPort);
 			v1port.setName(RegistryService.REGISTRY_PORT_NAME);
 			v1port.setTargetPort(new IntOrString(registrySVCPort));
-			if( regService.getType().equals(RegistryService.SVC_TYPE_NODE_PORT) ) {
-				if( registrySVCNodePort != 0 )
+			if (regService.getType().equals(RegistryService.SVC_TYPE_NODE_PORT)) {
+				if (registrySVCNodePort != 0)
 					v1port.setNodePort(registrySVCNodePort);
 			}
-			
+
 			ports.add(v1port);
 			lbSpec.setPorts(ports);
 
@@ -995,57 +1023,53 @@ public class K8sApiCaller {
 				JSONObject message = new JSONObject();
 				JSONObject reason = new JSONObject();
 				JSONArray patchStatusArray = new JSONArray();
-				
+
 				phase.put("op", "replace");
 				phase.put("path", "/status/phase");
 				phase.put("value", RegistryStatus.StatusPhase.ERROR.getStatus());
 				patchStatusArray.add(phase);
-				
+
 				message.put("op", "replace");
 				message.put("path", "/status/message");
 				message.put("value", e.getResponseBody());
 				patchStatusArray.add(message);
-				
+
 				reason.put("op", "replace");
 				reason.put("path", "/status/reason");
 				reason.put("value", "CreateServiceFailed");
 				patchStatusArray.add(reason);
-				
-				try{
-					Object result = customObjectApi.patchNamespacedCustomObjectStatus(
-							Constants.CUSTOM_OBJECT_GROUP, 
-							Constants.CUSTOM_OBJECT_VERSION, 
-							namespace, 
-							Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, 
+
+				try {
+					Object result = customObjectApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP,
+							Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY,
 							registry.getMetadata().getName(), patchStatusArray);
 					logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
-				}catch(ApiException e2) {
+				} catch (ApiException e2) {
 					logger.info(e2.getResponseBody());
 					throw e2;
 				}
-				
+
 				throw e;
 			}
 
 			// TYPE: ClusterIP or LoadBalancer => Get IP
 			// TYPE: NodePort => Get Port
 			registryPort = registrySVCPort;
-			
+
 			int RETRY_CNT = 200;
 			V1Service service = null;
 			for (int i = 0; i < RETRY_CNT; i++) {
 				Thread.sleep(500);
-				service = api.readNamespacedService(Constants.K8S_PREFIX + registryId,
-						namespace, null, null, null);
+				service = api.readNamespacedService(Constants.K8S_PREFIX + registryId, namespace, null, null, null);
 
 				// GET IP
 				if (service.getSpec().getType().equals("ClusterIP")) {
 					registryIP = service.getSpec().getClusterIP();
 					break;
-				
-				// GET IP
+
+					// GET IP
 				} else if (service.getSpec().getType().equals("LoadBalancer")) {
-					
+
 					if (service.getStatus().getLoadBalancer().getIngress() != null
 							&& service.getStatus().getLoadBalancer().getIngress().size() == 1) {
 						if (service.getStatus().getLoadBalancer().getIngress().get(0).getHostname() == null) {
@@ -1056,21 +1080,21 @@ public class K8sApiCaller {
 						logger.info("[registryIP]:" + registryIP);
 						break;
 					}
-					
-				// GET PORT
+
+					// GET PORT
 				} else if (service.getSpec().getType().equals("NodePort")) {
-					
-					for( V1ServicePort port : service.getSpec().getPorts() ) {
-						if(port.getName().equals(RegistryService.REGISTRY_PORT_NAME)) {
+
+					for (V1ServicePort port : service.getSpec().getPorts()) {
+						if (port.getName().equals(RegistryService.REGISTRY_PORT_NAME)) {
 							registrySVCNodePort = port.getNodePort();
 							registryPort = registrySVCNodePort;
 							logger.info("[registryNodePort]:" + registrySVCNodePort);
 							break;
 						}
 					}
-					if( registrySVCNodePort != 0) 
+					if (registrySVCNodePort != 0)
 						break;
-					
+
 				}
 
 				if (i == RETRY_CNT - 1) {
@@ -1078,39 +1102,35 @@ public class K8sApiCaller {
 					JSONObject message = new JSONObject();
 					JSONObject reason = new JSONObject();
 					JSONArray patchStatusArray = new JSONArray();
-					
+
 					phase.put("op", "replace");
 					phase.put("path", "/status/phase");
 					phase.put("value", RegistryStatus.StatusPhase.ERROR.getStatus());
 					patchStatusArray.add(phase);
-					
+
 					message.put("op", "replace");
 					message.put("path", "/status/message");
 					message.put("value", "Creating a registry is failed. Service(LB) is not found");
 					patchStatusArray.add(message);
-					
+
 					reason.put("op", "replace");
 					reason.put("path", "/status/reason");
 					reason.put("value", "ServiceNotFound");
 					patchStatusArray.add(reason);
-					
-					try{
-						Object result = customObjectApi.patchNamespacedCustomObjectStatus(
-								Constants.CUSTOM_OBJECT_GROUP, 
-								Constants.CUSTOM_OBJECT_VERSION, 
-								namespace, 
-								Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, 
+
+					try {
+						Object result = customObjectApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP,
+								Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY,
 								registry.getMetadata().getName(), patchStatusArray);
 						logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
-					}catch(ApiException e) {
+					} catch (ApiException e) {
 						logger.info(e.getResponseBody());
 						throw e;
 					}
-					
+
 					return;
 				}
 			}
-
 
 			// ----- Create PVC
 			V1PersistentVolumeClaim pvc = new V1PersistentVolumeClaim();
@@ -1119,20 +1139,19 @@ public class K8sApiCaller {
 			V1ResourceRequirements pvcResource = new V1ResourceRequirements();
 			Map<String, Quantity> limit = new HashMap<>();
 			List<String> accessModes = new ArrayList<>();
-			
+
 			RegistryPVC registryPVC = registry.getSpec().getPersistentVolumeClaim();
 //			String storageClassName = StringUtil.isEmpty(registryPVC.getStorageClassName()) ? RegistryPVC.STORAGE_CLASS_DEFAULT : registryPVC.getStorageClassName();
 			String storageClassName = registryPVC.getStorageClassName();
-			
-			
+
 			pvcMeta.setName(Constants.K8S_PREFIX + registryId);
-			
+
 			Map<String, String> pvcLabels = new HashMap<String, String>();
 			pvcLabels.put("app", Constants.K8S_PREFIX.substring(0, Constants.K8S_PREFIX.length() - 1));
 			pvcMeta.setLabels(pvcLabels);
-			
+
 			pvcMeta.setOwnerReferences(ownerRefs);
-			
+
 			// [2/5] set storage quota.
 			limit.put("storage", new Quantity(registryPVC.getStorageSize()));
 			pvcResource.setRequests(limit);
@@ -1143,9 +1162,9 @@ public class K8sApiCaller {
 //				accessModes.add(RegistryPVC.ACCESS_MODE_DEFAULT);
 //			}
 //			else {
-				for(String mode : registryPVC.getAccessModes()) {
-					accessModes.add(mode);
-				}
+			for (String mode : registryPVC.getAccessModes()) {
+				accessModes.add(mode);
+			}
 //			}
 			pvcSpec.setAccessModes(accessModes);
 
@@ -1158,49 +1177,44 @@ public class K8sApiCaller {
 			} catch (ApiException e) {
 				logger.info(e.getResponseBody());
 
-
 				JSONObject phase = new JSONObject();
 				JSONObject message = new JSONObject();
 				JSONObject reason = new JSONObject();
 				JSONArray patchStatusArray = new JSONArray();
-				
+
 				phase.put("op", "replace");
 				phase.put("path", "/status/phase");
 				phase.put("value", RegistryStatus.StatusPhase.ERROR.getStatus());
 				patchStatusArray.add(phase);
-				
+
 				message.put("op", "replace");
 				message.put("path", "/status/message");
 				message.put("value", e.getResponseBody());
 				patchStatusArray.add(message);
-				
+
 				reason.put("op", "replace");
 				reason.put("path", "/status/reason");
 				reason.put("value", "CreatePVCFailed");
 				patchStatusArray.add(reason);
-				
-				try{
-					Object result = customObjectApi.patchNamespacedCustomObjectStatus(
-							Constants.CUSTOM_OBJECT_GROUP, 
-							Constants.CUSTOM_OBJECT_VERSION, 
-							namespace, 
-							Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, 
+
+				try {
+					Object result = customObjectApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP,
+							Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY,
 							registry.getMetadata().getName(), patchStatusArray);
 					logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
-				}catch(ApiException e2) {
+				} catch (ApiException e2) {
 					logger.info(e2.getResponseBody());
 					throw e2;
 				}
-				
+
 				throw e;
 			}
-			
-			
+
 			// ----- Create Secret
 			// Create Cert Directory
 			logger.info("Create Cert Directory");
 			String registryDir = createDirectory(namespace, registryId);
-			
+
 			// Create Certificates
 			logger.info("Create Certificates");
 			List<String> commands = new ArrayList<>();
@@ -1214,51 +1228,47 @@ public class K8sApiCaller {
 			sb.append("\")) -out ");
 			sb.append(registryDir + "/" + Constants.CERT_CRT_FILE);
 			commands.clear();
-			commands.add("/bin/bash");		// bash Required!!
+			commands.add("/bin/bash"); // bash Required!!
 			commands.add("-c");
 			commands.add(sb.toString());
-			
+
 			try {
 				commandExecute(commands.toArray(new String[commands.size()]));
-			}catch (Exception e) {
+			} catch (Exception e) {
 				logger.info(e.getMessage());
-				
+
 				JSONObject phase = new JSONObject();
 				JSONObject message = new JSONObject();
 				JSONObject reason = new JSONObject();
 				JSONArray patchStatusArray = new JSONArray();
-				
+
 				phase.put("op", "replace");
 				phase.put("path", "/status/phase");
 				phase.put("value", RegistryStatus.StatusPhase.ERROR.getStatus());
 				patchStatusArray.add(phase);
-				
+
 				message.put("op", "replace");
 				message.put("path", "/status/message");
 				message.put("value", e.getMessage());
 				patchStatusArray.add(message);
-				
+
 				reason.put("op", "replace");
 				reason.put("path", "/status/reason");
 				reason.put("value", "CreateRegistryFailed");
 				patchStatusArray.add(reason);
-				
-				try{
-					Object result = customObjectApi.patchNamespacedCustomObjectStatus(
-							Constants.CUSTOM_OBJECT_GROUP, 
-							Constants.CUSTOM_OBJECT_VERSION, 
-							namespace, 
-							Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, 
+
+				try {
+					Object result = customObjectApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP,
+							Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY,
 							registry.getMetadata().getName(), patchStatusArray);
 					logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
-				}catch(ApiException e2) {
+				} catch (ApiException e2) {
 					logger.info(e2.getResponseBody());
 					throw e2;
 				}
-				
+
 				throw e;
 			}
-
 
 			sb.setLength(0);
 			sb.append("\'\'openssl x509 -inform PEM -in ");
@@ -1272,40 +1282,37 @@ public class K8sApiCaller {
 			commands.add(sb.toString());
 			try {
 				commandExecute(commands.toArray(new String[commands.size()]));
-			}catch (Exception e) {
+			} catch (Exception e) {
 				JSONObject phase = new JSONObject();
 				JSONObject message = new JSONObject();
 				JSONObject reason = new JSONObject();
 				JSONArray patchStatusArray = new JSONArray();
-				
+
 				phase.put("op", "replace");
 				phase.put("path", "/status/phase");
 				phase.put("value", RegistryStatus.StatusPhase.ERROR.getStatus());
 				patchStatusArray.add(phase);
-				
+
 				message.put("op", "replace");
 				message.put("path", "/status/message");
 				message.put("value", e.getMessage());
 				patchStatusArray.add(message);
-				
+
 				reason.put("op", "replace");
 				reason.put("path", "/status/reason");
 				reason.put("value", "CreateRegistryFailed");
 				patchStatusArray.add(reason);
-				
-				try{
-					Object result = customObjectApi.patchNamespacedCustomObjectStatus(
-							Constants.CUSTOM_OBJECT_GROUP, 
-							Constants.CUSTOM_OBJECT_VERSION, 
-							namespace, 
-							Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, 
+
+				try {
+					Object result = customObjectApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP,
+							Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY,
 							registry.getMetadata().getName(), patchStatusArray);
 					logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
-				}catch(ApiException e2) {
+				} catch (ApiException e2) {
 					logger.info(e2.getResponseBody());
 					throw e2;
 				}
-			
+
 				throw e;
 			}
 
@@ -1323,105 +1330,97 @@ public class K8sApiCaller {
 			Map<String, String> labels = new HashMap<>();
 			labels.put("secret", "cert");
 			String secretName;
-			
+
 			try {
 				// K8SApiCall createSecret
 				logger.info("K8SApiCall createSecret");
 				secretName = K8sApiCaller.createSecret(namespace, secrets, registryId, labels, null, ownerRefs);
-			}catch (ApiException e) {
+			} catch (ApiException e) {
 				JSONObject phase = new JSONObject();
 				JSONObject message = new JSONObject();
 				JSONObject reason = new JSONObject();
 				JSONArray patchStatusArray = new JSONArray();
-				
+
 				phase.put("op", "replace");
 				phase.put("path", "/status/phase");
 				phase.put("value", RegistryStatus.StatusPhase.ERROR.getStatus());
 				patchStatusArray.add(phase);
-				
+
 				message.put("op", "replace");
 				message.put("path", "/status/message");
 				message.put("value", e.getResponseBody());
 				patchStatusArray.add(message);
-				
+
 				reason.put("op", "replace");
 				reason.put("path", "/status/reason");
 				reason.put("value", "CreateRegistryFailed");
 				patchStatusArray.add(reason);
-				
-				try{
-					Object result = customObjectApi.patchNamespacedCustomObjectStatus(
-							Constants.CUSTOM_OBJECT_GROUP, 
-							Constants.CUSTOM_OBJECT_VERSION, 
-							namespace, 
-							Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, 
+
+				try {
+					Object result = customObjectApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP,
+							Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY,
 							registry.getMetadata().getName(), patchStatusArray);
 					logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
-				}catch(ApiException e2) {
+				} catch (ApiException e2) {
 					logger.info(e2.getResponseBody());
 					throw e2;
 				}
-				
+
 				throw e;
 			}
-			
-			
-			
+
 			// Create docker-config-json Secret Object
 			Map<String, String> secrets2 = new HashMap<>();
-			secrets2.put(Constants.DOCKER_CONFIG_JSON_FILE, createConfigJson(registryIP, registryPort, registry.getSpec().getLoginId(), registry.getSpec().getLoginPassword()));
+			secrets2.put(Constants.DOCKER_CONFIG_JSON_FILE, createConfigJson(registryIP, registryPort,
+					registry.getSpec().getLoginId(), registry.getSpec().getLoginPassword()));
 
 			Map<String, String> labels2 = new HashMap<>();
 			labels2.put("secret", "docker");
 			try {
-				K8sApiCaller.createSecret(namespace, secrets2, registryId, labels2, Constants.K8S_SECRET_TYPE_DOCKER_CONFIG_JSON, ownerRefs);
-			}catch (ApiException e) {
+				K8sApiCaller.createSecret(namespace, secrets2, registryId, labels2,
+						Constants.K8S_SECRET_TYPE_DOCKER_CONFIG_JSON, ownerRefs);
+			} catch (ApiException e) {
 				JSONObject phase = new JSONObject();
 				JSONObject message = new JSONObject();
 				JSONObject reason = new JSONObject();
 				JSONArray patchStatusArray = new JSONArray();
-				
+
 				phase.put("op", "replace");
 				phase.put("path", "/status/phase");
 				phase.put("value", RegistryStatus.StatusPhase.ERROR.getStatus());
 				patchStatusArray.add(phase);
-				
+
 				message.put("op", "replace");
 				message.put("path", "/status/message");
 				message.put("value", e.getResponseBody());
 				patchStatusArray.add(message);
-				
+
 				reason.put("op", "replace");
 				reason.put("path", "/status/reason");
 				reason.put("value", "CreateRegistryFailed");
 				patchStatusArray.add(reason);
-				
-				try{
-					Object result = customObjectApi.patchNamespacedCustomObjectStatus(
-							Constants.CUSTOM_OBJECT_GROUP, 
-							Constants.CUSTOM_OBJECT_VERSION, 
-							namespace, 
-							Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, 
+
+				try {
+					Object result = customObjectApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP,
+							Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY,
 							registry.getMetadata().getName(), patchStatusArray);
 					logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
-				}catch(ApiException e2) {
+				} catch (ApiException e2) {
 					logger.info(e2.getResponseBody());
 					throw e2;
 				}
-				
+
 				throw e;
 			}
-			
-			
-			
+
 			// ---- Create Config Map
 			boolean regConfigExist = true;
 			String configMapName = registry.getSpec().getCustomConfigYml();
-			
-			if( StringUtil.isNotEmpty(configMapName)) {
+
+			if (StringUtil.isNotEmpty(configMapName)) {
 				try {
 					V1ConfigMap regConfig = api.readNamespacedConfigMap(configMapName, namespace, null, null, null);
-					
+
 					logger.info("== customConfigYaml ==\n" + regConfig.toString());
 					regConfigExist = true;
 				} catch (ApiException e) {
@@ -1429,23 +1428,24 @@ public class K8sApiCaller {
 					regConfigExist = false;
 				}
 			}
-			
+
 			logger.info("regConfigExist: " + regConfigExist);
-			
-			if( StringUtil.isEmpty(configMapName) || !regConfigExist ) {
+
+			if (StringUtil.isEmpty(configMapName) || !regConfigExist) {
 				configMapName = Constants.K8S_PREFIX + registry.getMetadata().getName();
 				try {
-					V1ConfigMap regConfig = api.readNamespacedConfigMap(Constants.REGISTRY_CONFIG_MAP_NAME, Constants.REGISTRY_NAMESPACE, null, null, null);
-					
+					V1ConfigMap regConfig = api.readNamespacedConfigMap(Constants.REGISTRY_CONFIG_MAP_NAME,
+							Constants.REGISTRY_NAMESPACE, null, null, null);
+
 					V1ConfigMap configMap = new V1ConfigMap();
 					V1ObjectMeta metadata = new V1ObjectMeta();
-					
+
 					metadata.setName(configMapName);
 					metadata.setNamespace(namespace);
 					metadata.setOwnerReferences(ownerRefs);
 					configMap.setMetadata(metadata);
 					configMap.setData(regConfig.getData());
-					
+
 					V1ConfigMap result = api.createNamespacedConfigMap(namespace, configMap, null, null, null);
 					logger.info("createNamespacedConfigMap result: " + result.toString());
 					regConfigExist = true;
@@ -1454,7 +1454,6 @@ public class K8sApiCaller {
 					regConfigExist = false;
 				}
 			}
-			
 
 			// ----- Create Registry Replica Set
 			V1ReplicaSetBuilder rsBuilder = new V1ReplicaSetBuilder();
@@ -1465,21 +1464,21 @@ public class K8sApiCaller {
 			// 1-1. replica set name
 			rsMeta.setName(Constants.K8S_PREFIX + Constants.K8S_REGISTRY_PREFIX + registryId);
 			logger.info("RS Name: " + rsMeta.getName());
-			
+
 			// 1-2 replica set label
 			logger.info("<RS Label List>");
 			Map<String, String> rsLabels = new HashMap<String, String>();
 			rsLabels.put("app", "registry");
 			rsLabels.put("apps", rsMeta.getName());
-			logger.info("app: registry" );
+			logger.info("app: registry");
 			logger.info("apps: " + rsMeta.getName());
 			rsMeta.setLabels(rsLabels);
 
 			// 1-3. replica set owner ref
 			rsMeta.setOwnerReferences(ownerRefs);
-			
+
 			rsBuilder.withMetadata(rsMeta);
-			
+
 			// 2. spec
 			V1ReplicaSetSpec rsSpec = new V1ReplicaSetSpec();
 
@@ -1497,7 +1496,7 @@ public class K8sApiCaller {
 			Map<String, String> podLabels = new HashMap<String, String>();
 			podLabels.put("app", "registry");
 			podLabels.put("apps", rsMeta.getName());
-			logger.info("app: registry" );
+			logger.info("app: registry");
 			logger.info("apps: " + rsMeta.getName());
 
 			podLabels.put(Constants.K8S_PREFIX + registryId, "lb");
@@ -1520,7 +1519,7 @@ public class K8sApiCaller {
 			logger.info("- Image: " + container.getImage());
 			container.setImagePullPolicy("IfNotPresent");
 
-			// Set a Lifecycle 
+			// Set a Lifecycle
 			V1Lifecycle lifecycle = new V1Lifecycle();
 			V1Handler postStart = new V1Handler();
 			V1ExecAction exec = new V1ExecAction();
@@ -1584,7 +1583,7 @@ public class K8sApiCaller {
 			V1EnvVar secretEnv1 = new V1EnvVar();
 			secretEnv1.setName("ID");
 			V1EnvVarSource valueFrom = new V1EnvVarSource();
-			V1SecretKeySelector secretKeyRef = new V1SecretKeySelector ();
+			V1SecretKeySelector secretKeyRef = new V1SecretKeySelector();
 			secretKeyRef.setName(Constants.K8S_PREFIX + registryId);
 			secretKeyRef.setKey("ID");
 			valueFrom.setSecretKeyRef(secretKeyRef);
@@ -1594,13 +1593,13 @@ public class K8sApiCaller {
 			V1EnvVar secretEnv2 = new V1EnvVar();
 			secretEnv2.setName("PASSWD");
 			V1EnvVarSource valueFrom2 = new V1EnvVarSource();
-			V1SecretKeySelector secretKeyRef2 = new V1SecretKeySelector ();
+			V1SecretKeySelector secretKeyRef2 = new V1SecretKeySelector();
 			secretKeyRef2.setName(Constants.K8S_PREFIX + registryId);
 			secretKeyRef2.setKey("PASSWD");
 			valueFrom2.setSecretKeyRef(secretKeyRef2);
 			secretEnv2.setValueFrom(valueFrom2);
 			container.addEnvItem(secretEnv2);
-			
+
 			// 2-2-2-2-5. port
 			V1ContainerPort portsItem = new V1ContainerPort();
 			portsItem.setContainerPort(registrySVCTargetPort);
@@ -1610,15 +1609,15 @@ public class K8sApiCaller {
 			portsItem.setProtocol(RegistryService.REGISTRY_PORT_PROTOCOL);
 			container.addPortsItem(portsItem);
 
-			if( regConfigExist ) {
-				// Configmap Volume mount 
+			if (regConfigExist) {
+				// Configmap Volume mount
 				// config.yml:/etc/docker/registry/config.yml
 				V1VolumeMount configMount = new V1VolumeMount();
 				configMount.setName("config");
 				configMount.setMountPath("/etc/docker/registry");
 				container.addVolumeMountsItem(configMount);
 			}
-			
+
 			// Secret Volume mount
 			V1VolumeMount certMount = new V1VolumeMount();
 			certMount.setName("certs");
@@ -1633,8 +1632,8 @@ public class K8sApiCaller {
 
 			// Get loginAuth For Readiness Probe
 			String loginAuth = registry.getSpec().getLoginId() + ":" + registry.getSpec().getLoginPassword();
-			loginAuth = new String( Base64.encodeBase64( loginAuth.getBytes() ) );
-			
+			loginAuth = new String(Base64.encodeBase64(loginAuth.getBytes()));
+
 			// Set Readiness Probe
 			V1Probe readinessProbe = new V1Probe();
 			V1HTTPGetAction httpGet = new V1HTTPGetAction();
@@ -1643,13 +1642,13 @@ public class K8sApiCaller {
 			authHeader.setName("authorization");
 			authHeader.setValue("Basic " + loginAuth);
 			headers.add(authHeader);
-			
+
 			httpGet.setPath("v2/_catalog");
 			httpGet.setPort(new IntOrString(registryPort));
 			httpGet.setScheme("HTTPS");
 			httpGet.setHttpHeaders(headers);
 			readinessProbe.setHttpGet(httpGet);
-			
+
 			readinessProbe.setFailureThreshold(10);
 			readinessProbe.setInitialDelaySeconds(5);
 			readinessProbe.setPeriodSeconds(3);
@@ -1681,19 +1680,18 @@ public class K8sApiCaller {
 
 			podSpec.addContainersItem(container);
 
-			
 			List<V1Volume> volumes = new ArrayList<>();
-			
-			if( regConfigExist ) {
+
+			if (regConfigExist) {
 				// Configmap Volume
 				V1Volume configVolume = new V1Volume();
-				V1ConfigMapVolumeSource configMap = new V1ConfigMapVolumeSource ();
+				V1ConfigMapVolumeSource configMap = new V1ConfigMapVolumeSource();
 				configMap.setName(configMapName);
 				configVolume.setConfigMap(configMap);
 				configVolume.setName("config");
 				volumes.add(configVolume);
 			}
-			
+
 			// Secret Volume
 			V1Volume certVolume = new V1Volume();
 			certVolume.setName("certs");
@@ -1737,8 +1735,7 @@ public class K8sApiCaller {
 
 			try {
 				logger.info("Create ReplicaSet");
-				V1ReplicaSet result = appApi.createNamespacedReplicaSet(namespace, rsBuilder.build(),
-						null, null, null);
+				V1ReplicaSet result = appApi.createNamespacedReplicaSet(namespace, rsBuilder.build(), null, null, null);
 				logger.info("createNamespacedReplicaSet result: " + result.toString());
 			} catch (ApiException e) {
 				logger.info("Create Replicaset Failed");
@@ -1747,38 +1744,35 @@ public class K8sApiCaller {
 				JSONObject message = new JSONObject();
 				JSONObject reason = new JSONObject();
 				JSONArray patchStatusArray = new JSONArray();
-				
+
 				phase.put("op", "replace");
 				phase.put("path", "/status/phase");
 				phase.put("value", RegistryStatus.StatusPhase.ERROR.getStatus());
 				patchStatusArray.add(phase);
-				
+
 				message.put("op", "replace");
 				message.put("path", "/status/message");
 				message.put("value", e.getResponseBody());
 				patchStatusArray.add(message);
-				
+
 				reason.put("op", "replace");
 				reason.put("path", "/status/reason");
 				reason.put("value", "CreateRegistryFailed");
 				patchStatusArray.add(reason);
-				
-				try{
-					Object result = customObjectApi.patchNamespacedCustomObjectStatus(
-							Constants.CUSTOM_OBJECT_GROUP, 
-							Constants.CUSTOM_OBJECT_VERSION, 
-							namespace, 
-							Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, 
+
+				try {
+					Object result = customObjectApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP,
+							Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY,
 							registry.getMetadata().getName(), patchStatusArray);
 					logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
-				}catch(ApiException e2) {
+				} catch (ApiException e2) {
 					logger.info(e2.getResponseBody());
 					throw e2;
 				}
-				
+
 				throw e;
 			}
-			
+
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw e;
@@ -1787,54 +1781,52 @@ public class K8sApiCaller {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static void updateReigstryPhase(Registry registry, String changePhase, String changeMessage, String changeReason) throws ApiException {
-		logger.info( "[K8S ApiCaller] updateReigstryPhase(Registry, String, String, String) Start" );
+	public static void updateReigstryPhase(Registry registry, String changePhase, String changeMessage,
+			String changeReason) throws ApiException {
+		logger.info("[K8S ApiCaller] updateReigstryPhase(Registry, String, String, String) Start");
 		String namespace = registry.getMetadata().getNamespace();
-		
-		if( changePhase != null && changeMessage != null && changeReason != null) {
+
+		if (changePhase != null && changeMessage != null && changeReason != null) {
 			JSONObject jPhase = new JSONObject();
 			JSONObject message = new JSONObject();
 			JSONObject reason = new JSONObject();
 			JSONArray patchStatusArray = new JSONArray();
-			
+
 			jPhase.put("op", "replace");
 			jPhase.put("path", "/status/phase");
 			jPhase.put("value", changePhase);
 			patchStatusArray.add(jPhase);
-			
+
 			message.put("op", "replace");
 			message.put("path", "/status/message");
 			message.put("value", changeMessage);
 			patchStatusArray.add(message);
-			
+
 			reason.put("op", "replace");
 			reason.put("path", "/status/reason");
 			reason.put("value", changeReason);
 			patchStatusArray.add(reason);
-			
-			try{
-				Object result = customObjectApi.patchNamespacedCustomObjectStatus(
-						Constants.CUSTOM_OBJECT_GROUP, 
-						Constants.CUSTOM_OBJECT_VERSION, 
-						namespace, 
-						Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, 
+
+			try {
+				Object result = customObjectApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP,
+						Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY,
 						registry.getMetadata().getName(), patchStatusArray);
 				logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
-			}catch(ApiException e2) {
+			} catch (ApiException e2) {
 				logger.info(e2.getResponseBody());
 				throw e2;
 			}
 		}
 	}
-	
+
 	/*
 	 * {"op":"remove","path":"/apiVersion"}
-		{"op":"replace","path":"/kind","value":"Registry3"}
-		{"op":"add","path":"/kind2","value":"Registry"}
+	 * {"op":"replace","path":"/kind","value":"Registry3"}
+	 * {"op":"add","path":"/kind2","value":"Registry"}
 	 * 
 	 */
 	public static void updateRegistrySubResources(Registry registry, JsonNode diff) throws ApiException {
-		logger.info( "[K8S ApiCaller] updateRegistrySubResources(Registry, JsonNode) Start" );
+		logger.info("[K8S ApiCaller] updateRegistrySubResources(Registry, JsonNode) Start");
 		String namespace = registry.getMetadata().getNamespace();
 		String registryId = registry.getMetadata().getName();
 		Set<String> updateSubResources = new HashSet<>();
@@ -1842,47 +1834,47 @@ public class K8sApiCaller {
 		boolean renewLoginAuthRequired = false;
 		JsonArray jArrayPatchReplicaSet = new JsonArray();
 		JsonArray jArrayPatchSecret = new JsonArray();
-		
-		for( final JsonNode obj : diff) {
+
+		for (final JsonNode obj : diff) {
 			String path = "";
-			
+
 			logger.info("update object: " + obj.toString());
-			if( obj.get("path") != null) {
+			if (obj.get("path") != null) {
 				path = obj.get("path").toString().split("\"")[1];
 			}
-			
-			if(path.equals("/spec/image")) {
+
+			if (path.equals("/spec/image")) {
 				restartPodRequired = true;
 				JsonObject replJson = new JsonObject();
 				replJson.addProperty("op", "replace");
 				replJson.addProperty("path", "/spec/template/spec/containers/0/image");
 				replJson.addProperty("value", registry.getSpec().getImage());
-				
+
 				jArrayPatchReplicaSet.add(replJson);
-				
-				if(!updateSubResources.contains("ReplicaSet")) 
+
+				if (!updateSubResources.contains("ReplicaSet"))
 					updateSubResources.add("ReplicaSet");
 			}
-			if(path.equals("/spec/loginId")) {
+			if (path.equals("/spec/loginId")) {
 				restartPodRequired = true;
 				renewLoginAuthRequired = true;
 				String dataStr = registry.getSpec().getLoginId();
 				byte[] encodeData = Base64.encodeBase64(dataStr.getBytes());
-				
+
 				JsonObject replJson = new JsonObject();
 				replJson.addProperty("op", "replace");
 				replJson.addProperty("path", "/data/ID");
 				replJson.addProperty("value", new String(encodeData));
 
 				jArrayPatchSecret.add(replJson);
-				
-				if(!updateSubResources.contains("ReplicaSet")) 
+
+				if (!updateSubResources.contains("ReplicaSet"))
 					updateSubResources.add("ReplicaSet");
-				if(!updateSubResources.contains("Secret")) 
+				if (!updateSubResources.contains("Secret"))
 					updateSubResources.add("Secret");
-				
+
 			}
-			if(path.equals("/spec/loginPassword")) {
+			if (path.equals("/spec/loginPassword")) {
 				restartPodRequired = true;
 				renewLoginAuthRequired = true;
 				String dataStr = registry.getSpec().getLoginPassword();
@@ -1893,43 +1885,45 @@ public class K8sApiCaller {
 				replJson.addProperty("value", new String(encodeData));
 
 				jArrayPatchSecret.add(replJson);
-				
-				if(!updateSubResources.contains("ReplicaSet")) 
+
+				if (!updateSubResources.contains("ReplicaSet"))
 					updateSubResources.add("ReplicaSet");
-				if(!updateSubResources.contains("Secret")) 
+				if (!updateSubResources.contains("Secret"))
 					updateSubResources.add("Secret");
 			}
-			
-			if( renewLoginAuthRequired ) {
+
+			if (renewLoginAuthRequired) {
 				String loginAuth = registry.getSpec().getLoginId() + ":" + registry.getSpec().getLoginPassword();
-				loginAuth = new String( Base64.encodeBase64( loginAuth.getBytes() ) );
-				
+				loginAuth = new String(Base64.encodeBase64(loginAuth.getBytes()));
+
 				JsonObject replJson = new JsonObject();
 				replJson.addProperty("op", "replace");
-				replJson.addProperty("path", "/spec/template/spec/containers/0/readinessProbe/httpGet/httpHeaders/0/value");
+				replJson.addProperty("path",
+						"/spec/template/spec/containers/0/readinessProbe/httpGet/httpHeaders/0/value");
 				replJson.addProperty("value", "Basic " + loginAuth);
-				
+
 				jArrayPatchReplicaSet.add(replJson);
-				
+
 				JsonObject replJson2 = new JsonObject();
 				replJson2.addProperty("op", "replace");
-				replJson2.addProperty("path", "/spec/template/spec/containers/0/livenessProbe/httpGet/httpHeaders/0/value");
+				replJson2.addProperty("path",
+						"/spec/template/spec/containers/0/livenessProbe/httpGet/httpHeaders/0/value");
 				replJson2.addProperty("value", "Basic " + loginAuth);
-				
+
 				jArrayPatchReplicaSet.add(replJson2);
 			}
 		}
-		
-		for(String res : updateSubResources) {
-			if(res.equals("ReplicaSet")) {
+
+		for (String res : updateSubResources) {
+			if (res.equals("ReplicaSet")) {
 				updateRegistryReplicaSet(registry, jArrayPatchReplicaSet);
 			}
-			if(res.equals("Secret")) {
+			if (res.equals("Secret")) {
 				updateRegistrySecret(registry, jArrayPatchSecret);
 			}
 		}
-		
-		if(restartPodRequired) {
+
+		if (restartPodRequired) {
 			String podName = "";
 			V1PodList pods = null;
 			String labelSelector = "apps=" + Constants.K8S_PREFIX + Constants.K8S_REGISTRY_PREFIX + registryId;
@@ -1937,102 +1931,100 @@ public class K8sApiCaller {
 			try {
 				pods = api.listNamespacedPod(namespace, null, null, null, null, labelSelector, null, null, null, false);
 
-				if( pods.getItems().size() == 0) {
+				if (pods.getItems().size() == 0) {
 					logger.info("RegistryPod is not found");
 					return;
 				}
 
-				for(V1Pod pod : pods.getItems()) {
+				for (V1Pod pod : pods.getItems()) {
 					podName = pod.getMetadata().getName();
 					break;
 				}
 
 				api.deleteNamespacedPod(podName, namespace, null, null, null, null, null, null);
-				
-			}catch(ApiException e) {
+
+			} catch (ApiException e) {
 				logger.info(e.getResponseBody());
 			}
 		}
 	}
 
 	public static void updateRegistryReplicaSet(Registry registry, JsonElement patchJson) throws ApiException {
-		logger.info( "[K8S ApiCaller] updateRegistryReplicaSet(Registry, JsonElement) Start" );
+		logger.info("[K8S ApiCaller] updateRegistryReplicaSet(Registry, JsonElement) Start");
 		String namespace = registry.getMetadata().getNamespace();
 		String registryId = registry.getMetadata().getName();
 		logger.info("updateRegistryReplicaSet's Json: " + patchJson.toString());
 
 		try {
-			V1ReplicaSet result = appApi.patchNamespacedReplicaSet(Constants.K8S_PREFIX + Constants.K8S_REGISTRY_PREFIX + registryId, namespace, patchJson, null, null, null, null);
+			V1ReplicaSet result = appApi.patchNamespacedReplicaSet(
+					Constants.K8S_PREFIX + Constants.K8S_REGISTRY_PREFIX + registryId, namespace, patchJson, null, null,
+					null, null);
 			logger.info("patchNamespacedReplicaSet result: " + result.toString());
-		}catch(ApiException e) {
+		} catch (ApiException e) {
 			logger.info(e.getResponseBody());
 			throw e;
 		}
 	}
 
 	public static void updateRegistrySecret(Registry registry, JsonElement patchJson) throws ApiException {
-		logger.info( "[K8S ApiCaller] updateRegistrySecret(Registry, JsonElement) Start" );
+		logger.info("[K8S ApiCaller] updateRegistrySecret(Registry, JsonElement) Start");
 		String namespace = registry.getMetadata().getNamespace();
 		String registryId = registry.getMetadata().getName();
 		logger.info("updateRegistrySecret's Json: " + patchJson.toString());
 
 		try {
-			V1Secret result = api.patchNamespacedSecret(Constants.K8S_PREFIX + registryId, namespace, patchJson, null, null, null, null);
+			V1Secret result = api.patchNamespacedSecret(Constants.K8S_PREFIX + registryId, namespace, patchJson, null,
+					null, null, null);
 			logger.info("patchNamespacedSecret result: " + result.toString());
-		}catch(ApiException e) {
+		} catch (ApiException e) {
 			logger.info(e.getResponseBody());
 			throw e;
 		}
-		
+
 	}
-	
+
 	public static void updateRegistryAnnotationLastCR(Registry registry) throws ApiException {
-		logger.info( "[K8S ApiCaller] updateRegistryAnnotationLastCR(Registry) Start" );
+		logger.info("[K8S ApiCaller] updateRegistryAnnotationLastCR(Registry) Start");
 		String namespace = registry.getMetadata().getNamespace();
 		String registryId = registry.getMetadata().getName();
-		
+
 		// ------ Patch Registry
-		Map<String, String> annotations
-		= registry.getMetadata().getAnnotations() == null
-		? new HashMap<>() : registry.getMetadata().getAnnotations();
+		Map<String, String> annotations = registry.getMetadata().getAnnotations() == null ? new HashMap<>()
+				: registry.getMetadata().getAnnotations();
 
 		JsonObject json = (JsonObject) Util.toJson(registry);
-		
+
 		annotations.put(Constants.LAST_CUSTOM_RESOURCE, json.toString());
 		registry.getMetadata().setAnnotations(annotations);
 
 		try {
-			
-			Object result = customObjectApi.replaceNamespacedCustomObject(
-				Constants.CUSTOM_OBJECT_GROUP,
-				Constants.CUSTOM_OBJECT_VERSION,
-				namespace,
-				Constants.CUSTOM_OBJECT_PLURAL_REGISTRY,
-				registryId, registry);
+
+			Object result = customObjectApi.replaceNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
+					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registryId,
+					registry);
 			logger.info("replaceNamespacedCustomObject result: " + result.toString());
-			
-		}catch(ApiException e) {
+
+		} catch (ApiException e) {
 			logger.info(e.getResponseBody());
 			throw e;
 		}
 	}
-	
+
 	public static void addRegistryAnnotation(Registry registry) throws ApiException {
-		logger.info( "[K8S ApiCaller] addRegistryAnnotation(Registry) Start" );
+		logger.info("[K8S ApiCaller] addRegistryAnnotation(Registry) Start");
 		String namespace = registry.getMetadata().getNamespace();
 		String registryId = registry.getMetadata().getName();
 		String registryIpPort = "";
-		
+
 		V1Secret secretRet = api.readNamespacedSecret(Constants.K8S_PREFIX + registryId, namespace, null, null, null);
 
 		Map<String, byte[]> secretMap = secretRet.getData();
 		registryIpPort = new String(secretMap.get("REGISTRY_IP_PORT"));
 		logger.info("REGISTRY_IP_PORT = " + registryIpPort);
-		
+
 		// ------ Patch Registry
-		Map<String, String> annotations
-		= registry.getMetadata().getAnnotations() == null
-		? new HashMap<>() : registry.getMetadata().getAnnotations();
+		Map<String, String> annotations = registry.getMetadata().getAnnotations() == null ? new HashMap<>()
+				: registry.getMetadata().getAnnotations();
 
 		JsonObject json = (JsonObject) Util.toJson(registry);
 
@@ -2041,48 +2033,46 @@ public class K8sApiCaller {
 		registry.getMetadata().setAnnotations(annotations);
 
 		try {
-			Object result = customObjectApi.replaceNamespacedCustomObject(
-				Constants.CUSTOM_OBJECT_GROUP,
-				Constants.CUSTOM_OBJECT_VERSION,
-				namespace,
-				Constants.CUSTOM_OBJECT_PLURAL_REGISTRY,
-				registryId, registry);
+			Object result = customObjectApi.replaceNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
+					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registryId,
+					registry);
 
-		logger.info("replaceNamespacedCustomObject result: " + result.toString());
-		}catch(ApiException e) {
+			logger.info("replaceNamespacedCustomObject result: " + result.toString());
+		} catch (ApiException e) {
 			logger.info(e.getResponseBody());
 			throw e;
 		}
 	}
 
 	@SuppressWarnings("unchecked")
-	public static void updateRegistryStatus(V1ReplicaSet rs, String eventType) throws ApiException, JsonParseException, JsonMappingException, IOException {
-		logger.info( "[K8S ApiCaller] updateRegistryStatus(V1ReplicaSet, String) Start" );
-		
+	public static void updateRegistryStatus(V1ReplicaSet rs, String eventType)
+			throws ApiException, JsonParseException, JsonMappingException, IOException {
+		logger.info("[K8S ApiCaller] updateRegistryStatus(V1ReplicaSet, String) Start");
+
 		String registryName = "";
 		String registryPrefix = Constants.K8S_PREFIX + Constants.K8S_REGISTRY_PREFIX;
 		String namespace = rs.getMetadata().getNamespace();
-		
+
 		registryName = rs.getMetadata().getName();
 		registryName = registryName.substring(registryPrefix.length());
 		logger.info("registry name: " + registryName);
 
-		if(rs.getMetadata().getOwnerReferences() == null) {
-			logger.info(rs.getMetadata().getName() + "/" + namespace +" replicaset ownerReference is null");
+		if (rs.getMetadata().getOwnerReferences() == null) {
+			logger.info(rs.getMetadata().getName() + "/" + namespace + " replicaset ownerReference is null");
 			return;
 		}
-		
-		if( !isCurrentRegistry(rs.getMetadata().getOwnerReferences().get(0).getUid(), registryName, namespace) ) {
+
+		if (!isCurrentRegistry(rs.getMetadata().getOwnerReferences().get(0).getUid(), registryName, namespace)) {
 			logger.info("This registry's event is not for current registry. So do not update registry status");
 			return;
 		}
-			
+
 		JSONObject patchStatus = new JSONObject();
 		JSONObject condition = new JSONObject();
 		JSONArray patchStatusArray = new JSONArray();
-		
-		switch(eventType) {
-		case Constants.EVENT_TYPE_ADDED : 
+
+		switch (eventType) {
+		case Constants.EVENT_TYPE_ADDED:
 			condition.put("type", RegistryCondition.Condition.REPLICA_SET.getType());
 			condition.put("status", RegistryStatus.Status.TRUE.getStatus());
 
@@ -2090,12 +2080,12 @@ public class K8sApiCaller {
 			patchStatus.put("path", RegistryCondition.Condition.REPLICA_SET.getPath());
 			patchStatus.put("value", condition);
 			patchStatusArray.add(patchStatus);
-			
+
 			break;
-		case Constants.EVENT_TYPE_MODIFIED : 
-			
+		case Constants.EVENT_TYPE_MODIFIED:
+
 			break;
-		case Constants.EVENT_TYPE_DELETED : 
+		case Constants.EVENT_TYPE_DELETED:
 			condition.put("type", RegistryCondition.Condition.REPLICA_SET.getType());
 			condition.put("status", RegistryStatus.Status.FALSE.getStatus());
 
@@ -2103,109 +2093,107 @@ public class K8sApiCaller {
 			patchStatus.put("path", RegistryCondition.Condition.REPLICA_SET.getPath());
 			patchStatus.put("value", condition);
 			patchStatusArray.add(patchStatus);
-			
+
 			break;
 		}
-		
-		try{
-			Object result = customObjectApi.patchNamespacedCustomObjectStatus(
-					Constants.CUSTOM_OBJECT_GROUP, 
-					Constants.CUSTOM_OBJECT_VERSION, 
-					namespace, 
-					Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, 
-					registryName, patchStatusArray);
+
+		try {
+			Object result = customObjectApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP,
+					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registryName,
+					patchStatusArray);
 			logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
-		}catch(ApiException e) {
+		} catch (ApiException e) {
 			logger.info(e.getResponseBody());
 			throw e;
 		}
-		
+
 	}
-	
+
 	@SuppressWarnings("unchecked")
-	public static void updateRegistryStatus(V1Pod pod) throws ApiException, JsonParseException, JsonMappingException, IOException {
-		logger.info( "[K8S ApiCaller] updateRegistryStatus(V1Pod) Start" );
+	public static void updateRegistryStatus(V1Pod pod)
+			throws ApiException, JsonParseException, JsonMappingException, IOException {
+		logger.info("[K8S ApiCaller] updateRegistryStatus(V1Pod) Start");
 		String registryName = "";
 		String registryPrefix = Constants.K8S_PREFIX + Constants.K8S_REGISTRY_PREFIX;
 		String namespace = pod.getMetadata().getNamespace();
 		String reason = "";
-		
+
 		registryName = pod.getMetadata().getLabels().get("apps");
 		registryName = registryName.substring(registryPrefix.length());
 		logger.info("registry name: " + registryName);
-		
+
 		String verifyUid = null;
 		try {
-			V1ReplicaSet rs = appApi.readNamespacedReplicaSet(Constants.K8S_PREFIX + Constants.K8S_REGISTRY_PREFIX + registryName, namespace, null, null, null);
-			
-			if( pod.getMetadata().getOwnerReferences() != null ) {
-				if( pod.getMetadata().getOwnerReferences().get(0).getUid().equals(rs.getMetadata().getUid()) ) {
-					if( rs.getMetadata().getOwnerReferences() != null) {
+			V1ReplicaSet rs = appApi.readNamespacedReplicaSet(
+					Constants.K8S_PREFIX + Constants.K8S_REGISTRY_PREFIX + registryName, namespace, null, null, null);
+
+			if (pod.getMetadata().getOwnerReferences() != null) {
+				if (pod.getMetadata().getOwnerReferences().get(0).getUid().equals(rs.getMetadata().getUid())) {
+					if (rs.getMetadata().getOwnerReferences() != null) {
 						verifyUid = rs.getMetadata().getOwnerReferences().get(0).getUid();
 					}
-				}
-				else {
-					logger.info("This pod uid(" + pod.getMetadata().getOwnerReferences().get(0).getUid() + ") is not for current replicaset("+ rs.getMetadata().getOwnerReferences().get(0).getUid() +")");
+				} else {
+					logger.info("This pod uid(" + pod.getMetadata().getOwnerReferences().get(0).getUid()
+							+ ") is not for current replicaset(" + rs.getMetadata().getOwnerReferences().get(0).getUid()
+							+ ")");
 				}
 			}
-		}catch(ApiException e) {
+		} catch (ApiException e) {
 			logger.info(e.getResponseBody());
 			throw e;
 		}
-		
-		if( !isCurrentRegistry(verifyUid, registryName, namespace) ) {
+
+		if (!isCurrentRegistry(verifyUid, registryName, namespace)) {
 			logger.info("This registry's event is not for current registry. So do not update registry status");
 			return;
 		}
-		
-		if( pod.getStatus().getContainerStatuses() != null ) {
-			if(pod.getStatus().getContainerStatuses().get(0).getState().getWaiting() != null) {
+
+		if (pod.getStatus().getContainerStatuses() != null) {
+			if (pod.getStatus().getContainerStatuses().get(0).getState().getWaiting() != null) {
 				logger.info(pod.getStatus().getContainerStatuses().get(0).getState().getWaiting().toString());
 				reason = pod.getStatus().getContainerStatuses().get(0).getState().getWaiting().getReason();
-			}
-			else if(pod.getStatus().getContainerStatuses().get(0).getState().getRunning() != null) {
+			} else if (pod.getStatus().getContainerStatuses().get(0).getState().getRunning() != null) {
 				logger.info(pod.getStatus().getContainerStatuses().get(0).toString());
-				if(pod.getStatus().getContainerStatuses().get(0).getReady()) 
+				if (pod.getStatus().getContainerStatuses().get(0).getReady())
 					reason = "Running";
-				else 
+				else
 					reason = "NotReady";
-			}
-			else if(pod.getStatus().getContainerStatuses().get(0).getState().getTerminated() != null) {
+			} else if (pod.getStatus().getContainerStatuses().get(0).getState().getTerminated() != null) {
 				logger.info(pod.getStatus().getContainerStatuses().get(0).getState().getTerminated().toString());
 				reason = pod.getStatus().getContainerStatuses().get(0).getState().getTerminated().getReason();
-			}
-			else reason = "Unknown";
-			
-			if(reason == null) reason = "";
+			} else
+				reason = "Unknown";
+
+			if (reason == null)
+				reason = "";
 			logger.info("registry pod state's reason: " + reason);
 
 			Object response = null;
 			try {
-				response = customObjectApi.getNamespacedCustomObject(
-						Constants.CUSTOM_OBJECT_GROUP, 
-						Constants.CUSTOM_OBJECT_VERSION, 
-						namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registryName);
+				response = customObjectApi.getNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
+						Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY,
+						registryName);
 				logger.info("getNamespacedCustomObject result: " + response.toString());
-				
-			}catch(ApiException e) {
+
+			} catch (ApiException e) {
 				logger.info(e.getResponseBody());
 				throw e;
 			}
-			
+
 			Registry registry = null;
 			try {
 				registry = mapper.readValue(gson.toJson(response), Registry.class);
-			} catch(JsonParseException | JsonMappingException e) {
+			} catch (JsonParseException | JsonMappingException e) {
 				logger.info(e.getMessage());
-			} 
-			
+			}
+
 			logger.info("REGISTRY RESOURCE VERSION: " + registry.getMetadata().getResourceVersion());
 			logger.info("REGISTRY UID: " + registry.getMetadata().getUid());
 
 			JSONArray patchStatusArray = new JSONArray();
-			
-			if( registry.getStatus().getPhase() != null) {
-				if(reason.equals("NotReady")) {
+
+			if (registry.getStatus().getPhase() != null) {
+				if (reason.equals("NotReady")) {
 					JSONObject patchStatus = new JSONObject();
 					JSONObject patchStatus2 = new JSONObject();
 					JSONObject condition = new JSONObject();
@@ -2218,7 +2206,7 @@ public class K8sApiCaller {
 					patchStatus.put("path", RegistryCondition.Condition.POD.getPath());
 					patchStatus.put("value", condition);
 					patchStatusArray.add(patchStatus);
-					
+
 					condition2.put("type", RegistryCondition.Condition.CONTAINER.getType());
 					condition2.put("status", RegistryStatus.Status.FALSE.getStatus());
 
@@ -2226,8 +2214,7 @@ public class K8sApiCaller {
 					patchStatus2.put("path", RegistryCondition.Condition.CONTAINER.getPath());
 					patchStatus2.put("value", condition2);
 					patchStatusArray.add(patchStatus2);
-				}
-				else if( reason.equals("Running") ) {
+				} else if (reason.equals("Running")) {
 					JSONObject patchStatus = new JSONObject();
 					JSONObject patchStatus2 = new JSONObject();
 					JSONObject condition = new JSONObject();
@@ -2240,7 +2227,7 @@ public class K8sApiCaller {
 					patchStatus.put("path", RegistryCondition.Condition.POD.getPath());
 					patchStatus.put("value", condition);
 					patchStatusArray.add(patchStatus);
-					
+
 					condition2.put("type", RegistryCondition.Condition.CONTAINER.getType());
 					condition2.put("status", RegistryStatus.Status.TRUE.getStatus());
 
@@ -2248,8 +2235,7 @@ public class K8sApiCaller {
 					patchStatus2.put("path", RegistryCondition.Condition.CONTAINER.getPath());
 					patchStatus2.put("value", condition2);
 					patchStatusArray.add(patchStatus2);
-				}
-				else {
+				} else {
 					JSONObject patchStatus = new JSONObject();
 					JSONObject patchStatus2 = new JSONObject();
 					JSONObject condition = new JSONObject();
@@ -2262,7 +2248,7 @@ public class K8sApiCaller {
 					patchStatus.put("path", RegistryCondition.Condition.POD.getPath());
 					patchStatus.put("value", condition);
 					patchStatusArray.add(patchStatus);
-					
+
 					condition2.put("type", RegistryCondition.Condition.CONTAINER.getType());
 					condition2.put("status", RegistryStatus.Status.FALSE.getStatus());
 
@@ -2270,53 +2256,50 @@ public class K8sApiCaller {
 					patchStatus2.put("path", RegistryCondition.Condition.CONTAINER.getPath());
 					patchStatus2.put("value", condition2);
 					patchStatusArray.add(patchStatus2);
-					
+
 				}
-				
-				try{
-					Object result = customObjectApi.patchNamespacedCustomObjectStatus(
-							Constants.CUSTOM_OBJECT_GROUP, 
-							Constants.CUSTOM_OBJECT_VERSION, 
-							namespace, 
-							Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, 
+
+				try {
+					Object result = customObjectApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP,
+							Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY,
 							registryName, patchStatusArray);
 					logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
-				}catch(ApiException e) {
+				} catch (ApiException e) {
 					logger.info(e.getResponseBody());
 					throw e;
 				}
-				
+
 			}
 		}
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	public static void updateRegistryStatus(V1Service svc, String eventType) throws ApiException, IOException {
-		logger.info( "[K8S ApiCaller] updateRegistryStatus(V1Service, String) Start" );
+		logger.info("[K8S ApiCaller] updateRegistryStatus(V1Service, String) Start");
 		String registryName = "";
 		String registryPrefix = Constants.K8S_PREFIX;
 		String namespace = svc.getMetadata().getNamespace();
-		
+
 		registryName = svc.getMetadata().getName();
 		registryName = registryName.substring(registryPrefix.length());
 		logger.info("registry name: " + registryName);
-		
-		if(svc.getMetadata().getOwnerReferences() == null) {
-			logger.info(svc.getMetadata().getName() + "/" + namespace +" service ownerReference is null");
+
+		if (svc.getMetadata().getOwnerReferences() == null) {
+			logger.info(svc.getMetadata().getName() + "/" + namespace + " service ownerReference is null");
 			return;
 		}
-		
-		if( !isCurrentRegistry(svc.getMetadata().getOwnerReferences().get(0).getUid(), registryName, namespace) ) {
+
+		if (!isCurrentRegistry(svc.getMetadata().getOwnerReferences().get(0).getUid(), registryName, namespace)) {
 			logger.info("This registry's event is not for current registry. So do not update registry status");
 			return;
 		}
-		
+
 		JSONArray patchStatusArray = new JSONArray();
 		JSONObject patchStatus = new JSONObject();
 		JSONObject condition = new JSONObject();
-		
-		switch(eventType) {
-		case Constants.EVENT_TYPE_ADDED : 
+
+		switch (eventType) {
+		case Constants.EVENT_TYPE_ADDED:
 			condition.put("type", RegistryCondition.Condition.SERVICE.getType());
 			condition.put("status", RegistryStatus.Status.TRUE.getStatus());
 
@@ -2324,12 +2307,12 @@ public class K8sApiCaller {
 			patchStatus.put("path", RegistryCondition.Condition.SERVICE.getPath());
 			patchStatus.put("value", condition);
 			patchStatusArray.add(patchStatus);
-			
+
 			break;
-		case Constants.EVENT_TYPE_MODIFIED : 
-			
+		case Constants.EVENT_TYPE_MODIFIED:
+
 			break;
-		case Constants.EVENT_TYPE_DELETED : 
+		case Constants.EVENT_TYPE_DELETED:
 			condition.put("type", RegistryCondition.Condition.SERVICE.getType());
 			condition.put("status", RegistryStatus.Status.FALSE.getStatus());
 
@@ -2340,55 +2323,52 @@ public class K8sApiCaller {
 
 			break;
 		}
-		
-		try{
-			Object result = customObjectApi.patchNamespacedCustomObjectStatus(
-					Constants.CUSTOM_OBJECT_GROUP, 
-					Constants.CUSTOM_OBJECT_VERSION, 
-					namespace, 
-					Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, 
-					registryName, patchStatusArray);
+
+		try {
+			Object result = customObjectApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP,
+					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registryName,
+					patchStatusArray);
 			logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
-		}catch(ApiException e) {
+		} catch (ApiException e) {
 			logger.info(e.getResponseBody());
 			throw e;
 		}
-		
+
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	public static void updateRegistryStatus(V1Secret secret, String eventType) throws ApiException, IOException {
-		logger.info( "[K8S ApiCaller] updateRegistryStatus(V1Secret, String) Start" );
+		logger.info("[K8S ApiCaller] updateRegistryStatus(V1Secret, String) Start");
 		String registryName = "";
-		String registryPrefix = secret.getType().equals(Constants.K8S_SECRET_TYPE_DOCKER_CONFIG_JSON) 
-				? Constants.K8S_PREFIX + Constants.K8S_REGISTRY_PREFIX : Constants.K8S_PREFIX;
+		String registryPrefix = secret.getType().equals(Constants.K8S_SECRET_TYPE_DOCKER_CONFIG_JSON)
+				? Constants.K8S_PREFIX + Constants.K8S_REGISTRY_PREFIX
+				: Constants.K8S_PREFIX;
 		String namespace = secret.getMetadata().getNamespace();
-		
+
 		logger.info("registry secret type: " + secret.getType());
 		logger.info("registry prefix: " + registryPrefix);
 		registryName = secret.getMetadata().getName();
 		registryName = registryName.substring(registryPrefix.length());
 		logger.info("registry name: " + registryName);
-		
-		if(secret.getMetadata().getOwnerReferences() == null) {
-			logger.info(secret.getMetadata().getName() + "/" + namespace +" secret ownerReference is null");
+
+		if (secret.getMetadata().getOwnerReferences() == null) {
+			logger.info(secret.getMetadata().getName() + "/" + namespace + " secret ownerReference is null");
 			return;
 		}
-		
-		if( !isCurrentRegistry(secret.getMetadata().getOwnerReferences().get(0).getUid(), registryName, namespace) ) {
+
+		if (!isCurrentRegistry(secret.getMetadata().getOwnerReferences().get(0).getUid(), registryName, namespace)) {
 			logger.info("This registry's event is not for current registry. So do not update registry status");
 			return;
 		}
-		
 
 		// DOCKEER CONFIG JSON TYPE SECRET
-		if ( secret.getType().equals(Constants.K8S_SECRET_TYPE_DOCKER_CONFIG_JSON)) {
+		if (secret.getType().equals(Constants.K8S_SECRET_TYPE_DOCKER_CONFIG_JSON)) {
 			JSONArray patchStatusArray = new JSONArray();
 			JSONObject patchStatus = new JSONObject();
 			JSONObject condition = new JSONObject();
-			
-			switch(eventType) {
-			case Constants.EVENT_TYPE_ADDED : 
+
+			switch (eventType) {
+			case Constants.EVENT_TYPE_ADDED:
 				condition.put("type", RegistryCondition.Condition.SECRET_DOCKER_CONFIG_JSON.getType());
 				condition.put("status", RegistryStatus.Status.TRUE.getStatus());
 
@@ -2396,12 +2376,12 @@ public class K8sApiCaller {
 				patchStatus.put("path", RegistryCondition.Condition.SECRET_DOCKER_CONFIG_JSON.getPath());
 				patchStatus.put("value", condition);
 				patchStatusArray.add(patchStatus);
-				
+
 				break;
-			case Constants.EVENT_TYPE_MODIFIED : 
-				
+			case Constants.EVENT_TYPE_MODIFIED:
+
 				break;
-			case Constants.EVENT_TYPE_DELETED : 
+			case Constants.EVENT_TYPE_DELETED:
 				condition.put("type", RegistryCondition.Condition.SECRET_DOCKER_CONFIG_JSON.getType());
 				condition.put("status", RegistryStatus.Status.FALSE.getStatus());
 
@@ -2412,28 +2392,25 @@ public class K8sApiCaller {
 
 				break;
 			}
-			
-			try{
-				Object result = customObjectApi.patchNamespacedCustomObjectStatus(
-						Constants.CUSTOM_OBJECT_GROUP, 
-						Constants.CUSTOM_OBJECT_VERSION, 
-						namespace, 
-						Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, 
+
+			try {
+				Object result = customObjectApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP,
+						Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY,
 						registryName, patchStatusArray);
 				logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
 			} catch (ApiException e) {
 				logger.info(e.getResponseBody());
 				throw e;
 			}
-		
-		// OPAQUE TYPE SECRET
-		}else {
+
+			// OPAQUE TYPE SECRET
+		} else {
 			JSONArray patchStatusArray = new JSONArray();
 			JSONObject patchStatus = new JSONObject();
 			JSONObject condition = new JSONObject();
-			
-			switch(eventType) {
-			case Constants.EVENT_TYPE_ADDED : 
+
+			switch (eventType) {
+			case Constants.EVENT_TYPE_ADDED:
 				condition.put("type", RegistryCondition.Condition.SECRET_OPAQUE.getType());
 				condition.put("status", RegistryStatus.Status.TRUE.getStatus());
 
@@ -2441,12 +2418,12 @@ public class K8sApiCaller {
 				patchStatus.put("path", RegistryCondition.Condition.SECRET_OPAQUE.getPath());
 				patchStatus.put("value", condition);
 				patchStatusArray.add(patchStatus);
-				
+
 				break;
-			case Constants.EVENT_TYPE_MODIFIED : 
-				
+			case Constants.EVENT_TYPE_MODIFIED:
+
 				break;
-			case Constants.EVENT_TYPE_DELETED : 
+			case Constants.EVENT_TYPE_DELETED:
 				condition.put("type", RegistryCondition.Condition.SECRET_OPAQUE.getType());
 				condition.put("status", RegistryStatus.Status.FALSE.getStatus());
 
@@ -2457,127 +2434,120 @@ public class K8sApiCaller {
 
 				break;
 			}
-			
-			try{
-				Object result = customObjectApi.patchNamespacedCustomObjectStatus(
-						Constants.CUSTOM_OBJECT_GROUP, 
-						Constants.CUSTOM_OBJECT_VERSION, 
-						namespace, 
-						Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, 
+
+			try {
+				Object result = customObjectApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP,
+						Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY,
 						registryName, patchStatusArray);
 				logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
-			}catch(ApiException e) {
+			} catch (ApiException e) {
 				logger.info(e.getResponseBody());
 				throw e;
 			}
 		}
 	}
-	
-	public static boolean isCurrentRegistry(String verifyUid, String registryName, String namespace) throws ApiException, IOException {
+
+	public static boolean isCurrentRegistry(String verifyUid, String registryName, String namespace)
+			throws ApiException, IOException {
 		String existRegistryUID = null;
 		Object response = null;
-		
-		if( verifyUid == null ) {
+
+		if (verifyUid == null) {
 			logger.info("verifyUid is null!!");
 			return false;
 		}
-		
+
 		try {
-			response = customObjectApi.getNamespacedCustomObject(
-					Constants.CUSTOM_OBJECT_GROUP, 
-					Constants.CUSTOM_OBJECT_VERSION, 
-					namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registryName);
-		}catch(ApiException e) {
+			response = customObjectApi.getNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
+					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registryName);
+		} catch (ApiException e) {
 			logger.info(e.getResponseBody());
 			throw e;
 		}
-		
+
 		try {
 			Registry existRegistry = null;
-			
+
 			existRegistry = mapper.readValue(gson.toJson(response), Registry.class);
 			existRegistryUID = existRegistry.getMetadata().getUid();
 			logger.info("VERIFY REGISTRY UID: " + verifyUid);
 			logger.info("EXIST REGISTRY UID: " + existRegistryUID);
-		} catch(JsonParseException | JsonMappingException e) {
+		} catch (JsonParseException | JsonMappingException e) {
 			logger.info(e.getMessage());
 			throw e;
 		}
-		
+
 		return verifyUid.equals(existRegistryUID);
 	}
-	
-	
+
 	public static List<Image> getAllImageData(Registry registry) throws ApiException, Exception {
 		List<Image> imageList = null;
-		
+
 		try {
-			Object response = customObjectApi.listNamespacedCustomObject(
-				Constants.CUSTOM_OBJECT_GROUP, 
-				Constants.CUSTOM_OBJECT_VERSION, 
-				registry.getMetadata().getNamespace(),
-				Constants.CUSTOM_OBJECT_PLURAL_IMAGE, 
-				null, null, null, "registry=" + registry.getMetadata().getName(), 
-				null, null, null, Boolean.FALSE);
-			
+			Object response = customObjectApi.listNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
+					Constants.CUSTOM_OBJECT_VERSION, registry.getMetadata().getNamespace(),
+					Constants.CUSTOM_OBJECT_PLURAL_IMAGE, null, null, null,
+					"registry=" + registry.getMetadata().getName(), null, null, null, Boolean.FALSE);
+
 			JsonObject respJson = (JsonObject) new JsonParser().parse((new Gson()).toJson(response));
 
-			// Register Joda deserialization module because of creationTimestamp of k8s object
+			// Register Joda deserialization module because of creationTimestamp of k8s
+			// object
 			mapper.registerModule(new JodaModule());
-			imageList = mapper.readValue((new Gson()).toJson(respJson.get("items")), new TypeReference<ArrayList<Image>>() {});
+			imageList = mapper.readValue((new Gson()).toJson(respJson.get("items")),
+					new TypeReference<ArrayList<Image>>() {
+					});
 
-		}catch(ApiException e) {
+		} catch (ApiException e) {
 			logger.info(e.getResponseBody());
 			throw e;
-		}catch(JsonParseException | JsonMappingException e) {
+		} catch (JsonParseException | JsonMappingException e) {
 			logger.info(e.getMessage());
 			throw e;
-		} 
-		
+		}
+
 		return imageList;
 	}
 
 	public static void initializeImageList() throws ApiException, Exception {
 		try {
-			Object response = customObjectApi.listClusterCustomObject(
-					Constants.CUSTOM_OBJECT_GROUP, 
-					Constants.CUSTOM_OBJECT_VERSION, 
-					Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, 
-					null, null, null, null, null, null, null, Boolean.FALSE);
-
+			Object response = customObjectApi.listClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP,
+					Constants.CUSTOM_OBJECT_VERSION, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, null, null, null, null,
+					null, null, null, Boolean.FALSE);
 
 			JsonObject respJson = (JsonObject) new JsonParser().parse((new Gson()).toJson(response));
 
-        	mapper.registerModule(new JodaModule());
-			List<Registry> registryList = mapper.readValue((new Gson()).toJson(respJson.get("items")), new TypeReference<ArrayList<Registry>>() {});
+			mapper.registerModule(new JodaModule());
+			List<Registry> registryList = mapper.readValue((new Gson()).toJson(respJson.get("items")),
+					new TypeReference<ArrayList<Registry>>() {
+					});
 
-			if( registryList != null) {
-				for(Registry registry : registryList) {
-					logger.info(registry.getMetadata().getName() + "/" + registry.getMetadata().getNamespace() + " registry sync");
+			if (registryList != null) {
+				for (Registry registry : registryList) {
+					logger.info(registry.getMetadata().getName() + "/" + registry.getMetadata().getNamespace()
+							+ " registry sync");
 					syncImageList(registry);
 				}
 			}
 		} catch (ApiException e) {
 			logger.info("Response body: " + e.getResponseBody());
-		} catch(JsonParseException | JsonMappingException e) {
+		} catch (JsonParseException | JsonMappingException e) {
 			logger.info(e.getMessage());
 			throw e;
-		} 
+		}
 	}
-	
+
 	public static void syncImageList(Registry registry) throws ApiException, Exception {
-		logger.info( "[K8S ApiCaller] syncImageList(Registry) Start" );
+		logger.info("[K8S ApiCaller] syncImageList(Registry) Start");
 		String namespace = registry.getMetadata().getNamespace();
 		SSLSocketFactory sf = null;
 		Map<String, String> header = new HashMap<>();
 		Map<String, String> certMap = null;
-		
+
 		try {
 			certMap = K8sApiCaller.readSecret(namespace, Constants.K8S_PREFIX + registry.getMetadata().getName());
-			sf = SecurityHelper.createSocketFactory(
-					certMap.get(Constants.CERT_CERT_FILE), 
-					certMap.get(Constants.CERT_CERT_FILE), 
-					certMap.get(Constants.CERT_KEY_FILE));
+			sf = SecurityHelper.createSocketFactory(certMap.get(Constants.CERT_CERT_FILE),
+					certMap.get(Constants.CERT_CERT_FILE), certMap.get(Constants.CERT_KEY_FILE));
 		} catch (ApiException e) {
 			logger.info(e.getResponseBody());
 			throw e;
@@ -2588,237 +2558,236 @@ public class K8sApiCaller {
 
 		// Set authorization Header
 		String auth = certMap.get("ID") + ":" + certMap.get("PASSWD");
-		String encodedAuth = new String( Base64.encodeBase64( auth.getBytes() ) );
+		String encodedAuth = new String(Base64.encodeBase64(auth.getBytes()));
 		String registryIpPort = certMap.get("REGISTRY_IP_PORT");
 		logger.info("[encodedAuth]" + encodedAuth);
 		header.put("authorization", "Basic " + encodedAuth);
-		
-		logger.info("Image Registry [ "+ registryIpPort + "] : Get Current Image List from Repository ");
+
+		logger.info("Image Registry [ " + registryIpPort + "] : Get Current Image List from Repository ");
 		String imagelistResponse = httpsCommander(sf, header, null, registryIpPort, "v2/_catalog?n=10000", null);
-		
+
 		JsonObject imagelistJson = (JsonObject) new JsonParser().parse(imagelistResponse.toString());
 		JsonArray repositories = imagelistJson.getAsJsonArray("repositories");
-		List <String> imageList = new ArrayList<>();
-		if(repositories != null) {
-			for ( JsonElement imageElement : repositories ){
+		List<String> imageList = new ArrayList<>();
+		if (repositories != null) {
+			for (JsonElement imageElement : repositories) {
 				String imageName = imageElement.toString();
 				imageName = imageName.replaceAll("\"", "");
-				logger.info( "Repository Image : " + imageName );
-				imageList.add(imageName);			
+				logger.info("Repository Image : " + imageName);
+				imageList.add(imageName);
 			}
 		}
 
 		logger.info("Previous Image List");
-		List < Image > imageListDB = getAllImageData(registry);
-		List < String > imageNameListDB = null;
-		if(imageListDB != null) {
-			for (Image imageDB : imageListDB){
-				if (imageNameListDB == null){
+		List<Image> imageListDB = getAllImageData(registry);
+		List<String> imageNameListDB = null;
+		if (imageListDB != null) {
+			for (Image imageDB : imageListDB) {
+				if (imageNameListDB == null) {
 					imageNameListDB = new ArrayList<>();
 				}
 				imageNameListDB.add(imageDB.getSpec().getName());
 			}
 		}
-		
+
 		logger.info("Comparing ImageName and get New Images Name & Deleted Images Name");
-		List < String > newImageList = new ArrayList<>();
-		List < String > deletedImageList = new ArrayList<>();
-		
-		for (String imageName : imageList){	
-			if(imageNameListDB == null) {
+		List<String> newImageList = new ArrayList<>();
+		List<String> deletedImageList = new ArrayList<>();
+
+		for (String imageName : imageList) {
+			if (imageNameListDB == null) {
 				imageNameListDB = new ArrayList<>();
 			}
-			if(!imageNameListDB.contains(imageName)){
-				if (newImageList ==null){
+			if (!imageNameListDB.contains(imageName)) {
+				if (newImageList == null) {
 					newImageList = new ArrayList<>();
 				}
 				newImageList.add(imageName);
-				logger.info( "new Image : " + imageName );
+				logger.info("new Image : " + imageName);
 			}
 		}
 
-		if(imageNameListDB != null) {
-			for (String imageName : imageNameListDB){	
-				if (imageList == null){
+		if (imageNameListDB != null) {
+			for (String imageName : imageNameListDB) {
+				if (imageList == null) {
 					imageList = new ArrayList<>();
 				}
-				if(!imageList.contains(imageName)){
-					if (deletedImageList ==null){
+				if (!imageList.contains(imageName)) {
+					if (deletedImageList == null) {
 						deletedImageList = new ArrayList<>();
 					}
 					deletedImageList.add(imageName);
-					logger.info( "deleted Image : " + imageName );
+					logger.info("deleted Image : " + imageName);
 				}
 			}
 		}
-		
-		if(newImageList != null){
+
+		if (newImageList != null) {
 			logger.info("For New Image, Insert Image and Versions Data from Repository");
-			for (String newImage : newImageList){
-				logger.info("Image Registry [ "+ registryIpPort + "] : Get Current Image ["+ newImage +"] tags List ");
+			for (String newImage : newImageList) {
+				logger.info(
+						"Image Registry [ " + registryIpPort + "] : Get Current Image [" + newImage + "] tags List ");
 				String tagslistResponse = null;
-				
-				tagslistResponse = K8sApiCaller.httpsCommander(sf, header, null, registryIpPort, "v2/"+newImage+"/tags/list?n=10000", null);
+
+				tagslistResponse = K8sApiCaller.httpsCommander(sf, header, null, registryIpPort,
+						"v2/" + newImage + "/tags/list?n=10000", null);
 				JsonObject tagsListJson = (JsonObject) new JsonParser().parse(tagslistResponse.toString());
 				JsonArray tags = null;
 
-				if( tagsListJson.get("errors") == null) {
-					if (! tagsListJson.get("tags").isJsonNull() ) {
+				if (tagsListJson.get("errors") == null) {
+					if (!tagsListJson.get("tags").isJsonNull()) {
 						tags = tagsListJson.getAsJsonArray("tags");
-					}				
+					}
 				} else {
 					continue;
 				}
-				
-				List <String> tagsList = null;
-				
-				if(tags != null) {
+
+				List<String> tagsList = null;
+
+				if (tags != null) {
 					tagsList = new ArrayList<>();
-					for ( JsonElement tagElement : tags ){
+					for (JsonElement tagElement : tags) {
 						String tag = tagElement.toString();
 						tag = tag.replaceAll("\"", "");
 						tagsList.add(tag);
 					}
 				}
-				if(tagsList !=null){
+				if (tagsList != null) {
 					createImage(registry, newImage, tagsList);
 					logger.info("Insert Image and Versions Data from Repository Success!");
 				}
 			}
 		}
-				
-		if (imageListDB != null){
+
+		if (imageListDB != null) {
 			logger.info("For Exist Image, Compare tags List, Insert Version Data from Repository");
-			for (Image imageDB : imageListDB){
-				
-				List < String > tagsListDB = null;
-				for ( String imageVersion : imageDB.getSpec().getVersions() ){	
-					if (tagsListDB == null){
+			for (Image imageDB : imageListDB) {
+
+				List<String> tagsListDB = null;
+				for (String imageVersion : imageDB.getSpec().getVersions()) {
+					if (tagsListDB == null) {
 						tagsListDB = new ArrayList<>();
 					}
-					tagsListDB.add( imageVersion );
+					tagsListDB.add(imageVersion);
 				}
-				
+
 				String tagslistResponse = null;
-				logger.info("Image Registry [ "+ registryIpPort + "] : Get Current Image ["+ imageDB.getSpec().getName() + "] tags List ");
-				
-				tagslistResponse = K8sApiCaller.httpsCommander(sf, header, null, registryIpPort, "v2/" + imageDB.getSpec().getName() + "/tags/list?n=10000", null);
+				logger.info("Image Registry [ " + registryIpPort + "] : Get Current Image ["
+						+ imageDB.getSpec().getName() + "] tags List ");
+
+				tagslistResponse = K8sApiCaller.httpsCommander(sf, header, null, registryIpPort,
+						"v2/" + imageDB.getSpec().getName() + "/tags/list?n=10000", null);
 				JsonObject tagsListJson = (JsonObject) new JsonParser().parse(tagslistResponse.toString());
-				
+
 				JsonArray tags = null;
 
-				if( tagsListJson.get("errors") == null) {
-					if (! tagsListJson.get("tags").isJsonNull() ) {
+				if (tagsListJson.get("errors") == null) {
+					if (!tagsListJson.get("tags").isJsonNull()) {
 						tags = tagsListJson.getAsJsonArray("tags");
-					}				
+					}
 				} else {
 					continue;
 				}
-				
-				List <String> tagsList = null;
-				
-				if(tags != null) {
+
+				List<String> tagsList = null;
+
+				if (tags != null) {
 					tagsList = new ArrayList<>();
-					for ( JsonElement tagElement : tags ){
+					for (JsonElement tagElement : tags) {
 						String tag = tagElement.toString();
 						tag = tag.replaceAll("\"", "");
-						tagsList.add(tag);			
+						tagsList.add(tag);
 					}
 				}
 
 //				logger.info("Comparing Tags and get New Tag");
-				List < String > newTagsList = null;
-				List < String > deletedTagsList = null;
-				if ( tagsList != null && tagsList.size() > 0 ) {
-					for (String tag : tagsList ){
-						if( tagsListDB != null && !tagsListDB.contains(tag) ){
-							if(newTagsList == null){
+				List<String> newTagsList = null;
+				List<String> deletedTagsList = null;
+				if (tagsList != null && tagsList.size() > 0) {
+					for (String tag : tagsList) {
+						if (tagsListDB != null && !tagsListDB.contains(tag)) {
+							if (newTagsList == null) {
 								newTagsList = new ArrayList<>();
 							}
 							newTagsList.add(tag);
-							logger.info( "Image Name [" + imageDB.getSpec().getName() + "] New Tag : " + tag );
-						}			
+							logger.info("Image Name [" + imageDB.getSpec().getName() + "] New Tag : " + tag);
+						}
 					}
 				}
-					
-				if ( tagsListDB != null && tagsListDB.size() > 0 ) {
-					for (String tag : tagsListDB ){
-						if( tagsList != null && !tagsList.contains(tag) ){
-							if(deletedTagsList == null){
+
+				if (tagsListDB != null && tagsListDB.size() > 0) {
+					for (String tag : tagsListDB) {
+						if (tagsList != null && !tagsList.contains(tag)) {
+							if (deletedTagsList == null) {
 								deletedTagsList = new ArrayList<>();
 							}
 							deletedTagsList.add(tag);
-							logger.info( "Image Name [" + imageDB.getSpec().getName() + "] Deleted Tag : " + tag );
-						}			
-					}	
+							logger.info("Image Name [" + imageDB.getSpec().getName() + "] Deleted Tag : " + tag);
+						}
+					}
 				}
-				
-				if(newTagsList !=null){
+
+				if (newTagsList != null) {
 					addImageVersions(registry, imageDB.getSpec().getName(), newTagsList);
 					logger.info("Insert Versions Data from Repository Success!");
-				}	
-				
-				if(deletedTagsList !=null){
+				}
+
+				if (deletedTagsList != null) {
 					deleteImageVersions(registry, imageDB.getSpec().getName(), deletedTagsList);
 					logger.info("Delete Versions Data from Repository Success!");
-				}	
+				}
 			}
-		}		
-		
-		if(deletedImageList != null){
+		}
+
+		if (deletedImageList != null) {
 			logger.info("For Deleted Image, Delete Image Data from Repository");
-			for (String deletedImage : deletedImageList){
+			for (String deletedImage : deletedImageList) {
 				deleteImage(registry, deletedImage);
 				logger.info("Delete Image Data from Repository Success!");
 			}
 		}
-		
+
 	}
 
 	@SuppressWarnings("unchecked")
-	public static void deleteImageVersions(Registry registry, String imageName, List < String > tagsList) throws ApiException {
-		logger.info( "[K8S ApiCaller] deleteImageVersions(Registry, String, List<String>) Start" );
-		
+	public static void deleteImageVersions(Registry registry, String imageName, List<String> tagsList)
+			throws ApiException {
+		logger.info("[K8S ApiCaller] deleteImageVersions(Registry, String, List<String>) Start");
+
 		String namespace = registry.getMetadata().getNamespace();
 		String imageRegistry = registry.getMetadata().getName();
 		Image image = new Image();
-		
+
 		logger.info("imageName: " + imageName);
 		logger.info("imageRegistry: " + imageRegistry);
 
-		
 		String imageCRName = Util.parseImageName(imageName) + "." + imageRegistry;
-		
+
 		try {
-			Object response = customObjectApi.getNamespacedCustomObject(
-					Constants.CUSTOM_OBJECT_GROUP,
-					Constants.CUSTOM_OBJECT_VERSION,
-					namespace,
-					Constants.CUSTOM_OBJECT_PLURAL_IMAGE,
-					imageCRName);
-			
+			Object response = customObjectApi.getNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
+					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_IMAGE, imageCRName);
+
 			image = mapper.readValue(gson.toJson(response), Image.class);
 
 			logger.info("IMAGE RESOURCE VERSION: " + image.getMetadata().getResourceVersion());
 			logger.info("IMAGE UID: " + image.getMetadata().getUid());
-		}catch(ApiException e) {
+		} catch (ApiException e) {
 			logger.info(e.getResponseBody());
 		} catch (IOException e) {
 			logger.info(e.getMessage());
 		}
 
-		try { 
+		try {
 			JSONArray patchArray = new JSONArray();
 			JSONObject patchContent = new JSONObject();
 			JSONArray versions = new JSONArray();
 
-			for( String version : image.getSpec().getVersions()) {
+			for (String version : image.getSpec().getVersions()) {
 				logger.info("Exist Image Version: " + version);
-				
-				if(!tagsList.contains(version)) {
+
+				if (!tagsList.contains(version)) {
 					versions.add(version);
-				}
-				else {
+				} else {
 					logger.info("Deleted Image Version: " + version);
 				}
 			}
@@ -2829,49 +2798,43 @@ public class K8sApiCaller {
 			patchArray.add(patchContent);
 
 			try {
-				Object result = customObjectApi.patchNamespacedCustomObject(
-						Constants.CUSTOM_OBJECT_GROUP,
-						Constants.CUSTOM_OBJECT_VERSION,
-						namespace,
-						Constants.CUSTOM_OBJECT_PLURAL_IMAGE,
-						imageCRName, patchArray);
+				Object result = customObjectApi.patchNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
+						Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_IMAGE, imageCRName,
+						patchArray);
 				logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
-			}catch(ApiException e) {
+			} catch (ApiException e) {
 				logger.info(e.getResponseBody());
 				throw e;
 			}
 
-		} catch(ApiException e) {
+		} catch (ApiException e) {
 			logger.info(e.getResponseBody());
 		}
 	}
 
 	@SuppressWarnings("unchecked")
-	public static void addImageVersions(Registry registry, String imageName, List < String > tagsList) throws ApiException {
-		logger.info( "[K8S ApiCaller] addImageVersions(Registry, String, List<String>) Start" );
-		
+	public static void addImageVersions(Registry registry, String imageName, List<String> tagsList)
+			throws ApiException {
+		logger.info("[K8S ApiCaller] addImageVersions(Registry, String, List<String>) Start");
+
 		String namespace = registry.getMetadata().getNamespace();
 		String imageRegistry = registry.getMetadata().getName();
 		Image image = new Image();
-		
+
 		logger.info("imageName: " + imageName);
 		logger.info("imageRegistry: " + imageRegistry);
 
 		String imageCRName = Util.parseImageName(imageName) + "." + imageRegistry;
-		
+
 		try {
-			Object response = customObjectApi.getNamespacedCustomObject(
-					Constants.CUSTOM_OBJECT_GROUP,
-					Constants.CUSTOM_OBJECT_VERSION,
-					namespace,
-					Constants.CUSTOM_OBJECT_PLURAL_IMAGE,
-					imageCRName);
-			
+			Object response = customObjectApi.getNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
+					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_IMAGE, imageCRName);
+
 			image = mapper.readValue(gson.toJson(response), Image.class);
 
 			logger.info("IMAGE RESOURCE VERSION: " + image.getMetadata().getResourceVersion());
 			logger.info("IMAGE UID: " + image.getMetadata().getUid());
-		}catch(ApiException e) {
+		} catch (ApiException e) {
 			logger.info(e.getResponseBody());
 		} catch (IOException e) {
 			logger.info(e.getMessage());
@@ -2882,18 +2845,18 @@ public class K8sApiCaller {
 		JSONArray versions = new JSONArray();
 		Set<String> versionSet = new HashSet<>();
 
-		for( String version : image.getSpec().getVersions()) {
+		for (String version : image.getSpec().getVersions()) {
 			logger.info("Exist Image Version: " + version);
 			versionSet.add(version);
 		}
 
-		for( String version: tagsList) {
+		for (String version : tagsList) {
 			logger.info("New Image Version: " + version);
 			versionSet.add(version);
 		}
-		
+
 		Iterator<String> iter = versionSet.iterator();
-		while(iter.hasNext()) {
+		while (iter.hasNext()) {
 			String version = iter.next();
 			versions.add(version);
 		}
@@ -2904,21 +2867,18 @@ public class K8sApiCaller {
 		patchArray.add(patchContent);
 
 		try {
-			Object result = customObjectApi.patchNamespacedCustomObject(
-					Constants.CUSTOM_OBJECT_GROUP,
-					Constants.CUSTOM_OBJECT_VERSION,
-					namespace,
-					Constants.CUSTOM_OBJECT_PLURAL_IMAGE,
-					imageCRName, patchArray);
+			Object result = customObjectApi.patchNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
+					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_IMAGE, imageCRName,
+					patchArray);
 			logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
-		}catch(ApiException e) {
+		} catch (ApiException e) {
 			logger.info(e.getResponseBody());
 		}
 
 	}
-	
+
 	public static void deleteImage(Registry registry, String imageName) throws ApiException {
-		logger.info( "[K8S ApiCaller] deleteImage(Registry, String, List<String>) Start" );
+		logger.info("[K8S ApiCaller] deleteImage(Registry, String, List<String>) Start");
 		String namespace = registry.getMetadata().getNamespace();
 		String imageRegistry = registry.getMetadata().getName();
 
@@ -2927,26 +2887,23 @@ public class K8sApiCaller {
 
 		String imageCRName = Util.parseImageName(imageName) + "." + imageRegistry;
 		try {
-			Object result = customObjectApi.deleteNamespacedCustomObject(
-					Constants.CUSTOM_OBJECT_GROUP, 
-					Constants.CUSTOM_OBJECT_VERSION,
-					namespace, 
-					Constants.CUSTOM_OBJECT_PLURAL_IMAGE,
-					imageCRName, new V1DeleteOptions(), null, null, null);
+			Object result = customObjectApi.deleteNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
+					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_IMAGE, imageCRName,
+					new V1DeleteOptions(), null, null, null);
 
 			logger.info("deleteNamespacedCustomObject result: " + result.toString());
 		} catch (ApiException e) {
 			logger.info(e.getResponseBody());
 		}
 	}
-	
+
 	public static void createImage(Registry registry, String imageName, List<String> tagsList) throws ApiException {
-		logger.info( "[K8S ApiCaller] createImage(Registry, String, List<String>) Start" );
+		logger.info("[K8S ApiCaller] createImage(Registry, String, List<String>) Start");
 
 		String namespace = registry.getMetadata().getNamespace();
 		String imageRegistry = registry.getMetadata().getName();
 		Image image = null;
-		
+
 		try {
 			image = new Image();
 			String imageCRName = Util.parseImageName(imageName) + "." + imageRegistry;
@@ -2957,10 +2914,10 @@ public class K8sApiCaller {
 			Map<String, String> labels = new HashMap<>();
 			labels.put("registry", imageRegistry);
 			metadata.setLabels(labels);
-			
+
 			List<V1OwnerReference> ownerRefs = new ArrayList<>();
 			V1OwnerReference ownerRef = new V1OwnerReference();
-			
+
 			ownerRef.setApiVersion(registry.getApiVersion());
 			ownerRef.setBlockOwnerDeletion(Boolean.TRUE);
 			ownerRef.setController(Boolean.TRUE);
@@ -2968,39 +2925,35 @@ public class K8sApiCaller {
 			ownerRef.setName(registry.getMetadata().getName());
 			ownerRef.setUid(registry.getMetadata().getUid());
 			ownerRefs.add(ownerRef);
-			
+
 			metadata.setOwnerReferences(ownerRefs);
 			image.setMetadata(metadata);
 
 			ImageSpec spec = new ImageSpec();
 			List<String> versions = new ArrayList<>();
-			for( String imageVersion : tagsList) {
+			for (String imageVersion : tagsList) {
 				versions.add(imageVersion);
 			}
-			
+
 			spec.setName(imageName);
 			spec.setVersions(versions);
 			spec.setRegistry(imageRegistry);
 			image.setSpec(spec);
 
-			Object result = customObjectApi.createNamespacedCustomObject(
-					Constants.CUSTOM_OBJECT_GROUP, 
-					Constants.CUSTOM_OBJECT_VERSION,
-					namespace, 
-					Constants.CUSTOM_OBJECT_PLURAL_IMAGE, 
-					image, null);
+			Object result = customObjectApi.createNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
+					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_IMAGE, image, null);
 			logger.info("createNamespacedCustomObject result: " + result.toString());
-		}catch(ApiException e) {
+		} catch (ApiException e) {
 			logger.info(e.getResponseBody());
 		}
-		
+
 	}
 
 	@SuppressWarnings("unchecked")
 	public static void createImage(RegistryEvent event) throws ApiException, IOException {
-		logger.info( "[K8S ApiCaller] createImage(RegistryEvent) Start" );
+		logger.info("[K8S ApiCaller] createImage(RegistryEvent) Start");
 		boolean imageExist = true;
-		
+
 		Registry registry = getRegistry(event);
 		String namespace = registry.getMetadata().getNamespace();
 
@@ -3008,27 +2961,23 @@ public class K8sApiCaller {
 		String imageName = event.getTarget().getRepository();
 		String imageVersion = event.getTarget().getTag();
 		String imageRegistry = registry.getMetadata().getName();
-		
+
 		logger.info("imageName: " + imageName);
 		logger.info("imageVersion: " + imageVersion);
 		logger.info("imageRegistry: " + imageRegistry);
 
 		String imageCRName = Util.parseImageName(imageName) + "." + imageRegistry;
-		
+
 		try {
-			Object response = customObjectApi.getNamespacedCustomObject(
-					Constants.CUSTOM_OBJECT_GROUP,
-					Constants.CUSTOM_OBJECT_VERSION,
-					namespace,
-					Constants.CUSTOM_OBJECT_PLURAL_IMAGE,
-					imageCRName);
-			
+			Object response = customObjectApi.getNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
+					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_IMAGE, imageCRName);
+
 			image = mapper.readValue(gson.toJson(response), Image.class);
 
 			logger.info("IMAGE RESOURCE VERSION: " + image.getMetadata().getResourceVersion());
 			logger.info("IMAGE UID: " + image.getMetadata().getUid());
 			imageExist = true;
-		}catch(ApiException e) {
+		} catch (ApiException e) {
 			logger.info(e.getResponseBody());
 			imageExist = false;
 		} catch (IOException e) {
@@ -3036,23 +2985,23 @@ public class K8sApiCaller {
 			throw e;
 		}
 
-		if ( imageExist ) {
-			try { 
+		if (imageExist) {
+			try {
 				JSONArray patchArray = new JSONArray();
 				JSONObject patchContent = new JSONObject();
 				JSONArray versions = new JSONArray();
 				Set<String> versionSet = new HashSet<>();
 
-				for( String version : image.getSpec().getVersions()) {
+				for (String version : image.getSpec().getVersions()) {
 					logger.info("Exist Image Version: " + version);
 					versionSet.add(version);
 				}
-				
+
 				logger.info("New Image Version: " + imageVersion);
 				versionSet.add(imageVersion);
-				
+
 				Iterator<String> iter = versionSet.iterator();
-				while(iter.hasNext()) {
+				while (iter.hasNext()) {
 					String version = iter.next();
 					versions.add(version);
 				}
@@ -3063,24 +3012,20 @@ public class K8sApiCaller {
 				patchArray.add(patchContent);
 
 				try {
-					Object result = customObjectApi.patchNamespacedCustomObject(
-							Constants.CUSTOM_OBJECT_GROUP,
-							Constants.CUSTOM_OBJECT_VERSION,
-							namespace,
-							Constants.CUSTOM_OBJECT_PLURAL_IMAGE,
+					Object result = customObjectApi.patchNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
+							Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_IMAGE,
 							imageCRName, patchArray);
 					logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
-				}catch(ApiException e) {
+				} catch (ApiException e) {
 					logger.info(e.getResponseBody());
 					throw e;
 				}
 
 				imageExist = true;
-			} catch(ApiException e) {
+			} catch (ApiException e) {
 				logger.info(e.getResponseBody());
 			}
-		} 
-		else {
+		} else {
 			try {
 				image = new Image();
 				V1ObjectMeta metadata = new V1ObjectMeta();
@@ -3093,7 +3038,7 @@ public class K8sApiCaller {
 
 				List<V1OwnerReference> ownerRefs = new ArrayList<>();
 				V1OwnerReference ownerRef = new V1OwnerReference();
-				
+
 				ownerRef.setApiVersion(registry.getApiVersion());
 				ownerRef.setBlockOwnerDeletion(Boolean.TRUE);
 				ownerRef.setController(Boolean.TRUE);
@@ -3101,9 +3046,9 @@ public class K8sApiCaller {
 				ownerRef.setName(registry.getMetadata().getName());
 				ownerRef.setUid(registry.getMetadata().getUid());
 				ownerRefs.add(ownerRef);
-				
+
 				metadata.setOwnerReferences(ownerRefs);
-				
+
 				image.setMetadata(metadata);
 
 				ImageSpec spec = new ImageSpec();
@@ -3114,123 +3059,112 @@ public class K8sApiCaller {
 				spec.setRegistry(imageRegistry);
 				image.setSpec(spec);
 
-				Object result = customObjectApi.createNamespacedCustomObject(
-						Constants.CUSTOM_OBJECT_GROUP, 
-						Constants.CUSTOM_OBJECT_VERSION,
-						namespace, 
-						Constants.CUSTOM_OBJECT_PLURAL_IMAGE, 
-						image, null);
+				Object result = customObjectApi.createNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
+						Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_IMAGE, image, null);
 				logger.info("createNamespacedCustomObject result: " + result.toString());
-			}catch(ApiException e) {
+			} catch (ApiException e) {
 				logger.info(e.getResponseBody());
 			}
 		}
 
 	}
-	
-	
+
 	public static void deleteImage(RegistryEvent event) throws ApiException {
-		logger.info( "[K8S ApiCaller] deleteImage(RegistryEvent) Start" );
-		
+		logger.info("[K8S ApiCaller] deleteImage(RegistryEvent) Start");
+
 		Registry registry = getRegistry(event);
 		String namespace = registry.getMetadata().getNamespace();
 
 		String imageName = event.getTarget().getRepository();
 		String imageVersion = event.getTarget().getTag();
 		String imageRegistry = registry.getMetadata().getName();
-		
+
 		logger.info("imageName: " + imageName);
 		logger.info("imageVersion: " + imageVersion);
 		logger.info("imageRegistry: " + imageRegistry);
-		
+
 		String imageCRName = Util.parseImageName(imageName) + "." + imageRegistry;
-		
+
 		try {
-			Object result = customObjectApi.deleteNamespacedCustomObject(
-					Constants.CUSTOM_OBJECT_GROUP, 
-					Constants.CUSTOM_OBJECT_VERSION, 
-					namespace,
-					Constants.CUSTOM_OBJECT_PLURAL_IMAGE, 
-					imageCRName, new V1DeleteOptions(), null, null, null);
+			Object result = customObjectApi.deleteNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
+					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_IMAGE, imageCRName,
+					new V1DeleteOptions(), null, null, null);
 			logger.info("deleteNamespacedCustomObject result: " + result.toString());
-					
-		}catch(ApiException e) {
+
+		} catch (ApiException e) {
 			logger.info(e.getResponseBody());
 			throw e;
 		}
 	}
-	
+
 	public static Registry getRegistry(RegistryEvent event) throws ApiException {
 		Registry registry = null;
 		String namespace = null;
 		String registryId = null;
-		
+
 		try {
 			/*
-			 /events/0/source/addr: "hpcd-registry-t2-registry-46nfk:443"
+			 * /events/0/source/addr: "hpcd-registry-t2-registry-46nfk:443"
 			 */
 			V1PodList pods = api.listPodForAllNamespaces(null, null, null, null, null, null, null, null, Boolean.FALSE);
 			String searchName = null;
-			
-			if( event.getSource() == null || event.getSource().getAddr() == null) {
+
+			if (event.getSource() == null || event.getSource().getAddr() == null) {
 				return null;
 			}
-			
+
 			searchName = event.getSource().getAddr().split(":")[0];
 			logger.info("RegistrySearchName: " + searchName);
-			
-			for( V1Pod pod : pods.getItems()) {
-				if( pod.getMetadata().getName().equals(searchName) ) {
+
+			for (V1Pod pod : pods.getItems()) {
+				if (pod.getMetadata().getName().equals(searchName)) {
 					namespace = pod.getMetadata().getNamespace();
 					logger.info("RegistryNamespace: " + namespace);
-					
+
 					String registryPrefix = Constants.K8S_PREFIX + Constants.K8S_REGISTRY_PREFIX;
-					registryId = pod.getMetadata().getLabels().get("apps").substring(registryPrefix.length()); 
-					
+					registryId = pod.getMetadata().getLabels().get("apps").substring(registryPrefix.length());
+
 					break;
 				}
 			}
-			
-		}catch(ApiException e) {
+
+		} catch (ApiException e) {
 			logger.info(e.getResponseBody());
 			throw e;
 		}
-		
+
 		try {
-			Object response = customObjectApi.getNamespacedCustomObject(
-					Constants.CUSTOM_OBJECT_GROUP, 
-					Constants.CUSTOM_OBJECT_VERSION, 
-					namespace, 
-					Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registryId);
-			
+			Object response = customObjectApi.getNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
+					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registryId);
+
 			registry = mapper.readValue(gson.toJson(response), Registry.class);
-			
+
 			logger.info("REGISTRY RESOURCE VERSION: " + registry.getMetadata().getResourceVersion());
 			logger.info("REGISTRY UID: " + registry.getMetadata().getUid());
-			
-		}catch(ApiException e) {
+
+		} catch (ApiException e) {
 			logger.info(e.getResponseBody());
 			throw e;
 		} catch (IOException e) {
 			logger.info(e.getMessage());
 		}
-		
+
 		return registry;
 	}
-	
+
 	public static CommandExecOut commandExecute(String[] command) throws IOException, InterruptedException {
 		ProcessBuilder processBuilder = new ProcessBuilder();
 		CommandExecOut cmdOutDo = new CommandExecOut();
-		
+
 		// command exec.
 		logger.info("command: " + Arrays.asList(command));
-		
-        processBuilder.command(command);
 
-        try {
-            Process process = processBuilder.start();
+		processBuilder.command(command);
 
-            ByteArrayOutputStream baosOut = new ByteArrayOutputStream();
+		try {
+			Process process = processBuilder.start();
+
+			ByteArrayOutputStream baosOut = new ByteArrayOutputStream();
 			ByteArrayOutputStream baosErr = new ByteArrayOutputStream();
 			Thread outThread = new Thread(new Runnable() {
 				public void run() {
@@ -3239,7 +3173,7 @@ public class K8sApiCaller {
 					} catch (IOException ex) {
 						ex.printStackTrace();
 						logger.info(ex.getMessage());
-						
+
 						StringWriter sw = new StringWriter();
 						ex.printStackTrace(new PrintWriter(sw));
 						logger.info(sw.toString());
@@ -3257,7 +3191,7 @@ public class K8sApiCaller {
 					} catch (IOException ex) {
 						ex.printStackTrace();
 						logger.info(ex.getMessage());
-						
+
 						StringWriter sw = new StringWriter();
 						ex.printStackTrace(new PrintWriter(sw));
 						logger.info(sw.toString());
@@ -3294,70 +3228,70 @@ public class K8sApiCaller {
 
 			logger.info("exit code: " + process.exitValue());
 			cmdOutDo.setCmdExitCode(process.exitValue());
-            
-        } catch (IOException e) {
+
+		} catch (IOException e) {
 			logger.info(e.getMessage());
-			
+
 			StringWriter sw = new StringWriter();
 			e.printStackTrace(new PrintWriter(sw));
 			logger.info(sw.toString());
 			throw e;
-        } catch (InterruptedException e) {
+		} catch (InterruptedException e) {
 			logger.info(e.getMessage());
-			
+
 			StringWriter sw = new StringWriter();
 			e.printStackTrace(new PrintWriter(sw));
 			logger.info(sw.toString());
 			throw e;
-        }
+		}
 		return cmdOutDo;
 	}
 
 	// type1: null => Opaque
-	// type2: kubernetes.io/dockerconfigjson 
-	public static String createSecret(String namespace, Map<String, String> secrets, String secretName, Map<String, String> labels, String type, List<V1OwnerReference> ownerRefs) throws ApiException {
+	// type2: kubernetes.io/dockerconfigjson
+	public static String createSecret(String namespace, Map<String, String> secrets, String secretName,
+			Map<String, String> labels, String type, List<V1OwnerReference> ownerRefs) throws ApiException {
 		V1Secret secret = new V1Secret();
 		secret.setApiVersion("v1");
 		secret.setKind("Secret");
 		V1ObjectMeta metadata = new V1ObjectMeta();
-		
-		if( type != null && type.equals(Constants.K8S_SECRET_TYPE_DOCKER_CONFIG_JSON)) {
+
+		if (type != null && type.equals(Constants.K8S_SECRET_TYPE_DOCKER_CONFIG_JSON)) {
 			metadata.setName(Constants.K8S_PREFIX + Constants.K8S_REGISTRY_PREFIX + secretName.toLowerCase());
 		} else {
 			metadata.setName(Constants.K8S_PREFIX + secretName.toLowerCase());
 		}
-		
-		if( ownerRefs != null) {
+
+		if (ownerRefs != null) {
 			metadata.setOwnerReferences(ownerRefs);
 		}
 
-		//			logger.info("== secret map == ");
-		for( String key : secrets.keySet()) {
-			//				logger.info("[secretMap]" + key + "=" + secrets.get(key));
+		// logger.info("== secret map == ");
+		for (String key : secrets.keySet()) {
+			// logger.info("[secretMap]" + key + "=" + secrets.get(key));
 			secret.putStringDataItem(key, secrets.get(key));
-			//				secret.putDataItem(key, secrets.get(key).getBytes(StandardCharsets.UTF_8));
+			// secret.putDataItem(key, secrets.get(key).getBytes(StandardCharsets.UTF_8));
 		}
 
 		// 2-2-1-1. pod label
 		logger.info("<Pod Label List>");
 		Map<String, String> podLabels = new HashMap<String, String>();
 
-		if(labels == null) {
+		if (labels == null) {
 			podLabels.put("secret", "obj");
 			podLabels.put("apps", Constants.K8S_PREFIX + secretName);
 			logger.info("secret: obj");
 			logger.info("apps: " + Constants.K8S_PREFIX + secretName);
-		}
-		else {
-			for(String key : labels.keySet()) {
+		} else {
+			for (String key : labels.keySet()) {
 				podLabels.put(key, labels.get(key));
 			}
 		}
 
 		metadata.setLabels(podLabels);
 		secret.setMetadata(metadata);
-		if(type != null) {
-			if(type.equals(Constants.K8S_SECRET_TYPE_DOCKER_CONFIG_JSON)) {
+		if (type != null) {
+			if (type.equals(Constants.K8S_SECRET_TYPE_DOCKER_CONFIG_JSON)) {
 				secret.setType(Constants.K8S_SECRET_TYPE_DOCKER_CONFIG_JSON);
 			}
 		}
@@ -3366,13 +3300,15 @@ public class K8sApiCaller {
 			V1Secret result;
 			Map<String, byte[]> secretMap = new HashMap<>();
 			result = api.createNamespacedSecret(namespace, secret, "true", null, null);
-			
+
 			logger.info("[result]" + result);
 
-			//				V1Secret secretRet = api.readNamespacedSecret(Constants.K8S_PREFIX + secretName.toLowerCase(), Constants.K8S_PREFIX + domainId.toLowerCase(), null, null, null);
+			// V1Secret secretRet = api.readNamespacedSecret(Constants.K8S_PREFIX +
+			// secretName.toLowerCase(), Constants.K8S_PREFIX + domainId.toLowerCase(),
+			// null, null, null);
 
 			secretMap = result.getData();
-			//				logger.info("== real secret data ==");
+			// logger.info("== real secret data ==");
 //			for( String key : secretMap.keySet()) {
 //				//					logger.info("[secret]" + key + "=" + new String(secretMap.get(key))); 
 //			}
@@ -3385,37 +3321,71 @@ public class K8sApiCaller {
 		return secret.getMetadata().getName();
 	}
 	
+	public static void patchSecret(String namespace, Map<String, String> secrets, String secretName, Map<String, String> labels) throws Throwable {
+
+		V1Secret result;
+		
+		for( String key : secrets.keySet()) {
+			String dataStr = secrets.get(key);
+			byte[] encodeData = Base64.encodeBase64(dataStr.getBytes());
+			String jsonPatchStr = "[{\"op\":\"replace\",\"path\":\"/data/" + key + "\",\"value\": " + new String(encodeData) + " }]";
+			logger.info("JsonPatchStr: " + jsonPatchStr);
+
+			JsonElement jsonPatch = (JsonElement) new JsonParser().parse(jsonPatchStr);
+			try {
+				Map<String, byte[]> secretMap = new HashMap<>();
+				result = api.patchNamespacedSecret(Constants.K8S_PREFIX + secretName.toLowerCase(), namespace, jsonPatch, "true", null, null, null);
+				
+				logger.info("[result]" + result);
+				
+				secretMap = result.getData();
+				logger.info("== real secret data ==");
+				for( String key2 : secretMap.keySet()) {
+					logger.info("[secret]" + key2 + "=" + new String(secretMap.get(key2)));
+				}
+			
+			} catch (ApiException e) {
+				logger.info(e.getResponseBody());
+				e.printStackTrace();
+				throw e;
+			}
+		}
+		
+	}
+
 	public static void deleteSecret(String namespace, String secretName, String type) throws ApiException {
 		secretName = secretName.toLowerCase();
-		
-		try {
-			if( type != null && type.equals(Constants.K8S_SECRET_TYPE_DOCKER_CONFIG_JSON)) {
-				api.deleteNamespacedSecret(Constants.K8S_PREFIX + Constants.K8S_REGISTRY_PREFIX + secretName, namespace, null, null, 0, null, null, new V1DeleteOptions());
 
-			}else {
-				api.deleteNamespacedSecret(Constants.K8S_PREFIX + secretName, namespace, null, null, 0, null, null, new V1DeleteOptions());
+		try {
+			if (type != null && type.equals(Constants.K8S_SECRET_TYPE_DOCKER_CONFIG_JSON)) {
+				api.deleteNamespacedSecret(Constants.K8S_PREFIX + Constants.K8S_REGISTRY_PREFIX + secretName, namespace,
+						null, null, 0, null, null, new V1DeleteOptions());
+
+			} else {
+				api.deleteNamespacedSecret(Constants.K8S_PREFIX + secretName, namespace, null, null, 0, null, null,
+						new V1DeleteOptions());
 			}
 		} catch (ApiException e) {
 			logger.info(e.getResponseBody());
 			throw e;
 		}
-		
+
 	}
-	
-	public static Map <String, String> readSecret(String namespace, String secretName ) throws ApiException {
-		logger.info(" [k8sApiCaller] Read Secret Service Start ");  
+
+	public static Map<String, String> readSecret(String namespace, String secretName) throws ApiException {
+		logger.info(" [k8sApiCaller] Read Secret Service Start ");
 
 		Map<String, byte[]> secretMap = new HashMap<>();
 		Map<String, String> returnMap = new HashMap<>();
 		try {
-			V1Secret secretReturn = api.readNamespacedSecret(secretName.toLowerCase(), namespace , null, null, null);
+			V1Secret secretReturn = api.readNamespacedSecret(secretName.toLowerCase(), namespace, null, null, null);
 
 			secretMap = secretReturn.getData();
-			for( String key : secretMap.keySet()) {
+			for (String key : secretMap.keySet()) {
 				returnMap.put(key, new String(secretMap.get(key)));
 //			logger.info("[secret]" + key + "=" + new String(secretMap.get(key)));  
 			}
-			
+
 		} catch (ApiException e) {
 			logger.info(e.getResponseBody());
 			throw e;
@@ -3440,22 +3410,23 @@ public class K8sApiCaller {
 
 		return content;
 	}
-	
+
 	private static String createConfigJson(String ip, int port, String id, String password) {
-		// $(echo "{\"auths\": {\"192.168.6.218:443\": {\"auth\": \"$(echo "tmax:tmax123" | base64)\"}}}" | base64)
+		// $(echo "{\"auths\": {\"192.168.6.218:443\": {\"auth\": \"$(echo
+		// "tmax:tmax123" | base64)\"}}}" | base64)
 		StringBuilder configSb = new StringBuilder();
 		configSb.append("{\"auths\": {\"");
 		configSb.append(ip + ":" + port);
 		configSb.append("\": {\"auth\": \"");
 		String auth = id + ":" + password;
-		configSb.append( new String( Base64.encodeBase64( auth.getBytes() ) ) );
+		configSb.append(new String(Base64.encodeBase64(auth.getBytes())));
 		configSb.append("\"}}}");
 		logger.info("configStr: " + configSb.toString());
-		
+
 		return configSb.toString();
 //		return new String( Base64.encodeBase64( configSb.toString().getBytes() ) );
 	}
-	
+
 	private static String createDirectory(String domainId, String registryId) throws IOException {
 		Path opensslHome = Paths.get(Constants.OPENSSL_HOME_DIR);
 		if (!Files.exists(opensslHome)) {
@@ -3483,84 +3454,83 @@ public class K8sApiCaller {
 
 		return registryDir;
 	}
-	
+
 	public static Services getCatalog() throws ApiException {
 		Services catalog = new Services();
 		List<ServiceOffering> serviceList = new ArrayList<ServiceOffering>();
 		String catalogNamespace = Constants.DEFAULT_NAMESPACE;
-		if ( System.getenv(Constants.SYSTEM_ENV_CATALOG_NAMESPACE) != null && !System.getenv(Constants.SYSTEM_ENV_CATALOG_NAMESPACE).isEmpty() ) {
+		if (System.getenv(Constants.SYSTEM_ENV_CATALOG_NAMESPACE) != null
+				&& !System.getenv(Constants.SYSTEM_ENV_CATALOG_NAMESPACE).isEmpty()) {
 			catalogNamespace = System.getenv(Constants.SYSTEM_ENV_CATALOG_NAMESPACE);
 		}
-		Object templates = customObjectApi.listNamespacedCustomObject(
-				Constants.CUSTOM_OBJECT_GROUP, 
-				Constants.CUSTOM_OBJECT_VERSION, 
-				catalogNamespace,
-				Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE, 
-				null, null, null, null, null, null, null, false);
-		
+		Object templates = customObjectApi.listNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
+				Constants.CUSTOM_OBJECT_VERSION, catalogNamespace, Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE, null, null,
+				null, null, null, null, null, false);
+
 		JsonNode templateList = numberTypeConverter(objectToJsonNode(templates).get("items"));
 		logger.info("Catalog Debug 1");
 
-		if(templateList.isArray()) {
-			for(JsonNode template : templateList) {
+		if (templateList.isArray()) {
+			for (JsonNode template : templateList) {
 				ServiceOffering service = new ServiceOffering();
 				ServiceMetadata serviceMeta = new ServiceMetadata();
 				List<ServicePlan> planList = new ArrayList<ServicePlan>();
-				
+
 				service.setName(template.get("metadata").get("name").asText());
 				service.setId(template.get("metadata").get("name").asText());
-				
-				if ( template.get("shortDescription") == null ) {
-					service.setDescription(template.get("metadata").get("name").asText()); 
+
+				if (template.get("shortDescription") == null) {
+					service.setDescription(template.get("metadata").get("name").asText());
 				} else {
 					service.setDescription(template.get("shortDescription").asText());
 				}
-				if ( template.get("imageUrl") == null ) {
-					serviceMeta.setImageUrl( Constants.DEFAULT_IMAGE_URL ); 
+				if (template.get("imageUrl") == null) {
+					serviceMeta.setImageUrl(Constants.DEFAULT_IMAGE_URL);
 				} else {
 					serviceMeta.setImageUrl(template.get("imageUrl").asText());
 				}
-				if ( template.get("longDescription") == null ) {
-					serviceMeta.setLongDescription(template.get("metadata").get("name").asText()); 
+				if (template.get("longDescription") == null) {
+					serviceMeta.setLongDescription(template.get("metadata").get("name").asText());
 				} else {
 					serviceMeta.setLongDescription(template.get("longDescription").asText());
 				}
-				if ( template.get("provider") == null ) {
-					serviceMeta.setProviderDisplayName(Constants.DEFAULT_PROVIDER); 
+				if (template.get("provider") == null) {
+					serviceMeta.setProviderDisplayName(Constants.DEFAULT_PROVIDER);
 				} else {
 					serviceMeta.setProviderDisplayName(template.get("provider").asText());
 				}
-				if ( template.get("recommend") != null ) {
-					serviceMeta.setRecommend( template.get("recommend").asBoolean() );
+				if (template.get("recommend") != null) {
+					serviceMeta.setRecommend(template.get("recommend").asBoolean());
 				} else {
-					serviceMeta.setRecommend( false );
+					serviceMeta.setRecommend(false);
 				}
-				
+
 				List<String> tags = new ArrayList<String>();
-				if ( template.get("tags") != null ) {
-					for(JsonNode tag : template.get("tags")) {
+				if (template.get("tags") != null) {
+					for (JsonNode tag : template.get("tags")) {
 						tags.add(tag.asText());
 					}
 				} else {
-					tags.add( Constants.DEFAULT_TAGS );
+					tags.add(Constants.DEFAULT_TAGS);
 				}
 				service.setTags(tags);
 				service.setMetadata(serviceMeta);
-				
-				
+
 				logger.info("Catalog Debug 2");
-				if ( template.get("objectKinds") != null ) {
+				if (template.get("objectKinds") != null) {
 					JsonNode objectKinds = template.get("objectKinds");
-					if(objectKinds.isArray()) {
+					if (objectKinds.isArray()) {
 						List<String> kinds = null;
-						ObjectReader reader = mapper.readerFor(new TypeReference<List<String>>() {});
+						ObjectReader reader = mapper.readerFor(new TypeReference<List<String>>() {
+						});
 						try {
 							kinds = reader.readValue(objectKinds);
 						} catch (IOException e) {
-							logger.info(e.getMessage());;
+							logger.info(e.getMessage());
+							;
 						}
-						
-						if(kinds.contains("Secret") || kinds.contains("Service (LoadBalancer)")) {
+
+						if (kinds.contains("Secret") || kinds.contains("Service (LoadBalancer)")) {
 							service.setBindable(true);
 						}
 					}
@@ -3569,14 +3539,14 @@ public class K8sApiCaller {
 				}
 				service.setBindings_retrievable(false);
 				service.setInstances_retrievable(false);
-				
+
 				logger.info("Catalog Debug 3");
 				try {
-					if ( template.get("plans") != null ) {
+					if (template.get("plans") != null) {
 						JsonNode plans = template.get("plans");
-						if(plans.isArray()) {
+						if (plans.isArray()) {
 							int defaultPlaneId = 1;
-							for(JsonNode plan : plans) {
+							for (JsonNode plan : plans) {
 								try {
 									ServicePlan servicePlan = new ServicePlan();
 									PlanMetadata planMeta = new PlanMetadata();
@@ -3586,49 +3556,57 @@ public class K8sApiCaller {
 									ServiceInstanceSchema instanceSchema = new ServiceInstanceSchema();
 									InputParametersSchema create = new InputParametersSchema();
 									Map<String, String> parameters = null;
-									
-									if ( plan.get("name") == null ) {
-										servicePlan.setId(template.get("metadata").get("name").asText() + "-plan" + defaultPlaneId);
-										servicePlan.setName(template.get("metadata").get("name").asText() + "-plan" + defaultPlaneId);
+
+									if (plan.get("name") == null) {
+										servicePlan.setId(template.get("metadata").get("name").asText() + "-plan"
+												+ defaultPlaneId);
+										servicePlan.setName(template.get("metadata").get("name").asText() + "-plan"
+												+ defaultPlaneId);
 									} else {
 										servicePlan.setId(plan.get("name").asText());
 										servicePlan.setName(plan.get("name").asText());
 									}
-									if ( plan.get("description") == null ) {
-										servicePlan.setDescription(template.get("metadata").get("name").asText() + "-plan" + defaultPlaneId);
+									if (plan.get("description") == null) {
+										servicePlan.setDescription(template.get("metadata").get("name").asText()
+												+ "-plan" + defaultPlaneId);
 									} else {
 										servicePlan.setDescription(plan.get("description").asText());
 									}
-									if ( plan.get("bindable") == null ) {
+									if (plan.get("bindable") == null) {
 										servicePlan.setBindable(false);
 									} else {
 										servicePlan.setBindable(plan.get("bindable").asBoolean());
 									}
 									defaultPlaneId++;
-									
+
 									logger.info("Catalog Debug 4");
 									try {
-										for(JsonNode bullet : plan.get("metadata").get("bullets")) {
+										for (JsonNode bullet : plan.get("metadata").get("bullets")) {
 											bullets.add(bullet.asText());
 										}
 										planMeta.setBullets(bullets);
-										
+
 										planCost.setAmount(plan.get("metadata").get("costs").get("amount").asText());
 										planCost.setUnit(plan.get("metadata").get("costs").get("unit").asText());
 										planMeta.setCosts(planCost);
 										servicePlan.setMetadata(planMeta);
-										
-										parameters = mapper.convertValue(plan.get("schemas").get("service_instance").get("create").get("parameters"), new TypeReference<Map<String, String>>(){});
+
+										parameters = mapper
+												.convertValue(
+														plan.get("schemas").get("service_instance").get("create")
+																.get("parameters"),
+														new TypeReference<Map<String, String>>() {
+														});
 										create.setParameters(parameters);
-									} catch ( Exception e ) {
+									} catch (Exception e) {
 										logger.info("This Plan is Error1");
 									}
-									
+
 									instanceSchema.setCreate(create);
 									planSchema.setService_instance(instanceSchema);
 									servicePlan.setSchemas(planSchema);
 									planList.add(servicePlan);
-								} catch( Exception e) {
+								} catch (Exception e) {
 									logger.info("This Plan is Error2");
 								}
 							}
@@ -3641,7 +3619,7 @@ public class K8sApiCaller {
 						servicePlan.setBindable(false);
 						planList.add(servicePlan);
 					}
-				} catch( Exception e) {
+				} catch (Exception e) {
 					logger.info("This Plan is Empty");
 				}
 				logger.info("Catalog Debug 5");
@@ -3652,8 +3630,9 @@ public class K8sApiCaller {
 		}
 		return catalog;
 	}
-	
-	public static Object createTemplateInstance(String instanceId, ProvisionInDO inDO, String instanceName, String instanceUid) throws Exception {
+
+	public static Object createTemplateInstance(String instanceId, ProvisionInDO inDO, String instanceName,
+			String instanceUid) throws Exception {
 		Object response = null;
 		TemplateInstance instance = new TemplateInstance();
 		Metadata instanceMeta = new Metadata();
@@ -3661,10 +3640,10 @@ public class K8sApiCaller {
 		TemplateInstanceSpec spec = new TemplateInstanceSpec();
 		TemplateInstanceSpecTemplate template = new TemplateInstanceSpecTemplate();
 		List<TemplateParameter> parameters = new ArrayList<TemplateParameter>();
-		
+
 		List<V1OwnerReference> ownerRefs = new ArrayList<>();
 		V1OwnerReference ownerRef = new V1OwnerReference();
-		
+
 		ownerRef.setApiVersion(Constants.SERVICE_INSTANCE_API_VERSION);
 		ownerRef.setBlockOwnerDeletion(Boolean.TRUE);
 		ownerRef.setController(Boolean.TRUE);
@@ -3673,103 +3652,95 @@ public class K8sApiCaller {
 		ownerRef.setUid(instanceUid);
 		ownerRefs.add(ownerRef);
 		instanceMeta.setOwnerReferences(ownerRefs);
-		
+
 		logger.info("Service Instance Namespace : " + inDO.getContext().getNamespace());
-		
+
 		try {
 			instance.setApiVersion(Constants.CUSTOM_OBJECT_GROUP + "/" + Constants.CUSTOM_OBJECT_VERSION);
 			instance.setKind(Constants.CUSTOM_OBJECT_KIND_TEMPLATE_INSTANCE);
 			instanceMeta.setName(instanceId);
 			instanceMeta.setNamespace(inDO.getContext().getNamespace());
 			instance.setMetadata(instanceMeta);
-			
+
 			templateMeta.setName(inDO.getService_id());
 			template.setMetadata(templateMeta);
-			
-			if(inDO.getParameters() != null) {
-				for(String key : inDO.getParameters().keySet()) {
+
+			if (inDO.getParameters() != null) {
+				for (String key : inDO.getParameters().keySet()) {
 					TemplateParameter parameter = new TemplateParameter();
 					parameter.setName(key);
 					parameter.setValue(inDO.getParameters().get(key));
 					parameters.add(parameter);
 				}
 				template.setParameters(parameters);
-			} /*else {
-				String planName = inDO.getPlan_id();
-				Object planResponse = customObjectApi.getClusterCustomObject("servicecatalog.k8s.io", "v1beta1", "clusterserviceplans", planName);
-				GetPlanDO plan = mapper.readValue(gson.toJson(planResponse), GetPlanDO.class);
-				if(plan.getSpec().getInstanceCreateParameterSchema() != null) {
-					for(String key : plan.getSpec().getInstanceCreateParameterSchema().keySet()) {
-						TemplateParameter parameter = new TemplateParameter();
-						parameter.setName(key);
-						parameter.setValue(inDO.getParameters().get(key));
-						parameters.add(parameter);
-					}
-				}
-				template.setParameters(parameters);
-			}*/
-			
+			} /*
+				 * else { String planName = inDO.getPlan_id(); Object planResponse =
+				 * customObjectApi.getClusterCustomObject("servicecatalog.k8s.io", "v1beta1",
+				 * "clusterserviceplans", planName); GetPlanDO plan =
+				 * mapper.readValue(gson.toJson(planResponse), GetPlanDO.class);
+				 * if(plan.getSpec().getInstanceCreateParameterSchema() != null) { for(String
+				 * key : plan.getSpec().getInstanceCreateParameterSchema().keySet()) {
+				 * TemplateParameter parameter = new TemplateParameter();
+				 * parameter.setName(key); parameter.setValue(inDO.getParameters().get(key));
+				 * parameters.add(parameter); } } template.setParameters(parameters); }
+				 */
+
 			spec.setTemplate(template);
 			instance.setSpec(spec);
-			
-			JSONParser parser = new JSONParser();        	
-	    	JSONObject bodyObj = (JSONObject) parser.parse(new Gson().toJson(instance));
-	    	
-	    	response = customObjectApi.createNamespacedCustomObject(
-	    			Constants.CUSTOM_OBJECT_GROUP,
-					Constants.CUSTOM_OBJECT_VERSION, 
-					inDO.getContext().getNamespace(),
-					Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE,
-					bodyObj, null);
-		} catch(ApiException e) {
+
+			JSONParser parser = new JSONParser();
+			JSONObject bodyObj = (JSONObject) parser.parse(new Gson().toJson(instance));
+
+			response = customObjectApi.createNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
+					Constants.CUSTOM_OBJECT_VERSION, inDO.getContext().getNamespace(),
+					Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, bodyObj, null);
+		} catch (ApiException e) {
 			logger.info("Response body: " + e.getResponseBody());
-        	e.printStackTrace();
-        	throw e;
-		} catch(Exception e) {
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
 			logger.info("Exception message: " + e.getMessage());
-        	e.printStackTrace();
-        	throw e;
+			e.printStackTrace();
+			throw e;
 		}
-		
+
 		return response;
 	}
-		
-	public static BindingOutDO insertBindingSecret(String instanceId, String bindingId, BindingInDO inDO) throws Exception {
+
+	public static BindingOutDO insertBindingSecret(String instanceId, String bindingId, BindingInDO inDO)
+			throws Exception {
 		BindingOutDO outDO = new BindingOutDO();
 		Map<String, Object> secretMap = new HashMap<String, Object>();
 		logger.info(" Binding Namespace : " + inDO.getContext().getNamespace());
 		try {
-			Object response = customObjectApi.getNamespacedCustomObject(
-					Constants.CUSTOM_OBJECT_GROUP,
-					Constants.CUSTOM_OBJECT_VERSION,
-					inDO.getContext().getNamespace(), 
-					Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, 
-					instanceId);
-			
+			Object response = customObjectApi.getNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
+					Constants.CUSTOM_OBJECT_VERSION, inDO.getContext().getNamespace(),
+					Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, instanceId);
+
 			TemplateInstance templateInstance = mapper.readValue(gson.toJson(response), TemplateInstance.class);
 			List<Object> objects = templateInstance.getSpec().getTemplate().getObjects();
-					
-			for(Object object : objects) {
+
+			for (Object object : objects) {
 				JSONObject objectJson = (JSONObject) JSONValue.parse(gson.toJson(object));
 				JSONObject metadataJson = (JSONObject) JSONValue.parse(objectJson.get("metadata").toString());
-				
+
 				String name = metadataJson.get("name").toString();
 				String namespace = "default";
-				if(metadataJson.get("namespace") != null) {
+				if (metadataJson.get("namespace") != null) {
 					namespace = metadataJson.get("namespace").toString();
 				}
-				
-				if(objectJson.get("kind").toString().equals("Service")) {
+
+				if (objectJson.get("kind").toString().equals("Service")) {
 					List<Endpoint> endPointList = new ArrayList<Endpoint>();
 					V1Service service = api.readNamespacedService(name, namespace, null, null, null);
-					if(service.getSpec().getType().equals("LoadBalancer")) {
-						for(V1LoadBalancerIngress ip : service.getStatus().getLoadBalancer().getIngress()) {
+					if (service.getSpec().getType().equals("LoadBalancer")) {
+						for (V1LoadBalancerIngress ip : service.getStatus().getLoadBalancer().getIngress()) {
 							Endpoint endPoint = new Endpoint();
 							List<String> ports = new ArrayList<String>();
 							endPoint.setHost(ip.getIp());
 							secretMap.put("instance-ip", ip.getIp());
-							
-							for(V1ServicePort port : service.getSpec().getPorts()) {
+
+							for (V1ServicePort port : service.getSpec().getPorts()) {
 								ports.add(String.valueOf(port.getPort()));
 							}
 							endPoint.setPorts(ports);
@@ -3778,13 +3749,13 @@ public class K8sApiCaller {
 						}
 						outDO.setEndpoints(endPointList);
 					}
-				} else if(objectJson.get("kind").toString().equals("Secret")) {
+				} else if (objectJson.get("kind").toString().equals("Secret")) {
 					V1Secret secret = api.readNamespacedSecret(name, namespace, null, null, null);
 					Map<String, byte[]> data = secret.getData();
-					for(String key : data.keySet()) {
+					for (String key : data.keySet()) {
 						secretMap.put(key, new String(data.get(key)));
 					}
-					
+
 					outDO.setCredentials(secretMap);
 				}
 			}
@@ -3794,24 +3765,24 @@ public class K8sApiCaller {
 			throw e;
 		}
 	}
-	
+
 	private static JsonNode numberTypeConverter(JsonNode jsonNode) {
 		if (jsonNode.isObject()) {
 			ObjectNode objectNode = (ObjectNode) jsonNode;
-			
+
 			Iterator<Map.Entry<String, JsonNode>> iter = objectNode.fields();
-			
-			while(iter.hasNext()) {
+
+			while (iter.hasNext()) {
 				Map.Entry<String, JsonNode> entry = iter.next();
 				entry.setValue(numberTypeConverter(entry.getValue()));
 			}
 		} else if (jsonNode.isArray()) {
 			ArrayNode arrayNode = (ArrayNode) jsonNode;
-			for(int i = 0; i < arrayNode.size(); i++) {
+			for (int i = 0; i < arrayNode.size(); i++) {
 				arrayNode.set(i, numberTypeConverter(arrayNode.get(i)));
 			}
 		} else if (jsonNode.isValueNode()) {
-			if(jsonNode.isDouble() && jsonNode.canConvertToInt()) {
+			if (jsonNode.isDouble() && jsonNode.canConvertToInt()) {
 				IntNode intNode = new IntNode(jsonNode.asInt());
 				jsonNode = intNode;
 			}
@@ -3831,45 +3802,45 @@ public class K8sApiCaller {
 		}
 		return resultNode;
 	}
-	
+
 	private static JsonNode objectToJsonNodeForBinding(Object object) throws IOException {
 		JsonNode resultNode = mapper.valueToTree(object);
 		return resultNode;
 	}
 
 	/**
-	 * START method for Namespace Claim Controller by seonho_choi
-	 * DO-NOT-DELETE
+	 * START method for Namespace Claim Controller by seonho_choi DO-NOT-DELETE
 	 */
-	private static long getLatestResourceVersion( String customResourceName, boolean isNamespaced ) throws Exception {
+	private static long getLatestResourceVersion(String customResourceName, boolean isNamespaced) throws Exception {
 		long latestResourceVersion = 0;
 		try {
-			
-			Object result = customObjectApi.listClusterCustomObject(
-					Constants.CUSTOM_OBJECT_GROUP, 
-					Constants.CUSTOM_OBJECT_VERSION, 
-					customResourceName, 
-					null, null, null, null, null, null, null, Boolean.FALSE);
-			
+
+			Object result = customObjectApi.listClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP,
+					Constants.CUSTOM_OBJECT_VERSION, customResourceName, null, null, null, null, null, null, null,
+					Boolean.FALSE);
+
 			String JsonInString = gson.toJson(result);
 			JsonFactory factory = mapper.getFactory();
 			com.fasterxml.jackson.core.JsonParser parser = factory.createParser(JsonInString);
 			JsonNode customObjectList = mapper.readTree(parser);
-			
-			if(customObjectList.get("items").isArray()) {
-				for(JsonNode instance : customObjectList.get("items")) {
+
+			if (customObjectList.get("items").isArray()) {
+				for (JsonNode instance : customObjectList.get("items")) {
 					long resourceVersion = instance.get("metadata").get("resourceVersion").asLong();
 					if (isNamespaced) {
-						latestResourceVersion = patchOperatorStartTime( customResourceName, instance.get("metadata").get("name").asText(), instance.get("metadata").get("namespace").asText(), resourceVersion );
+						latestResourceVersion = patchOperatorStartTime(customResourceName,
+								instance.get("metadata").get("name").asText(),
+								instance.get("metadata").get("namespace").asText(), resourceVersion);
 					} else {
-						latestResourceVersion = patchOperatorStartTime( customResourceName, instance.get("metadata").get("name").asText(), resourceVersion );
+						latestResourceVersion = patchOperatorStartTime(customResourceName,
+								instance.get("metadata").get("name").asText(), resourceVersion);
 					}
 				}
 			}
 		} catch (ApiException e) {
 			logger.info("Response body: " + e.getResponseBody());
-        	e.printStackTrace();
-        	throw e;
+			e.printStackTrace();
+			throw e;
 		} catch (Exception e) {
 			logger.info("Exception: " + e.getMessage());
 			e.printStackTrace();
@@ -3877,279 +3848,283 @@ public class K8sApiCaller {
 		}
 		return latestResourceVersion;
 	}
-	
-	public static void createNamespace( NamespaceClaim claim ) throws Throwable {
-		logger.info( "[K8S ApiCaller] Create Namespace Start" );
-		
+
+	public static void createNamespace(NamespaceClaim claim) throws Throwable {
+		logger.info("[K8S ApiCaller] Create Namespace Start");
+
 		V1Namespace namespace = new V1Namespace();
 		V1ObjectMeta namespaceMeta = new V1ObjectMeta();
-		Map<String,String> label = new HashMap<>();
-		label.put( "fromClaim", claim.getMetadata().getName() );
-		namespaceMeta.setLabels( label );
-		namespaceMeta.setName( claim.getResourceName() );
-		namespace.setMetadata( namespaceMeta );
+		Map<String, String> label = new HashMap<>();
+		label.put("fromClaim", claim.getMetadata().getName());
+		namespaceMeta.setLabels(label);
+		namespaceMeta.setName(claim.getResourceName());
+		namespace.setMetadata(namespaceMeta);
 
 		V1Namespace namespaceResult;
 		try {
-			namespaceResult = api.createNamespace( namespace, null, null, null );
+			namespaceResult = api.createNamespace(namespace, null, null, null);
 		} catch (ApiException e) {
-			logger.info( e.getResponseBody() );
+			logger.info(e.getResponseBody());
 			throw e;
 		}
-		
+
 		V1ResourceQuota quota = new V1ResourceQuota();
 		V1ObjectMeta quotaMeta = new V1ObjectMeta();
-		quotaMeta.setName( claim.getResourceName()  );
-		quotaMeta.setNamespace( claim.getResourceName() );
-		Map<String,String> quotaLabel = new HashMap<>();
-		quotaLabel.put( "fromClaim", claim.getMetadata().getName() );
-		quotaMeta.setLabels( quotaLabel );
+		quotaMeta.setName(claim.getResourceName());
+		quotaMeta.setNamespace(claim.getResourceName());
+		Map<String, String> quotaLabel = new HashMap<>();
+		quotaLabel.put("fromClaim", claim.getMetadata().getName());
+		quotaMeta.setLabels(quotaLabel);
 		V1ResourceQuotaSpec spec = claim.getSpec();
-		quota.setMetadata( quotaMeta );
-		quota.setSpec( spec );
-		
+		quota.setMetadata(quotaMeta);
+		quota.setSpec(spec);
+
 		V1ResourceQuota quotaResult;
 		try {
-			quotaResult = api.createNamespacedResourceQuota( claim.getResourceName(), quota, null, null, null );
+			quotaResult = api.createNamespacedResourceQuota(claim.getResourceName(), quota, null, null, null);
 		} catch (ApiException e) {
-			logger.info( e.getResponseBody() );
+			logger.info(e.getResponseBody());
 			throw e;
 		}
 	}
-	
-	public static void updateNamespace( NamespaceClaim claim ) throws Throwable {
-		logger.info( "[K8S ApiCaller] Update Namespace Start" );
-		
+
+	public static void updateNamespace(NamespaceClaim claim) throws Throwable {
+		logger.info("[K8S ApiCaller] Update Namespace Start");
+
 		V1Namespace namespace = new V1Namespace();
 		V1ObjectMeta namespaceMeta = new V1ObjectMeta();
-		Map<String,String> label = new HashMap<>();
-		label.put( "fromClaim", claim.getMetadata().getName() );
-		namespaceMeta.setLabels( label );
-		namespaceMeta.setName( claim.getResourceName() );
-		namespace.setMetadata( namespaceMeta );
+		Map<String, String> label = new HashMap<>();
+		label.put("fromClaim", claim.getMetadata().getName());
+		namespaceMeta.setLabels(label);
+		namespaceMeta.setName(claim.getResourceName());
+		namespace.setMetadata(namespaceMeta);
 
 		V1Namespace namespaceResult;
 		try {
-			namespaceResult = api.replaceNamespace( claim.getResourceName(), namespace, null, null, null );
+			namespaceResult = api.replaceNamespace(claim.getResourceName(), namespace, null, null, null);
 		} catch (ApiException e) {
-			logger.info( e.getResponseBody() );
+			logger.info(e.getResponseBody());
 			throw e;
 		}
-		
+
 		V1ResourceQuota quota = new V1ResourceQuota();
 		V1ObjectMeta quotaMeta = new V1ObjectMeta();
-		quotaMeta.setName( claim.getResourceName()  );
-		quotaMeta.setNamespace( claim.getResourceName() );
-		Map<String,String> quotaLabel = new HashMap<>();
-		quotaLabel.put( "fromClaim", claim.getMetadata().getName() );
-		quotaMeta.setLabels( quotaLabel );
+		quotaMeta.setName(claim.getResourceName());
+		quotaMeta.setNamespace(claim.getResourceName());
+		Map<String, String> quotaLabel = new HashMap<>();
+		quotaLabel.put("fromClaim", claim.getMetadata().getName());
+		quotaMeta.setLabels(quotaLabel);
 		V1ResourceQuotaSpec spec = claim.getSpec();
-		quota.setMetadata( quotaMeta );
-		quota.setSpec( spec );
-		
+		quota.setMetadata(quotaMeta);
+		quota.setSpec(spec);
+
 		V1ResourceQuota quotaResult;
 		try {
-			quotaResult = api.replaceNamespacedResourceQuota( claim.getResourceName(), claim.getResourceName(), quota, null, null, null );
+			quotaResult = api.replaceNamespacedResourceQuota(claim.getResourceName(), claim.getResourceName(), quota,
+					null, null, null);
 		} catch (ApiException e) {
-			logger.info( e.getResponseBody() );
+			logger.info(e.getResponseBody());
 			throw e;
 		}
 	}
-	
-	public static void createResourceQuota( NamespaceClaim claim ) throws Throwable {
-		logger.info( "[K8S ApiCaller] Create Resource Quota Start" );
-		
+
+	public static void createResourceQuota(NamespaceClaim claim) throws Throwable {
+		logger.info("[K8S ApiCaller] Create Resource Quota Start");
+
 		V1ResourceQuota quota = new V1ResourceQuota();
 		V1ObjectMeta quotaMeta = new V1ObjectMeta();
-		quotaMeta.setName( claim.getResourceName() );
-		quotaMeta.setNamespace( claim.getMetadata().getNamespace() );
-		Map<String,String> quotaLabel = new HashMap<>();
-		quotaLabel.put( "fromClaim", claim.getMetadata().getName() );
-		quotaMeta.setLabels( quotaLabel );
+		quotaMeta.setName(claim.getResourceName());
+		quotaMeta.setNamespace(claim.getMetadata().getNamespace());
+		Map<String, String> quotaLabel = new HashMap<>();
+		quotaLabel.put("fromClaim", claim.getMetadata().getName());
+		quotaMeta.setLabels(quotaLabel);
 		V1ResourceQuotaSpec spec = claim.getSpec();
-		quota.setMetadata( quotaMeta );
-		quota.setSpec( spec );
-		
+		quota.setMetadata(quotaMeta);
+		quota.setSpec(spec);
+
 		V1ResourceQuota quotaResult;
 		try {
-			quotaResult = api.createNamespacedResourceQuota( claim.getMetadata().getNamespace(), quota, null, null, null );
+			quotaResult = api.createNamespacedResourceQuota(claim.getMetadata().getNamespace(), quota, null, null,
+					null);
 		} catch (ApiException e) {
-			logger.info( e.getResponseBody() );
+			logger.info(e.getResponseBody());
 			throw e;
 		}
 	}
-	
-	public static void updateResourceQuota( NamespaceClaim claim ) throws Throwable {
-		logger.info( "[K8S ApiCaller] Update Resource Quota Start" );
-				
+
+	public static void updateResourceQuota(NamespaceClaim claim) throws Throwable {
+		logger.info("[K8S ApiCaller] Update Resource Quota Start");
+
 		V1ResourceQuota quota = new V1ResourceQuota();
 		V1ObjectMeta quotaMeta = new V1ObjectMeta();
-		quotaMeta.setName( claim.getResourceName() );
-		quotaMeta.setNamespace( claim.getMetadata().getNamespace() );
-		Map<String,String> quotaLabel = new HashMap<>();
-		quotaLabel.put( "fromClaim", claim.getMetadata().getName() );
-		quotaMeta.setLabels( quotaLabel );
+		quotaMeta.setName(claim.getResourceName());
+		quotaMeta.setNamespace(claim.getMetadata().getNamespace());
+		Map<String, String> quotaLabel = new HashMap<>();
+		quotaLabel.put("fromClaim", claim.getMetadata().getName());
+		quotaMeta.setLabels(quotaLabel);
 		V1ResourceQuotaSpec spec = claim.getSpec();
-		quota.setMetadata( quotaMeta );
-		quota.setSpec( spec );
-		
+		quota.setMetadata(quotaMeta);
+		quota.setSpec(spec);
+
 		try {
-			api.replaceNamespacedResourceQuota( claim.getResourceName(), claim.getMetadata().getNamespace(), quota, null, null, null);
+			api.replaceNamespacedResourceQuota(claim.getResourceName(), claim.getMetadata().getNamespace(), quota, null,
+					null, null);
 		} catch (ApiException e) {
-			logger.info( e.getResponseBody() );
+			logger.info(e.getResponseBody());
 			throw e;
 		}
 	}
-	
-	public static boolean namespaceAlreadyExist( String name ) throws Throwable {
-		logger.info( "[K8S ApiCaller] Get Namespace Start" );
+
+	public static boolean namespaceAlreadyExist(String name) throws Throwable {
+		logger.info("[K8S ApiCaller] Get Namespace Start");
 
 		V1Namespace namespaceResult;
 		try {
-			namespaceResult = api.readNamespace( name, null, null, null);
+			namespaceResult = api.readNamespace(name, null, null, null);
 		} catch (ApiException e) {
-			logger.info( "[K8S ApiCaller][Exception] Namespace-" + name + " is not Exist" );
+			logger.info("[K8S ApiCaller][Exception] Namespace-" + name + " is not Exist");
 			return false;
 		}
-		
-		if ( namespaceResult == null ) {
-			logger.info( "[K8S ApiCaller] Namespace-" + name + " is not Exist" );
+
+		if (namespaceResult == null) {
+			logger.info("[K8S ApiCaller] Namespace-" + name + " is not Exist");
 			return false;
 		} else {
-			logger.info( namespaceResult.toString() );
+			logger.info(namespaceResult.toString());
 			return true;
 		}
 	}
-	
-	public static boolean resourcequotaAlreadyExist( String name, String namespace ) throws Throwable {
-		logger.info( "[K8S ApiCaller] Get Resource Quota Start" );
+
+	public static boolean resourcequotaAlreadyExist(String name, String namespace) throws Throwable {
+		logger.info("[K8S ApiCaller] Get Resource Quota Start");
 
 		V1ResourceQuota resourceQuotaResult;
 		try {
 			resourceQuotaResult = api.readNamespacedResourceQuota(name, namespace, null, null, null);
 		} catch (ApiException e) {
-			logger.info( "[K8S ApiCaller][Exception] ResourceQuota-" + name + " is not Exist" );
+			logger.info("[K8S ApiCaller][Exception] ResourceQuota-" + name + " is not Exist");
 			return false;
 		}
-		
-		if ( resourceQuotaResult == null ) {
-			logger.info( "[K8S ApiCaller][Exception] ResourceQuota-" + name + " is not Exist" );
+
+		if (resourceQuotaResult == null) {
+			logger.info("[K8S ApiCaller][Exception] ResourceQuota-" + name + " is not Exist");
 			return false;
 		} else {
-			logger.info( resourceQuotaResult.toString() );
+			logger.info(resourceQuotaResult.toString());
 			return true;
 		}
 	}
-	
-	public static boolean roleBindingAlreadyExist( String name, String namespace ) throws Throwable {
-		logger.info( "[K8S ApiCaller] Get RoleBinding Start" );
+
+	public static boolean roleBindingAlreadyExist(String name, String namespace) throws Throwable {
+		logger.info("[K8S ApiCaller] Get RoleBinding Start");
 
 		V1RoleBinding roleBindingResult;
 		try {
 			roleBindingResult = rbacApi.readNamespacedRoleBinding(name, namespace, null);
 		} catch (ApiException e) {
-			logger.info( "[K8S ApiCaller][Exception] RoleBinding-" + name + " is not Exist" );
+			logger.info("[K8S ApiCaller][Exception] RoleBinding-" + name + " is not Exist");
 			return false;
 		}
-		
-		if ( roleBindingResult == null ) {
-			logger.info( "[K8S ApiCaller][Exception] RoleBinding-" + name + " is not Exist" );
+
+		if (roleBindingResult == null) {
+			logger.info("[K8S ApiCaller][Exception] RoleBinding-" + name + " is not Exist");
 			return false;
 		} else {
-			logger.info( roleBindingResult.toString() );
+			logger.info(roleBindingResult.toString());
 			return true;
 		}
 	}
-	
-	public static void createRoleBinding( RoleBindingClaim claim ) throws ApiException {
-		logger.info( "[K8S ApiCaller] Create RoleBinding Start" );
+
+	public static void createRoleBinding(RoleBindingClaim claim) throws ApiException {
+		logger.info("[K8S ApiCaller] Create RoleBinding Start");
 
 		V1RoleBinding roleBinding = new V1RoleBinding();
 		V1ObjectMeta roleBindingMeta = new V1ObjectMeta();
-		roleBindingMeta.setName( claim.getResourceName() );
-		roleBindingMeta.setNamespace( claim.getMetadata().getNamespace() );
-		roleBinding.setMetadata( roleBindingMeta );
-		roleBinding.setSubjects( claim.getSubjects() );
-		roleBinding.setRoleRef( claim.getRoleRef() );
-		
+		roleBindingMeta.setName(claim.getResourceName());
+		roleBindingMeta.setNamespace(claim.getMetadata().getNamespace());
+		roleBinding.setMetadata(roleBindingMeta);
+		roleBinding.setSubjects(claim.getSubjects());
+		roleBinding.setRoleRef(claim.getRoleRef());
+
 		try {
-			rbacApi.createNamespacedRoleBinding( claim.getMetadata().getNamespace(), roleBinding, null, null, null);
+			rbacApi.createNamespacedRoleBinding(claim.getMetadata().getNamespace(), roleBinding, null, null, null);
 		} catch (ApiException e) {
-			logger.info( e.getResponseBody() );
+			logger.info(e.getResponseBody());
 			throw e;
 		}
 	}
-	
-	public static void updateRoleBinding( RoleBindingClaim claim ) throws Throwable {
-		logger.info( "[K8S ApiCaller] Update Role Binding Start" );
-				
+
+	public static void updateRoleBinding(RoleBindingClaim claim) throws Throwable {
+		logger.info("[K8S ApiCaller] Update Role Binding Start");
+
 		V1RoleBinding roleBinding = new V1RoleBinding();
 		V1ObjectMeta roleBindingMeta = new V1ObjectMeta();
-		roleBindingMeta.setName( claim.getResourceName() );
-		roleBindingMeta.setNamespace( claim.getMetadata().getNamespace() );
-		roleBinding.setMetadata( roleBindingMeta );
-		roleBinding.setSubjects( claim.getSubjects() );
-		roleBinding.setRoleRef( claim.getRoleRef() );
-		
+		roleBindingMeta.setName(claim.getResourceName());
+		roleBindingMeta.setNamespace(claim.getMetadata().getNamespace());
+		roleBinding.setMetadata(roleBindingMeta);
+		roleBinding.setSubjects(claim.getSubjects());
+		roleBinding.setRoleRef(claim.getRoleRef());
+
 		try {
-			rbacApi.replaceNamespacedRoleBinding( claim.getResourceName(), claim.getMetadata().getNamespace(), roleBinding, null, null, null);
+			rbacApi.replaceNamespacedRoleBinding(claim.getResourceName(), claim.getMetadata().getNamespace(),
+					roleBinding, null, null, null);
 		} catch (ApiException e) {
-			logger.info( e.getResponseBody() );
+			logger.info(e.getResponseBody());
 			throw e;
 		}
 	}
-	
-	public static void createClusterRoleForNewUser ( User userInDO ) throws ApiException {
-		logger.info( "[K8S ApiCaller] Create Temporary ClusterRole for New User Start" );
+
+	public static void createClusterRoleForNewUser(User userInDO) throws ApiException {
+		logger.info("[K8S ApiCaller] Create Temporary ClusterRole for New User Start");
 
 		V1ClusterRole clusterRole = new V1ClusterRole();
 		V1ObjectMeta clusterRoleMeta = new V1ObjectMeta();
-		clusterRoleMeta.setName( userInDO.getId() );
-		clusterRole.setMetadata( clusterRoleMeta );
+		clusterRoleMeta.setName(userInDO.getId());
+		clusterRole.setMetadata(clusterRoleMeta);
 		List<V1PolicyRule> rules = new ArrayList<>();
-		
+
 		V1PolicyRule rule = new V1PolicyRule();
 		// User Rule
 		rule.addApiGroupsItem(Constants.CUSTOM_OBJECT_GROUP);
 		rule.addResourcesItem("users");
-		rule.addResourceNamesItem(userInDO.getId());    
-		rule.addVerbsItem("*"); 
+		rule.addResourceNamesItem(userInDO.getId());
+		rule.addVerbsItem("*");
 		rules.add(rule);
-		
+
 		// Cluster Rule
 		rule = new V1PolicyRule();
 		rule.addApiGroupsItem(Constants.RBAC_API_GROUP);
 		rule.addResourcesItem("clusterroles");
-		rule.addResourceNamesItem(userInDO.getId());    
-		rule.addVerbsItem("*"); 
+		rule.addResourceNamesItem(userInDO.getId());
+		rule.addVerbsItem("*");
 		rules.add(rule);
-		
+
 		// ClusterRoleBinding Rule
 		rule = new V1PolicyRule();
 		rule.addApiGroupsItem(Constants.RBAC_API_GROUP);
 		rule.addResourcesItem("clusterrolebindings");
-		rule.addResourceNamesItem(userInDO.getId());    
-		rule.addVerbsItem("*"); 
+		rule.addResourceNamesItem(userInDO.getId());
+		rule.addVerbsItem("*");
 		rules.add(rule);
-		
+
 		clusterRole.setRules(rules);
-		
+
 		try {
-			rbacApi.createClusterRole( clusterRole, null, null, null);
+			rbacApi.createClusterRole(clusterRole, null, null, null);
 		} catch (ApiException e) {
-			logger.info( e.getResponseBody() );
+			logger.info(e.getResponseBody());
 			throw e;
 		}
 	}
-	
-	public static void createClusterRoleBindingForNewUser ( User userInDO ) throws ApiException {
-		logger.info( "[K8S ApiCaller] Create Temporary ClusterRoleBinding for New User Start" );
+
+	public static void createClusterRoleBindingForNewUser(User userInDO) throws ApiException {
+		logger.info("[K8S ApiCaller] Create Temporary ClusterRoleBinding for New User Start");
 
 		V1ClusterRoleBinding clusterRoleBinding = new V1ClusterRoleBinding();
 		V1ObjectMeta clusterRoleBindingMeta = new V1ObjectMeta();
-		clusterRoleBindingMeta.setName( userInDO.getId() );
-		clusterRoleBinding.setMetadata( clusterRoleBindingMeta );
-		
+		clusterRoleBindingMeta.setName(userInDO.getId());
+		clusterRoleBinding.setMetadata(clusterRoleBindingMeta);
+
 		// RoleRef
 		V1RoleRef roleRef = new V1RoleRef();
 		roleRef.setApiGroup(Constants.RBAC_API_GROUP);
@@ -4163,70 +4138,65 @@ public class K8sApiCaller {
 		subject.setKind("User");
 		subject.setName(userInDO.getId());
 		clusterRoleBinding.addSubjectsItem(subject);
-	
+
 		try {
-			rbacApi.createClusterRoleBinding( clusterRoleBinding, null, null, null);
+			rbacApi.createClusterRoleBinding(clusterRoleBinding, null, null, null);
 		} catch (ApiException e) {
-			logger.info( e.getResponseBody() );
+			logger.info(e.getResponseBody());
 			throw e;
 		}
 	}
-	
-    public static void deleteClusterRole(String name) throws Exception {
-    	try {
-    		V1DeleteOptions body = new V1DeleteOptions();
-    		rbacApi.deleteClusterRole(name, null, null, null, null, null, body);       	
-        } catch (ApiException e) {
-        	logger.info("Response body: " + e.getResponseBody());
-        	e.printStackTrace();
-        	throw e;
-        } catch (Exception e) {
-        	logger.info("Exception message: " + e.getMessage());
-        	e.printStackTrace();
-        	throw e;
-        }
-    }
-    
-    public static void deleteClusterRoleBinding(String name) throws Exception {
-    	try {
-    		V1DeleteOptions body = new V1DeleteOptions();		
-    		rbacApi.deleteClusterRoleBinding(name, null, null, null, null, null, body);
-        } catch (ApiException e) {
-        	logger.info("Response body: " + e.getResponseBody());
-        	e.printStackTrace();
-        	throw e;
-        } catch (Exception e) {
-        	logger.info("Exception message: " + e.getMessage());
-        	e.printStackTrace();
-        	throw e;
-        }
-    }
-	/**
-	 * END method for Namespace Claim Controller by seonho_choi
-	 * DO-NOT-DELETE
-	 */
-	
-	/**
-	 * START method for Namespace Claim Controller by seonho_choi
-	 * DO-NOT-DELETE
-	 */
-	public static String getUid( String namespace, String name ) {
-		String uid = "";
+
+	public static void deleteClusterRole(String name) throws Exception {
 		try {
-			Object result = customObjectApi.getNamespacedCustomObject(
-					Constants.SERVICE_INSTANCE_API_GROUP, 
-					Constants.SERVICE_INSTANCE_API_VERSION, 
-					namespace, 
-					Constants.SERVICE_INSTANCE_PLURAL, 
-					name );
-			
-			String jsonString = gson.toJson(result);
-			logger.info( jsonString );
-			JsonParser parser = new JsonParser();
-			uid = parser.parse( jsonString ).getAsJsonObject().get( "metadata" ).getAsJsonObject().get( "uid" ).getAsString();
+			V1DeleteOptions body = new V1DeleteOptions();
+			rbacApi.deleteClusterRole(name, null, null, null, null, null, body);
 		} catch (ApiException e) {
 			logger.info("Response body: " + e.getResponseBody());
-        	e.printStackTrace();
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			logger.info("Exception message: " + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		}
+	}
+
+	public static void deleteClusterRoleBinding(String name) throws Exception {
+		try {
+			V1DeleteOptions body = new V1DeleteOptions();
+			rbacApi.deleteClusterRoleBinding(name, null, null, null, null, null, body);
+		} catch (ApiException e) {
+			logger.info("Response body: " + e.getResponseBody());
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			logger.info("Exception message: " + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		}
+	}
+
+	/**
+	 * END method for Namespace Claim Controller by seonho_choi DO-NOT-DELETE
+	 */
+
+	/**
+	 * START method for Namespace Claim Controller by seonho_choi DO-NOT-DELETE
+	 */
+	public static String getUid(String namespace, String name) {
+		String uid = "";
+		try {
+			Object result = customObjectApi.getNamespacedCustomObject(Constants.SERVICE_INSTANCE_API_GROUP,
+					Constants.SERVICE_INSTANCE_API_VERSION, namespace, Constants.SERVICE_INSTANCE_PLURAL, name);
+
+			String jsonString = gson.toJson(result);
+			logger.info(jsonString);
+			JsonParser parser = new JsonParser();
+			uid = parser.parse(jsonString).getAsJsonObject().get("metadata").getAsJsonObject().get("uid").getAsString();
+		} catch (ApiException e) {
+			logger.info("Response body: " + e.getResponseBody());
+			e.printStackTrace();
 		} catch (Exception e) {
 			logger.info("Exception: " + e.getMessage());
 			e.printStackTrace();
@@ -4237,112 +4207,126 @@ public class K8sApiCaller {
 
 	@SuppressWarnings("null")
 	public static V1NamespaceList getAccessibleNS(String userId) throws ApiException {
-		V1NamespaceList nsList = null;//TODO
-		List <String> nsNameList = null;
-		//1. List of ClusterRoleBinding 
+		V1NamespaceList nsList = null;// TODO
+		List<String> nsNameList = null;
+		// 1. List of ClusterRoleBinding
 		V1ClusterRoleBindingList crbList = null;
-		List < String > clusterRoleList = null;
+		List<String> clusterRoleList = null;
 		boolean clusterRoleFlag = false;
 		try {
-			crbList = rbacApi.listClusterRoleBinding("true", false, null, null, null, 1000 , null, 60, false);
+			crbList = rbacApi.listClusterRoleBinding("true", false, null, null, null, 1000, null, 60, false);
 			for (V1ClusterRoleBinding item : crbList.getItems()) {
 				List<V1Subject> subjects = item.getSubjects();
 				V1RoleRef roleRef = item.getRoleRef();
 				if (subjects != null) {
-					for( V1Subject subject : subjects ) {
+					for (V1Subject subject : subjects) {
 
-						if ( subject.getKind().equalsIgnoreCase("User")) {
-							if( subject.getName().equalsIgnoreCase(userId)) {
-								if (clusterRoleList == null ) clusterRoleList = new ArrayList<>();
-								clusterRoleList.add(roleRef.getName());   // get ClusterRole name
+						if (subject.getKind().equalsIgnoreCase("User")) {
+							if (subject.getName().equalsIgnoreCase(userId)) {
+								if (clusterRoleList == null)
+									clusterRoleList = new ArrayList<>();
+								clusterRoleList.add(roleRef.getName()); // get ClusterRole name
 							}
 						}
-					}	
-				}			
+					}
+				}
 			}
-			
-			//2. Check if ClusterRole has NameSpace GET rule 
+
+			// 2. Check if ClusterRole has NameSpace GET rule
 			if (clusterRoleList != null) {
-				for ( String clusterRoleName : clusterRoleList ) {
-					logger.info("User [ " + userId + " ] has ClusterRole ["  + clusterRoleName + " ]");
+				for (String clusterRoleName : clusterRoleList) {
+					logger.info("User [ " + userId + " ] has ClusterRole [" + clusterRoleName + " ]");
 					V1ClusterRole clusterRole = rbacApi.readClusterRole(clusterRoleName, "true");
 					List<V1PolicyRule> rules = clusterRole.getRules();
-					if ( rules != null) {
-						for ( V1PolicyRule rule : rules ) {
-							if (rule.getResources()!= null) {
+					if (rules != null) {
+						for (V1PolicyRule rule : rules) {
+							if (rule.getResources() != null) {
 								if (rule.getResources().contains("*") || rule.getResources().contains("namespaces")) {
-									logger.info("clusterRoleName : " + clusterRoleName );
-									if( rule.getVerbs()!=null) {
-										if (rule.getVerbs().contains("list") || rule.getVerbs().contains("*")){
-											if ( rule.getResourceNames() == null || rule.getResourceNames().size() == 0) {
+									logger.info("clusterRoleName : " + clusterRoleName);
+									if (rule.getVerbs() != null) {
+										if (rule.getVerbs().contains("list") || rule.getVerbs().contains("*")) {
+											if (rule.getResourceNames() == null
+													|| rule.getResourceNames().size() == 0) {
 												clusterRoleFlag = true;
 											} else {
 												for (String nsName : rule.getResourceNames()) {
-													if(nsNameList == null) nsNameList = new ArrayList<>();
+													if (nsNameList == null)
+														nsNameList = new ArrayList<>();
 													nsNameList.add(nsName);
 												}
 											}
 										}
-									}	
+									}
 								}
 							}
 						}
-					}	
+					}
 				}
 			}
-			logger.info("clusterRoleflag : "  + clusterRoleFlag);
+			logger.info("clusterRoleflag : " + clusterRoleFlag);
 			// Get All NameSpace
 			if (clusterRoleFlag) {
-				nsList = api.listNamespace("true", false, null, null, null, 100 , null, 60, false);				
+				nsList = api.listNamespace("true", false, null, null, null, 100, null, 60, false);
 			} else {
-				V1NamespaceList nsListK8S = api.listNamespace("true", false, null, null, null, 100 , null, 60, false);	
-				
-				//3. List of RoleBinding
-				if ( nsListK8S.getItems()!=null ) {
-					for ( V1Namespace ns : nsListK8S.getItems()) {
-						V1RoleBindingList rbList = rbacApi.listNamespacedRoleBinding(ns.getMetadata().getName(), "true", false, null, null, null, 100, null, 60, false);
+				V1NamespaceList nsListK8S = api.listNamespace("true", false, null, null, null, 100, null, 60, false);
+
+				// 3. List of RoleBinding
+				if (nsListK8S.getItems() != null) {
+					for (V1Namespace ns : nsListK8S.getItems()) {
+						V1RoleBindingList rbList = rbacApi.listNamespacedRoleBinding(ns.getMetadata().getName(), "true",
+								false, null, null, null, 100, null, 60, false);
 						for (V1RoleBinding item : rbList.getItems()) {
 							List<V1Subject> subjects = item.getSubjects();
 							V1RoleRef roleRef = item.getRoleRef();
-							for( V1Subject subject : subjects ) {
-								if ( subject.getKind().equalsIgnoreCase("User")) {
-									if( subject.getName().equalsIgnoreCase(userId)) {  // Found Matching Role & ClusterRole
-										
-										//4. Check if Role has NameSpace GET rule 
-										if ( roleRef.getKind().equalsIgnoreCase("Role")) {
-											logger.info("User [ " + userId + " ] has Role ["  + roleRef.getName() + " ]");
-											V1Role role = rbacApi.readNamespacedRole(roleRef.getName(), ns.getMetadata().getName(), "true");
-											List<V1PolicyRule> rules = role.getRules();							
-											if ( rules != null) {
-												for ( V1PolicyRule rule : rules ) {
-													if (rule.getResources()!= null) {
-														if (rule.getResources().contains("*") || rule.getResources().contains("namespaces")) {
-															if( rule.getVerbs()!=null) {
-																if (rule.getVerbs().contains("list") || rule.getVerbs().contains("*")){
-																	if(nsNameList == null) nsNameList = new ArrayList<>();
+							for (V1Subject subject : subjects) {
+								if (subject.getKind().equalsIgnoreCase("User")) {
+									if (subject.getName().equalsIgnoreCase(userId)) { // Found Matching Role &
+																						// ClusterRole
+
+										// 4. Check if Role has NameSpace GET rule
+										if (roleRef.getKind().equalsIgnoreCase("Role")) {
+											logger.info(
+													"User [ " + userId + " ] has Role [" + roleRef.getName() + " ]");
+											V1Role role = rbacApi.readNamespacedRole(roleRef.getName(),
+													ns.getMetadata().getName(), "true");
+											List<V1PolicyRule> rules = role.getRules();
+											if (rules != null) {
+												for (V1PolicyRule rule : rules) {
+													if (rule.getResources() != null) {
+														if (rule.getResources().contains("*")
+																|| rule.getResources().contains("namespaces")) {
+															if (rule.getVerbs() != null) {
+																if (rule.getVerbs().contains("list")
+																		|| rule.getVerbs().contains("*")) {
+																	if (nsNameList == null)
+																		nsNameList = new ArrayList<>();
 																	nsNameList.add(ns.getMetadata().getName());
 																}
-															}	
+															}
 														}
 													}
 												}
 											}
-										
-										// 5. Check if ClusterRole has NameSpace GET rule 
-										} else if ( roleRef.getKind().equalsIgnoreCase("ClusterRole") ) {
-											logger.info("User [ " + userId + " ] has ClusterRole ["  + roleRef.getName() + " ]");
+
+											// 5. Check if ClusterRole has NameSpace GET rule
+										} else if (roleRef.getKind().equalsIgnoreCase("ClusterRole")) {
+											logger.info("User [ " + userId + " ] has ClusterRole [" + roleRef.getName()
+													+ " ]");
 											V1ClusterRole role = rbacApi.readClusterRole(roleRef.getName(), "true");
-											List<V1PolicyRule> rules = role.getRules();							
-											if ( rules != null) {
-												for ( V1PolicyRule rule : rules ) {
-													if (rule.getResources()!= null) {
-														if (rule.getResources().contains("*") || rule.getResources().contains("namespaces")) {
-															if( rule.getVerbs()!=null) {
-																if (rule.getVerbs().contains("list") || rule.getVerbs().contains("*")){
-																	if(nsNameList == null) nsNameList = new ArrayList<>();
+											List<V1PolicyRule> rules = role.getRules();
+											if (rules != null) {
+												for (V1PolicyRule rule : rules) {
+													if (rule.getResources() != null) {
+														if (rule.getResources().contains("*")
+																|| rule.getResources().contains("namespaces")) {
+															if (rule.getVerbs() != null) {
+																if (rule.getVerbs().contains("list")
+																		|| rule.getVerbs().contains("*")) {
+																	if (nsNameList == null)
+																		nsNameList = new ArrayList<>();
 																	nsNameList.add(ns.getMetadata().getName());
 																}
-															}	
+															}
 														}
 													}
 												}
@@ -4350,28 +4334,29 @@ public class K8sApiCaller {
 										}
 									}
 								}
-							}				
+							}
 						}
-					} 	
-				}		
-				if (nsNameList!=null) {
-					// Stream distinct (중복제거)
-					nsNameList = nsNameList.stream().distinct().collect(Collectors.toList());				
-					
-					for (String nsName : nsNameList) {
-						if(nsList == null) nsList = new V1NamespaceList();
-						nsList.addItemsItem( api.readNamespace(nsName, "true", false, false) );
 					}
-				}			
-			}			
-		} catch (ApiException e) {			
+				}
+				if (nsNameList != null) {
+					// Stream distinct (중복제거)
+					nsNameList = nsNameList.stream().distinct().collect(Collectors.toList());
+
+					for (String nsName : nsNameList) {
+						if (nsList == null)
+							nsList = new V1NamespaceList();
+						nsList.addItemsItem(api.readNamespace(nsName, "true", false, false));
+					}
+				}
+			}
+		} catch (ApiException e) {
 			logger.info(e.getResponseBody());
 			throw e;
-		}		
-		
-		if ( nsList != null ) {
+		}
+
+		if (nsList != null) {
 			for (V1Namespace ns : nsList.getItems()) {
-				logger.info(" [ Accessible NameSpace ] : " + ns.getMetadata().getName() );		
+				logger.info(" [ Accessible NameSpace ] : " + ns.getMetadata().getName());
 			}
 		}
 		return nsList;
@@ -4381,215 +4366,205 @@ public class K8sApiCaller {
 		V1ClusterRoleBindingList crbList = null;
 		boolean isAdmin = false;
 		try {
-			crbList = rbacApi.listClusterRoleBinding("true", false, null, null, null, 1000 , null, 60, false);
+			crbList = rbacApi.listClusterRoleBinding("true", false, null, null, null, 1000, null, 60, false);
 			for (V1ClusterRoleBinding item : crbList.getItems()) {
 				List<V1Subject> subjects = item.getSubjects();
 				V1RoleRef roleRef = item.getRoleRef();
 				if (subjects != null) {
-					for( V1Subject subject : subjects ) {
-						if ( subject.getKind().equalsIgnoreCase("User")) {
-							if( subject.getName().equalsIgnoreCase(userId)) {
+					for (V1Subject subject : subjects) {
+						if (subject.getKind().equalsIgnoreCase("User")) {
+							if (subject.getName().equalsIgnoreCase(userId)) {
 								V1ClusterRole clusterRole = rbacApi.readClusterRole(roleRef.getName(), "true");
 								List<V1PolicyRule> rules = clusterRole.getRules();
-								if ( rules != null) {
-									for ( V1PolicyRule rule : rules ) {									
-										if ( rule.getApiGroups().contains("*") && rule.getResources().contains("*") && rule.getVerbs().contains("*") ) {  // check admin rule 
+								if (rules != null) {
+									for (V1PolicyRule rule : rules) {
+										if (rule.getApiGroups().contains("*") && rule.getResources().contains("*")
+												&& rule.getVerbs().contains("*")) { // check admin rule
 											isAdmin = true;
 										}
 									}
 								}
 							}
 						}
-					}	
-				}			
+					}
+				}
 			}
-		}catch (ApiException e) {			
+		} catch (ApiException e) {
 			logger.info(e.getResponseBody());
 			throw e;
-		} catch(Exception e2) {
+		} catch (Exception e2) {
 			logger.info(e2.getStackTrace().toString());
 		}
-		return isAdmin;		
+		return isAdmin;
 	}
 
 	public static void createUser(User userInDO) throws Exception {
 		try {
 			UserCR userCR = new UserCR();
-    		// Set name & label
-        	V1ObjectMeta metadata = new V1ObjectMeta();
-        	metadata.setName(userInDO.getId());        	
-        	userCR.setMetadata(metadata);
-        	
-        	// Set userInfo
-    		userCR.setUserInfo(userInDO);
-    		// Truncate PW 
-    		userCR.getUserInfo().setPassword(null);
-    		
-    		userCR.setStatus("active"); //FIXME : UI 연동 테스트 후 삭제 예정
-//    		userCR.setStatus("blocked");
-       	
-        	// Make body
-        	JSONParser parser = new JSONParser();        	
-        	JSONObject bodyObj = (JSONObject) parser.parse(new Gson().toJson(userCR));
-        	
-        	customObjectApi.createClusterCustomObject(
-        			Constants.CUSTOM_OBJECT_GROUP,
-					Constants.CUSTOM_OBJECT_VERSION, 
-					Constants.CUSTOM_OBJECT_PLURAL_USER,
-					bodyObj, null);
-        } catch (ApiException e) {
-        	logger.info("Response body: " + e.getResponseBody());
-        	e.printStackTrace();
-        	throw e;
-        } catch (Exception e) {
-        	logger.info("Exception message: " + e.getMessage());
-        	e.printStackTrace();
-        	throw e;
-        }
-		
-	}
-	
-	public static List < String > deleteBlockedUser() throws Exception {
-		List < String > deletedUserIdList = null;
-		try {
-			List < UserCR > userList = listUser();
-			if ( userList != null ) {
-				for( UserCR user : userList) {
-					if ( user.getStatus().equalsIgnoreCase(Constants.USER_STATUS_BLOCKED) ) {
-						deleteUser( user.getMetadata().getName() );
-						logger.info(  " Bloced User [ " + user.getMetadata().getName() + " ] delete Success in k8s");
+			// Set name & label
+			V1ObjectMeta metadata = new V1ObjectMeta();
+			metadata.setName(userInDO.getId());
+			userCR.setMetadata(metadata);
 
-						deleteClusterRole( user.getMetadata().getName() );
+			// Set userInfo
+			userCR.setUserInfo(userInDO);
+			// Truncate PW
+			userCR.getUserInfo().setPassword(null);
+
+			userCR.setStatus("active"); // FIXME : UI 연동 테스트 후 삭제 예정
+//    		userCR.setStatus("blocked");
+
+			// Make body
+			JSONParser parser = new JSONParser();
+			JSONObject bodyObj = (JSONObject) parser.parse(new Gson().toJson(userCR));
+
+			customObjectApi.createClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION,
+					Constants.CUSTOM_OBJECT_PLURAL_USER, bodyObj, null);
+		} catch (ApiException e) {
+			logger.info("Response body: " + e.getResponseBody());
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			logger.info("Exception message: " + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		}
+
+	}
+
+	public static List<String> deleteBlockedUser() throws Exception {
+		List<String> deletedUserIdList = null;
+		try {
+			List<UserCR> userList = listUser();
+			if (userList != null) {
+				for (UserCR user : userList) {
+					if (user.getStatus().equalsIgnoreCase(Constants.USER_STATUS_BLOCKED)) {
+						deleteUser(user.getMetadata().getName());
+						logger.info(" Bloced User [ " + user.getMetadata().getName() + " ] delete Success in k8s");
+
+						deleteClusterRole(user.getMetadata().getName());
 //						logger.info(  " Cluster Role [ " + user.getMetadata().getName() + " ] delete Success in k8s");
 
-						deleteClusterRoleBinding( user.getMetadata().getName() );
+						deleteClusterRoleBinding(user.getMetadata().getName());
 //						logger.info(  " Cluster RoleBindning [ " + user.getMetadata().getName() + " ] delete Success in k8s");
 
-						if ( deletedUserIdList == null ) deletedUserIdList = new ArrayList<>();
-						deletedUserIdList.add( user.getMetadata().getName() );
+						if (deletedUserIdList == null)
+							deletedUserIdList = new ArrayList<>();
+						deletedUserIdList.add(user.getMetadata().getName());
 					}
 				}
 			}
-        } catch (ApiException e) {
-        	logger.info("Response body: " + e.getResponseBody());
-        	e.printStackTrace();
-        	throw e;
-        } catch (Exception e) {
-        	logger.info("Exception message: " + e.getMessage());
-        	e.printStackTrace();
-        	throw e;
-        }
-		
-		if ( deletedUserIdList == null ) logger.info(  " No Blocked User to Delete !!");
+		} catch (ApiException e) {
+			logger.info("Response body: " + e.getResponseBody());
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			logger.info("Exception message: " + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		}
+
+		if (deletedUserIdList == null)
+			logger.info(" No Blocked User to Delete !!");
 
 		return deletedUserIdList;
 	}
-	
-	
-	private static long patchOperatorStartTime( String plural, String name, String namespace, long version ) {
-		
+
+	private static long patchOperatorStartTime(String plural, String name, String namespace, long version) {
+
 		JsonArray patchArray = new JsonArray();
 		JsonObject patch = new JsonObject();
 		patch.addProperty("op", "replace");
 		patch.addProperty("path", "/operatorStartTime");
 		patch.addProperty("value", Long.toString(time));
-		patchArray.add( patch );
+		patchArray.add(patch);
 
-		//logger.info( "Patch Annotation Object : " + patchArray );
-		
+		// logger.info( "Patch Annotation Object : " + patchArray );
+
 		Object response = null;
 		try {
-			response = customObjectApi.patchNamespacedCustomObject(
-					Constants.CUSTOM_OBJECT_GROUP, 
-					Constants.CUSTOM_OBJECT_VERSION, 
-					namespace, 
-					plural, 
-					name, 
-					patchArray);
+			response = customObjectApi.patchNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
+					Constants.CUSTOM_OBJECT_VERSION, namespace, plural, name, patchArray);
 		} catch (ApiException e) {
 			logger.info(e.getResponseBody());
 			logger.info("ApiException Code: " + e.getCode());
 		}
-		
+
 		long resourceVersion = version;
-		if ( response != null ) {
+		if (response != null) {
 			JsonObject json = (JsonObject) new JsonParser().parse(new Gson().toJson(response));
 			resourceVersion = json.get("metadata").getAsJsonObject().get("resourceVersion").getAsLong();
 		}
-		
+
 		return resourceVersion;
 	}
-	
-	private static long patchOperatorStartTime( String plural, String name, long version ) {
-		
+
+	private static long patchOperatorStartTime(String plural, String name, long version) {
+
 		JsonArray patchArray = new JsonArray();
 		JsonObject patch = new JsonObject();
 		patch.addProperty("op", "replace");
 		patch.addProperty("path", "/operatorStartTime");
 		patch.addProperty("value", Long.toString(time));
-		patchArray.add( patch );
+		patchArray.add(patch);
 
-		//logger.info( "Patch Annotation Object : " + patchArray );
-		
+		// logger.info( "Patch Annotation Object : " + patchArray );
+
 		Object response = null;
 		try {
-			response = customObjectApi.patchClusterCustomObject(
-					Constants.CUSTOM_OBJECT_GROUP, 
-					Constants.CUSTOM_OBJECT_VERSION, 
-					plural, 
-					name, 
-					patchArray);
+			response = customObjectApi.patchClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP,
+					Constants.CUSTOM_OBJECT_VERSION, plural, name, patchArray);
 		} catch (ApiException e) {
 			logger.info(e.getResponseBody());
 			logger.info("ApiException Code: " + e.getCode());
 		}
-		
+
 		long resourceVersion = version;
-		if ( response != null ) {
+		if (response != null) {
 			JsonObject json = (JsonObject) new JsonParser().parse(new Gson().toJson(response));
 			resourceVersion = json.get("metadata").getAsJsonObject().get("resourceVersion").getAsLong();
 		}
-		
+
 		return resourceVersion;
 	}
-	
-	
-	
+
 	private static OkHttpClient getHttpClient() {
-	    OkHttpClient httpClient;
-        OkHttpClient.Builder builder = new OkHttpClient.Builder();
-        builder.addNetworkInterceptor( getProgressInterceptor() ); // K8S Interceptor
-        builder.addNetworkInterceptor( new LogInterceptor() ); // HyperCloud Interceptor
-        httpClient = builder.build();
-        return httpClient;
+		OkHttpClient httpClient;
+		OkHttpClient.Builder builder = new OkHttpClient.Builder();
+		builder.addNetworkInterceptor(getProgressInterceptor()); // K8S Interceptor
+		builder.addNetworkInterceptor(new LogInterceptor()); // HyperCloud Interceptor
+		httpClient = builder.build();
+		return httpClient;
 	}
-    /**
-     * Get network interceptor to add it to the httpClient to track download progress for
-     * async requests.
-     */
-    private static Interceptor getProgressInterceptor() {
-        return new Interceptor() {
-            @Override
-            public Response intercept(Interceptor.Chain chain) throws IOException {
-                final Request request = chain.request();
-                final Response originalResponse = chain.proceed(request);
-                if (request.tag() instanceof ApiCallback) {
-                    final ApiCallback callback = (ApiCallback) request.tag();
-                    return originalResponse.newBuilder()
-                        .body(new ProgressResponseBody(originalResponse.body(), callback))
-                        .build();
-                }
-                return originalResponse;
-            }
-        };
-    }
-    
-    public static String httpsCommander(SSLSocketFactory sf, Map<String, String> requestHeader, Map<String, String> responseHeader, String address, String command, String method) throws Exception {
-		//		Properties propertiesClone = ProzoneConfig.makeClone(ServiceManager.getCurrentRequestContext().getRequest());
 
-		StringBuilder textBuilder = new StringBuilder(); 
+	/**
+	 * Get network interceptor to add it to the httpClient to track download
+	 * progress for async requests.
+	 */
+	private static Interceptor getProgressInterceptor() {
+		return new Interceptor() {
+			@Override
+			public Response intercept(Interceptor.Chain chain) throws IOException {
+				final Request request = chain.request();
+				final Response originalResponse = chain.proceed(request);
+				if (request.tag() instanceof ApiCallback) {
+					final ApiCallback callback = (ApiCallback) request.tag();
+					return originalResponse.newBuilder()
+							.body(new ProgressResponseBody(originalResponse.body(), callback)).build();
+				}
+				return originalResponse;
+			}
+		};
+	}
 
-	    logger.info("[ InfraAPICaller-K8s ] httpsCommander "); 
+	public static String httpsCommander(SSLSocketFactory sf, Map<String, String> requestHeader,
+			Map<String, String> responseHeader, String address, String command, String method) throws Exception {
+		// Properties propertiesClone =
+		// ProzoneConfig.makeClone(ServiceManager.getCurrentRequestContext().getRequest());
+
+		StringBuilder textBuilder = new StringBuilder();
+
+		logger.info("[ InfraAPICaller-K8s ] httpsCommander ");
 		StringBuilder sb = new StringBuilder();
 		sb.append(Constants.HTTPS_SCHEME_PREFIX);
 		sb.append(address);
@@ -4597,7 +4572,7 @@ public class K8sApiCaller {
 		sb.append(command);
 		String serviceURL = sb.toString();
 		logger.info("Service URL : " + serviceURL);
-		
+
 		try {
 			URL url = new URL(serviceURL);
 			HttpsURLConnection client = (HttpsURLConnection) url.openConnection();
@@ -4609,10 +4584,9 @@ public class K8sApiCaller {
 			client.setConnectTimeout(30 * 1000);
 			client.setReadTimeout(60 * 1000);
 			client.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-			
-			
+
 			// set HTTPS Header
-			for(String key : requestHeader.keySet()) {
+			for (String key : requestHeader.keySet()) {
 				logger.info("[Request*Header]" + key + ": " + requestHeader.get(key));
 				client.setRequestProperty(key, requestHeader.get(key));
 			}
