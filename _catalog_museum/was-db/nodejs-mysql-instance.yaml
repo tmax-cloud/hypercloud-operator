@@ -14,6 +14,10 @@ spec:
       value: default
     - name: SERVICE_ACCOUNT_NAME
       value: tutorial-service
+    - name: DB_SERVICE_TYPE
+      value: ClusterIP
+    - name: WAS_SERVICE_TYPE
+      value: LoadBalancer
     - name: WAS_PORT
       value: 3000
     - name: DB_STORAGE

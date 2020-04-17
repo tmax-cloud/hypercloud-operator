@@ -19,12 +19,12 @@ objects:
     labels:
       app: ${APP_NAME}
   spec:
+    type: ${SERVICE_TYPE}
     ports:
     - port: 27017
     selector:
       app: ${APP_NAME}
       tier: mongodb
-    clusterIP: None
 - apiVersion: v1
   kind: PersistentVolumeClaim
   metadata:
@@ -33,7 +33,6 @@ objects:
     labels:
       app: ${APP_NAME}
   spec:
-    #storageClassName: manual
     storageClassName: csi-cephfs-sc
     accessModes:
     - ReadWriteOnce
@@ -117,6 +116,10 @@ parameters:
 - name: DB_STORAGE
   displayName: DBStorage
   description: Storage size for DB
+  required: true
+- name: SERVICE_TYPE
+  displayName: ServiceType
+  description: Service Type (ClsuterIP/NodePort/LoadBalancer)
   required: true
 - name: MONGODB_USER
   displayName: MongoDBUser
