@@ -33,7 +33,7 @@ spec:
     spec:
       containers:
       - name: proauth-db
-        image: 192.168.6.110:5000/proauth_db:d023
+        image: 192.168.6.110:5000/proauth_db:d027
         ports:
         - containerPort: 8629
         volumeMounts:

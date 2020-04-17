@@ -30,4 +30,21 @@
 
 9. authenticate webhook 설정 (http://192.168.1.150:10080/hypercloud/hypercloud-operator/wikis/WebHook-Guide)
 
+10. hypercloud4-operator userCreate 서비스를 이용해서 지워줬던 user를 추가 생성할 수 있다. ( 통합 회원가입 페이지가 나오기 전까지 )
+  1) POST http://192.168.6.149:28677/user
+       {
+		  "id": "test-user",
+		  "name": "test",
+		  "password": "c7ad44cbad762a5da0a452f9e854fdc1e0e7a52a38015f23f3eab1d80b931dd472634dfac71cd34ebc35d16ab7fb8a90c81f975113d6c7538dc69dd8de9077ec",
+		  "email": "test-user@tmax.co.kr",
+		  "phone": "000-0000-0000"
+	   }
+  2) id와 비밀번호는 분리 되었으므로 형식을 맞출 필요가 더이상 없지만 위의 예시는 기존에 생성되어있던 admin@tmax.co.kr 의 설정을 그대로 쓰기 위함이다.
+  3) id는 k8s의 metadata Name으로 들어가기 때문에, 대부분의 특수 문자를 더이상 사용할 수 없다.	   
+  3) password는 현재 ui가 나오지 않은 상황이기 때문에 원하는 password를 sha-512 해슁을 진행 ( https://www.convertstring.com/ko/Hash/SHA512 이용)
+  4) 소문자를 넣어 줘야 하므로 비밀번호를 모두 소문자로 만들어준다. (http://mwultong.blogspot.com/2007/12/case-converter.html 이용 )
+      * 위의 예시는 "admin"을 해쉬 하고 소문자로 만든 결과이다.
+      
+11. id / password(해쉬 하기전 ) 으로 로그인이 가능해진다.      
+  
 
