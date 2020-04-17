@@ -56,7 +56,7 @@ public class RefreshHandler extends GeneralHandler {
 			logger.info( "  Access token: " + refreshInDO.getAccessToken() );
     		logger.info( "  Refresh token: " + refreshInDO.getRefreshToken() );
     		
-    		if ( atExpireTimeSec < 1 || atExpireTimeSec >720 ) throw new Exception(ErrorCode.INVALID_TOKEN_EXPIRED_TIME);
+//    		if ( atExpireTimeSec < 1 || atExpireTimeSec >720 ) throw new Exception(ErrorCode.INVALID_TOKEN_EXPIRED_TIME);
     		atExpireTimeSec = (refreshInDO.getAtExpireTime() == 0)?  Constants.ACCESS_TOKEN_EXP_TIME : refreshInDO.getAtExpireTime() * 60;
 			logger.info( "  AT Expire Time : " +  atExpireTimeSec/60  + " min");
 			

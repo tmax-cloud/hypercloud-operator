@@ -15,14 +15,12 @@ metadata:
   uid: eca984a0-0a99-4329-b826-6fc9ec973cfa
 status: active
 userInfo:
-  department: CK2-4
+  department: CK2-3
   description: For test
   email: admin@tmax.co.kr
   name: Admin
-  password: 3da13df61dc87ba605d441920abf00a3d30fd8b32c109670e04236e12ba668b7
-  passwordSalt: 2ba19dcc-bb56-484b-b426-53d19dced859
-  phone: 010-5730-8221
-  position: developer
+  phone: 010-4878-8544
+  position: administration
   
 ---
 
