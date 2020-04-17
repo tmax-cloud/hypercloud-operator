@@ -73,6 +73,14 @@ parameters:
   description: WAS Port
   value: number
   required: true
+- name: DB_SERVICE_TYPE
+  displayName: DbServiceType
+  description: DB Service Type (ClsuterIP/NodePort/LoadBalancer)
+  required: true
+- name: WAS_SERVICE_TYPE
+  displayName: WasServiceType
+  description: WAS Service Type (ClsuterIP/NodePort/LoadBalancer)
+  required: true
 objects:
 - apiVersion: v1
   kind: Service
@@ -82,7 +90,7 @@ objects:
     labels:
       app: ${APP_NAME}
   spec:
-    type: LoadBalancer
+    type: ${WAS_SERVICE_TYPE}
     ports:
     - port: ${WAS_PORT}
     selector:
@@ -96,12 +104,12 @@ objects:
     labels:
       app: ${APP_NAME}
   spec:
+    type: ${DB_SERVICE_TYPE}
     ports:
     - port: 3306
     selector:
       app: ${APP_NAME}
       tier: mysql
-    clusterIP: None
 - apiVersion: v1
   kind: PersistentVolumeClaim
   metadata:
@@ -255,7 +263,7 @@ objects:
 - apiVersion: tekton.dev/v1alpha1
   kind: Pipeline
   metadata:
-    name: ${APP_NAME}
+    name: ${APP_NAME}-pipeline
     namespace: ${NAMESPACE}
   spec:
     resources:
@@ -334,7 +342,7 @@ objects:
   spec:
     serviceAccountName: ${SERVICE_ACCOUNT_NAME}
     pipelineRef:
-      name: ${APP_NAME}
+      name: ${APP_NAME}-pipeline
     resources:
     - name: source-repo
       resourceRef:

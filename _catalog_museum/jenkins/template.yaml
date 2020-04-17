@@ -19,7 +19,7 @@ objects:
     labels:
       app: ${APP_NAME}
   spec:
-    type: ClusterIP
+    type: ${SERVICE_TYPE}
     ports:
     - name: http
       port: 8080
@@ -86,6 +86,10 @@ parameters:
 - name: STORAGE
   displayName: Storage
   description: Storage size
+  required: true
+- name: SERVICE_TYPE
+  displayName: ServiceType
+  description: Service Type (ClsuterIP/NodePort/LoadBalancer)
   required: true
 plans:
 - name: jenkins-plan1

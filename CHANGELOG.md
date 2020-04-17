@@ -1,6 +1,35 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.0.16 start -------------------->
+
+## HyperCloudServer_4.1.0.16 (2020년 04월 17일 금 오후  2:13:50)
+
+### Added
+
+### Changed
+  - [mod] email handler 추가 by taegeon_woo
+  - [mod] install_guide 추가 by taegeon_woo
+  - [mod] admin 권한 최초 유저 정보 변경 by taegeon_woo
+  - [mod] namespaceGET 403 에러시 에러메시지 출력되도록 return 타입 변경 by taegeon_woo
+  - [mod] 모든 ns에 권한이 없는 user일때 namespaceGet 처리 해주기 by taegeon_woo
+  - [mod] User Class에 profile Pic 추가 by taegeon_woo
+  - [mod] NamespaceClaimController.java 정책 변경 : NamespaceClaim은 중복 이름이면 reject by taegeon_woo
+  - [mod] default_user_group.yaml 수정 by taegeon_woo
+  - [mod] serviceinstance 에서 plan 조회 시 namespaced 가 아닌 cluster scope 로 조회하도록 수정 by seonho_choi
+  - [mod]  dockerFile 테스트 by taegeon_woo
+  - [mod] UserDeleteWatcher.java 구현 by taegeon_woo
+
+### Fixed
+  - [ims][222485] clusterRole에 resourceName을 가진 Namespace에 관해서만 권한을 가지도록 수정 by taegeon_woo
+
+### CRD yaml
+  - [crd] Template/TemplateCRD_v1beta1.yaml paramters 필수값 표시 by seonho_choi
+
+### Etc
+
+<!--------------------- v4.1.0.16 end --------------------->
+
 <!-------------------- v4.1.0.15 start -------------------->
 
 ## HyperCloudServer_4.1.0.15 (2020년 04월 14일 화 오후  6:45:20)

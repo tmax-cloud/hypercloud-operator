@@ -7,7 +7,14 @@ public class TemplateInstance {
 	private Metadata metadata = null;
 	private TemplateInstanceSpec spec = null;
 	private TemplateInstanceStatus status = null;
+	private String operatorStartTime = null;
 	
+	public String getOperatorStartTime() {
+		return operatorStartTime;
+	}
+	public void setOperatorStartTime(String operatorStartTime) {
+		this.operatorStartTime = operatorStartTime;
+	}
 	public String getApiVersion() {
 		return apiVersion;
 	}

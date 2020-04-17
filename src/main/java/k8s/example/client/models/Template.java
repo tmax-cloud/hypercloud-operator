@@ -19,6 +19,14 @@ public class Template {
 	private JSONObject objects = null;
 	private List<ServicePlan> plans = null;
 	private List<TemplateParameter> parameters = null;
+	private String operatorStartTime = null;
+	
+	public String getOperatorStartTime() {
+		return operatorStartTime;
+	}
+	public void setOperatorStartTime(String operatorStartTime) {
+		this.operatorStartTime = operatorStartTime;
+	}
 	public String getApiVersion() {
 		return apiVersion;
 	}
