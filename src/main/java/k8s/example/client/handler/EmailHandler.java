@@ -71,7 +71,9 @@ public class EmailHandler extends GeneralHandler {
     		logger.info( " verifyCode: " + verifyCode );
 
     		// Send E-mail to User
-    		Util.sendMail( userInDO.getEmail(), verifyCode ); 
+    		String subject = "[인증번호 : " + verifyCode + " ] 이메일을 인증해 주세요";
+    		String content = "인증번호 " + verifyCode + "\n\n 안녕하세요? \n TmaxCloud를 이용해 주셔서 감사합니다. \n 가입화면에서 인증번호를 입력해 주세요. \n 감사합니다.";
+    		Util.sendMail( userInDO.getEmail(), subject, content ); 
     		
     		// Insert VerifyCode into Secret
     		try {

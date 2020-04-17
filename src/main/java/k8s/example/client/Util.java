@@ -101,14 +101,13 @@ public class Util {
         return numStr;
 	}
 	 
-	 public static void sendMail( String email, String content ) throws Throwable {	
+	 public static void sendMail( String email, String subject, String content ) throws Throwable {	
 		logger.info( " Send Verification Mail User ");
 		String host = "mail.tmax.co.kr";
 		int port = 25;
-		String recipient = "taegeon_woo@tmax.co.kr";
-//		String recipient = email;  //FIXME
+//		String recipient = "taegeon_woo@tmax.co.kr";
+		String recipient = email; 
 
-		String subject = "MailTest 메일테스트";	
 		String charSetUtf = "UTF-8" ; //FIXME : 제목 한글 여전히 깨짐 ㅠㅠ
 		Properties props = System.getProperties();
 		String body = null;
@@ -139,8 +138,7 @@ public class Util {
 		mimeMessage.setRecipient( Message.RecipientType.TO, new InternetAddress( recipient ) );
 		
 		// Make Subject
-		mimeMessage.setSubject( subject, charSetUtf );
-//			mimeMessage.setSubject( subject, "text/plain; charset=UTF-8" );
+		mimeMessage.setSubject( MimeUtility.encodeText(subject,  charSetUtf, "B") );
 
 		// Make Body
 //		Map<String, String> bodyMap = K8sApiCaller.readSecret(Constants.TEMPLATE_NAMESPACE, "authenticate-html");  		
@@ -148,6 +146,7 @@ public class Util {
 //			body = bodyMap.get("body") + " \n AccessToken\n" + accessToken;
 //			if( content != null) body = body + " \n Alter PassWord\n" + content; //TODO
 //		}
+		
 		logger.info( " Mail Body : "  + content );
 		body = content;
 		if (body!=null) mimeMessage.setText( MimeUtility.encodeText(content,  charSetUtf, "B") );
