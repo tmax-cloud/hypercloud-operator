@@ -31,7 +31,7 @@
 9. authenticate webhook 설정 (http://192.168.1.150:10080/hypercloud/hypercloud-operator/wikis/WebHook-Guide)
 
 10. hypercloud4-operator userCreate 서비스를 이용해서 지워줬던 user를 추가 생성할 수 있다. ( 통합 회원가입 페이지가 나오기 전까지 )
-  1) POST http://192.168.6.149:28677/user
+  1) POST http://192.168.6.149:28677/user ( hypercloud4-operator로 call 을 해야한다)
        {
 		  "id": "test-user",
 		  "name": "test",
