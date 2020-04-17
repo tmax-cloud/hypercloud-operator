@@ -21,11 +21,11 @@ spec:
   validation:
     openAPIV3Schema:
       type: object
+      required:
+      - parameters
       properties:
         operatorStartTime:
           type: string
-        required:
-        - parameters
         apiVersion:
           type: string
         kind:
@@ -60,6 +60,7 @@ spec:
               type: string
           type: object
         objects:
+          items:
             type: object
             x-kubernetes-preserve-unknown-fields: true
           type: array
