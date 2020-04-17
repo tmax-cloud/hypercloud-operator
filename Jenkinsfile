@@ -64,10 +64,11 @@ node {
 			sh "git tag v${version}"
 			
 			sh "sudo git push -u origin +${params.buildBranch}"
+			sh "sudo git push origin v${version}"
 
 			sh "git fetch --all"
 			sh "git reset --hard origin/${params.buildBranch}"
-			sh "git pull origin v${version}"
+			sh "git pull origin ${params.buildBranch}"
 			
 			//sh "git pull origin ${params.buildBranch}"
 			//sh "sudo git push origin v${version}"
