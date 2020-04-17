@@ -149,6 +149,7 @@ public class Util {
 //			if( content != null) body = body + " \n Alter PassWord\n" + content; //TODO
 //		}
 		logger.info( " Mail Body : "  + content );
+		body = content;
 		if (body!=null) mimeMessage.setText( MimeUtility.encodeText(content,  charSetUtf, "B") );
 		logger.info( " Ready to Send Mail to " + recipient);
 		try {

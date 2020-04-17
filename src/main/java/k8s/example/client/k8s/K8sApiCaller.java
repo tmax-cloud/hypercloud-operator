@@ -3251,6 +3251,8 @@ public class K8sApiCaller {
 	// type2: kubernetes.io/dockerconfigjson
 	public static String createSecret(String namespace, Map<String, String> secrets, String secretName,
 			Map<String, String> labels, String type, List<V1OwnerReference> ownerRefs) throws ApiException {
+		logger.info("[K8S ApiCaller] createSecret Service Start");
+
 		V1Secret secret = new V1Secret();
 		secret.setApiVersion("v1");
 		secret.setKind("Secret");
@@ -3322,13 +3324,14 @@ public class K8sApiCaller {
 	}
 	
 	public static void patchSecret(String namespace, Map<String, String> secrets, String secretName, Map<String, String> labels) throws Throwable {
+		logger.info("[K8S ApiCaller] patchSecret Service Start");
 
 		V1Secret result;
 		
 		for( String key : secrets.keySet()) {
 			String dataStr = secrets.get(key);
 			byte[] encodeData = Base64.encodeBase64(dataStr.getBytes());
-			String jsonPatchStr = "[{\"op\":\"replace\",\"path\":\"/data/" + key + "\",\"value\": " + new String(encodeData) + " }]";
+			String jsonPatchStr = "[{\"op\":\"replace\",\"path\":\"/data/" + key + "\",\"value\": \"" + new String(encodeData) + "\" }]";
 			logger.info("JsonPatchStr: " + jsonPatchStr);
 
 			JsonElement jsonPatch = (JsonElement) new JsonParser().parse(jsonPatchStr);
@@ -3336,7 +3339,7 @@ public class K8sApiCaller {
 				Map<String, byte[]> secretMap = new HashMap<>();
 				result = api.patchNamespacedSecret(Constants.K8S_PREFIX + secretName.toLowerCase(), namespace, jsonPatch, "true", null, null, null);
 				
-				logger.info("[result]" + result);
+//				logger.info("[result]" + result);
 				
 				secretMap = result.getData();
 				logger.info("== real secret data ==");
