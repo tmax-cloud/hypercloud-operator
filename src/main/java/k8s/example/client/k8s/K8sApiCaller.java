@@ -133,6 +133,8 @@ import k8s.example.client.DataObject.UserCR;
 import k8s.example.client.Main;
 import k8s.example.client.StringUtil;
 import k8s.example.client.Util;
+import k8s.example.client.interceptor.ChunkedInterceptor;
+import k8s.example.client.interceptor.HttpLoggingInterceptor;
 import k8s.example.client.interceptor.LogInterceptor;
 import k8s.example.client.k8s.apis.CustomResourceApi;
 import k8s.example.client.k8s.util.SecurityHelper;
@@ -186,7 +188,7 @@ public class K8sApiCaller {
 
 	public static void initK8SClient() throws Exception {
 		k8sClient = Config.fromCluster();
-		// k8sClient.setHttpClient(getHttpClient()); // set network interceptors
+		//k8sClient.setHttpClient(getHttpClient()); // set network interceptors
 		k8sClient.setConnectTimeout(0);
 		k8sClient.setReadTimeout(0);
 		k8sClient.setWriteTimeout(0);
@@ -4532,7 +4534,8 @@ public class K8sApiCaller {
 		OkHttpClient httpClient;
 		OkHttpClient.Builder builder = new OkHttpClient.Builder();
 		builder.addNetworkInterceptor(getProgressInterceptor()); // K8S Interceptor
-		builder.addNetworkInterceptor(new LogInterceptor()); // HyperCloud Interceptor
+		//builder.addNetworkInterceptor(new ChunkedInterceptor()); // HyperCloud Interceptor
+		//builder.addInterceptor(new HttpLoggingInterceptor());
 		httpClient = builder.build();
 		return httpClient;
 	}

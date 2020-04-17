@@ -1,7 +1,5 @@
 package k8s.example.client;
 
-import java.io.IOException;
-
 import org.quartz.CronScheduleBuilder;
 import org.quartz.CronTrigger;
 import org.quartz.JobBuilder;
@@ -13,14 +11,9 @@ import org.quartz.impl.StdSchedulerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.kubernetes.client.openapi.ApiCallback;
-import io.kubernetes.client.openapi.ProgressResponseBody;
 import k8s.example.client.handler.UserDeleteJob;
 import k8s.example.client.k8s.K8sApiCaller;
 import k8s.example.client.metering.MeteringJob;
-import okhttp3.Interceptor;
-import okhttp3.Request;
-import okhttp3.Response;
 
 public class Main {
 	public static Logger logger = LoggerFactory.getLogger("K8SOperator");
