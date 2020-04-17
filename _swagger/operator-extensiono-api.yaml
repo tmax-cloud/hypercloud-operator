@@ -74,7 +74,13 @@ components:
           description: "User Department"
         description:
           type: string
-          description: "User Description"                                                                                    
+          description: "User Description" 
+        profile:
+          type: string
+          description: "User Profile Picture"
+        verifyCode:
+          type: string
+          description: "User Verification Code"
     UserLoginDO:
       type: object
       description: "HyperCloud4 Login DO"
@@ -201,7 +207,51 @@ paths:
                 }     
       responses:
         200:
-          description: Password Change Success                                                                                  
+          description: Password Change Success    
+  /email:
+    post:
+      tags:
+      - "Integrated Auth"
+      summary: "Integrated Hyper Cloud4 Email Vefification Code Send Service"
+      requestBody:
+        description: "User"
+        required: true  
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                dto:
+                  $ref: "#/components/schemas/User"    
+              example:
+                {
+                  "email": "woo@tmax.co.kr",
+                }     
+      responses:
+        200:
+          description: User Email Vefification Code Send Success
+    put:
+      tags:
+      - "Integrated Auth"
+      summary: "Integrated Hyper Cloud4 User Email Verify Service"
+      requestBody:
+        description: "User"
+        required: true  
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                dto:
+                  $ref: "#/components/schemas/User"    
+              example:
+                {
+                  "email": "woo@tmax.co.kr",
+                  "verifyCode" : "1234"
+                }     
+      responses:
+        200:
+          description: User Email Vefification Code Verify Success          
   /login:
     post:
       tags:
