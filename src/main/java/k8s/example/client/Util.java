@@ -101,7 +101,7 @@ public class Util {
         return numStr;
 	}
 	 
-	 public static void sendMail( String email, String subject, String content ) throws Throwable {	
+	 public static void sendMail( String email, String subject, String body ) throws Throwable {	
 		logger.info( " Send Verification Mail User ");
 		String host = "mail.tmax.co.kr";
 		int port = 25;
@@ -110,7 +110,6 @@ public class Util {
 
 		String charSetUtf = "UTF-8" ; //FIXME : 제목 한글 여전히 깨짐 ㅠㅠ
 		Properties props = System.getProperties();
-		String body = null;
 		props.put( "mail.transport.protocol", "smtp" );
 		props.put( "mail.smtp.host", host );
 		props.put( "mail.smtp.port", port );
@@ -147,9 +146,9 @@ public class Util {
 //			if( content != null) body = body + " \n Alter PassWord\n" + content; //TODO
 //		}
 		
-		logger.info( " Mail Body : "  + content );
-		body = content;
-		if (body!=null) mimeMessage.setText( MimeUtility.encodeText(content,  charSetUtf, "B") ); //FIXME
+		logger.info( " Mail Body : "  + body );
+		mimeMessage.setContent(body, "UTF-8");
+		if (body!=null) mimeMessage.setText( body, charSetUtf); //FIXME
 		logger.info( " Ready to Send Mail to " + recipient);
 		try {
 			//Send Mail
