@@ -603,7 +603,7 @@ public class K8sApiCaller {
 			List < UserCR > userCRList = null;
 			String jsonPatchStr = "[";
 			
-			if ( StringUtil.isEmpty(userInfo.getRetryCount())) {
+			if ( userInfo.getRetryCount()==0 ) {
 				jsonPatchStr = jsonPatchStr + "{\"op\":\"replace\",\"path\":\"/userInfo/dateOfBirth\",\"value\": " + userInfo.getDateOfBirth() + "}";
 				if (userInfo.getName() != null) jsonPatchStr = jsonPatchStr + ", {\"op\":\"replace\",\"path\":\"/userInfo/name\",\"value\": " + userInfo.getName() + "}";
 				if (userInfo.getDepartment() != null) jsonPatchStr = jsonPatchStr + ", {\"op\":\"replace\",\"path\":\"/userInfo/department\",\"value\": " + userInfo.getDepartment() + "}";

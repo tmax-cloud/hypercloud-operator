@@ -58,7 +58,7 @@ public class LoginHandler extends GeneralHandler {
 		String appNameRequestParameter = null;
 		String accessToken = null;
 		String refreshToken = null;
-
+		int retryCount = 0;
 			try {
 				// Read inDO
 	    		loginInDO = new ObjectMapper().readValue(body.get( "postData" ), LoginInDO.class);
@@ -95,21 +95,27 @@ public class LoginHandler extends GeneralHandler {
 		    	    		status = Status.OK; 
 		    	    		
 		    	    		//Check if retryCount is 10, if not set 0
-		    	    		if(k8sUser.getUserInfo().getRetryCount().equalsIgnoreCase("10")) {
+		    	    		if(k8sUser.getUserInfo().getRetryCount()==10) {
 		    	    			throw new Exception(ErrorCode.BLOCKED_USER);
 		    	    		}
 	    	    		} else {
 	    	    			logger.info("  Login failed by ProAuth.");		    			
 			    			status = Status.BAD_REQUEST; 
 			    			outDO = loginOut.get("reason").toString().replaceAll("\"", ""); 
+	    	    			logger.info(" outDO : " + outDO);		    			
+
 			    			if (outDO.equalsIgnoreCase("Wrong Password")) {
-			    				int retryCount = Integer.parseInt(k8sUser.getUserInfo().getRetryCount());
+				    			retryCount = k8sUser.getUserInfo().getRetryCount();	
+		    	    			logger.info(" previous retryCount : " + retryCount);		    			
+
 			    				if (retryCount == 9) {
 			    	    			throw new Exception(ErrorCode.BLOCKED_USER);
 			    				} else {
 			    					retryCount  = retryCount + 1;
 			    					User newUser = new User();
-			    					newUser.setRetryCount(Integer.toString(retryCount));
+			    					newUser.setId(loginInDO.getId());//TODO
+			    					newUser.setRetryCount(retryCount);
+			    	    			logger.info(" current retryCount : " + retryCount);		    			
 			    					K8sApiCaller.updateUserMeta(newUser);
 			    				}	
 			    			}
@@ -241,6 +247,7 @@ public class LoginHandler extends GeneralHandler {
 			} else if ( status.equals(Status.BAD_REQUEST)) { 
 				CommonOutDO out = new CommonOutDO();
 				out.setMsg(outDO);
+				if ( retryCount != 0 ) out.setEvent( Integer.toString(retryCount) );
     			status = Status.OK; //ui요청
 				Gson gson = new GsonBuilder().setPrettyPrinting().create();
 				outDO = gson.toJson(out).toString();

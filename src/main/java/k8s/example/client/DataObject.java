@@ -112,7 +112,7 @@ public class DataObject {
     	private String description;
     	private String profile;
     	private String verifyCode;
-    	private String retryCount;
+    	private int retryCount;
     	
     	public String getId() { return id; }
     	public String getName() { return name; }
@@ -127,7 +127,7 @@ public class DataObject {
     	public String getDescription() { return description; }
     	public String getProfile() { return profile; }
     	public String getVerifyCode() { return verifyCode; }
-    	public String getRetryCount() { return retryCount; }
+    	public int getRetryCount() { return retryCount; }
     	
     	public void setId(String id) { this.id = id; }
     	public void setName(String name) { this.name = name; }
@@ -142,7 +142,7 @@ public class DataObject {
     	public void setDescription(String description) { this.description = description; }
     	public void setProfile(String profile) { this.profile = profile; }
     	public void setVerifyCode(String verifyCode) { this.verifyCode = verifyCode; }
-    	public void setRetryCount(String retryCount) { this.retryCount = retryCount; }
+    	public void setRetryCount(int retryCount) { this.retryCount = retryCount; }
     }
     
     public static class UserGroup {
@@ -229,12 +229,15 @@ public class DataObject {
     public static class CommonOutDO {
     	private String msg;
     	private String status;
+    	private String event;
 
     	public String getMsg() { return msg; }
     	public String getStatus() { return status; }
+    	public String getEvent() { return event; }
     	
     	public void setMsg(String msg) { this.msg = msg; }
     	public void setStatus(String status) { this.status = status; }
+    	public void setEvent(String event) { this.event = event; }
     }
     
     public static class RegistryEventDO {
