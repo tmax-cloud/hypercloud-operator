@@ -8,8 +8,26 @@ public class ServiceMetadata {
 	private String providerDisplayName = null;
 	private String documentationUrl = null;
 	private String supportUrl = null;
+	private String urlDescription = null;
+	private String markdownDescription = null;
 	private boolean recommend = false;
 	
+	public String getUrlDescription() {
+		return urlDescription;
+	}
+
+	public void setUrlDescription(String urlDescription) {
+		this.urlDescription = urlDescription;
+	}
+
+	public String getMarkdownDescription() {
+		return markdownDescription;
+	}
+
+	public void setMarkdownDescription(String markdownDescription) {
+		this.markdownDescription = markdownDescription;
+	}
+
 	public boolean isRecommend() {
 		return recommend;
 	}

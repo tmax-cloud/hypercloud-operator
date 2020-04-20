@@ -1,6 +1,34 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.0.17 start -------------------->
+
+## HyperCloudServer_4.1.0.17 (Mon Apr 20 06:30:14 KST 2020)
+
+### Added
+
+### Changed
+  - [mod] user email 중복 체크 서비스 개발 by taegeon_woo
+  - [mod] user login retrycount 구현 완료 by taegeon_woo
+  - [mod] user id 중복 체크 기능 추가 by taegeon_woo
+  - [mod] 비밀번호 변경기능 id로 가능하게끔 변경 by taegeon_woo
+  - [mod] user meta에 dateOfBirth 추가 by taegeon_woo
+  - [mod] 메일 전송 서비스 한글화 해결 by taegeon_woo
+  - [mod] email Handler swagger정리 by taegeon_woo
+  - [mod] user Email send & verify 서비스 구현 by taegeon_woo
+  - [mod] Catalog museum 각 템플릿에 SERVICE_TYPE 파라미터 추가 by Sunghyun Kim
+  - [mod] template, template instance 객체에 operatorStartTime 추가 by seonho_choi
+
+### Fixed
+
+### CRD yaml
+  - [crd] Template/TemplateCRD_v1beta1.yaml : urlDescription, markdownDescription 필드 추가 by seonho_choi
+  - [crd] Template/TemplateCRD_v1beta1.yaml 버그 수정 by seonho_choi
+
+### Etc
+
+<!--------------------- v4.1.0.17 end --------------------->
+
 <!-------------------- v4.1.0.16 start -------------------->
 
 ## HyperCloudServer_4.1.0.16 (2020년 04월 17일 금 오후  2:13:50)

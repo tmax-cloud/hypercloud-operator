@@ -54,9 +54,9 @@ node {
 			sh "git config --global user.email ${userEmail}"
 			sh "git config --global credential.helper store"
 
-			sh "git fetch --all"
-			sh "git reset --hard origin/${params.buildBranch}"
-			sh "git pull origin ${params.buildBranch}"
+			//sh "git fetch --all"
+			//sh "git reset --hard origin/${params.buildBranch}"
+			//sh "git pull origin ${params.buildBranch}"
 
 			sh "git add -A"
 
