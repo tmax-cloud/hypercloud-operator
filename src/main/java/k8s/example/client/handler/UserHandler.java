@@ -363,7 +363,7 @@ public class UserHandler extends GeneralHandler {
 	    		if (userCR.getMetadata().getName() == null) {
 	    			throw new Exception(ErrorCode.NO_CORRESPONDING_USER);
 	    		} else {
-	    			K8sApiCaller.updateUserMeta( userInDO );
+	    			K8sApiCaller.updateUserMeta( userInDO, false );
 	    			status = Status.OK; 
 					outDO = Constants.USER_UPDATE_SUCCESS;
 	    		}

@@ -601,12 +601,12 @@ public class K8sApiCaller {
 		return user;
 	}
 
-	public static void updateUserMeta(User userInfo) throws Exception {
+	public static void updateUserMeta(User userInfo, boolean retryCountFlag) throws Exception {
 		try {
 			List < UserCR > userCRList = null;
 			String jsonPatchStr = "[";
 			
-			if ( userInfo.getRetryCount()==0 ) {
+			if ( !retryCountFlag ) {
 				jsonPatchStr = jsonPatchStr + "{\"op\":\"replace\",\"path\":\"/userInfo/dateOfBirth\",\"value\": " + userInfo.getDateOfBirth() + "}";
 				if (userInfo.getName() != null) jsonPatchStr = jsonPatchStr + ", {\"op\":\"replace\",\"path\":\"/userInfo/name\",\"value\": " + userInfo.getName() + "}";
 				if (userInfo.getDepartment() != null) jsonPatchStr = jsonPatchStr + ", {\"op\":\"replace\",\"path\":\"/userInfo/department\",\"value\": " + userInfo.getDepartment() + "}";

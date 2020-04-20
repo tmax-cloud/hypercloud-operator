@@ -97,6 +97,12 @@ public class LoginHandler extends GeneralHandler {
 		    	    		//Check if retryCount is 10, if not set 0
 		    	    		if(k8sUser.getUserInfo().getRetryCount()==10) {
 		    	    			throw new Exception(ErrorCode.BLOCKED_USER);
+		    	    		} else {
+		    	    			User newUser = new User();
+		    					newUser.setId(loginInDO.getId());
+		    					newUser.setRetryCount(0);
+		    	    			logger.info(" set Retry Count to 0");		    			
+		    					K8sApiCaller.updateUserMeta(newUser, true);
 		    	    		}
 	    	    		} else {
 	    	    			logger.info("  Login failed by ProAuth.");		    			
@@ -107,17 +113,14 @@ public class LoginHandler extends GeneralHandler {
 			    			if (outDO.equalsIgnoreCase("Wrong Password")) {
 				    			retryCount = k8sUser.getUserInfo().getRetryCount();	
 		    	    			logger.info(" previous retryCount : " + retryCount);		    			
-
-			    				if (retryCount == 9) {
-			    	    			throw new Exception(ErrorCode.BLOCKED_USER);
-			    				} else {
-			    					retryCount  = retryCount + 1;
-			    					User newUser = new User();
-			    					newUser.setId(loginInDO.getId());//TODO
-			    					newUser.setRetryCount(retryCount);
-			    	    			logger.info(" current retryCount : " + retryCount);		    			
-			    					K8sApiCaller.updateUserMeta(newUser);
-			    				}	
+		    					if (retryCount == 10) throw new Exception(ErrorCode.BLOCKED_USER);			    					
+		    					retryCount++;
+		    					User newUser = new User();
+		    					newUser.setId(loginInDO.getId());
+		    					newUser.setRetryCount(retryCount);
+		    	    			logger.info(" current retryCount : " + retryCount);		    			
+		    					K8sApiCaller.updateUserMeta(newUser, true);
+		    					if (retryCount == 10) throw new Exception(ErrorCode.BLOCKED_USER);			    					
 			    			}
 	    	    		}
 	    	    		
@@ -173,8 +176,7 @@ public class LoginHandler extends GeneralHandler {
 		    			logger.info("  Login fail. Check if the user is belong to Integrated Auth User");
 		    			status = Status.BAD_REQUEST; 
 		    			outDO = Constants.LOGIN_FAILED;
-		    		}
-		    		
+		    		}	
 	        	}
 	    		
             	// Get Redirect URI if Exists
@@ -219,9 +221,12 @@ public class LoginHandler extends GeneralHandler {
 			} catch (Exception e) {
 				logger.info( "Exception message: " + e.getMessage() );
 				e.printStackTrace();
-				
 				status = Status.UNAUTHORIZED;
-				outDO = Constants.LOGIN_FAILED;
+				if( e.getMessage().equalsIgnoreCase(ErrorCode.BLOCKED_USER) ) {
+					outDO = e.getMessage();
+				}else {
+					outDO = Constants.LOGIN_FAILED;
+				}
 			}
 			
 			
