@@ -55,16 +55,7 @@ public class EmailHandler extends GeneralHandler {
     		logger.info( "  User E-Mail: " + userInDO.getEmail() );
     		
     		// Validate
-    		if (userInDO.getEmail() == null ) 	throw new Exception(ErrorCode.USER_MAIL_EMPTY);
-    		
-    		// Check ID, Email Duplication
-    		userCRList = K8sApiCaller.listUser();
-    		if ( userCRList != null ) {
-        		for(UserCR userCR : userCRList) {
-        			User user = userCR.getUserInfo();
-        			if ( user.getEmail().equalsIgnoreCase( userInDO.getEmail() )) throw new Exception( ErrorCode.USER_MAIL_DUPLICATED );
-        		}
-    		}		
+    		if (userInDO.getEmail() == null ) 	throw new Exception(ErrorCode.USER_MAIL_EMPTY);		
 
     		// Issue VerifyCode
     		String verifyCode = Util.numberGen(4, 1);
