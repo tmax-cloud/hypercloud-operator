@@ -93,11 +93,6 @@ public class UserDeleteWatcher extends Thread {
 										throw new Exception(ErrorCode.USER_DELETE_FAILED);
 									}
 								}
-								
-								// Delete Basic Role & RoleBinding of User
-								K8sApiCaller.deleteClusterRole( response.object.getMetadata().getName());
-								K8sApiCaller.deleteClusterRoleBinding( response.object.getMetadata().getName() );
-
 				        	}						
 							break;
 						}

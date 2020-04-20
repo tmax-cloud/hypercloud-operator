@@ -102,8 +102,8 @@ public class UserHandler extends GeneralHandler {
 
     		// Send E-mail to User
 //    		sendMail(userInDO.getEmail(), accessToken, null); //FIXME : UI 연동 테스트 후 주석 풀어줘야함
-//			status = Status.CREATED;
-//    		outDO = "User Create Success";
+			status = Status.CREATED;
+    		outDO = "User Create Success";
     		  		
 		} catch (ApiException e) {
 			logger.info( "Exception message: " + e.getResponseBody() );

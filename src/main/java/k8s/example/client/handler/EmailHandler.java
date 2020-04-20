@@ -140,11 +140,11 @@ public class EmailHandler extends GeneralHandler {
     			Iterator<String> keyset = returnMap.keySet().iterator();
         		while( keyset.hasNext() ) {
         			String key = keyset.next().toString();
-//        			logger.info("key: " + key);	
+        			logger.info("key: " + key);	
         			if ( key.equalsIgnoreCase(userInDO.getEmail().replaceAll("@", "-"))) {
-//            			logger.info("userInDO.getEmail(): " + userInDO.getEmail());	
-//            			logger.info("userInDO.getVerifyCode(): " + userInDO.getVerifyCode());	
-//            			logger.info("returnMap.get(key)): " + returnMap.get(key));	
+            			logger.info("userInDO.getEmail(): " + userInDO.getEmail());	
+            			logger.info("userInDO.getVerifyCode(): " + userInDO.getVerifyCode());	
+            			logger.info("returnMap.get(key)): " + returnMap.get(key));	
         				if (returnMap.get(key).equalsIgnoreCase(userInDO.getVerifyCode())) {
         					flag = true;
         				}

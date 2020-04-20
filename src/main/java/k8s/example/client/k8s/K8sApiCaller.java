@@ -3369,11 +3369,11 @@ public class K8sApiCaller {
 				
 //				logger.info("[result]" + result);
 				
-				secretMap = result.getData();
-				logger.info("== real secret data ==");
-				for( String key2 : secretMap.keySet()) {
-					logger.info("[secret]" + key2 + "=" + new String(secretMap.get(key2)));
-				}
+//				secretMap = result.getData();
+//				logger.info("== real secret data ==");
+//				for( String key2 : secretMap.keySet()) {
+//					logger.info("[secret]" + key2 + "=" + new String(secretMap.get(key2)));
+//				}
 			
 			} catch (ApiException e) {
 				logger.info(e.getResponseBody());
