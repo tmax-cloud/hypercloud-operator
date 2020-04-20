@@ -192,9 +192,13 @@ paths:
     put:
       tags:
       - "Integrated Auth"
-      summary: "Integrated Hyper Cloud4 User Password Change Service"
+      summary: "Integrated Hyper Cloud4 User Password Change Service"    
       parameters:
-      - $ref: "#/components/parameters/tokenParam"    
+      - in: "query"
+        name: "mode"
+        description: "meta / password"
+        schema:
+          type: "string"      
       requestBody:
         description: "User"
         required: true  
@@ -207,6 +211,7 @@ paths:
                   $ref: "#/components/schemas/User"    
               example:
                 {
+                  "id" : "test-tmax.co.kr",
                   "password": "tmax@23",
                   "alterPassword" : "tmax@2323"
                 }     

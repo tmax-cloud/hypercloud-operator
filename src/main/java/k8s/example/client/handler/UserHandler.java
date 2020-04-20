@@ -195,68 +195,68 @@ public class UserHandler extends GeneralHandler {
 			}			
 			break;
 		
-		case "password": 
-			// Get id with query parameter
-			try {
-				String id = SimpleUtil.getQueryParameter( session.getParameters(), Constants.QUERY_PARAMETER_ID );
-				String email = null;
-				
-				// Get e-mail from k8s with user ID
-				if ( id == null) throw new Exception(ErrorCode.USER_ID_EMPTY);
-				else {
-					UserCR userCR = K8sApiCaller.getUser(id);
-					email = userCR.getUserInfo().getEmail();
-					logger.info( " User Email : " + email );
-
-				}
-				
-				// Set Random Password to proauth
-				String alterPassword = Util.getRamdomPassword(10);
-				logger.info( " AlterPassword : " + alterPassword );
-
-				JsonObject setPasswordOut = OAuthApiCaller.SetPasswordService( null, id , alterPassword );
-				
-	    		logger.info( "  result : " + setPasswordOut.get("result").toString() );
-	    		
-	    		if ( setPasswordOut.get("result").toString().equalsIgnoreCase("\"true\"") ){
-    				logger.info( "  Password Change to random success." );
-    				outDO = Constants.PASSWORD_CHANGE_SUCCESS;
-	    			status = Status.OK; 
-	    		} else {
-	    			logger.info("  Password Change to random failed by ProAuth.");
-	    			logger.info( setPasswordOut.get("error").toString());
-	    			status = Status.UNAUTHORIZED; 
-    				outDO = Constants.PASSWORD_CHANGE_FAILED;
-	    		}
-	    		
-	    		// Login to ProAuth with new Password & Get Token
-	    		JsonObject loginOut = OAuthApiCaller.AuthenticateCreate( id, alterPassword);
-//	    		String refreshToken = loginOut.get("refresh_token").toString().replaceAll("\"", "");
-	    		String accessToken = loginOut.get("token").toString().replaceAll("\"", ""); //
-	    		logger.info( "  accessToken : " + accessToken );
-	    		
-	    		// Send E-mail to User
-//				sendMail( email, accessToken, alterPassword );
-			
-				status = Status.OK;
-	    		outDO = Constants.USER_PASSWORD_FIND_SUCCESS;
-
-			} catch (ApiException e) {
-				logger.info( "Exception message: " + e.getResponseBody() );
-				logger.info( "Exception message: " + e.getMessage() );
-				status = Status.UNAUTHORIZED; 
-				outDO = Constants.USER_PASSWORD_FIND_FAILED;
-			} catch (Exception e) {
-				logger.info( "Exception message: " + e.getMessage() );
-				status = Status.UNAUTHORIZED; 
-				outDO = Constants.USER_PASSWORD_FIND_FAILED;
-			} catch (Throwable e) {
-				logger.info( "Exception message: " + e.getMessage() );
-				status = Status.UNAUTHORIZED; 
-				outDO = Constants.USER_PASSWORD_FIND_FAILED;
-				e.printStackTrace();
-			}		
-			break;	
+//		case "password": 
+//			// Get id with query parameter
+//			try {
+//				String id = SimpleUtil.getQueryParameter( session.getParameters(), Constants.QUERY_PARAMETER_ID );
+//				String email = null;
+//				
+//				// Get e-mail from k8s with user ID
+//				if ( id == null) throw new Exception(ErrorCode.USER_ID_EMPTY);
+//				else {
+//					UserCR userCR = K8sApiCaller.getUser(id);
+//					email = userCR.getUserInfo().getEmail();
+//					logger.info( " User Email : " + email );
+//
+//				}
+//				
+//				// Set Random Password to proauth
+//				String alterPassword = Util.getRamdomPassword(10);
+//				logger.info( " AlterPassword : " + alterPassword );
+//
+//				JsonObject setPasswordOut = OAuthApiCaller.SetPasswordService( null, id , alterPassword );
+//				
+//	    		logger.info( "  result : " + setPasswordOut.get("result").toString() );
+//	    		
+//	    		if ( setPasswordOut.get("result").toString().equalsIgnoreCase("\"true\"") ){
+//    				logger.info( "  Password Change to random success." );
+//    				outDO = Constants.PASSWORD_CHANGE_SUCCESS;
+//	    			status = Status.OK; 
+//	    		} else {
+//	    			logger.info("  Password Change to random failed by ProAuth.");
+//	    			logger.info( setPasswordOut.get("error").toString());
+//	    			status = Status.UNAUTHORIZED; 
+//    				outDO = Constants.PASSWORD_CHANGE_FAILED;
+//	    		}
+//	    		
+//	    		// Login to ProAuth with new Password & Get Token
+//	    		JsonObject loginOut = OAuthApiCaller.AuthenticateCreate( id, alterPassword);
+////	    		String refreshToken = loginOut.get("refresh_token").toString().replaceAll("\"", "");
+//	    		String accessToken = loginOut.get("token").toString().replaceAll("\"", ""); //
+//	    		logger.info( "  accessToken : " + accessToken );
+//	    		
+//	    		// Send E-mail to User
+////				sendMail( email, accessToken, alterPassword );
+//			
+//				status = Status.OK;
+//	    		outDO = Constants.USER_PASSWORD_FIND_SUCCESS;
+//
+//			} catch (ApiException e) {
+//				logger.info( "Exception message: " + e.getResponseBody() );
+//				logger.info( "Exception message: " + e.getMessage() );
+//				status = Status.UNAUTHORIZED; 
+//				outDO = Constants.USER_PASSWORD_FIND_FAILED;
+//			} catch (Exception e) {
+//				logger.info( "Exception message: " + e.getMessage() );
+//				status = Status.UNAUTHORIZED; 
+//				outDO = Constants.USER_PASSWORD_FIND_FAILED;
+//			} catch (Throwable e) {
+//				logger.info( "Exception message: " + e.getMessage() );
+//				status = Status.UNAUTHORIZED; 
+//				outDO = Constants.USER_PASSWORD_FIND_FAILED;
+//				e.printStackTrace();
+//			}		
+//			break;	
 		}	
 		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML , outDO));
 	}
@@ -326,26 +326,15 @@ public class UserHandler extends GeneralHandler {
 			
 		case "password":
 			logger.info( "  User ID: " + userInDO.getId() );
-			logger.info( "  User Current Password: " + userInDO.getPassword() );
 			logger.info( "  User Alter Password: " + userInDO.getAlterPassword() );
 			
 			try {
 				// Validate
 	    		if (userInDO.getId() == null ) 	throw new Exception(ErrorCode.USER_ID_EMPTY);
-	    		if (userInDO.getPassword() == null ) 	throw new Exception(ErrorCode.USER_PASSWORD_EMPTY);
 	    		if (userInDO.getAlterPassword() == null ) 	throw new Exception(ErrorCode.USER_ALTER_PASSWORD_EMPTY);
 	    		
-	    		// Read AccessToken from Header
-				if(!session.getHeaders().get("authorization").isEmpty()) {
-					accessToken = session.getHeaders().get("authorization");
-				} else {
-					status = Status.BAD_REQUEST;
-					throw new Exception(ErrorCode.TOKEN_EMPTY);
-				}
-	    		logger.info( "  Token: " + accessToken );
-	    		
 	    		// Call ProAuth
-	    		JsonObject setPasswordOut = OAuthApiCaller.SetPasswordService( accessToken, null, userInDO.getAlterPassword() );
+	    		JsonObject setPasswordOut = OAuthApiCaller.SetPasswordService( userInDO.getId(), userInDO.getAlterPassword() );
 	    		logger.info( "  result : " + setPasswordOut.get("result").toString() );
 	    		if ( setPasswordOut.get("result").toString().equalsIgnoreCase("\"true\"") ){
     				logger.info( "  Password Change success." );

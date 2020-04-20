@@ -206,11 +206,10 @@ public class OAuthApiCaller {
 	    return ConfigurationUpdateOut; 
 	}
 	
-	public static JsonObject SetPasswordService( String token, String id,  String alterPassword ) throws IOException {
+	public static JsonObject SetPasswordService( String id,  String alterPassword ) throws IOException {
 		logger.info( "[OAuth] Password Change Service Start" );
 	
-		if (token != null) logger.info(" Token : " + token);	
-		if (id != null) logger.info(" User ID : " + id);	
+		logger.info(" User ID : " + id);	
 		logger.info(" Alter Password : " + alterPassword);	
 	    
 		JsonObject setPasswordInDO = new JsonObject();		
@@ -221,17 +220,11 @@ public class OAuthApiCaller {
 	    String json = gson.toJson(setPasswordInDO);
 	    Request request = null;
 	
-//	    POST svc
-		if (token != null) {
-		    request = new Request.Builder().addHeader("token", token)
-		    		.url(setAuthURL( Constants.SERVICE_NAME_SET_PASSWORD_SERVICE ))
-		            .post(RequestBody.create(MediaType.parse("application/json"), json)).build();
-		} else if (id != null) {
-			HttpUrl.Builder urlBuilder = HttpUrl.parse(setAuthURL( Constants.SERVICE_NAME_SET_PASSWORD_SERVICE )).newBuilder();
-		    urlBuilder.addQueryParameter("id", id);
-		    String url = urlBuilder.build().toString();
-		    request = new Request.Builder().url(url).post(RequestBody.create(MediaType.parse("application/json"), json)).build();
-		} 
+//	    POST svc	    
+		HttpUrl.Builder urlBuilder = HttpUrl.parse(setAuthURL( Constants.SERVICE_NAME_SET_PASSWORD_SERVICE )).newBuilder();
+	    urlBuilder.addQueryParameter("id", id);
+	    String url = urlBuilder.build().toString();
+	    request = new Request.Builder().url(url).post(RequestBody.create(MediaType.parse("application/json"), json)).build();
 	    
 		Response response = client.newCall(request).execute();
 		String result = response.body().string();
