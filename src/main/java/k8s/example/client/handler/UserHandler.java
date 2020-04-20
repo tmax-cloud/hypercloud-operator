@@ -312,6 +312,39 @@ public class UserHandler extends GeneralHandler {
 				outDO = Constants.USER_ID_DUPLICATION_VERIFY_FAILED;		
 			}		
 			break;
+			
+		case "email":
+			logger.info( "  User email Duplication Verify Service Start" );
+			logger.info( "  User email: " + userInDO.getEmail() );
+			try {
+				// Validate
+	    		if (userInDO.getEmail() == null ) 	throw new Exception(ErrorCode.USER_MAIL_EMPTY);
+	    		
+	    		// Check ID, Email Duplication
+	    		List < UserCR > userCRList = K8sApiCaller.listUser();
+	    		if ( userCRList != null ) {
+	        		for(UserCR userCR1 : userCRList) {
+	        			if ( userCR1.getUserInfo().getEmail().equalsIgnoreCase(userInDO.getEmail())) throw new Exception(ErrorCode.USER_MAIL_DUPLICATED);  
+	        		}
+	    		}
+	    		
+	    		status = Status.OK; 
+				outDO = Constants.USER_EMAIL_DUPLICATION_VERIFY_SUCCESS;
+	    		
+			} catch (ApiException e) {
+				logger.info( "Exception message: " + e.getResponseBody() );
+				logger.info( "Exception message: " + e.getMessage() );
+				status = Status.BAD_REQUEST; 
+				outDO = Constants.USER_EMAIL_DUPLICATION_VERIFY_SUCCESS;
+				
+			} catch (Exception e) {
+				logger.info( "Exception message: " + e.getMessage() );
+				e.printStackTrace();
+				status = Status.BAD_REQUEST;
+				outDO = Constants.USER_EMAIL_DUPLICATION_VERIFY_SUCCESS;		
+			}		
+			break;
+			
 		
 		case "meta":
 			logger.info( "  User Meta Update Service Start" );

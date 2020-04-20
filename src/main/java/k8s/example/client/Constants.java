@@ -160,6 +160,8 @@ public class Constants {
 	public static final String USER_CREATE_FAILED = "User Create Failed";
 	public static final String USER_UPDATE_SUCCESS = "User Update Success";
 	public static final String USER_UPDATE_FAILED = "User Update Failed";
+	public static final String USER_EMAIL_DUPLICATION_VERIFY_SUCCESS = "User Email Duplication verify Success";
+	public static final String USER_EMAIL_DUPLICATION_VERIFY_FAILED = "User EMAIL Duplication verify Failed";
 	public static final String USER_ID_DUPLICATION_VERIFY_SUCCESS = "User ID Duplication verify Success";
 	public static final String USER_ID_DUPLICATION_VERIFY_FAILED = "User ID Duplication verify Failed";
 	public static final String USER_PASSWORD_FIND_SUCCESS = "User Password Change & Send Email Success";
