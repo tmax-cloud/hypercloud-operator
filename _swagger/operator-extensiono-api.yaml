@@ -192,7 +192,7 @@ paths:
     put:
       tags:
       - "Integrated Auth"
-      summary: "Integrated Hyper Cloud4 User ID Duplication Check Service or Meta,Password Change Service"    
+      summary: "Integrated Hyper Cloud4 User ID/Email Duplication Check Service or Meta,Password Change Service"    
       parameters:
       - in: "query"
         name: "mode"
