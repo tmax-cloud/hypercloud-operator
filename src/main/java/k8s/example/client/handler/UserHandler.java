@@ -75,6 +75,7 @@ public class UserHandler extends GeneralHandler {
     		logger.info( "  User Name: " + userInDO.getName() );
     		logger.info( "  User E-Mail: " + userInDO.getEmail() );
     		logger.info( "  User PassWord: " + userInDO.getPassword() );
+    		logger.info( "  User DateOfBirth: " + userInDO.getDateOfBirth() );
     		
     		// Validate
     		if (userInDO.getId() == null ) 	throw new Exception(ErrorCode.USER_ID_EMPTY);
@@ -102,23 +103,23 @@ public class UserHandler extends GeneralHandler {
     		K8sApiCaller.createUser(userInDO);
     		userInDO.setPassword(password);
     		
-    		// Create Role & RoleBinding
-    		K8sApiCaller.createClusterRoleForNewUser(userInDO);  		
-    		K8sApiCaller.createClusterRoleBindingForNewUser(userInDO);  		
+//    		// Create Role & RoleBinding 
+//    		K8sApiCaller.createClusterRoleForNewUser(userInDO);  		
+//    		K8sApiCaller.createClusterRoleBindingForNewUser(userInDO);  		
 
     		// Call UserCreate to ProAuth
     		OAuthApiCaller.createUser(userInDO);
     		
     		// Login to ProAuth & Get Token
-    		JsonObject loginOut = OAuthApiCaller.AuthenticateCreate(userInDO.getId(), userInDO.getPassword());
-//    		String refreshToken = loginOut.get("refresh_token").toString().replaceAll("\"", "");
-    		String accessToken = loginOut.get("token").toString().replaceAll("\"", ""); //
-    		logger.info( "  accessToken : " + accessToken );
+//    		JsonObject loginOut = OAuthApiCaller.AuthenticateCreate(userInDO.getId(), userInDO.getPassword());
+////    		String refreshToken = loginOut.get("refresh_token").toString().replaceAll("\"", "");
+//    		String accessToken = loginOut.get("token").toString().replaceAll("\"", ""); //
+//    		logger.info( "  accessToken : " + accessToken );
 
     		// Send E-mail to User
 //    		sendMail(userInDO.getEmail(), accessToken, null); //FIXME : UI 연동 테스트 후 주석 풀어줘야함
-			status = Status.CREATED;
-    		outDO = "User Create Success";
+//			status = Status.CREATED;
+//    		outDO = "User Create Success";
     		  		
 		} catch (ApiException e) {
 			logger.info( "Exception message: " + e.getResponseBody() );
@@ -146,25 +147,6 @@ public class UserHandler extends GeneralHandler {
 	
 	public Response get( UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
 		logger.info("***** GET /User Id Find");
-		
-		String decodedFromUtf8 = new String("가나다라마바사");
-		byte text[] = decodedFromUtf8.getBytes();
-		String testVal;
-		try {
-			testVal = new String(text, "UTF-8");
-			logger.info(testVal);
-		} catch (UnsupportedEncodingException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		
-		Map<String, String> envMap = System.getenv();
-		Set<String> key = envMap.keySet();
-		Iterator it = key.iterator();
-		while(it.hasNext()) {
-			String envkey = it.next().toString();
-			logger.info( "key : " + envkey + "||| " + "value : " +  envMap.get(envkey));
-		}
 		
 		List < UserCR > userCRList = null;
 		IStatus status = null;
@@ -394,66 +376,7 @@ public class UserHandler extends GeneralHandler {
 		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO));
 
 	}
-	
-
-	private void sendMail( String email, String accessToken, String content ) throws Throwable {	
-		logger.info( " Send Verification Mail User ");
-		String recipient = "taegeon_woo@tmax.co.kr";
-//		String recipient = email;  //FIXME
-
-		String subject = "MailTest 메일테스트";	
-		String charSetUtf = "UTF-8" ; //FIXME : 제목 한글 여전히 깨짐 ㅠㅠ
-		Properties props = System.getProperties();
-		String body = null;
-		props.put( "mail.transport.protocol", "smtp" );
-		props.put( "mail.smtp.host", HOST );
-		props.put( "mail.smtp.port", PORT );
-		props.put( "mail.smtp.ssl.trust", HOST );
-		props.put( "mail.smtp.auth", "true" );
-		props.put( "mail.smtp.starttls.enable", "true" );
-		props.put("mail.smtp.ssl.protocols", "TLSv1.2");
 		
-		Session session = Session.getDefaultInstance( props, new javax.mail.Authenticator() {
-			String un = "taegeon_woo@tmax.co.kr";
-			String pw = "tg540315";
-			protected PasswordAuthentication getPasswordAuthentication() {
-				return new PasswordAuthentication( un, pw );
-			}
-		});		
-		
-		session.setDebug( true );
-
-		MimeMessage mimeMessage = new MimeMessage(session);
-		
-		// Sender
-		mimeMessage.setFrom( new InternetAddress(recipient, recipient, charSetUtf));
-		
-		// Receiver
-		mimeMessage.setRecipient( Message.RecipientType.TO, new InternetAddress( recipient ) );
-		
-		// Make Subject
-		mimeMessage.setSubject( subject, charSetUtf );
-//		mimeMessage.setSubject( subject, "text/plain; charset=UTF-8" );
-
-		// Make Body
-		Map<String, String> bodyMap = K8sApiCaller.readSecret(Constants.TEMPLATE_NAMESPACE, "authenticate-html");  		
-		if( bodyMap != null ) {
-			body = bodyMap.get("body") + " \n AccessToken\n" + accessToken;
-			if( content != null) body = body + " \n Alter PassWord\n" + content; //TODO
-		}
-		logger.info( " Mail Body : "  + body );
-		if (body!=null) mimeMessage.setText( MimeUtility.encodeText(body,  charSetUtf, "B") );
-		logger.info( " Ready to Send Mail to " + recipient);
-		try {
-			//Send Mail
-			Transport.send( mimeMessage );
-			logger.info( " Sent E-Mail to " + recipient);
-		}catch (MessagingException e) {
-            e.printStackTrace();
-            logger.info( e.getMessage() + e.getStackTrace());
-		} 
-	}
-	
 	private String readFile(String path, Integer length) {
 		Charset charset = Charset.defaultCharset();
 		String bodyStr = "";

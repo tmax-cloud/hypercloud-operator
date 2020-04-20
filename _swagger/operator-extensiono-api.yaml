@@ -60,6 +60,9 @@ components:
         passwordSalt:
           type: string
           description: "User PasswordSalt"
+        dateOfBirth:
+          type: string
+          description: "User Date of Birth"
         email:
           type: string
           description: "User E-mail"
@@ -153,10 +156,12 @@ paths:
                   "id": "woo-tmax.co.kr",
                   "name": "woo",
                   "password": "tmax@23",
+                  "dateOfBirth": "19920102",
                   "email": "woo@tmax.co.kr",
                   "phone": "010-4878-8544",
                   "department": "ck2-3",
-                  "position" : "developer"
+                  "position" : "developer",
+                  "profile" : "12n1o2ko4l213"
                 }     
       responses:
         200:

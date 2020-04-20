@@ -105,6 +105,7 @@ public class DataObject {
     	private String alterPassword;
     	private String passwordSalt;
     	private String email;
+    	private String dateOfBirth;    	
     	private String phone;
     	private String department;
     	private String position;
@@ -117,6 +118,7 @@ public class DataObject {
     	public String getPassword() { return password; }
     	public String getAlterPassword() { return alterPassword; }
     	public String getPasswordSalt() { return passwordSalt; }
+    	public String getDateOfBirth() { return dateOfBirth; }
     	public String getEmail() { return email; }
     	public String getPhone() { return phone; }
     	public String getDepartment() { return department; }
@@ -130,6 +132,7 @@ public class DataObject {
     	public void setPassword(String password) { this.password = password; }
     	public void setAlterPassword(String alterPassword) { this.alterPassword = alterPassword; }
     	public void setPasswordSalt(String passwordSalt) { this.passwordSalt = passwordSalt; }
+    	public void setDateOfBirth(String dateOfBirth) { this.dateOfBirth = dateOfBirth; }
     	public void setEmail(String email) { this.email = email; }
     	public void setPhone(String phone) { this.phone = phone; }
     	public void setDepartment(String department) { this.department = department; }
