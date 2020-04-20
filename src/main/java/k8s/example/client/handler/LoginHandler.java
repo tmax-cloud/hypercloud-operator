@@ -27,6 +27,7 @@ import k8s.example.client.DataObject.Client;
 import k8s.example.client.DataObject.CommonOutDO;
 import k8s.example.client.DataObject.LoginInDO;
 import k8s.example.client.DataObject.Token;
+import k8s.example.client.DataObject.User;
 import k8s.example.client.DataObject.UserCR;
 import k8s.example.client.ErrorCode;
 import k8s.example.client.Main;
@@ -84,6 +85,7 @@ public class LoginHandler extends GeneralHandler {
 	        			// Login to ProAuth & Get Token
 	    	    		JsonObject loginOut = OAuthApiCaller.AuthenticateCreate(loginInDO.getId(), loginInDO.getPassword());
 	    	    		logger.info( "  loginOut.get(\"result\") : " + loginOut.get("result").toString() );
+	    	    		UserCR k8sUser = K8sApiCaller.getUser(loginInDO.getId());
 
 	    	    		if ( loginOut.get("result").toString().equalsIgnoreCase("\"true\"") ){
 	    	    			accessToken = loginOut.get("token").toString().replaceAll("\"", ""); 
@@ -91,10 +93,26 @@ public class LoginHandler extends GeneralHandler {
 		    	    		logger.info( "  accessToken : " + accessToken );
 		    	    		logger.info( "  refreshToken : " + refreshToken );	
 		    	    		status = Status.OK; 
+		    	    		
+		    	    		//Check if retryCount is 10, if not set 0
+		    	    		if(k8sUser.getUserInfo().getRetryCount().equalsIgnoreCase("10")) {
+		    	    			throw new Exception(ErrorCode.BLOCKED_USER);
+		    	    		}
 	    	    		} else {
 	    	    			logger.info("  Login failed by ProAuth.");		    			
 			    			status = Status.BAD_REQUEST; 
-			    			outDO = loginOut.get("reason").toString().replaceAll("\"", ""); ;
+			    			outDO = loginOut.get("reason").toString().replaceAll("\"", ""); 
+			    			if (outDO.equalsIgnoreCase("Wrong Password")) {
+			    				int retryCount = Integer.parseInt(k8sUser.getUserInfo().getRetryCount());
+			    				if (retryCount == 9) {
+			    	    			throw new Exception(ErrorCode.BLOCKED_USER);
+			    				} else {
+			    					retryCount  = retryCount + 1;
+			    					User newUser = new User();
+			    					newUser.setRetryCount(Integer.toString(retryCount));
+			    					K8sApiCaller.updateUserMeta(newUser);
+			    				}	
+			    			}
 	    	    		}
 	    	    		
 	        		}

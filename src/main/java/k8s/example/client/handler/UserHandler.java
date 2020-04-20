@@ -1,25 +1,12 @@
 package k8s.example.client.handler;
 
 import java.io.FileInputStream;
-import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.PasswordAuthentication;
-import javax.mail.Session;
-import javax.mail.Transport;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeUtility;
 
 import org.slf4j.Logger;
 
@@ -47,9 +34,7 @@ import k8s.example.client.k8s.OAuthApiCaller;
 import k8s.example.client.metering.util.SimpleUtil;
 
 public class UserHandler extends GeneralHandler {
-	private final String HOST = "mail.tmax.co.kr";
-	private final int PORT = 25;
-//	private final String USERNAME = "taegeon_woo";
+
     private Logger logger = Main.logger;
 	@Override
     public Response post(
@@ -86,9 +71,8 @@ public class UserHandler extends GeneralHandler {
     		userCRList = K8sApiCaller.listUser();
     		if ( userCRList != null ) {
         		for(UserCR userCR : userCRList) {
-        			User user = userCR.getUserInfo();
-        			if ( user.getName().equalsIgnoreCase(userInDO.getId())) throw new Exception(ErrorCode.USER_ID_DUPLICATED);  // 주의 : 회원가입 시 받은 ID를 k8s에는 Name으로 넣자
-        			if ( user.getEmail().equalsIgnoreCase(userInDO.getEmail())) throw new Exception(ErrorCode.USER_MAIL_DUPLICATED);
+        			if ( userCR.getMetadata().getName().equalsIgnoreCase(userInDO.getId())) throw new Exception(ErrorCode.USER_ID_DUPLICATED);  // 주의 : 회원가입 시 받은 ID를 k8s에는 Name으로 넣자
+        			if ( userCR.getUserInfo().getEmail().equalsIgnoreCase(userInDO.getEmail())) throw new Exception(ErrorCode.USER_MAIL_DUPLICATED);
         		}
     		}
     		JsonArray userAuthList = OAuthApiCaller.listUser();
@@ -268,7 +252,6 @@ public class UserHandler extends GeneralHandler {
 		String outDO = null; 
 		UserCR userCR = null;
 		User userInDO = null;
-		String accessToken = null;
 		
 		Map<String, String> body = new HashMap<String, String>();
         try {
@@ -290,9 +273,49 @@ public class UserHandler extends GeneralHandler {
 		}
 
 		switch(mode) {	
+		case "id":
+			logger.info( "  User ID: " + userInDO.getId() );
+			try {
+				// Validate
+	    		if (userInDO.getId() == null ) 	throw new Exception(ErrorCode.USER_ID_EMPTY);
+	    		
+	    		// Check ID, Email Duplication
+	    		List < UserCR > userCRList = K8sApiCaller.listUser();
+	    		if ( userCRList != null ) {
+	        		for(UserCR userCR1 : userCRList) {
+	        			if ( userCR1.getMetadata().getName().equalsIgnoreCase(userInDO.getId())) throw new Exception(ErrorCode.USER_ID_DUPLICATED);  
+	        		}
+	    		}
+	    		
+	    		JsonArray userAuthList = OAuthApiCaller.listUser();
+	    		if ( userAuthList != null ) {
+	    			for (JsonElement userAuth : userAuthList) {
+	    				if (userAuth.getAsJsonObject().get("user_id").toString().replaceAll("\"", "").equalsIgnoreCase(userInDO.getId())) throw new Exception(ErrorCode.USER_ID_DUPLICATED);
+	    				
+	    			}
+	    		}
+	    		
+	    		status = Status.OK; 
+				outDO = Constants.USER_ID_DUPLICATION_VERIFY_SUCCESS;
+	    		
+			} catch (ApiException e) {
+				logger.info( "Exception message: " + e.getResponseBody() );
+				logger.info( "Exception message: " + e.getMessage() );
+				status = Status.BAD_REQUEST; 
+				outDO = Constants.USER_ID_DUPLICATION_VERIFY_FAILED;
+				
+			} catch (Exception e) {
+				logger.info( "Exception message: " + e.getMessage() );
+				e.printStackTrace();
+				status = Status.BAD_REQUEST;
+				outDO = Constants.USER_ID_DUPLICATION_VERIFY_FAILED;		
+			}		
+			break;
+		
 		case "meta":
 			logger.info( "  User ID: " + userInDO.getId() );
 			logger.info( "  User Name: " + userInDO.getName() );
+			logger.info( "  User email: " + userInDO.getEmail() );
 			logger.info( "  User Description: " + userInDO.getDescription() );
 			logger.info( "  User Department: " + userInDO.getDepartment() );
 			logger.info( "  User Phone: " + userInDO.getPhone() );

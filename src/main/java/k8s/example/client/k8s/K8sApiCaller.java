@@ -124,6 +124,7 @@ import io.kubernetes.client.openapi.models.V1Volume;
 import io.kubernetes.client.openapi.models.V1VolumeMount;
 import io.kubernetes.client.util.Config;
 import k8s.example.client.Constants;
+import k8s.example.client.ErrorCode;
 import k8s.example.client.DataObject.Client;
 import k8s.example.client.DataObject.ClientCR;
 import k8s.example.client.DataObject.RegistryEvent;
@@ -599,13 +600,34 @@ public class K8sApiCaller {
 
 	public static void updateUserMeta(User userInfo) throws Exception {
 		try {
-			String jsonPatchStr = "[" + "{\"op\":\"replace\",\"path\":\"/userInfo/name\",\"value\": "
-					+ userInfo.getName() + "}," + "{\"op\":\"replace\",\"path\":\"/userInfo/department\",\"value\": "
-					+ userInfo.getDepartment() + "},"
-					+ "{\"op\":\"replace\",\"path\":\"/userInfo/position\",\"value\": " + userInfo.getPosition() + "},"
-					+ "{\"op\":\"replace\",\"path\":\"/userInfo/phone\",\"value\": " + userInfo.getPhone() + "},"
-					+ "{\"op\":\"replace\",\"path\":\"/userInfo/description\",\"value\": " + userInfo.getDescription()
-					+ "}" + "]";
+			List < UserCR > userCRList = null;
+			String jsonPatchStr = "[";
+			
+			if ( StringUtil.isEmpty(userInfo.getRetryCount())) {
+				jsonPatchStr = jsonPatchStr + "{\"op\":\"replace\",\"path\":\"/userInfo/dateOfBirth\",\"value\": " + userInfo.getDateOfBirth() + "}";
+				if (userInfo.getName() != null) jsonPatchStr = jsonPatchStr + ", {\"op\":\"replace\",\"path\":\"/userInfo/name\",\"value\": " + userInfo.getName() + "}";
+				if (userInfo.getDepartment() != null) jsonPatchStr = jsonPatchStr + ", {\"op\":\"replace\",\"path\":\"/userInfo/department\",\"value\": " + userInfo.getDepartment() + "}";
+				if (userInfo.getPosition() != null) jsonPatchStr = jsonPatchStr + ", {\"op\":\"replace\",\"path\":\"/userInfo/position\",\"value\": " + userInfo.getPosition() + "}";
+				if (userInfo.getPhone() != null) jsonPatchStr = jsonPatchStr + ", {\"op\":\"replace\",\"path\":\"/userInfo/phone\",\"value\": " + userInfo.getPhone() + "}";
+				if (userInfo.getDescription() != null) jsonPatchStr = jsonPatchStr + ", {\"op\":\"replace\",\"path\":\"/userInfo/description\",\"value\": " + userInfo.getDescription() + "}";
+				if (userInfo.getProfile() != null) jsonPatchStr = jsonPatchStr + ", {\"op\":\"replace\",\"path\":\"/userInfo/profile\",\"value\": " + userInfo.getProfile() + "}";
+				if (userInfo.getEmail() != null) {
+		    		userCRList = listUser();
+		    		if ( userCRList != null ) {
+		        		for(UserCR userCR : userCRList) {
+		        			User user = userCR.getUserInfo();
+		        			if ( user.getEmail().equalsIgnoreCase(userInfo.getEmail())) throw new Exception(ErrorCode.USER_MAIL_DUPLICATED);
+		        		}
+		    		}
+					jsonPatchStr = jsonPatchStr + ", {\"op\":\"replace\",\"path\":\"/userInfo/email\",\"value\": " + userInfo.getEmail() + "}";
+				}
+			} else {
+				jsonPatchStr = jsonPatchStr + "{\"op\":\"replace\",\"path\":\"/userInfo/retryCount\",\"value\": " + userInfo.getRetryCount() + "}";
+			}
+			
+			jsonPatchStr = jsonPatchStr + "]";
+			
+			logger.info("jsonPatchStr: " + jsonPatchStr);	
 			JsonElement jsonPatch = (JsonElement) new JsonParser().parse(jsonPatchStr);
 
 			customObjectApi.patchClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION,
