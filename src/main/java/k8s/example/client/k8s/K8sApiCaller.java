@@ -17,6 +17,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -167,11 +168,13 @@ import k8s.example.client.models.TemplateInstance;
 import k8s.example.client.models.TemplateInstanceSpec;
 import k8s.example.client.models.TemplateInstanceSpecTemplate;
 import k8s.example.client.models.TemplateParameter;
+import okhttp3.CipherSuite;
 import okhttp3.ConnectionSpec;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import okhttp3.TlsVersion;
 
 public class K8sApiCaller {
 	private static ApiClient k8sClient;
@@ -3500,6 +3503,21 @@ public class K8sApiCaller {
 				} else {
 					serviceMeta.setLongDescription(template.get("longDescription").asText());
 				}
+				if (template.get("longDescription") == null) {
+					serviceMeta.setLongDescription(template.get("metadata").get("name").asText());
+				} else {
+					serviceMeta.setLongDescription(template.get("longDescription").asText());
+				}
+				if (template.get("urlDescription") == null) {
+					serviceMeta.setUrlDescription(template.get("metadata").get("name").asText());
+				} else {
+					serviceMeta.setUrlDescription(template.get("urlDescription").asText());
+				}
+				if (template.get("markdownDescription") == null) {
+					serviceMeta.setMarkdownDescription(template.get("metadata").get("name").asText());
+				} else {
+					serviceMeta.setMarkdownDescription(template.get("markdownDescription").asText());
+				}
 				if (template.get("provider") == null) {
 					serviceMeta.setProviderDisplayName(Constants.DEFAULT_PROVIDER);
 				} else {
@@ -4536,12 +4554,25 @@ public class K8sApiCaller {
 
 	private static OkHttpClient getHttpClient() {
 		OkHttpClient httpClient;
-		List lists = Arrays.asList(ConnectionSpec.COMPATIBLE_TLS, ConnectionSpec.CLEARTEXT);
+		//List lists = Arrays.asList(ConnectionSpec.COMPATIBLE_TLS, ConnectionSpec.CLEARTEXT);
+		 ConnectionSpec spec = new ConnectionSpec.Builder(ConnectionSpec.COMPATIBLE_TLS)
+		            .tlsVersions(TlsVersion.TLS_1_2, TlsVersion.TLS_1_1, TlsVersion.TLS_1_0)
+		            .cipherSuites(
+		                    CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+		                    CipherSuite.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,
+		                    CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
+		                    CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA)
+		            .build();
+
+		//httpClient.connectionSpecs(Collections.singletonList(spec))
+
+		
+		
 		OkHttpClient.Builder builder = new OkHttpClient.Builder();
 		builder.addNetworkInterceptor(getProgressInterceptor()); // K8S Interceptor
-		//builder.addNetworkInterceptor(new ChunkedInterceptor()); // HyperCloud Interceptor
-		builder.addInterceptor(new HttpLoggingInterceptor());
-		builder.connectionSpecs(lists);
+		builder.addNetworkInterceptor(new ChunkedInterceptor()); // HyperCloud Interceptor
+		//builder.addInterceptor(new HttpLoggingInterceptor());
+		builder.connectionSpecs(Collections.singletonList(spec));
 		httpClient = builder.build();
 		return httpClient;
 	}

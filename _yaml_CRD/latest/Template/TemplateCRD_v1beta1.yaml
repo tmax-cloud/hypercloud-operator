@@ -3,7 +3,7 @@ kind: CustomResourceDefinition
 metadata:
   name: templates.tmax.io
   annotations:
-    operator.version: %latest%
+    operator.version: 4.1.0.16
 spec:
   group: tmax.io
   versions:
@@ -21,11 +21,11 @@ spec:
   validation:
     openAPIV3Schema:
       type: object
+      required:
+      - parameters
       properties:
         operatorStartTime:
           type: string
-        required:
-        - parameters
         apiVersion:
           type: string
         kind:
@@ -37,6 +37,10 @@ spec:
         shortDescription:
           type: string
         longDescription:
+          type: string
+        urlDescription:
+          type: string
+        markdownDescription:
           type: string
         provider:
           type: string
@@ -60,6 +64,7 @@ spec:
               type: string
           type: object
         objects:
+          items:
             type: object
             x-kubernetes-preserve-unknown-fields: true
           type: array
