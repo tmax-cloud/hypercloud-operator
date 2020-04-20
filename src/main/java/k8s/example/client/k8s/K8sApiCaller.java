@@ -167,6 +167,7 @@ import k8s.example.client.models.TemplateInstance;
 import k8s.example.client.models.TemplateInstanceSpec;
 import k8s.example.client.models.TemplateInstanceSpecTemplate;
 import k8s.example.client.models.TemplateParameter;
+import okhttp3.ConnectionSpec;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -4535,10 +4536,12 @@ public class K8sApiCaller {
 
 	private static OkHttpClient getHttpClient() {
 		OkHttpClient httpClient;
+		List lists = Arrays.asList(ConnectionSpec.COMPATIBLE_TLS, ConnectionSpec.CLEARTEXT);
 		OkHttpClient.Builder builder = new OkHttpClient.Builder();
 		builder.addNetworkInterceptor(getProgressInterceptor()); // K8S Interceptor
 		//builder.addNetworkInterceptor(new ChunkedInterceptor()); // HyperCloud Interceptor
-		//builder.addInterceptor(new HttpLoggingInterceptor());
+		builder.addInterceptor(new HttpLoggingInterceptor());
+		builder.connectionSpecs(lists);
 		httpClient = builder.build();
 		return httpClient;
 	}
