@@ -192,11 +192,11 @@ paths:
     put:
       tags:
       - "Integrated Auth"
-      summary: "Integrated Hyper Cloud4 User Password Change Service"    
+      summary: "Integrated Hyper Cloud4 User ID Duplication Check Service or Meta,Password Change Service"    
       parameters:
       - in: "query"
         name: "mode"
-        description: "meta / password"
+        description: " id /meta / password"
         schema:
           type: "string"      
       requestBody:
@@ -217,7 +217,7 @@ paths:
                 }     
       responses:
         200:
-          description: Password Change Success    
+          description: Integrated Hyper Cloud4 User ID Duplication Check Service or Meta,Password Change Service Success    
   /email:
     post:
       tags:

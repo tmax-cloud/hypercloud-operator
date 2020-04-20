@@ -274,6 +274,7 @@ public class UserHandler extends GeneralHandler {
 
 		switch(mode) {	
 		case "id":
+			logger.info( "  User ID Duplication Verify Service Start" );
 			logger.info( "  User ID: " + userInDO.getId() );
 			try {
 				// Validate
@@ -313,6 +314,7 @@ public class UserHandler extends GeneralHandler {
 			break;
 		
 		case "meta":
+			logger.info( "  User Meta Update Service Start" );
 			logger.info( "  User ID: " + userInDO.getId() );
 			logger.info( "  User Name: " + userInDO.getName() );
 			logger.info( "  User email: " + userInDO.getEmail() );
@@ -348,6 +350,8 @@ public class UserHandler extends GeneralHandler {
 			break;
 			
 		case "password":
+			logger.info( "  User Password Update Service Start" );
+
 			logger.info( "  User ID: " + userInDO.getId() );
 			logger.info( "  User Alter Password: " + userInDO.getAlterPassword() );
 			
