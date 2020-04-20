@@ -236,7 +236,7 @@ public class UserHandler extends GeneralHandler {
 	    		logger.info( "  accessToken : " + accessToken );
 	    		
 	    		// Send E-mail to User
-				sendMail( email, accessToken, alterPassword );
+//				sendMail( email, accessToken, alterPassword );
 			
 				status = Status.OK;
 	    		outDO = Constants.USER_PASSWORD_FIND_SUCCESS;
