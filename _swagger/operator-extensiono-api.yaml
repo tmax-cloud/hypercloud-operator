@@ -192,9 +192,13 @@ paths:
     put:
       tags:
       - "Integrated Auth"
-      summary: "Integrated Hyper Cloud4 User Password Change Service"
+      summary: "Integrated Hyper Cloud4 User ID/Email Duplication Check Service or Meta,Password Change Service"    
       parameters:
-      - $ref: "#/components/parameters/tokenParam"    
+      - in: "query"
+        name: "mode"
+        description: " id /meta / password"
+        schema:
+          type: "string"      
       requestBody:
         description: "User"
         required: true  
@@ -207,12 +211,13 @@ paths:
                   $ref: "#/components/schemas/User"    
               example:
                 {
+                  "id" : "test-tmax.co.kr",
                   "password": "tmax@23",
                   "alterPassword" : "tmax@2323"
                 }     
       responses:
         200:
-          description: Password Change Success    
+          description: Integrated Hyper Cloud4 User ID Duplication Check Service or Meta,Password Change Service Success    
   /email:
     post:
       tags:
