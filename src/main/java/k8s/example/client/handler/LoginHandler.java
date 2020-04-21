@@ -27,6 +27,7 @@ import k8s.example.client.DataObject.Client;
 import k8s.example.client.DataObject.CommonOutDO;
 import k8s.example.client.DataObject.LoginInDO;
 import k8s.example.client.DataObject.Token;
+import k8s.example.client.DataObject.User;
 import k8s.example.client.DataObject.UserCR;
 import k8s.example.client.ErrorCode;
 import k8s.example.client.Main;
@@ -57,7 +58,7 @@ public class LoginHandler extends GeneralHandler {
 		String appNameRequestParameter = null;
 		String accessToken = null;
 		String refreshToken = null;
-
+		int retryCount = 0;
 			try {
 				// Read inDO
 	    		loginInDO = new ObjectMapper().readValue(body.get( "postData" ), LoginInDO.class);
@@ -84,6 +85,7 @@ public class LoginHandler extends GeneralHandler {
 	        			// Login to ProAuth & Get Token
 	    	    		JsonObject loginOut = OAuthApiCaller.AuthenticateCreate(loginInDO.getId(), loginInDO.getPassword());
 	    	    		logger.info( "  loginOut.get(\"result\") : " + loginOut.get("result").toString() );
+	    	    		UserCR k8sUser = K8sApiCaller.getUser(loginInDO.getId());
 
 	    	    		if ( loginOut.get("result").toString().equalsIgnoreCase("\"true\"") ){
 	    	    			accessToken = loginOut.get("token").toString().replaceAll("\"", ""); 
@@ -91,10 +93,35 @@ public class LoginHandler extends GeneralHandler {
 		    	    		logger.info( "  accessToken : " + accessToken );
 		    	    		logger.info( "  refreshToken : " + refreshToken );	
 		    	    		status = Status.OK; 
+		    	    		
+		    	    		//Check if retryCount is 10, if not set 0
+		    	    		if(k8sUser.getUserInfo().getRetryCount()==10) {
+		    	    			throw new Exception(ErrorCode.BLOCKED_USER);
+		    	    		} else {
+		    	    			User newUser = new User();
+		    					newUser.setId(loginInDO.getId());
+		    					newUser.setRetryCount(0);
+		    	    			logger.info(" set Retry Count to 0");		    			
+		    					K8sApiCaller.updateUserMeta(newUser, true);
+		    	    		}
 	    	    		} else {
 	    	    			logger.info("  Login failed by ProAuth.");		    			
 			    			status = Status.BAD_REQUEST; 
-			    			outDO = loginOut.get("reason").toString().replaceAll("\"", ""); ;
+			    			outDO = loginOut.get("reason").toString().replaceAll("\"", ""); 
+	    	    			logger.info(" outDO : " + outDO);		    			
+
+			    			if (outDO.equalsIgnoreCase("Wrong Password")) {
+				    			retryCount = k8sUser.getUserInfo().getRetryCount();	
+		    	    			logger.info(" previous retryCount : " + retryCount);		    			
+		    					if (retryCount == 10) throw new Exception(ErrorCode.BLOCKED_USER);			    					
+		    					retryCount++;
+		    					User newUser = new User();
+		    					newUser.setId(loginInDO.getId());
+		    					newUser.setRetryCount(retryCount);
+		    	    			logger.info(" current retryCount : " + retryCount);		    			
+		    					K8sApiCaller.updateUserMeta(newUser, true);
+		    					if (retryCount == 10) throw new Exception(ErrorCode.BLOCKED_USER);			    					
+			    			}
 	    	    		}
 	    	    		
 	        		}
@@ -149,8 +176,7 @@ public class LoginHandler extends GeneralHandler {
 		    			logger.info("  Login fail. Check if the user is belong to Integrated Auth User");
 		    			status = Status.BAD_REQUEST; 
 		    			outDO = Constants.LOGIN_FAILED;
-		    		}
-		    		
+		    		}	
 	        	}
 	    		
             	// Get Redirect URI if Exists
@@ -195,9 +221,12 @@ public class LoginHandler extends GeneralHandler {
 			} catch (Exception e) {
 				logger.info( "Exception message: " + e.getMessage() );
 				e.printStackTrace();
-				
 				status = Status.UNAUTHORIZED;
-				outDO = Constants.LOGIN_FAILED;
+				if( e.getMessage().equalsIgnoreCase(ErrorCode.BLOCKED_USER) ) {
+					outDO = e.getMessage();
+				}else {
+					outDO = Constants.LOGIN_FAILED;
+				}
 			}
 			
 			
@@ -223,6 +252,7 @@ public class LoginHandler extends GeneralHandler {
 			} else if ( status.equals(Status.BAD_REQUEST)) { 
 				CommonOutDO out = new CommonOutDO();
 				out.setMsg(outDO);
+				if ( retryCount != 0 ) out.setEvent( Integer.toString(retryCount) );
     			status = Status.OK; //ui요청
 				Gson gson = new GsonBuilder().setPrettyPrinting().create();
 				outDO = gson.toJson(out).toString();

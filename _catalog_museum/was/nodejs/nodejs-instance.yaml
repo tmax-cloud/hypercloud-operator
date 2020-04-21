@@ -22,3 +22,5 @@ spec:
       value: 192.168.6.110:5000/nodejs-sample:latest
     - name: WAS_PORT
       value: 8080
+    - name: SERVICE_TYPE
+      value: LoadBalancer

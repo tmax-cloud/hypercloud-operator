@@ -105,35 +105,44 @@ public class DataObject {
     	private String alterPassword;
     	private String passwordSalt;
     	private String email;
+    	private String dateOfBirth;    	
     	private String phone;
     	private String department;
     	private String position;
     	private String description;
     	private String profile;
+    	private String verifyCode;
+    	private int retryCount;
     	
     	public String getId() { return id; }
     	public String getName() { return name; }
     	public String getPassword() { return password; }
     	public String getAlterPassword() { return alterPassword; }
     	public String getPasswordSalt() { return passwordSalt; }
+    	public String getDateOfBirth() { return dateOfBirth; }
     	public String getEmail() { return email; }
     	public String getPhone() { return phone; }
     	public String getDepartment() { return department; }
     	public String getPosition() { return position; }
     	public String getDescription() { return description; }
     	public String getProfile() { return profile; }
+    	public String getVerifyCode() { return verifyCode; }
+    	public int getRetryCount() { return retryCount; }
     	
     	public void setId(String id) { this.id = id; }
     	public void setName(String name) { this.name = name; }
     	public void setPassword(String password) { this.password = password; }
     	public void setAlterPassword(String alterPassword) { this.alterPassword = alterPassword; }
     	public void setPasswordSalt(String passwordSalt) { this.passwordSalt = passwordSalt; }
+    	public void setDateOfBirth(String dateOfBirth) { this.dateOfBirth = dateOfBirth; }
     	public void setEmail(String email) { this.email = email; }
     	public void setPhone(String phone) { this.phone = phone; }
     	public void setDepartment(String department) { this.department = department; }
     	public void setPosition(String position) { this.position = position; }
     	public void setDescription(String description) { this.description = description; }
-    	public void setProfile(String profile) { this.description = profile; }
+    	public void setProfile(String profile) { this.profile = profile; }
+    	public void setVerifyCode(String verifyCode) { this.verifyCode = verifyCode; }
+    	public void setRetryCount(int retryCount) { this.retryCount = retryCount; }
     }
     
     public static class UserGroup {
@@ -220,12 +229,15 @@ public class DataObject {
     public static class CommonOutDO {
     	private String msg;
     	private String status;
+    	private String event;
 
     	public String getMsg() { return msg; }
     	public String getStatus() { return status; }
+    	public String getEvent() { return event; }
     	
     	public void setMsg(String msg) { this.msg = msg; }
     	public void setStatus(String status) { this.status = status; }
+    	public void setEvent(String event) { this.event = event; }
     }
     
     public static class RegistryEventDO {

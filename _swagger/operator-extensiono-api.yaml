@@ -60,6 +60,9 @@ components:
         passwordSalt:
           type: string
           description: "User PasswordSalt"
+        dateOfBirth:
+          type: string
+          description: "User Date of Birth"
         email:
           type: string
           description: "User E-mail"
@@ -74,7 +77,13 @@ components:
           description: "User Department"
         description:
           type: string
-          description: "User Description"                                                                                    
+          description: "User Description" 
+        profile:
+          type: string
+          description: "User Profile Picture"
+        verifyCode:
+          type: string
+          description: "User Verification Code"
     UserLoginDO:
       type: object
       description: "HyperCloud4 Login DO"
@@ -147,10 +156,12 @@ paths:
                   "id": "woo-tmax.co.kr",
                   "name": "woo",
                   "password": "tmax@23",
+                  "dateOfBirth": "19920102",
                   "email": "woo@tmax.co.kr",
                   "phone": "010-4878-8544",
                   "department": "ck2-3",
-                  "position" : "developer"
+                  "position" : "developer",
+                  "profile" : "12n1o2ko4l213"
                 }     
       responses:
         200:
@@ -181,9 +192,13 @@ paths:
     put:
       tags:
       - "Integrated Auth"
-      summary: "Integrated Hyper Cloud4 User Password Change Service"
+      summary: "Integrated Hyper Cloud4 User ID/Email Duplication Check Service or Meta,Password Change Service"    
       parameters:
-      - $ref: "#/components/parameters/tokenParam"    
+      - in: "query"
+        name: "mode"
+        description: " id /meta / password"
+        schema:
+          type: "string"      
       requestBody:
         description: "User"
         required: true  
@@ -196,12 +211,57 @@ paths:
                   $ref: "#/components/schemas/User"    
               example:
                 {
+                  "id" : "test-tmax.co.kr",
                   "password": "tmax@23",
                   "alterPassword" : "tmax@2323"
                 }     
       responses:
         200:
-          description: Password Change Success                                                                                  
+          description: Integrated Hyper Cloud4 User ID Duplication Check Service or Meta,Password Change Service Success    
+  /email:
+    post:
+      tags:
+      - "Integrated Auth"
+      summary: "Integrated Hyper Cloud4 Email Vefification Code Send Service"
+      requestBody:
+        description: "User"
+        required: true  
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                dto:
+                  $ref: "#/components/schemas/User"    
+              example:
+                {
+                  "email": "woo@tmax.co.kr",
+                }     
+      responses:
+        200:
+          description: User Email Vefification Code Send Success
+    put:
+      tags:
+      - "Integrated Auth"
+      summary: "Integrated Hyper Cloud4 User Email Verify Service"
+      requestBody:
+        description: "User"
+        required: true  
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                dto:
+                  $ref: "#/components/schemas/User"    
+              example:
+                {
+                  "email": "woo@tmax.co.kr",
+                  "verifyCode" : "1234"
+                }     
+      responses:
+        200:
+          description: User Email Vefification Code Verify Success          
   /login:
     post:
       tags:

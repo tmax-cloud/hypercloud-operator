@@ -42,7 +42,7 @@ public class Constants {
 	public static final String NAMESPACE_OWNER_LABEL = "ownerUserName";
 	
 	public static final String MASTER_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiY2x1c3Rlci1hZG1pbiIsInRva2VuSWQiOiJ3b29AdG1heC5jby5rciIsImlzcyI6IlRtYXgtUHJvQXV0aC1XZWJIb29rIiwiaWQiOiJhZG1pbkB0bWF4LmNvLmtyIiwiZXhwIjoxNzQzMzAxNDM1fQ.ls9Cj1BX4NPJ3XxxHwcrGDzveaaqsauMo5L4e5BfUnE";
-	public static final String MASTER_USER_ID = "admin@tmax.co.kr";
+	public static final String MASTER_USER_ID = "admin-tmax.co.kr";
 	public static final int ACCESS_TOKEN_EXP_TIME = 3600; // 1 hour
 	public static final int REFRESH_TOKEN_EXP_TIME = 604800; // 7 days
 	
@@ -118,6 +118,7 @@ public class Constants {
 	public static final String PASSWORD_CHANGE_FAILED = "Password Change Failed";
 	public static final String EMPTY_PASSWORD = "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e";
 	public static final String SECRET_VERIFICATAION_CODE = "verification-code-for-user";
+	public static final int VERIFICATAION_DURATION_MINUTES = 30;
 	
 	// User Status
 	public static final String USER_STATUS_BLOCKED = "blocked";
@@ -160,9 +161,14 @@ public class Constants {
 	public static final String USER_CREATE_FAILED = "User Create Failed";
 	public static final String USER_UPDATE_SUCCESS = "User Update Success";
 	public static final String USER_UPDATE_FAILED = "User Update Failed";
+	public static final String USER_EMAIL_DUPLICATION_VERIFY_SUCCESS = "User Email Duplication verify Success";
+	public static final String USER_EMAIL_DUPLICATION_VERIFY_FAILED = "User EMAIL Duplication verify Failed";
+	public static final String USER_ID_DUPLICATION_VERIFY_SUCCESS = "User ID Duplication verify Success";
+	public static final String USER_ID_DUPLICATION_VERIFY_FAILED = "User ID Duplication verify Failed";
 	public static final String USER_PASSWORD_FIND_SUCCESS = "User Password Change & Send Email Success";
 	public static final String USER_PASSWORD_FIND_FAILED = "User Password Change & Send Email Failed";
 	public static final String USER_ID_FIND_FAILED = "User ID Find Failed";
+	public static final String USER_EMAIL_VERIFICATION_NUMBER_SEND_FAIL = "User Email verification number send service fail";
 	public static final String USER_EMAIL_VERIFY_FAIL = "User Email verify service fail";
 	public static final String SERVICE_NAME_OAUTH_USER_LIST = "proauth/oauth/usersList";
 	public static final String SERVICE_NAME_OAUTH_USER_DETAIL = "proauth/oauth/user-details/";

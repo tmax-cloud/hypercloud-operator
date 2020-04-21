@@ -44,6 +44,9 @@ spec:
             passwordSalt:
               type: string
               description: do not enter
+            dateOfBirth:
+              type: string
+              description: user's Date of Birth              
             email:
               type: string
               description: user's email for login
@@ -62,6 +65,9 @@ spec:
             profile:
               type: string
               description: user's profile picture
+            retryCount:
+              type: integer
+              description: retryCount of Login 
         status:
           type: string
           description: Status defines whether the user is active or blocked

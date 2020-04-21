@@ -17,6 +17,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -124,6 +125,7 @@ import io.kubernetes.client.openapi.models.V1Volume;
 import io.kubernetes.client.openapi.models.V1VolumeMount;
 import io.kubernetes.client.util.Config;
 import k8s.example.client.Constants;
+import k8s.example.client.ErrorCode;
 import k8s.example.client.DataObject.Client;
 import k8s.example.client.DataObject.ClientCR;
 import k8s.example.client.DataObject.RegistryEvent;
@@ -133,6 +135,8 @@ import k8s.example.client.DataObject.UserCR;
 import k8s.example.client.Main;
 import k8s.example.client.StringUtil;
 import k8s.example.client.Util;
+import k8s.example.client.interceptor.ChunkedInterceptor;
+import k8s.example.client.interceptor.HttpLoggingInterceptor;
 import k8s.example.client.interceptor.LogInterceptor;
 import k8s.example.client.k8s.apis.CustomResourceApi;
 import k8s.example.client.k8s.util.SecurityHelper;
@@ -165,10 +169,13 @@ import k8s.example.client.models.TemplateInstance;
 import k8s.example.client.models.TemplateInstanceSpec;
 import k8s.example.client.models.TemplateInstanceSpecTemplate;
 import k8s.example.client.models.TemplateParameter;
+import okhttp3.CipherSuite;
+import okhttp3.ConnectionSpec;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import okhttp3.TlsVersion;
 
 public class K8sApiCaller {
 	private static ApiClient k8sClient;
@@ -186,7 +193,7 @@ public class K8sApiCaller {
 
 	public static void initK8SClient() throws Exception {
 		k8sClient = Config.fromCluster();
-		// k8sClient.setHttpClient(getHttpClient()); // set network interceptors
+		//k8sClient.setHttpClient(getHttpClient()); // set network interceptors
 		k8sClient.setConnectTimeout(0);
 		k8sClient.setReadTimeout(0);
 		k8sClient.setWriteTimeout(0);
@@ -594,15 +601,36 @@ public class K8sApiCaller {
 		return user;
 	}
 
-	public static void updateUserMeta(User userInfo) throws Exception {
+	public static void updateUserMeta(User userInfo, boolean retryCountFlag) throws Exception {
 		try {
-			String jsonPatchStr = "[" + "{\"op\":\"replace\",\"path\":\"/userInfo/name\",\"value\": "
-					+ userInfo.getName() + "}," + "{\"op\":\"replace\",\"path\":\"/userInfo/department\",\"value\": "
-					+ userInfo.getDepartment() + "},"
-					+ "{\"op\":\"replace\",\"path\":\"/userInfo/position\",\"value\": " + userInfo.getPosition() + "},"
-					+ "{\"op\":\"replace\",\"path\":\"/userInfo/phone\",\"value\": " + userInfo.getPhone() + "},"
-					+ "{\"op\":\"replace\",\"path\":\"/userInfo/description\",\"value\": " + userInfo.getDescription()
-					+ "}" + "]";
+			List < UserCR > userCRList = null;
+			String jsonPatchStr = "[";
+			
+			if ( !retryCountFlag ) {
+				jsonPatchStr = jsonPatchStr + "{\"op\":\"replace\",\"path\":\"/userInfo/dateOfBirth\",\"value\": " + userInfo.getDateOfBirth() + "}";
+				if (userInfo.getName() != null) jsonPatchStr = jsonPatchStr + ", {\"op\":\"replace\",\"path\":\"/userInfo/name\",\"value\": " + userInfo.getName() + "}";
+				if (userInfo.getDepartment() != null) jsonPatchStr = jsonPatchStr + ", {\"op\":\"replace\",\"path\":\"/userInfo/department\",\"value\": " + userInfo.getDepartment() + "}";
+				if (userInfo.getPosition() != null) jsonPatchStr = jsonPatchStr + ", {\"op\":\"replace\",\"path\":\"/userInfo/position\",\"value\": " + userInfo.getPosition() + "}";
+				if (userInfo.getPhone() != null) jsonPatchStr = jsonPatchStr + ", {\"op\":\"replace\",\"path\":\"/userInfo/phone\",\"value\": " + userInfo.getPhone() + "}";
+				if (userInfo.getDescription() != null) jsonPatchStr = jsonPatchStr + ", {\"op\":\"replace\",\"path\":\"/userInfo/description\",\"value\": " + userInfo.getDescription() + "}";
+				if (userInfo.getProfile() != null) jsonPatchStr = jsonPatchStr + ", {\"op\":\"replace\",\"path\":\"/userInfo/profile\",\"value\": " + userInfo.getProfile() + "}";
+				if (userInfo.getEmail() != null) {
+		    		userCRList = listUser();
+		    		if ( userCRList != null ) {
+		        		for(UserCR userCR : userCRList) {
+		        			User user = userCR.getUserInfo();
+		        			if ( user.getEmail().equalsIgnoreCase(userInfo.getEmail())) throw new Exception(ErrorCode.USER_MAIL_DUPLICATED);
+		        		}
+		    		}
+					jsonPatchStr = jsonPatchStr + ", {\"op\":\"replace\",\"path\":\"/userInfo/email\",\"value\": " + userInfo.getEmail() + "}";
+				}
+			} else {
+				jsonPatchStr = jsonPatchStr + "{\"op\":\"replace\",\"path\":\"/userInfo/retryCount\",\"value\": " + userInfo.getRetryCount() + "}";
+			}
+			
+			jsonPatchStr = jsonPatchStr + "]";
+			
+			logger.info("jsonPatchStr: " + jsonPatchStr);	
 			JsonElement jsonPatch = (JsonElement) new JsonParser().parse(jsonPatchStr);
 
 			customObjectApi.patchClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION,
@@ -2534,7 +2562,13 @@ public class K8sApiCaller {
 		Map<String, String> certMap = null;
 
 		try {
-			certMap = K8sApiCaller.readSecret(namespace, Constants.K8S_PREFIX + registry.getMetadata().getName());
+			V1Secret secretReturn = K8sApiCaller.readSecret(namespace, Constants.K8S_PREFIX + registry.getMetadata().getName());
+			Map<String, byte[]> secretMap = new HashMap<>();
+    		secretMap = secretReturn.getData();
+			for (String key : secretMap.keySet()) {
+				certMap.put(key, new String(secretMap.get(key)));
+			}
+ 
 			sf = SecurityHelper.createSocketFactory(certMap.get(Constants.CERT_CERT_FILE),
 					certMap.get(Constants.CERT_CERT_FILE), certMap.get(Constants.CERT_KEY_FILE));
 		} catch (ApiException e) {
@@ -3240,6 +3274,8 @@ public class K8sApiCaller {
 	// type2: kubernetes.io/dockerconfigjson
 	public static String createSecret(String namespace, Map<String, String> secrets, String secretName,
 			Map<String, String> labels, String type, List<V1OwnerReference> ownerRefs) throws ApiException {
+		logger.info("[K8S ApiCaller] createSecret Service Start");
+
 		V1Secret secret = new V1Secret();
 		secret.setApiVersion("v1");
 		secret.setKind("Secret");
@@ -3311,13 +3347,14 @@ public class K8sApiCaller {
 	}
 	
 	public static void patchSecret(String namespace, Map<String, String> secrets, String secretName, Map<String, String> labels) throws Throwable {
+		logger.info("[K8S ApiCaller] patchSecret Service Start");
 
 		V1Secret result;
 		
 		for( String key : secrets.keySet()) {
 			String dataStr = secrets.get(key);
 			byte[] encodeData = Base64.encodeBase64(dataStr.getBytes());
-			String jsonPatchStr = "[{\"op\":\"replace\",\"path\":\"/data/" + key + "\",\"value\": " + new String(encodeData) + " }]";
+			String jsonPatchStr = "[{\"op\":\"replace\",\"path\":\"/data/" + key + "\",\"value\": \"" + new String(encodeData) + "\" }]";
 			logger.info("JsonPatchStr: " + jsonPatchStr);
 
 			JsonElement jsonPatch = (JsonElement) new JsonParser().parse(jsonPatchStr);
@@ -3325,13 +3362,13 @@ public class K8sApiCaller {
 				Map<String, byte[]> secretMap = new HashMap<>();
 				result = api.patchNamespacedSecret(Constants.K8S_PREFIX + secretName.toLowerCase(), namespace, jsonPatch, "true", null, null, null);
 				
-				logger.info("[result]" + result);
+//				logger.info("[result]" + result);
 				
-				secretMap = result.getData();
-				logger.info("== real secret data ==");
-				for( String key2 : secretMap.keySet()) {
-					logger.info("[secret]" + key2 + "=" + new String(secretMap.get(key2)));
-				}
+//				secretMap = result.getData();
+//				logger.info("== real secret data ==");
+//				for( String key2 : secretMap.keySet()) {
+//					logger.info("[secret]" + key2 + "=" + new String(secretMap.get(key2)));
+//				}
 			
 			} catch (ApiException e) {
 				logger.info(e.getResponseBody());
@@ -3356,30 +3393,23 @@ public class K8sApiCaller {
 			}
 		} catch (ApiException e) {
 			logger.info(e.getResponseBody());
+			e.printStackTrace();
 			throw e;
 		}
 
 	}
 
-	public static Map<String, String> readSecret(String namespace, String secretName) throws ApiException {
+	public static V1Secret readSecret(String namespace, String secretName) throws ApiException {
 		logger.info(" [k8sApiCaller] Read Secret Service Start ");
-
-		Map<String, byte[]> secretMap = new HashMap<>();
-		Map<String, String> returnMap = new HashMap<>();
+		V1Secret secretReturn = null;
 		try {
-			V1Secret secretReturn = api.readNamespacedSecret(secretName.toLowerCase(), namespace, null, null, null);
-
-			secretMap = secretReturn.getData();
-			for (String key : secretMap.keySet()) {
-				returnMap.put(key, new String(secretMap.get(key)));
-//			logger.info("[secret]" + key + "=" + new String(secretMap.get(key)));  
-			}
+			secretReturn = api.readNamespacedSecret(secretName.toLowerCase(), namespace, null, null, null);
 
 		} catch (ApiException e) {
 			logger.info(e.getResponseBody());
 			throw e;
 		}
-		return returnMap;
+		return secretReturn;
 	}
 
 	private static String readFile(String filePath) throws IOException {
@@ -3482,6 +3512,21 @@ public class K8sApiCaller {
 					serviceMeta.setLongDescription(template.get("metadata").get("name").asText());
 				} else {
 					serviceMeta.setLongDescription(template.get("longDescription").asText());
+				}
+				if (template.get("longDescription") == null) {
+					serviceMeta.setLongDescription(template.get("metadata").get("name").asText());
+				} else {
+					serviceMeta.setLongDescription(template.get("longDescription").asText());
+				}
+				if (template.get("urlDescription") == null) {
+					serviceMeta.setUrlDescription(template.get("metadata").get("name").asText());
+				} else {
+					serviceMeta.setUrlDescription(template.get("urlDescription").asText());
+				}
+				if (template.get("markdownDescription") == null) {
+					serviceMeta.setMarkdownDescription(template.get("metadata").get("name").asText());
+				} else {
+					serviceMeta.setMarkdownDescription(template.get("markdownDescription").asText());
 				}
 				if (template.get("provider") == null) {
 					serviceMeta.setProviderDisplayName(Constants.DEFAULT_PROVIDER);
@@ -4224,28 +4269,30 @@ public class K8sApiCaller {
 			// 2. Check if ClusterRole has NameSpace GET rule
 			if (clusterRoleList != null) {
 				for (String clusterRoleName : clusterRoleList) {
-					logger.info("User [ " + userId + " ] has ClusterRole [" + clusterRoleName + " ]");
+					logger.info("User [ " + userId + " ] has ClusterRole [ " + clusterRoleName + " ]");
 					V1ClusterRole clusterRole = rbacApi.readClusterRole(clusterRoleName, "true");
 					List<V1PolicyRule> rules = clusterRole.getRules();
 					if (rules != null) {
 						for (V1PolicyRule rule : rules) {
 							if (rule.getResources() != null) {
 								if (rule.getResources().contains("*") || rule.getResources().contains("namespaces")) {
-									logger.info("clusterRoleName : " + clusterRoleName);
-									if (rule.getVerbs() != null) {
-										if (rule.getVerbs().contains("list") || rule.getVerbs().contains("*")) {
-											if (rule.getResourceNames() == null
-													|| rule.getResourceNames().size() == 0) {
-												clusterRoleFlag = true;
-											} else {
-												for (String nsName : rule.getResourceNames()) {
-													if (nsNameList == null)
-														nsNameList = new ArrayList<>();
-													nsNameList.add(nsName);
+									if ( rule.getApiGroups().contains("*") || rule.getApiGroups().contains("") || rule.getApiGroups().contains("core") ) {
+										logger.info("clusterRoleName : " + clusterRoleName);
+										if (rule.getVerbs() != null) {
+											if (rule.getVerbs().contains("list") || rule.getVerbs().contains("*")) {
+												if (rule.getResourceNames() == null
+														|| rule.getResourceNames().size() == 0) {
+													clusterRoleFlag = true;
+												} else {
+													for (String nsName : rule.getResourceNames()) {
+														if (nsNameList == null)
+															nsNameList = new ArrayList<>();
+														nsNameList.add(nsName);
+													}
 												}
 											}
 										}
-									}
+									}		
 								}
 							}
 						}
@@ -4282,16 +4329,18 @@ public class K8sApiCaller {
 											if (rules != null) {
 												for (V1PolicyRule rule : rules) {
 													if (rule.getResources() != null) {
-														if (rule.getResources().contains("*")
-																|| rule.getResources().contains("namespaces")) {
-															if (rule.getVerbs() != null) {
-																if (rule.getVerbs().contains("list")
-																		|| rule.getVerbs().contains("*")) {
-																	if (nsNameList == null)
-																		nsNameList = new ArrayList<>();
-																	nsNameList.add(ns.getMetadata().getName());
+														if (rule.getResources().contains("*") || rule.getResources().contains("namespaces")) {
+															if ( rule.getApiGroups().contains("*") || rule.getApiGroups().contains("") 
+																	|| rule.getApiGroups().contains("core") ) {
+																if (rule.getVerbs() != null) {
+																	if (rule.getVerbs().contains("list")
+																			|| rule.getVerbs().contains("*")) {
+																		if (nsNameList == null)
+																			nsNameList = new ArrayList<>();
+																		nsNameList.add(ns.getMetadata().getName());
+																	}
 																}
-															}
+															}	
 														}
 													}
 												}
@@ -4306,16 +4355,18 @@ public class K8sApiCaller {
 											if (rules != null) {
 												for (V1PolicyRule rule : rules) {
 													if (rule.getResources() != null) {
-														if (rule.getResources().contains("*")
-																|| rule.getResources().contains("namespaces")) {
-															if (rule.getVerbs() != null) {
-																if (rule.getVerbs().contains("list")
-																		|| rule.getVerbs().contains("*")) {
-																	if (nsNameList == null)
-																		nsNameList = new ArrayList<>();
-																	nsNameList.add(ns.getMetadata().getName());
+														if (rule.getResources().contains("*") || rule.getResources().contains("namespaces")) {
+															if ( rule.getApiGroups().contains("*") || rule.getApiGroups().contains("") 
+																	|| rule.getApiGroups().contains("core") ) {
+																if (rule.getVerbs() != null) {
+																	if (rule.getVerbs().contains("list")
+																			|| rule.getVerbs().contains("*")) {
+																		if (nsNameList == null)
+																			nsNameList = new ArrayList<>();
+																		nsNameList.add(ns.getMetadata().getName());
+																	}
 																}
-															}
+															}	
 														}
 													}
 												}
@@ -4519,9 +4570,25 @@ public class K8sApiCaller {
 
 	private static OkHttpClient getHttpClient() {
 		OkHttpClient httpClient;
+		//List lists = Arrays.asList(ConnectionSpec.COMPATIBLE_TLS, ConnectionSpec.CLEARTEXT);
+		 ConnectionSpec spec = new ConnectionSpec.Builder(ConnectionSpec.COMPATIBLE_TLS)
+		            .tlsVersions(TlsVersion.TLS_1_2, TlsVersion.TLS_1_1, TlsVersion.TLS_1_0)
+		            .cipherSuites(
+		                    CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+		                    CipherSuite.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,
+		                    CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
+		                    CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA)
+		            .build();
+
+		//httpClient.connectionSpecs(Collections.singletonList(spec))
+
+		
+		
 		OkHttpClient.Builder builder = new OkHttpClient.Builder();
 		builder.addNetworkInterceptor(getProgressInterceptor()); // K8S Interceptor
-		builder.addNetworkInterceptor(new LogInterceptor()); // HyperCloud Interceptor
+		builder.addNetworkInterceptor(new ChunkedInterceptor()); // HyperCloud Interceptor
+		//builder.addInterceptor(new HttpLoggingInterceptor());
+		builder.connectionSpecs(Collections.singletonList(spec));
 		httpClient = builder.build();
 		return httpClient;
 	}
