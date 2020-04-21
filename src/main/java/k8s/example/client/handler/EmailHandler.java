@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -62,10 +61,9 @@ public class EmailHandler extends GeneralHandler {
 			logger.info(" verifyCode: " + verifyCode);
 
 			// Send E-mail to User
-			String subject = "[인증번호 : " + verifyCode + " ] 이메일을 인증해 주세요";
-			String content = "인증번호 " + verifyCode
-					+ "\n\n 안녕하세요? \n TmaxCloud를 이용해 주셔서 감사합니다. \n 인증번호를 입력해 주세요. \n 감사합니다.";
-			Util.sendMail(userInDO.getEmail(), subject, content); // FIXME
+			String subject = "[ 인증번호 : " + verifyCode + " ] 이메일을 인증해 주세요";
+			String content = Constants.VERIFY_MAIL_CONTENTS.replaceAll("@@verifyNumber@@", verifyCode);
+			Util.sendMail(userInDO.getEmail(), subject, content); 
 
 			// Insert VerifyCode into Secret
 			try {

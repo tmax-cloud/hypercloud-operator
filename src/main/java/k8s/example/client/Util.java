@@ -8,13 +8,16 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
 
+import javax.mail.BodyPart;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimeUtility;
 
 import org.slf4j.Logger;
@@ -109,7 +112,6 @@ public class Util {
 		logger.info( " Send Verification Mail User ");
 		String host = "mail.tmax.co.kr";
 		int port = 25;
-//		String recipient = "taegeon_woo@tmax.co.kr";
 		String recipient = email; 
 
 		String charSetUtf = "UTF-8" ; //FIXME : 제목 한글 여전히 깨짐 ㅠㅠ
@@ -143,16 +145,17 @@ public class Util {
 		// Make Subject
 		mimeMessage.setSubject( MimeUtility.encodeText(subject,  charSetUtf, "B") );
 
-		// Make Body
 //		Map<String, String> bodyMap = K8sApiCaller.readSecret(Constants.TEMPLATE_NAMESPACE, "authenticate-html");  		
 //		if( bodyMap != null ) {
 //			body = bodyMap.get("body") + " \n AccessToken\n" + accessToken;
 //			if( content != null) body = body + " \n Alter PassWord\n" + content; //TODO
 //		}
 		
+		// Make Body
 		logger.info( " Mail Body : "  + body );
-		mimeMessage.setContent(body, "UTF-8");
-		if (body!=null) mimeMessage.setText( body, charSetUtf); //FIXME
+		mimeMessage.setContent(body,"text/html; charset="+charSetUtf);
+		mimeMessage.setHeader("Content-Type", "text/html; charset="+charSetUtf);
+		
 		logger.info( " Ready to Send Mail to " + recipient);
 		try {
 			//Send Mail

@@ -23,7 +23,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -83,6 +82,7 @@ import io.kubernetes.client.openapi.models.V1HTTPGetAction;
 import io.kubernetes.client.openapi.models.V1HTTPHeader;
 import io.kubernetes.client.openapi.models.V1Handler;
 import io.kubernetes.client.openapi.models.V1LabelSelector;
+import io.kubernetes.client.openapi.models.V1LabelSelectorRequirement;
 import io.kubernetes.client.openapi.models.V1Lifecycle;
 import io.kubernetes.client.openapi.models.V1LoadBalancerIngress;
 import io.kubernetes.client.openapi.models.V1Namespace;
@@ -121,23 +121,22 @@ import io.kubernetes.client.openapi.models.V1ServiceList;
 import io.kubernetes.client.openapi.models.V1ServicePort;
 import io.kubernetes.client.openapi.models.V1ServiceSpec;
 import io.kubernetes.client.openapi.models.V1Subject;
+import io.kubernetes.client.openapi.models.V1Toleration;
 import io.kubernetes.client.openapi.models.V1Volume;
 import io.kubernetes.client.openapi.models.V1VolumeMount;
 import io.kubernetes.client.util.Config;
 import k8s.example.client.Constants;
-import k8s.example.client.ErrorCode;
 import k8s.example.client.DataObject.Client;
 import k8s.example.client.DataObject.ClientCR;
 import k8s.example.client.DataObject.RegistryEvent;
 import k8s.example.client.DataObject.TokenCR;
 import k8s.example.client.DataObject.User;
 import k8s.example.client.DataObject.UserCR;
+import k8s.example.client.ErrorCode;
 import k8s.example.client.Main;
 import k8s.example.client.StringUtil;
 import k8s.example.client.Util;
 import k8s.example.client.interceptor.ChunkedInterceptor;
-import k8s.example.client.interceptor.HttpLoggingInterceptor;
-import k8s.example.client.interceptor.LogInterceptor;
 import k8s.example.client.k8s.apis.CustomResourceApi;
 import k8s.example.client.k8s.util.SecurityHelper;
 import k8s.example.client.models.BindingInDO;
@@ -145,7 +144,6 @@ import k8s.example.client.models.BindingOutDO;
 import k8s.example.client.models.CommandExecOut;
 import k8s.example.client.models.Cost;
 import k8s.example.client.models.Endpoint;
-import k8s.example.client.models.GetPlanDO;
 import k8s.example.client.models.Image;
 import k8s.example.client.models.ImageSpec;
 import k8s.example.client.models.InputParametersSchema;
@@ -995,7 +993,7 @@ public class K8sApiCaller {
 			V1ObjectMeta lbMeta = new V1ObjectMeta();
 			V1ServiceSpec lbSpec = new V1ServiceSpec();
 			List<V1ServicePort> ports = new ArrayList<>();
-			Map<String, String> selector = new HashMap<String, String>();
+			Map<String, String> lbSelector = new HashMap<String, String>();
 
 			lbMeta.setName(Constants.K8S_PREFIX + registryId);
 
@@ -1036,8 +1034,8 @@ public class K8sApiCaller {
 			lbSpec.setPorts(ports);
 
 			logger.info("Selector: " + Constants.K8S_PREFIX + registryId + "=lb");
-			selector.put(Constants.K8S_PREFIX + registryId, "lb");
-			lbSpec.setSelector(selector);
+			lbSelector.put(Constants.K8S_PREFIX + registryId, "lb");
+			lbSpec.setSelector(lbSelector);
 
 			lbSpec.setType(registry.getSpec().getService().getType());
 
@@ -1740,23 +1738,56 @@ public class K8sApiCaller {
 
 			podSpec.setVolumes(volumes);
 
-			// 2-2-2-5. restart policy
+			// restart policy
 			podSpec.setRestartPolicy("Always");
 			logger.info("Restart Policy: " + podSpec.getRestartPolicy());
 
+			// node selector
+			if( registry.getSpec().getReplicaSet() != null) {
+				Map<String, String> nodeSelector = null;
+				List<V1Toleration> tolerations = null;
+				
+				if( (nodeSelector = registry.getSpec().getReplicaSet().getNodeSelector()) != null) 
+					podSpec.setNodeSelector(nodeSelector);
+				
+				if( (tolerations = registry.getSpec().getReplicaSet().getTolerations()) != null) 
+					podSpec.setTolerations(tolerations);
+			}
+			
 			podTemplateSpec.setSpec(podSpec);
 			rsSpec.setTemplate(podTemplateSpec);
 
-			// 2-3. label selector
+			// label selector
 			V1LabelSelector labelSelector = new V1LabelSelector();
 			logger.info("<RS Label List>");
-			Map<String, String> podLabelSelector = new HashMap<String, String>();
-			podLabelSelector.put("app", "registry");
-			podLabelSelector.put("apps", rsMeta.getName());
+			Map<String, String> rsLabelSelector = new HashMap<String, String>();
+			rsLabelSelector.put("app", "registry");
+			rsLabelSelector.put("apps", rsMeta.getName());
 			logger.info("app: registry");
 			logger.info("apps: " + rsMeta.getName());
-			labelSelector.setMatchLabels(podLabelSelector);
 
+			// user label selector
+			if( registry.getSpec().getReplicaSet() != null) {
+				V1LabelSelector rsSelector = null;
+				List<V1LabelSelectorRequirement> matchExpressions = null;
+				Map<String, String> matchLabels = null;
+				 
+				if( (rsSelector = registry.getSpec().getReplicaSet().getSelector()) != null) {
+					matchLabels = rsSelector.getMatchLabels();
+					if( matchLabels != null ) {
+						for( String key : matchLabels.keySet()) {
+							rsLabelSelector.put(key, matchLabels.get(key));
+						}
+					}
+					
+					matchExpressions = rsSelector.getMatchExpressions();
+					if( matchExpressions != null ) {
+						labelSelector.setMatchExpressions(matchExpressions);
+					}
+				}
+			}
+
+			labelSelector.setMatchLabels(rsLabelSelector);
 			rsSpec.setSelector(labelSelector);
 
 			rsBuilder.withSpec(rsSpec);
@@ -2554,14 +2585,20 @@ public class K8sApiCaller {
 				for (Registry registry : registryList) {
 					logger.info(registry.getMetadata().getName() + "/" + registry.getMetadata().getNamespace()
 							+ " registry sync");
-					syncImageList(registry);
+					try {
+						syncImageList(registry);
+					} catch (ApiException e) {
+						logger.info(e.getResponseBody());
+					} catch (Exception e) {
+						logger.info(e.getMessage());
+					}
 				}
 			}
 		} catch (ApiException e) {
 			logger.info("Response body: " + e.getResponseBody());
 		} catch (JsonParseException | JsonMappingException e) {
 			logger.info(e.getMessage());
-			throw e;
+//			throw e;
 		}
 	}
 
@@ -2570,17 +2607,20 @@ public class K8sApiCaller {
 		String namespace = registry.getMetadata().getNamespace();
 		SSLSocketFactory sf = null;
 		Map<String, String> header = new HashMap<>();
-		Map<String, String> certMap = null;
+		Map<String, String> certMap = new HashMap<>();
 
 		try {
-			V1Secret secretReturn = K8sApiCaller.readSecret(namespace, Constants.K8S_PREFIX + registry.getMetadata().getName());
+			
+			V1Secret secretReturn = api.readNamespacedSecret(Constants.K8S_PREFIX + registry.getMetadata().getName(), namespace, null, null, null);
 			Map<String, byte[]> secretMap = new HashMap<>();
-    		secretMap = secretReturn.getData();
+			secretMap = secretReturn.getData();
+			
 			for (String key : secretMap.keySet()) {
+				logger.info("secret key: " + key);
 				certMap.put(key, new String(secretMap.get(key)));
 			}
- 
-			sf = SecurityHelper.createSocketFactory(certMap.get(Constants.CERT_CERT_FILE),
+			
+			sf = SecurityHelper.createSocketFactory(certMap.get(Constants.CERT_CRT_FILE),
 					certMap.get(Constants.CERT_CERT_FILE), certMap.get(Constants.CERT_KEY_FILE));
 		} catch (ApiException e) {
 			logger.info(e.getResponseBody());
@@ -4251,33 +4291,60 @@ public class K8sApiCaller {
 	}
 
 	@SuppressWarnings("null")
-	public static V1NamespaceList getAccessibleNS(String userId) throws ApiException {
-		V1NamespaceList nsList = null;// TODO
+	public static V1NamespaceList getAccessibleNS(String userId) throws Exception {
+		V1NamespaceList nsList = null;
 		List<String> nsNameList = null;
-		// 1. List of ClusterRoleBinding
+		List<String> userGroupList = null;
+		
 		V1ClusterRoleBindingList crbList = null;
 		List<String> clusterRoleList = null;
 		boolean clusterRoleFlag = false;
 		try {
+			// 1. Get UserGroup List if Exists
+			logger.info(" userId :" + userId);
+			UserCR user = getUser(userId);
+			Map< String, String > userLabel = user.getMetadata().getLabels();
+			if (userLabel != null) {
+				Iterator<String> iter = userLabel.keySet().iterator();
+				while (iter.hasNext()) {
+					String key = iter.next();
+					logger.info(" User label key " + key);
+
+					if( key.startsWith("group-")) {
+						if( userGroupList == null ) userGroupList = new ArrayList<>();
+						logger.info(" userGroup Name " + key.substring(6));
+						userGroupList.add(key.substring(6));
+					}
+				}
+			}					
+			// 2. List of ClusterRoleBinding
 			crbList = rbacApi.listClusterRoleBinding("true", false, null, null, null, 1000, null, 60, false);
 			for (V1ClusterRoleBinding item : crbList.getItems()) {
 				List<V1Subject> subjects = item.getSubjects();
 				V1RoleRef roleRef = item.getRoleRef();
 				if (subjects != null) {
 					for (V1Subject subject : subjects) {
-
 						if (subject.getKind().equalsIgnoreCase("User")) {
 							if (subject.getName().equalsIgnoreCase(userId)) {
 								if (clusterRoleList == null)
 									clusterRoleList = new ArrayList<>();
 								clusterRoleList.add(roleRef.getName()); // get ClusterRole name
 							}
+						} else if (subject.getKind().equalsIgnoreCase("Group")) {
+							if ( userGroupList != null ) {
+								logger.info(" subject.getName() " + subject.getName());
+								if ( userGroupList.contains(subject.getName())) {
+									if (clusterRoleList == null)
+										clusterRoleList = new ArrayList<>();
+									clusterRoleList.add(roleRef.getName()); // get ClusterRole name
+								}
+							}
 						}
 					}
 				}
 			}
 
-			// 2. Check if ClusterRole has NameSpace GET rule
+			// 3. Check if ClusterRole has NameSpace GET rule
 			if (clusterRoleList != null) {
 				for (String clusterRoleName : clusterRoleList) {
 					logger.info("User [ " + userId + " ] has ClusterRole [ " + clusterRoleName + " ]");
@@ -4317,7 +4384,7 @@ public class K8sApiCaller {
 			} else {
 				V1NamespaceList nsListK8S = api.listNamespace("true", false, null, null, null, 100, null, 60, false);
 
-				// 3. List of RoleBinding
+				// 4. List of RoleBinding
 				if (nsListK8S.getItems() != null) {
 					for (V1Namespace ns : nsListK8S.getItems()) {
 						V1RoleBindingList rbList = rbacApi.listNamespacedRoleBinding(ns.getMetadata().getName(), "true",
@@ -4326,64 +4393,61 @@ public class K8sApiCaller {
 							List<V1Subject> subjects = item.getSubjects();
 							V1RoleRef roleRef = item.getRoleRef();
 							for (V1Subject subject : subjects) {
-								if (subject.getKind().equalsIgnoreCase("User")) {
-									if (subject.getName().equalsIgnoreCase(userId)) { // Found Matching Role &
-																						// ClusterRole
-
-										// 4. Check if Role has NameSpace GET rule
-										if (roleRef.getKind().equalsIgnoreCase("Role")) {
-											logger.info(
-													"User [ " + userId + " ] has Role [" + roleRef.getName() + " ]");
-											V1Role role = rbacApi.readNamespacedRole(roleRef.getName(),
-													ns.getMetadata().getName(), "true");
-											List<V1PolicyRule> rules = role.getRules();
-											if (rules != null) {
-												for (V1PolicyRule rule : rules) {
-													if (rule.getResources() != null) {
-														if (rule.getResources().contains("*") || rule.getResources().contains("namespaces")) {
-															if ( rule.getApiGroups().contains("*") || rule.getApiGroups().contains("") 
-																	|| rule.getApiGroups().contains("core") ) {
-																if (rule.getVerbs() != null) {
-																	if (rule.getVerbs().contains("list")
-																			|| rule.getVerbs().contains("*")) {
-																		if (nsNameList == null)
-																			nsNameList = new ArrayList<>();
-																		nsNameList.add(ns.getMetadata().getName());
-																	}
+								if (( subject.getKind().equalsIgnoreCase("User") && subject.getName().equalsIgnoreCase(userId) ) 
+										|| ( userGroupList!= null && subject.getKind().equalsIgnoreCase("Group") && userGroupList.contains(subject.getName()) ) ) {
+										
+									// 5. Check if Role has NameSpace GET rule
+									if (roleRef.getKind().equalsIgnoreCase("Role")) {
+										logger.info(
+												"User [ " + userId + " ] has Role [" + roleRef.getName() + " ]");
+										V1Role role = rbacApi.readNamespacedRole(roleRef.getName(),
+												ns.getMetadata().getName(), "true");
+										List<V1PolicyRule> rules = role.getRules();
+										if (rules != null) {
+											for (V1PolicyRule rule : rules) {
+												if (rule.getResources() != null) {
+													if (rule.getResources().contains("*") || rule.getResources().contains("namespaces")) {
+														if ( rule.getApiGroups().contains("*") || rule.getApiGroups().contains("") 
+																|| rule.getApiGroups().contains("core") ) {
+															if (rule.getVerbs() != null) {
+																if (rule.getVerbs().contains("list")
+																		|| rule.getVerbs().contains("*")) {
+																	if (nsNameList == null)
+																		nsNameList = new ArrayList<>();
+																	nsNameList.add(ns.getMetadata().getName());
 																}
-															}	
-														}
-													}
-												}
-											}
-
-											// 5. Check if ClusterRole has NameSpace GET rule
-										} else if (roleRef.getKind().equalsIgnoreCase("ClusterRole")) {
-											logger.info("User [ " + userId + " ] has ClusterRole [" + roleRef.getName()
-													+ " ]");
-											V1ClusterRole role = rbacApi.readClusterRole(roleRef.getName(), "true");
-											List<V1PolicyRule> rules = role.getRules();
-											if (rules != null) {
-												for (V1PolicyRule rule : rules) {
-													if (rule.getResources() != null) {
-														if (rule.getResources().contains("*") || rule.getResources().contains("namespaces")) {
-															if ( rule.getApiGroups().contains("*") || rule.getApiGroups().contains("") 
-																	|| rule.getApiGroups().contains("core") ) {
-																if (rule.getVerbs() != null) {
-																	if (rule.getVerbs().contains("list")
-																			|| rule.getVerbs().contains("*")) {
-																		if (nsNameList == null)
-																			nsNameList = new ArrayList<>();
-																		nsNameList.add(ns.getMetadata().getName());
-																	}
-																}
-															}	
-														}
+															}
+														}	
 													}
 												}
 											}
 										}
-									}
+
+										// 6. Check if ClusterRole has NameSpace GET rule
+									} else if (roleRef.getKind().equalsIgnoreCase("ClusterRole")) {
+										logger.info("User [ " + userId + " ] has ClusterRole [" + roleRef.getName() + " ]");
+										V1ClusterRole role = rbacApi.readClusterRole(roleRef.getName(), "true");
+										List<V1PolicyRule> rules = role.getRules();
+										if (rules != null) {
+											for (V1PolicyRule rule : rules) {
+												if (rule.getResources() != null) {
+													if (rule.getResources().contains("*") || rule.getResources().contains("namespaces")) {
+														if ( rule.getApiGroups().contains("*") || rule.getApiGroups().contains("") 
+																|| rule.getApiGroups().contains("core") ) {
+															if (rule.getVerbs() != null) {
+																if (rule.getVerbs().contains("list")
+																		|| rule.getVerbs().contains("*")) {
+																	if (nsNameList == null)
+																		nsNameList = new ArrayList<>();
+																	nsNameList.add(ns.getMetadata().getName());
+																}
+															}
+														}	
+													}
+												}
+											}
+										}
+									}			
 								}
 							}
 						}
@@ -4461,9 +4525,7 @@ public class K8sApiCaller {
 			userCR.setUserInfo(userInDO);
 			// Truncate PW
 			userCR.getUserInfo().setPassword(null);
-
-			userCR.setStatus("active"); // FIXME : UI 연동 테스트 후 삭제 예정
-//    		userCR.setStatus("blocked");
+			userCR.setStatus("active"); 
 
 			// Make body
 			JSONParser parser = new JSONParser();
