@@ -1,11 +1,15 @@
 package k8s.example.client.models;
 
+import java.util.Map;
+
 public class RegistrySpec {
 	private String image = null;
 	private String description = null;
 	private String loginId = null;
 	private String loginPassword = null;
 	private String customConfigYml = null;
+	
+	private String domainName = null;
 	private RegistryService service = null;
 	private RegistryPVC persistentVolumeClaim = null;
 
@@ -39,6 +43,12 @@ public class RegistrySpec {
 	public void setCustomConfigYml(String customConfigYml) {
 		this.customConfigYml = customConfigYml;
 	}
+	public String getDomainName() {
+		return domainName;
+	}
+	public void setDomainName(String domainName) {
+		this.domainName = domainName;
+	}
 	public RegistryService getService() {
 		return service;
 	}
@@ -60,6 +70,7 @@ public class RegistrySpec {
 		sb.append("    loginId: ").append(toIndentedString(loginId)).append("\n");
 		sb.append("    loginPassword: ").append(toIndentedString(loginPassword)).append("\n");
 		sb.append("    customConfigYml: ").append(toIndentedString(customConfigYml)).append("\n");
+		sb.append("    domainName: ").append(toIndentedString(domainName)).append("\n");
 		sb.append("    service: ").append(toIndentedString(service)).append("\n");
 		sb.append("    persistentVolumeClaim: ").append(toIndentedString(persistentVolumeClaim)).append("\n");
 		sb.append("}");
