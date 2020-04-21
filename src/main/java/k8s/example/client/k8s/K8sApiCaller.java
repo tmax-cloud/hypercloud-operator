@@ -82,6 +82,7 @@ import io.kubernetes.client.openapi.models.V1HTTPGetAction;
 import io.kubernetes.client.openapi.models.V1HTTPHeader;
 import io.kubernetes.client.openapi.models.V1Handler;
 import io.kubernetes.client.openapi.models.V1LabelSelector;
+import io.kubernetes.client.openapi.models.V1LabelSelectorRequirement;
 import io.kubernetes.client.openapi.models.V1Lifecycle;
 import io.kubernetes.client.openapi.models.V1LoadBalancerIngress;
 import io.kubernetes.client.openapi.models.V1Namespace;
@@ -120,6 +121,7 @@ import io.kubernetes.client.openapi.models.V1ServiceList;
 import io.kubernetes.client.openapi.models.V1ServicePort;
 import io.kubernetes.client.openapi.models.V1ServiceSpec;
 import io.kubernetes.client.openapi.models.V1Subject;
+import io.kubernetes.client.openapi.models.V1Toleration;
 import io.kubernetes.client.openapi.models.V1Volume;
 import io.kubernetes.client.openapi.models.V1VolumeMount;
 import io.kubernetes.client.util.Config;
@@ -991,7 +993,7 @@ public class K8sApiCaller {
 			V1ObjectMeta lbMeta = new V1ObjectMeta();
 			V1ServiceSpec lbSpec = new V1ServiceSpec();
 			List<V1ServicePort> ports = new ArrayList<>();
-			Map<String, String> selector = new HashMap<String, String>();
+			Map<String, String> lbSelector = new HashMap<String, String>();
 
 			lbMeta.setName(Constants.K8S_PREFIX + registryId);
 
@@ -1032,8 +1034,8 @@ public class K8sApiCaller {
 			lbSpec.setPorts(ports);
 
 			logger.info("Selector: " + Constants.K8S_PREFIX + registryId + "=lb");
-			selector.put(Constants.K8S_PREFIX + registryId, "lb");
-			lbSpec.setSelector(selector);
+			lbSelector.put(Constants.K8S_PREFIX + registryId, "lb");
+			lbSpec.setSelector(lbSelector);
 
 			lbSpec.setType(registry.getSpec().getService().getType());
 
@@ -1736,23 +1738,56 @@ public class K8sApiCaller {
 
 			podSpec.setVolumes(volumes);
 
-			// 2-2-2-5. restart policy
+			// restart policy
 			podSpec.setRestartPolicy("Always");
 			logger.info("Restart Policy: " + podSpec.getRestartPolicy());
 
+			// node selector
+			if( registry.getSpec().getReplicaSet() != null) {
+				Map<String, String> nodeSelector = null;
+				List<V1Toleration> tolerations = null;
+				
+				if( (nodeSelector = registry.getSpec().getReplicaSet().getNodeSelector()) != null) 
+					podSpec.setNodeSelector(nodeSelector);
+				
+				if( (tolerations = registry.getSpec().getReplicaSet().getTolerations()) != null) 
+					podSpec.setTolerations(tolerations);
+			}
+			
 			podTemplateSpec.setSpec(podSpec);
 			rsSpec.setTemplate(podTemplateSpec);
 
-			// 2-3. label selector
+			// label selector
 			V1LabelSelector labelSelector = new V1LabelSelector();
 			logger.info("<RS Label List>");
-			Map<String, String> podLabelSelector = new HashMap<String, String>();
-			podLabelSelector.put("app", "registry");
-			podLabelSelector.put("apps", rsMeta.getName());
+			Map<String, String> rsLabelSelector = new HashMap<String, String>();
+			rsLabelSelector.put("app", "registry");
+			rsLabelSelector.put("apps", rsMeta.getName());
 			logger.info("app: registry");
 			logger.info("apps: " + rsMeta.getName());
-			labelSelector.setMatchLabels(podLabelSelector);
 
+			// user label selector
+			if( registry.getSpec().getReplicaSet() != null) {
+				V1LabelSelector rsSelector = null;
+				List<V1LabelSelectorRequirement> matchExpressions = null;
+				Map<String, String> matchLabels = null;
+				 
+				if( (rsSelector = registry.getSpec().getReplicaSet().getSelector()) != null) {
+					matchLabels = rsSelector.getMatchLabels();
+					if( matchLabels != null ) {
+						for( String key : matchLabels.keySet()) {
+							rsLabelSelector.put(key, matchLabels.get(key));
+						}
+					}
+					
+					matchExpressions = rsSelector.getMatchExpressions();
+					if( matchExpressions != null ) {
+						labelSelector.setMatchExpressions(matchExpressions);
+					}
+				}
+			}
+
+			labelSelector.setMatchLabels(rsLabelSelector);
 			rsSpec.setSelector(labelSelector);
 
 			rsBuilder.withSpec(rsSpec);
