@@ -953,157 +953,176 @@ public class K8sApiCaller {
 	public static void createRegistry(Registry registry) throws Exception {
 		logger.info("[K8S ApiCaller] createRegistry(Registry) Start");
 
-		//			long time = System.currentTimeMillis();
-		//			String randomUID = UIDGenerator.getInstance().generate32( registry, 8, time );
+		try {
+//			long time = System.currentTimeMillis();
+//			String randomUID = UIDGenerator.getInstance().generate32( registry, 8, time );
 
-		String namespace = registry.getMetadata().getNamespace();
-		String registryId = registry.getMetadata().getName();
-		RegistryService regService = registry.getSpec().getService();
-		List<String> nodeIPList = new ArrayList<>();
-		String domainName = registry.getSpec().getDomainName() == null ? Constants.K8S_PREFIX + registryId + "." + namespace : registry.getSpec().getDomainName();
-//		String domainName = Constants.K8S_PREFIX + registryId + "." + namespace;
-		String ingressDomainName = null;
-//		String ingressDomainName = "tmax2-registry.172.22.11.15.nip.io";
-		String svcType = regService.getType();
+			String namespace = registry.getMetadata().getNamespace();
+			String registryId = registry.getMetadata().getName();
+			RegistryService regService = registry.getSpec().getService();
+			String registryIP = "";
+			int registryPort = 0;
 
-		// set default
-		int registrySVCTargetPort = RegistryService.REGISTRY_TARGET_PORT;
-		int registrySVCPort = registry.getSpec().getService().getPort() == 0 ? registrySVCTargetPort
-				: registry.getSpec().getService().getPort();
-		int registrySVCNodePort = regService.getNodePort();
+			// set default
+			int registrySVCTargetPort = RegistryService.REGISTRY_TARGET_PORT;
+			int registrySVCPort = registry.getSpec().getService().getPort() == 0 ? registrySVCTargetPort
+					: registry.getSpec().getService().getPort();
+			int registrySVCNodePort = regService.getNodePort();
 
-		if (!svcType.equals(RegistryService.SVC_TYPE_CLUSTER_IP)) {
-			if (StringUtil.isEmpty(regService.getNodeIP())) {
-				V1NodeList nodes = api.listNode(null, null, null, null, null, null, null, null, null);
-
-				for (V1Node node : nodes.getItems()) {
-					for (V1NodeAddress address : node.getStatus().getAddresses()) {
-						if (address.getType().equals("InternalIP")) {
-							String nodeIP = address.getAddress();
-							nodeIPList.add(nodeIP);
-							logger.info("[nodeIP]:" + nodeIP);
+			if (regService.getType().equals(RegistryService.SVC_TYPE_NODE_PORT)) {
+				// If Registry Node IP is null
+				if (StringUtil.isEmpty(regService.getNodeIP())) {
+					V1NodeList nodes = api.listNode(null, null, null, null, null, null, null, null, null);
+					for (V1Node node : nodes.getItems()) {
+						for (V1NodeAddress address : node.getStatus().getAddresses()) {
+							if (address.getType().equals("InternalIP")) {
+								registryIP = address.getAddress();
+								logger.info("[registryIP]:" + registryIP);
+								break;
+							}
+						}
+						if (StringUtil.isNotEmpty(registryIP)) {
 							break;
 						}
 					}
+				} else {
+					registryIP = regService.getNodeIP();
 				}
 			}
-		}
 
-		// ----- Create Loadbalancer
-		V1Service lb = new V1Service();
-		V1ObjectMeta lbMeta = new V1ObjectMeta();
-		V1ServiceSpec lbSpec = new V1ServiceSpec();
-		List<V1ServicePort> ports = new ArrayList<>();
-		Map<String, String> selector = new HashMap<String, String>();
+			// ----- Create Loadbalancer
+			V1Service lb = new V1Service();
+			V1ObjectMeta lbMeta = new V1ObjectMeta();
+			V1ServiceSpec lbSpec = new V1ServiceSpec();
+			List<V1ServicePort> ports = new ArrayList<>();
+			Map<String, String> selector = new HashMap<String, String>();
 
-		lbMeta.setName(Constants.K8S_PREFIX + registryId);
+			lbMeta.setName(Constants.K8S_PREFIX + registryId);
 
-		logger.info("<Service Label List>");
-		Map<String, String> serviceLabels = new HashMap<String, String>();
-		serviceLabels.put("app", "registry");
-		serviceLabels.put("apps", lbMeta.getName());
-		logger.info("app: registry");
-		logger.info("apps: " + lbMeta.getName());
-		lbMeta.setLabels(serviceLabels);
+			logger.info("<Service Label List>");
+			Map<String, String> serviceLabels = new HashMap<String, String>();
+			serviceLabels.put("app", "registry");
+			serviceLabels.put("apps", lbMeta.getName());
+			logger.info("app: registry");
+			logger.info("apps: " + lbMeta.getName());
+			lbMeta.setLabels(serviceLabels);
 
-		List<V1OwnerReference> ownerRefs = new ArrayList<>();
-		V1OwnerReference ownerRef = new V1OwnerReference();
+			List<V1OwnerReference> ownerRefs = new ArrayList<>();
+			V1OwnerReference ownerRef = new V1OwnerReference();
 
-		ownerRef.setApiVersion(registry.getApiVersion());
-		ownerRef.setBlockOwnerDeletion(Boolean.TRUE);
-		ownerRef.setController(Boolean.TRUE);
-		ownerRef.setKind(registry.getKind());
-		ownerRef.setName(registry.getMetadata().getName());
-		ownerRef.setUid(registry.getMetadata().getUid());
-		ownerRefs.add(ownerRef);
+			ownerRef.setApiVersion(registry.getApiVersion());
+			ownerRef.setBlockOwnerDeletion(Boolean.TRUE);
+			ownerRef.setController(Boolean.TRUE);
+			ownerRef.setKind(registry.getKind());
+			ownerRef.setName(registry.getMetadata().getName());
+			ownerRef.setUid(registry.getMetadata().getUid());
+			ownerRefs.add(ownerRef);
 
-		lbMeta.setOwnerReferences(ownerRefs);
+			lbMeta.setOwnerReferences(ownerRefs);
 
-		lb.setMetadata(lbMeta);
+			lb.setMetadata(lbMeta);
 
-		V1ServicePort v1port = new V1ServicePort();
-		v1port.setProtocol(RegistryService.REGISTRY_PORT_PROTOCOL);
-		v1port.setPort(registrySVCPort);
-		v1port.setName(RegistryService.REGISTRY_PORT_NAME);
-		v1port.setTargetPort(new IntOrString(registrySVCPort));
-		if (! svcType.equals(RegistryService.SVC_TYPE_CLUSTER_IP)) {
-			if (registrySVCNodePort != 0)
-				v1port.setNodePort(registrySVCNodePort);
-		}
-
-		ports.add(v1port);
-		lbSpec.setPorts(ports);
-
-		logger.info("Selector: " + Constants.K8S_PREFIX + registryId + "=lb");
-		selector.put(Constants.K8S_PREFIX + registryId, "lb");
-		lbSpec.setSelector(selector);
-
-		lbSpec.setType(registry.getSpec().getService().getType());
-
-		lb.setSpec(lbSpec);
-
-		try {
-			api.createNamespacedService(namespace, lb, null, null, null);
-		} catch (ApiException e) {
-			logger.info(e.getResponseBody());
-			JSONObject phase = new JSONObject();
-			JSONObject message = new JSONObject();
-			JSONObject reason = new JSONObject();
-			JSONArray patchStatusArray = new JSONArray();
-
-			phase.put("op", "replace");
-			phase.put("path", "/status/phase");
-			phase.put("value", RegistryStatus.StatusPhase.ERROR.getStatus());
-			patchStatusArray.add(phase);
-
-			message.put("op", "replace");
-			message.put("path", "/status/message");
-			message.put("value", e.getResponseBody());
-			patchStatusArray.add(message);
-
-			reason.put("op", "replace");
-			reason.put("path", "/status/reason");
-			reason.put("value", "CreateServiceFailed");
-			patchStatusArray.add(reason);
-
-			try {
-				Object result = customObjectApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP,
-						Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY,
-						registry.getMetadata().getName(), patchStatusArray);
-				logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
-			} catch (ApiException e2) {
-				logger.info(e2.getResponseBody());
-				throw e2;
+			V1ServicePort v1port = new V1ServicePort();
+			v1port.setProtocol(RegistryService.REGISTRY_PORT_PROTOCOL);
+			v1port.setPort(registrySVCPort);
+			v1port.setName(RegistryService.REGISTRY_PORT_NAME);
+			v1port.setTargetPort(new IntOrString(registrySVCPort));
+			if (regService.getType().equals(RegistryService.SVC_TYPE_NODE_PORT)) {
+				if (registrySVCNodePort != 0)
+					v1port.setNodePort(registrySVCNodePort);
 			}
 
-			throw e;
-		}
+			ports.add(v1port);
+			lbSpec.setPorts(ports);
 
-		int RETRY_CNT = 200;
-		V1Service service = null;
-		String clusterIP = null;
-		String lbIP = null;
+			logger.info("Selector: " + Constants.K8S_PREFIX + registryId + "=lb");
+			selector.put(Constants.K8S_PREFIX + registryId, "lb");
+			lbSpec.setSelector(selector);
 
-		for (int i = 0; i < RETRY_CNT; i++) {
-			Thread.sleep(500);
+			lbSpec.setType(registry.getSpec().getService().getType());
+
+			lb.setSpec(lbSpec);
+
 			try {
-				service = api.readNamespacedService(Constants.K8S_PREFIX + registryId, namespace, null, null, null);
-			}catch(ApiException e) {
+				api.createNamespacedService(namespace, lb, null, null, null);
+			} catch (ApiException e) {
 				logger.info(e.getResponseBody());
+				JSONObject phase = new JSONObject();
+				JSONObject message = new JSONObject();
+				JSONObject reason = new JSONObject();
+				JSONArray patchStatusArray = new JSONArray();
+
+				phase.put("op", "replace");
+				phase.put("path", "/status/phase");
+				phase.put("value", RegistryStatus.StatusPhase.ERROR.getStatus());
+				patchStatusArray.add(phase);
+
+				message.put("op", "replace");
+				message.put("path", "/status/message");
+				message.put("value", e.getResponseBody());
+				patchStatusArray.add(message);
+
+				reason.put("op", "replace");
+				reason.put("path", "/status/reason");
+				reason.put("value", "CreateServiceFailed");
+				patchStatusArray.add(reason);
+
+				try {
+					Object result = customObjectApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP,
+							Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY,
+							registry.getMetadata().getName(), patchStatusArray);
+					logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
+				} catch (ApiException e2) {
+					logger.info(e2.getResponseBody());
+					throw e2;
+				}
+
+				throw e;
 			}
 
-			clusterIP = service.getSpec().getClusterIP();
+			// TYPE: ClusterIP or LoadBalancer => Get IP
+			// TYPE: NodePort => Get Port
+			registryPort = registrySVCPort;
 
-			if (service.getSpec().getType().equals("LoadBalancer")) {
-				if (service.getStatus().getLoadBalancer().getIngress() != null
-						&& service.getStatus().getLoadBalancer().getIngress().size() == 1) {
-					if (service.getStatus().getLoadBalancer().getIngress().get(0).getHostname() == null) {
-						lbIP = service.getStatus().getLoadBalancer().getIngress().get(0).getIp();
-					} else {
-						lbIP = service.getStatus().getLoadBalancer().getIngress().get(0).getHostname();
-					}
-					logger.info("[lbIP]:" + lbIP);
+			int RETRY_CNT = 200;
+			V1Service service = null;
+			for (int i = 0; i < RETRY_CNT; i++) {
+				Thread.sleep(500);
+				service = api.readNamespacedService(Constants.K8S_PREFIX + registryId, namespace, null, null, null);
+
+				// GET IP
+				if (service.getSpec().getType().equals("ClusterIP")) {
+					registryIP = service.getSpec().getClusterIP();
 					break;
+
+					// GET IP
+				} else if (service.getSpec().getType().equals("LoadBalancer")) {
+
+					if (service.getStatus().getLoadBalancer().getIngress() != null
+							&& service.getStatus().getLoadBalancer().getIngress().size() == 1) {
+						if (service.getStatus().getLoadBalancer().getIngress().get(0).getHostname() == null) {
+							registryIP = service.getStatus().getLoadBalancer().getIngress().get(0).getIp();
+						} else {
+							registryIP = service.getStatus().getLoadBalancer().getIngress().get(0).getHostname();
+						}
+						logger.info("[registryIP]:" + registryIP);
+						break;
+					}
+
+					// GET PORT
+				} else if (service.getSpec().getType().equals("NodePort")) {
+
+					for (V1ServicePort port : service.getSpec().getPorts()) {
+						if (port.getName().equals(RegistryService.REGISTRY_PORT_NAME)) {
+							registrySVCNodePort = port.getNodePort();
+							registryPort = registrySVCNodePort;
+							logger.info("[registryNodePort]:" + registrySVCNodePort);
+							break;
+						}
+					}
+					if (registrySVCNodePort != 0)
+						break;
+
 				}
 
 				if (i == RETRY_CNT - 1) {
@@ -1150,7 +1169,7 @@ public class K8sApiCaller {
 			List<String> accessModes = new ArrayList<>();
 
 			RegistryPVC registryPVC = registry.getSpec().getPersistentVolumeClaim();
-			//			String storageClassName = StringUtil.isEmpty(registryPVC.getStorageClassName()) ? RegistryPVC.STORAGE_CLASS_DEFAULT : registryPVC.getStorageClassName();
+//			String storageClassName = StringUtil.isEmpty(registryPVC.getStorageClassName()) ? RegistryPVC.STORAGE_CLASS_DEFAULT : registryPVC.getStorageClassName();
 			String storageClassName = registryPVC.getStorageClassName();
 
 			pvcMeta.setName(Constants.K8S_PREFIX + registryId);
@@ -1167,14 +1186,14 @@ public class K8sApiCaller {
 			pvcSpec.setResources(pvcResource);
 
 			pvcSpec.setStorageClassName(storageClassName);
-			//			if(registryPVC.getAccessModes() == null || registryPVC.getAccessModes().size() == 0) {
-			//				accessModes.add(RegistryPVC.ACCESS_MODE_DEFAULT);
-			//			}
-			//			else {
+//			if(registryPVC.getAccessModes() == null || registryPVC.getAccessModes().size() == 0) {
+//				accessModes.add(RegistryPVC.ACCESS_MODE_DEFAULT);
+//			}
+//			else {
 			for (String mode : registryPVC.getAccessModes()) {
 				accessModes.add(mode);
 			}
-			//			}
+//			}
 			pvcSpec.setAccessModes(accessModes);
 
 			pvc.setMetadata(pvcMeta);
@@ -1231,22 +1250,9 @@ public class K8sApiCaller {
 			sb.append("openssl req -newkey rsa:4096 -nodes -sha256 -keyout ");
 			sb.append(registryDir + "/" + Constants.CERT_KEY_FILE);
 			sb.append(" -x509 -days 1000 -subj \"/C=KR/ST=Seoul/O=tmax/CN=");
-			sb.append(domainName);
-			sb.append("\" -config <(cat /etc/ssl/openssl.cnf <(printf \"[v3_ca]\\nsubjectAltName=");
-			sb.append("DNS:" + domainName);
-			if(ingressDomainName != null) {
-				sb.append(",DNS:" + ingressDomainName);
-			}
-			sb.append(",IP:" + clusterIP);
-			if( !svcType.equals(RegistryService.SVC_TYPE_CLUSTER_IP) ) {
-				if( svcType.equals(RegistryService.SVC_TYPE_LOAD_BALANCER) ) {
-					sb.append(",IP:" + lbIP);
-				}
-				
-				for( String nodeIP : nodeIPList) {
-					sb.append(",IP:" + nodeIP);
-				}
-			}
+			sb.append(registryIP + ":" + registryPort);
+			sb.append("\" -config <(cat /etc/ssl/openssl.cnf <(printf \"[v3_ca]\\nsubjectAltName=IP:");
+			sb.append(registryIP);
 			sb.append("\")) -out ");
 			sb.append(registryDir + "/" + Constants.CERT_CRT_FILE);
 			commands.clear();
@@ -1347,7 +1353,7 @@ public class K8sApiCaller {
 			secrets.put(Constants.CERT_CERT_FILE, readFile(registryDir + "/" + Constants.CERT_CERT_FILE));
 			secrets.put("ID", registry.getSpec().getLoginId());
 			secrets.put("PASSWD", registry.getSpec().getLoginPassword());
-			secrets.put("REGISTRY_IP_PORT", clusterIP + ":" + registrySVCPort);
+			secrets.put("REGISTRY_IP_PORT", registryIP + ":" + registryPort);
 
 			Map<String, String> labels = new HashMap<>();
 			labels.put("secret", "cert");
@@ -1393,7 +1399,7 @@ public class K8sApiCaller {
 
 			// Create docker-config-json Secret Object
 			Map<String, String> secrets2 = new HashMap<>();
-			secrets2.put(Constants.DOCKER_CONFIG_JSON_FILE, createConfigJson(clusterIP, registrySVCPort,
+			secrets2.put(Constants.DOCKER_CONFIG_JSON_FILE, createConfigJson(registryIP, registryPort,
 					registry.getSpec().getLoginId(), registry.getSpec().getLoginPassword()));
 
 			Map<String, String> labels2 = new HashMap<>();
@@ -1583,7 +1589,7 @@ public class K8sApiCaller {
 
 			V1EnvVar env4 = new V1EnvVar();
 			env4.setName("REGISTRY_HTTP_ADDR");
-			env4.setValue("0.0.0.0:" + registrySVCTargetPort);
+			env4.setValue("0.0.0.0:" + registryPort);
 			container.addEnvItem(env4);
 
 			V1EnvVar env5 = new V1EnvVar();
@@ -1598,7 +1604,7 @@ public class K8sApiCaller {
 
 			V1EnvVar env7 = new V1EnvVar();
 			env7.setName("REGISTRY_IP_PORT");
-			env7.setValue(clusterIP + ":" + registrySVCPort);
+			env7.setValue(registryIP + ":" + registryPort);
 			container.addEnvItem(env7);
 
 			// env
@@ -1666,7 +1672,7 @@ public class K8sApiCaller {
 			headers.add(authHeader);
 
 			httpGet.setPath("v2/_catalog");
-			httpGet.setPort(new IntOrString(registrySVCPort));
+			httpGet.setPort(new IntOrString(registryPort));
 			httpGet.setScheme("HTTPS");
 			httpGet.setHttpHeaders(headers);
 			readinessProbe.setHttpGet(httpGet);
@@ -1688,7 +1694,7 @@ public class K8sApiCaller {
 			headers2.add(authHeader2);
 
 			httpGet2.setPath("v2/_catalog");
-			httpGet2.setPort(new IntOrString(registrySVCPort));
+			httpGet2.setPort(new IntOrString(registryPort));
 			httpGet2.setScheme("HTTPS");
 			httpGet2.setHttpHeaders(headers2);
 			livenessProbe.setHttpGet(httpGet2);
@@ -1794,7 +1800,12 @@ public class K8sApiCaller {
 
 				throw e;
 			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw e;
 		}
+
 	}
 
 	@SuppressWarnings("unchecked")
@@ -2543,14 +2554,20 @@ public class K8sApiCaller {
 				for (Registry registry : registryList) {
 					logger.info(registry.getMetadata().getName() + "/" + registry.getMetadata().getNamespace()
 							+ " registry sync");
-					syncImageList(registry);
+					try {
+						syncImageList(registry);
+					} catch (ApiException e) {
+						logger.info(e.getResponseBody());
+					} catch (Exception e) {
+						logger.info(e.getMessage());
+					}
 				}
 			}
 		} catch (ApiException e) {
 			logger.info("Response body: " + e.getResponseBody());
 		} catch (JsonParseException | JsonMappingException e) {
 			logger.info(e.getMessage());
-			throw e;
+//			throw e;
 		}
 	}
 
@@ -2566,10 +2583,11 @@ public class K8sApiCaller {
 			Map<String, byte[]> secretMap = new HashMap<>();
     		secretMap = secretReturn.getData();
 			for (String key : secretMap.keySet()) {
+				logger.info("secret key: " + key);
 				certMap.put(key, new String(secretMap.get(key)));
 			}
  
-			sf = SecurityHelper.createSocketFactory(certMap.get(Constants.CERT_CERT_FILE),
+			sf = SecurityHelper.createSocketFactory(certMap.get(Constants.CERT_CRT_FILE),
 					certMap.get(Constants.CERT_CERT_FILE), certMap.get(Constants.CERT_KEY_FILE));
 		} catch (ApiException e) {
 			logger.info(e.getResponseBody());
