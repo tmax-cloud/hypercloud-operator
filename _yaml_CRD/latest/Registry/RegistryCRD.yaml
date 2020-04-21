@@ -41,16 +41,19 @@ spec:
             customConfigYml:
               type: string
               description: "The name of the configmap where the registry config.yml content"
+            domainName:
+              type: string
+              description: "registry domain name"
             service:
               type: object
               required: [type]
               properties:
+                lbIP:
+                  type: string
+                  description: "external IP"
                 port:
                   type: integer
                   description: "external port (default: 443)"
-                nodeIP:
-                  type: string
-                  description: "if service type is NodePort, set NodeIP to assign to the registry"
                 nodePort:
                   type: integer
                   description: "if service type is NodePort, you can set 30000~32767"
