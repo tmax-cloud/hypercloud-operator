@@ -4280,28 +4280,30 @@ public class K8sApiCaller {
 			// 2. Check if ClusterRole has NameSpace GET rule
 			if (clusterRoleList != null) {
 				for (String clusterRoleName : clusterRoleList) {
-					logger.info("User [ " + userId + " ] has ClusterRole [" + clusterRoleName + " ]");
+					logger.info("User [ " + userId + " ] has ClusterRole [ " + clusterRoleName + " ]");
 					V1ClusterRole clusterRole = rbacApi.readClusterRole(clusterRoleName, "true");
 					List<V1PolicyRule> rules = clusterRole.getRules();
 					if (rules != null) {
 						for (V1PolicyRule rule : rules) {
 							if (rule.getResources() != null) {
 								if (rule.getResources().contains("*") || rule.getResources().contains("namespaces")) {
-									logger.info("clusterRoleName : " + clusterRoleName);
-									if (rule.getVerbs() != null) {
-										if (rule.getVerbs().contains("list") || rule.getVerbs().contains("*")) {
-											if (rule.getResourceNames() == null
-													|| rule.getResourceNames().size() == 0) {
-												clusterRoleFlag = true;
-											} else {
-												for (String nsName : rule.getResourceNames()) {
-													if (nsNameList == null)
-														nsNameList = new ArrayList<>();
-													nsNameList.add(nsName);
+									if ( rule.getApiGroups().contains("*") || rule.getApiGroups().contains("") || rule.getApiGroups().contains("core") ) {
+										logger.info("clusterRoleName : " + clusterRoleName);
+										if (rule.getVerbs() != null) {
+											if (rule.getVerbs().contains("list") || rule.getVerbs().contains("*")) {
+												if (rule.getResourceNames() == null
+														|| rule.getResourceNames().size() == 0) {
+													clusterRoleFlag = true;
+												} else {
+													for (String nsName : rule.getResourceNames()) {
+														if (nsNameList == null)
+															nsNameList = new ArrayList<>();
+														nsNameList.add(nsName);
+													}
 												}
 											}
 										}
-									}
+									}		
 								}
 							}
 						}
@@ -4338,16 +4340,18 @@ public class K8sApiCaller {
 											if (rules != null) {
 												for (V1PolicyRule rule : rules) {
 													if (rule.getResources() != null) {
-														if (rule.getResources().contains("*")
-																|| rule.getResources().contains("namespaces")) {
-															if (rule.getVerbs() != null) {
-																if (rule.getVerbs().contains("list")
-																		|| rule.getVerbs().contains("*")) {
-																	if (nsNameList == null)
-																		nsNameList = new ArrayList<>();
-																	nsNameList.add(ns.getMetadata().getName());
+														if (rule.getResources().contains("*") || rule.getResources().contains("namespaces")) {
+															if ( rule.getApiGroups().contains("*") || rule.getApiGroups().contains("") 
+																	|| rule.getApiGroups().contains("core") ) {
+																if (rule.getVerbs() != null) {
+																	if (rule.getVerbs().contains("list")
+																			|| rule.getVerbs().contains("*")) {
+																		if (nsNameList == null)
+																			nsNameList = new ArrayList<>();
+																		nsNameList.add(ns.getMetadata().getName());
+																	}
 																}
-															}
+															}	
 														}
 													}
 												}
@@ -4362,16 +4366,18 @@ public class K8sApiCaller {
 											if (rules != null) {
 												for (V1PolicyRule rule : rules) {
 													if (rule.getResources() != null) {
-														if (rule.getResources().contains("*")
-																|| rule.getResources().contains("namespaces")) {
-															if (rule.getVerbs() != null) {
-																if (rule.getVerbs().contains("list")
-																		|| rule.getVerbs().contains("*")) {
-																	if (nsNameList == null)
-																		nsNameList = new ArrayList<>();
-																	nsNameList.add(ns.getMetadata().getName());
+														if (rule.getResources().contains("*") || rule.getResources().contains("namespaces")) {
+															if ( rule.getApiGroups().contains("*") || rule.getApiGroups().contains("") 
+																	|| rule.getApiGroups().contains("core") ) {
+																if (rule.getVerbs() != null) {
+																	if (rule.getVerbs().contains("list")
+																			|| rule.getVerbs().contains("*")) {
+																		if (nsNameList == null)
+																			nsNameList = new ArrayList<>();
+																		nsNameList.add(ns.getMetadata().getName());
+																	}
 																}
-															}
+															}	
 														}
 													}
 												}
