@@ -2573,7 +2573,13 @@ public class K8sApiCaller {
 		Map<String, String> certMap = null;
 
 		try {
-			certMap = K8sApiCaller.readSecret(namespace, Constants.K8S_PREFIX + registry.getMetadata().getName());
+			V1Secret secretReturn = K8sApiCaller.readSecret(namespace, Constants.K8S_PREFIX + registry.getMetadata().getName());
+			Map<String, byte[]> secretMap = new HashMap<>();
+    		secretMap = secretReturn.getData();
+			for (String key : secretMap.keySet()) {
+				certMap.put(key, new String(secretMap.get(key)));
+			}
+ 
 			sf = SecurityHelper.createSocketFactory(certMap.get(Constants.CERT_CERT_FILE),
 					certMap.get(Constants.CERT_CERT_FILE), certMap.get(Constants.CERT_KEY_FILE));
 		} catch (ApiException e) {
@@ -3403,25 +3409,17 @@ public class K8sApiCaller {
 
 	}
 
-	public static Map<String, String> readSecret(String namespace, String secretName) throws ApiException {
+	public static V1Secret readSecret(String namespace, String secretName) throws ApiException {
 		logger.info(" [k8sApiCaller] Read Secret Service Start ");
-
-		Map<String, byte[]> secretMap = new HashMap<>();
-		Map<String, String> returnMap = new HashMap<>();
+		V1Secret secretReturn = null;
 		try {
-			V1Secret secretReturn = api.readNamespacedSecret(secretName.toLowerCase(), namespace, null, null, null);
-
-			secretMap = secretReturn.getData();
-			for (String key : secretMap.keySet()) {
-				returnMap.put(key, new String(secretMap.get(key)));
-//			logger.info("[secret]" + key + "=" + new String(secretMap.get(key)));  
-			}
+			secretReturn = api.readNamespacedSecret(secretName.toLowerCase(), namespace, null, null, null);
 
 		} catch (ApiException e) {
 			logger.info(e.getResponseBody());
 			throw e;
 		}
-		return returnMap;
+		return secretReturn;
 	}
 
 	private static String readFile(String filePath) throws IOException {
