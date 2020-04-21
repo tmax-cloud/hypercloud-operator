@@ -74,6 +74,10 @@ public class Util {
     	return sb.toString();
 	}
     
+    public static String makeK8sFieldValue(String name) { 
+    	return name.replaceAll("@", "-").replaceAll("_", "-");
+	}
+    
 	 public static String numberGen(int len, int dupCd ) {
 	        
 	        Random rand = new Random();

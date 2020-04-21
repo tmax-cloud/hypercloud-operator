@@ -3404,6 +3404,7 @@ public class K8sApiCaller {
 			}
 		} catch (ApiException e) {
 			logger.info(e.getResponseBody());
+			e.printStackTrace();
 			throw e;
 		}
 

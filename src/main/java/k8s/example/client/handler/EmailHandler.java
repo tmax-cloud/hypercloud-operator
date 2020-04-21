@@ -5,7 +5,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.joda.time.DateTime;
@@ -25,7 +24,6 @@ import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.models.V1Secret;
 import k8s.example.client.Constants;
 import k8s.example.client.DataObject.User;
-import k8s.example.client.DataObject.UserCR;
 import k8s.example.client.ErrorCode;
 import k8s.example.client.Main;
 import k8s.example.client.Util;
@@ -46,7 +44,6 @@ public class EmailHandler extends GeneralHandler {
 			e.printStackTrace();
 		}
 
-		List<UserCR> userCRList = null;
 		User userInDO = null;
 		String outDO = null;
 		IStatus status = null;
@@ -73,22 +70,22 @@ public class EmailHandler extends GeneralHandler {
 			// Insert VerifyCode into Secret
 			try {
 				V1Secret secretReturn = K8sApiCaller.readSecret(Constants.TEMPLATE_NAMESPACE,
-						userInDO.getEmail().replaceAll("@", "-"));
+						Constants.K8S_PREFIX + Util.makeK8sFieldValue( userInDO.getEmail() ));
 
 				// Delete old secret
-				K8sApiCaller.deleteSecret(Constants.TEMPLATE_NAMESPACE, userInDO.getEmail().replaceAll("@", "-"), null);
+				K8sApiCaller.deleteSecret(Constants.TEMPLATE_NAMESPACE, Util.makeK8sFieldValue( userInDO.getEmail() ), null);
 
 				// Create new secret
 				Map<String, String> createMap = new HashMap<>();
 				createMap.put("verifycode", verifyCode);
-				K8sApiCaller.createSecret(Constants.TEMPLATE_NAMESPACE, createMap, Constants.SECRET_VERIFICATAION_CODE,
+				K8sApiCaller.createSecret(Constants.TEMPLATE_NAMESPACE, createMap, Util.makeK8sFieldValue( userInDO.getEmail() ),
 						null, null, null);
 			} catch (ApiException e) {
 				logger.info("Exception message: " + e.getResponseBody());
 				e.printStackTrace();
 				Map<String, String> createMap = new HashMap<>();
 				createMap.put("verifycode", verifyCode);
-				K8sApiCaller.createSecret(Constants.TEMPLATE_NAMESPACE, createMap, Constants.SECRET_VERIFICATAION_CODE,
+				K8sApiCaller.createSecret(Constants.TEMPLATE_NAMESPACE, createMap, Util.makeK8sFieldValue( userInDO.getEmail() ),
 						null, null, null);
 			}
 			status = Status.CREATED;
@@ -147,7 +144,7 @@ public class EmailHandler extends GeneralHandler {
     		logger.info( "  User E-Mail: " + userInDO.getEmail() );
     		logger.info( "  User VerifyCode: " + userInDO.getVerifyCode() );
     		
-    		V1Secret secretReturn = K8sApiCaller.readSecret(Constants.TEMPLATE_NAMESPACE, userInDO.getEmail().replaceAll("@", "-"));
+    		V1Secret secretReturn = K8sApiCaller.readSecret(Constants.TEMPLATE_NAMESPACE, Constants.K8S_PREFIX + Util.makeK8sFieldValue( userInDO.getEmail() ));
     		Map<String, byte[]> secretMap = new HashMap<>();
     		Map<String, String> returnMap = new HashMap<>();
     		secretMap = secretReturn.getData();
@@ -155,17 +152,18 @@ public class EmailHandler extends GeneralHandler {
 				returnMap.put(key, new String(secretMap.get(key)));
 			}
 			
-			DateTime currentTimeUTC = new DateTime().withZone(DateTimeZone.UTC);
+//			DateTime currentTimeUTC = new DateTime().withZone(DateTimeZone.UTC);
+			DateTime currentTimeUTC = new DateTime();
     		if (returnMap.size() != 0) {
-        		logger.info( "  currentTimeUTC.minusMinutes(Constants.VERIFICATAION_DURATION_MINUTES): " + currentTimeUTC.minusMinutes(Constants.VERIFICATAION_DURATION_MINUTES) );
-        		logger.info( "  secretReturn.getMetadata().getCreationTimestamp(): " + secretReturn.getMetadata().getCreationTimestamp() );
+//        		logger.info( "  currentTimeUTC.minusMinutes(Constants.VERIFICATAION_DURATION_MINUTES): " + currentTimeUTC.minusMinutes(Constants.VERIFICATAION_DURATION_MINUTES) );
+//        		logger.info( "  secretReturn.getMetadata().getCreationTimestamp(): " + secretReturn.getMetadata().getCreationTimestamp() );
         		
     			 if( currentTimeUTC.minusMinutes(Constants.VERIFICATAION_DURATION_MINUTES).isBefore( secretReturn.getMetadata().getCreationTimestamp()) ) {
-    				  if ( returnMap.get("verifyCode").equalsIgnoreCase(userInDO.getVerifyCode()) ){
+    				  if ( returnMap.get("verifycode").equalsIgnoreCase(userInDO.getVerifyCode()) ){
 	    					status = Status.OK;
 	 		        		outDO = "User Email Verify Success";
 	 		        		// Delete Secret 
-	 		        		K8sApiCaller.deleteSecret(Constants.TEMPLATE_NAMESPACE, userInDO.getEmail().replaceAll("@", "-"), null);	 
+	 		        		K8sApiCaller.deleteSecret(Constants.TEMPLATE_NAMESPACE, Util.makeK8sFieldValue( userInDO.getEmail() ), null);	 
     				  } else {
     					status = Status.UNAUTHORIZED;
     		    		outDO = "Verification Number is Wrong";		
