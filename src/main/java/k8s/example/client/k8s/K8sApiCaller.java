@@ -2576,17 +2576,19 @@ public class K8sApiCaller {
 		String namespace = registry.getMetadata().getNamespace();
 		SSLSocketFactory sf = null;
 		Map<String, String> header = new HashMap<>();
-		Map<String, String> certMap = null;
+		Map<String, String> certMap = new HashMap<>();
 
 		try {
-			V1Secret secretReturn = K8sApiCaller.readSecret(namespace, Constants.K8S_PREFIX + registry.getMetadata().getName());
+			
+			V1Secret secretReturn = api.readNamespacedSecret(Constants.K8S_PREFIX + registry.getMetadata().getName(), namespace, null, null, null);
 			Map<String, byte[]> secretMap = new HashMap<>();
-    		secretMap = secretReturn.getData();
+			secretMap = secretReturn.getData();
+			
 			for (String key : secretMap.keySet()) {
 				logger.info("secret key: " + key);
 				certMap.put(key, new String(secretMap.get(key)));
 			}
- 
+			
 			sf = SecurityHelper.createSocketFactory(certMap.get(Constants.CERT_CRT_FILE),
 					certMap.get(Constants.CERT_CERT_FILE), certMap.get(Constants.CERT_KEY_FILE));
 		} catch (ApiException e) {
