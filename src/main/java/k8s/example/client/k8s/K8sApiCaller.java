@@ -4291,33 +4291,60 @@ public class K8sApiCaller {
 	}
 
 	@SuppressWarnings("null")
-	public static V1NamespaceList getAccessibleNS(String userId) throws ApiException {
-		V1NamespaceList nsList = null;// TODO
+	public static V1NamespaceList getAccessibleNS(String userId) throws Exception {
+		V1NamespaceList nsList = null;
 		List<String> nsNameList = null;
-		// 1. List of ClusterRoleBinding
+		List<String> userGroupList = null;
+		
 		V1ClusterRoleBindingList crbList = null;
 		List<String> clusterRoleList = null;
 		boolean clusterRoleFlag = false;
 		try {
+			// 1. Get UserGroup List if Exists
+			logger.info(" userId :" + userId);
+			UserCR user = getUser(userId);
+			Map< String, String > userLabel = user.getMetadata().getLabels();
+			if (userLabel != null) {
+				Iterator<String> iter = userLabel.keySet().iterator();
+				while (iter.hasNext()) {
+					String key = iter.next();
+					logger.info(" User label key " + key);
+
+					if( key.startsWith("group-")) {
+						if( userGroupList == null ) userGroupList = new ArrayList<>();
+						logger.info(" userGroup Name " + key.substring(6));
+						userGroupList.add(key.substring(6));
+					}
+				}
+			}					
+			// 2. List of ClusterRoleBinding
 			crbList = rbacApi.listClusterRoleBinding("true", false, null, null, null, 1000, null, 60, false);
 			for (V1ClusterRoleBinding item : crbList.getItems()) {
 				List<V1Subject> subjects = item.getSubjects();
 				V1RoleRef roleRef = item.getRoleRef();
 				if (subjects != null) {
 					for (V1Subject subject : subjects) {
-
 						if (subject.getKind().equalsIgnoreCase("User")) {
 							if (subject.getName().equalsIgnoreCase(userId)) {
 								if (clusterRoleList == null)
 									clusterRoleList = new ArrayList<>();
 								clusterRoleList.add(roleRef.getName()); // get ClusterRole name
 							}
+						} else if (subject.getKind().equalsIgnoreCase("Group")) {
+							if ( userGroupList != null ) {
+								logger.info(" subject.getName() " + subject.getName());
+								if ( userGroupList.contains(subject.getName())) {
+									if (clusterRoleList == null)
+										clusterRoleList = new ArrayList<>();
+									clusterRoleList.add(roleRef.getName()); // get ClusterRole name
+								}
+							}
 						}
 					}
 				}
 			}
 
-			// 2. Check if ClusterRole has NameSpace GET rule
+			// 3. Check if ClusterRole has NameSpace GET rule
 			if (clusterRoleList != null) {
 				for (String clusterRoleName : clusterRoleList) {
 					logger.info("User [ " + userId + " ] has ClusterRole [ " + clusterRoleName + " ]");
@@ -4357,7 +4384,7 @@ public class K8sApiCaller {
 			} else {
 				V1NamespaceList nsListK8S = api.listNamespace("true", false, null, null, null, 100, null, 60, false);
 
-				// 3. List of RoleBinding
+				// 4. List of RoleBinding
 				if (nsListK8S.getItems() != null) {
 					for (V1Namespace ns : nsListK8S.getItems()) {
 						V1RoleBindingList rbList = rbacApi.listNamespacedRoleBinding(ns.getMetadata().getName(), "true",
@@ -4366,64 +4393,61 @@ public class K8sApiCaller {
 							List<V1Subject> subjects = item.getSubjects();
 							V1RoleRef roleRef = item.getRoleRef();
 							for (V1Subject subject : subjects) {
-								if (subject.getKind().equalsIgnoreCase("User")) {
-									if (subject.getName().equalsIgnoreCase(userId)) { // Found Matching Role &
-																						// ClusterRole
-
-										// 4. Check if Role has NameSpace GET rule
-										if (roleRef.getKind().equalsIgnoreCase("Role")) {
-											logger.info(
-													"User [ " + userId + " ] has Role [" + roleRef.getName() + " ]");
-											V1Role role = rbacApi.readNamespacedRole(roleRef.getName(),
-													ns.getMetadata().getName(), "true");
-											List<V1PolicyRule> rules = role.getRules();
-											if (rules != null) {
-												for (V1PolicyRule rule : rules) {
-													if (rule.getResources() != null) {
-														if (rule.getResources().contains("*") || rule.getResources().contains("namespaces")) {
-															if ( rule.getApiGroups().contains("*") || rule.getApiGroups().contains("") 
-																	|| rule.getApiGroups().contains("core") ) {
-																if (rule.getVerbs() != null) {
-																	if (rule.getVerbs().contains("list")
-																			|| rule.getVerbs().contains("*")) {
-																		if (nsNameList == null)
-																			nsNameList = new ArrayList<>();
-																		nsNameList.add(ns.getMetadata().getName());
-																	}
+								if (( subject.getKind().equalsIgnoreCase("User") && subject.getName().equalsIgnoreCase(userId) ) 
+										|| ( userGroupList!= null && subject.getKind().equalsIgnoreCase("Group") && userGroupList.contains(subject.getName()) ) ) {
+										
+									// 5. Check if Role has NameSpace GET rule
+									if (roleRef.getKind().equalsIgnoreCase("Role")) {
+										logger.info(
+												"User [ " + userId + " ] has Role [" + roleRef.getName() + " ]");
+										V1Role role = rbacApi.readNamespacedRole(roleRef.getName(),
+												ns.getMetadata().getName(), "true");
+										List<V1PolicyRule> rules = role.getRules();
+										if (rules != null) {
+											for (V1PolicyRule rule : rules) {
+												if (rule.getResources() != null) {
+													if (rule.getResources().contains("*") || rule.getResources().contains("namespaces")) {
+														if ( rule.getApiGroups().contains("*") || rule.getApiGroups().contains("") 
+																|| rule.getApiGroups().contains("core") ) {
+															if (rule.getVerbs() != null) {
+																if (rule.getVerbs().contains("list")
+																		|| rule.getVerbs().contains("*")) {
+																	if (nsNameList == null)
+																		nsNameList = new ArrayList<>();
+																	nsNameList.add(ns.getMetadata().getName());
 																}
-															}	
-														}
-													}
-												}
-											}
-
-											// 5. Check if ClusterRole has NameSpace GET rule
-										} else if (roleRef.getKind().equalsIgnoreCase("ClusterRole")) {
-											logger.info("User [ " + userId + " ] has ClusterRole [" + roleRef.getName()
-													+ " ]");
-											V1ClusterRole role = rbacApi.readClusterRole(roleRef.getName(), "true");
-											List<V1PolicyRule> rules = role.getRules();
-											if (rules != null) {
-												for (V1PolicyRule rule : rules) {
-													if (rule.getResources() != null) {
-														if (rule.getResources().contains("*") || rule.getResources().contains("namespaces")) {
-															if ( rule.getApiGroups().contains("*") || rule.getApiGroups().contains("") 
-																	|| rule.getApiGroups().contains("core") ) {
-																if (rule.getVerbs() != null) {
-																	if (rule.getVerbs().contains("list")
-																			|| rule.getVerbs().contains("*")) {
-																		if (nsNameList == null)
-																			nsNameList = new ArrayList<>();
-																		nsNameList.add(ns.getMetadata().getName());
-																	}
-																}
-															}	
-														}
+															}
+														}	
 													}
 												}
 											}
 										}
-									}
+
+										// 6. Check if ClusterRole has NameSpace GET rule
+									} else if (roleRef.getKind().equalsIgnoreCase("ClusterRole")) {
+										logger.info("User [ " + userId + " ] has ClusterRole [" + roleRef.getName() + " ]");
+										V1ClusterRole role = rbacApi.readClusterRole(roleRef.getName(), "true");
+										List<V1PolicyRule> rules = role.getRules();
+										if (rules != null) {
+											for (V1PolicyRule rule : rules) {
+												if (rule.getResources() != null) {
+													if (rule.getResources().contains("*") || rule.getResources().contains("namespaces")) {
+														if ( rule.getApiGroups().contains("*") || rule.getApiGroups().contains("") 
+																|| rule.getApiGroups().contains("core") ) {
+															if (rule.getVerbs() != null) {
+																if (rule.getVerbs().contains("list")
+																		|| rule.getVerbs().contains("*")) {
+																	if (nsNameList == null)
+																		nsNameList = new ArrayList<>();
+																	nsNameList.add(ns.getMetadata().getName());
+																}
+															}
+														}	
+													}
+												}
+											}
+										}
+									}			
 								}
 							}
 						}
@@ -4501,9 +4525,7 @@ public class K8sApiCaller {
 			userCR.setUserInfo(userInDO);
 			// Truncate PW
 			userCR.getUserInfo().setPassword(null);
-
-			userCR.setStatus("active"); // FIXME : UI 연동 테스트 후 삭제 예정
-//    		userCR.setStatus("blocked");
+			userCR.setStatus("active"); 
 
 			// Make body
 			JSONParser parser = new JSONParser();
