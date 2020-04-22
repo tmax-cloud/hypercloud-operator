@@ -71,7 +71,7 @@ parameters:
 - name: WAS_PORT
   displayName: wasPort
   description: WAS Port
-  value: number
+  valueType: number
   required: true
 - name: DB_SERVICE_TYPE
   displayName: DbServiceType
