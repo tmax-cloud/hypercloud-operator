@@ -237,7 +237,8 @@ parameters:
   displayName: Replica
   description: Replication count
   required: true
-  value: number
+  valueType: number
+  value: 2
 plans:
 - name: mysql-ha-plan1
   description: "MySQL HA Plan (1 replica)"

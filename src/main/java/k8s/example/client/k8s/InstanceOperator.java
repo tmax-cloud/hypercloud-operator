@@ -184,10 +184,31 @@ public class InstanceOperator extends Thread {
 							        				logger.info("[Instance Operator] Parameter Value to be replaced : " + paramValue);
 						        					objStr = objStr.replace( replaceString, paramValue );
 						        				}
-					        					
-					        					
 					        				}
 					        			}
+			        					for(JsonNode parameter : objectToJsonNode(template).get("parameters")) {
+			        						String defaultValue = "";
+		        							if( parameter.has("value") ) {
+		        								defaultValue = parameter.get("value").asText();
+			        						}
+		        							if ( parameter.has("name") ) {
+		        								String paramName = parameter.get("name").asText();
+		        								if( parameter.has("valueType") && parameter.get("valueType").asText().equals( Constants.TEMPLATE_DATA_TYPE_NUMBER )) {
+			        								String replaceString = "\"${" + paramName + "}\"";
+					        						if( objStr.contains( replaceString ) ) {
+							        					logger.info("[Instance Operator] Parameter Number Name to be replaced : " + replaceString);
+								        				logger.info("[Instance Operator] Parameter Number Value to be replaced : " + defaultValue);
+							        					objStr = objStr.replace( replaceString, defaultValue );
+							        				}
+				        						}
+		        								String replaceString = "${" + paramName + "}";
+					        					if( objStr.contains( replaceString ) ) {
+						        					logger.info("[Instance Operator] Parameter Name to be replaced : " + replaceString);
+							        				logger.info("[Instance Operator] Parameter Value to be replaced : " + defaultValue);
+						        					objStr = objStr.replace( replaceString, defaultValue );
+						        				}
+		        							}
+			        					}
 			        				}
 			        				
 			        				String[] splitStr = objStr.split("\"metadata\":\\{");
@@ -233,7 +254,12 @@ public class InstanceOperator extends Thread {
 			        					if(replacedObject.get("metadata").has("namespace")) {
 			        						namespace = replacedObject.get("metadata").get("namespace").asText();
 			        					} else {
-			        						namespace = "default";
+			        						if (instanceObj.get("metadata").has("namespace")) {
+			        							namespace = instanceObj.get("metadata").get("namespace").asText();
+			        						} else {
+			        							namespace = "default";
+			        						}
+			        						
 			        					}
 			        					
 			        					if(replacedObject.has("kind")) {
@@ -501,7 +527,7 @@ public class InstanceOperator extends Thread {
 		String dataType = null;
 		for(JsonNode parameter : parameters) {
 			if( parameter.has("name") && parameter.get("name").asText().toUpperCase().equals( paramName.toUpperCase() )) {
-				if( parameter.has("value") && parameter.get("value").asText().equals( Constants.TEMPLATE_DATA_TYPE_NUMBER )) {
+				if( parameter.has("valueType") && parameter.get("valueType").asText().equals( Constants.TEMPLATE_DATA_TYPE_NUMBER )) {
 					dataType = Constants.TEMPLATE_DATA_TYPE_NUMBER;
 				} else {
 					dataType = Constants.TEMPLATE_DATA_TYPE_STRING;

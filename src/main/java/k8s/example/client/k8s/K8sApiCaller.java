@@ -1178,12 +1178,15 @@ public class K8sApiCaller {
 
 			pvcMeta.setOwnerReferences(ownerRefs);
 
-			// [2/5] set storage quota.
+			// set storage quota.
 			limit.put("storage", new Quantity(registryPVC.getStorageSize()));
 			pvcResource.setRequests(limit);
 			pvcSpec.setResources(pvcResource);
 
+			// set storage class name
 			pvcSpec.setStorageClassName(storageClassName);
+
+			// set access mode
 //			if(registryPVC.getAccessModes() == null || registryPVC.getAccessModes().size() == 0) {
 //				accessModes.add(RegistryPVC.ACCESS_MODE_DEFAULT);
 //			}
@@ -1194,6 +1197,10 @@ public class K8sApiCaller {
 //			}
 			pvcSpec.setAccessModes(accessModes);
 
+			// set volume mode
+			if (registryPVC.getVolumeMode() != null) 
+				pvcSpec.setVolumeMode(registryPVC.getVolumeMode());
+			
 			pvc.setMetadata(pvcMeta);
 			pvc.setSpec(pvcSpec);
 
