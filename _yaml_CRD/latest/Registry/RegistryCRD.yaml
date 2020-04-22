@@ -3,7 +3,7 @@ kind: CustomResourceDefinition
 metadata:
   name: registries.tmax.io
   annotations:
-    operator.version: 4.1.0.17
+    operator.version: %latest%
 spec:
   group: tmax.io
   versions:
