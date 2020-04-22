@@ -211,13 +211,13 @@ public class Util {
     }
     
     public static void setTrialNSTimer(V1Namespace nsResult) throws Exception  {
-		logger.info(" TrialNSTimer Sets Service Start ");
+		logger.info("   TrialNSTimer Set Service Start ");
 
 		DateTime createTime = nsResult.getMetadata().getCreationTimestamp();
 		logger.info(" CreateTime : " + createTime);
 
-		Timer mailTimer = new Timer(nsResult.getMetadata().getUid() + "#" + nsResult.getMetadata().getName() + "#" + nsResult.getMetadata().getLabels().get("trial"));
-		Timer deleteTimer = new Timer(nsResult.getMetadata().getUid() + "#" + nsResult.getMetadata().getName() + "#" + nsResult.getMetadata().getLabels().get("trial"));
+		Timer mailTimer = new Timer(nsResult.getMetadata().getUid() + "#" + nsResult.getMetadata().getName() + "#" + nsResult.getMetadata().getLabels().get("owner"));
+		Timer deleteTimer = new Timer(nsResult.getMetadata().getUid() + "#" + nsResult.getMetadata().getName() + "#" + nsResult.getMetadata().getLabels().get("owner"));
 
 		mailTimer.schedule(new TimerTask() {
 			public void run() {
@@ -225,32 +225,33 @@ public class Util {
 					String nsId = Thread.currentThread().getName().split("#")[0];
 					String nsName = Thread.currentThread().getName().split("#")[1];
 					String userId = Thread.currentThread().getName().split("#")[2];
-					logger.info(" Trial NameSpace [ " + nsName + " ] Mail Service before 1 weeks of deletion Start");
-					logger.info(" User ID : " + userId );
+					logger.info("   Trial NameSpace [ " + nsName + " ] Mail Service before 1 weeks of deletion Start");
+					logger.info("   User ID : " + userId );
 					
 					V1Namespace nameSpace = K8sApiCaller.getNameSpace(nsName);
-					if ( nameSpace.getMetadata().getLabels() != null && nameSpace.getMetadata().getLabels().get("trial") != null ) {
-						logger.info(" Still Trial NameSpace, Send Info Mail to User [ " + userId + " ]");
+					if ( nameSpace.getMetadata().getLabels() != null && nameSpace.getMetadata().getLabels().get("trial") != null
+							&& nameSpace.getMetadata().getLabels().get("owner") != null) {
+						logger.info("   Still Trial NameSpace, Send Info Mail to User [ " + userId + " ]");
 						UserCR user = K8sApiCaller.getUser( userId );
 						String email = user.getUserInfo().getEmail();
-						logger.info(" Email : " + email );
+						logger.info("   Email : " + email );
 						String subject = " 신청해주신 Trial NameSpace [ " + nameSpace.getMetadata().getName() + " ] 만료 안내 ";
 						String body = " 신청해주신 Trial NameSpace [ " + nameSpace.getMetadata().getName() + " ] 만료가 1주일 남았습니다. 유료버전으로 전환 해주세요 ";
 						Util.sendMail(email, subject, body);
 					} else {
-						logger.info(" Paid NameSpace, Nothing todo ");
+						logger.info("   Paid NameSpace, Nothing to do ");
 					}
 				} catch (Exception e) {
-					logger.info( "Exception : " + e.getMessage());
+					logger.info( "  Exception : " + e.getMessage());
 					e.printStackTrace();
 				} catch (Throwable e) {
-					logger.info( "Exception : " + e.getMessage());
+					logger.info( "  Exception : " + e.getMessage());
 					e.printStackTrace();
 				}
 			}
-		}, createTime.plusMonths(1).minusWeeks(1).toDate());
-//		createTime.plusMonths(1).minusWeeks(1).toDate()
-		logger.info(" Set Trial NameSpace Sending Mail Timer Success ");
+		}, createTime.plusDays(23).toDate());
+		
+		logger.info("   Set Trial NameSpace Sending Mail Timer Success ");
 
 		deleteTimer.schedule(new TimerTask() {
 			public void run() {
@@ -262,12 +263,13 @@ public class Util {
 					logger.info(" User ID : " + userId );
 					
 					V1Namespace nameSpace = K8sApiCaller.getNameSpace(nsName);
-					if ( nameSpace.getMetadata().getLabels() != null && nameSpace.getMetadata().getLabels().get("trial") != null ) {
+					if ( nameSpace.getMetadata().getLabels() != null && nameSpace.getMetadata().getLabels().get("trial") != null 
+							&& nameSpace.getMetadata().getLabels().get("owner") != null) {
 						logger.info(" Still Trial NameSpace, Delete Expired Namespace [ " + nsName + " ]");
 						K8sApiCaller.deleteRoleBinding(nsName, "trial-" + nsName);
 						K8sApiCaller.deleteNameSpace(nsName);
 					} else {
-						logger.info(" Paid NameSpace, Nothing todo ");
+						logger.info(" Paid NameSpace, Nothing to do ");
 					}
 				} catch (Exception e) {
 					logger.info( "Exception : " + e.getMessage());
@@ -277,14 +279,14 @@ public class Util {
 					e.printStackTrace();
 				}
 			}
-		}, createTime.plusMonths(1).toDate());	
-//		createTime.plusMonths(1).toDate()
-		logger.info(" Set Trial NameSpace Delete Timer Success ");
+		}, createTime.plusDays(30).toDate());
+		
+		logger.info("   Set Trial NameSpace Delete Timer Success ");
 
 		// Insert to TimerMap
 		TimerMap.addTimerList(nsResult);
 		for (V1Namespace timerNs : TimerMap.getTimerList()) {
-			logger.info(" Registered NameSpace Timer in test : " + timerNs.getMetadata().getName() );
+			logger.info("   Registered NameSpace Timer in test : " + timerNs.getMetadata().getName() );
 		}
 			
 	}

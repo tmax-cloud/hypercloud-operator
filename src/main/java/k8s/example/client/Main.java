@@ -57,7 +57,8 @@ public class Main {
 		try {
 			V1NamespaceList nsList = K8sApiCaller.listNameSpace();
 			for ( V1Namespace ns : nsList.getItems()) {
-				if( ns.getMetadata().getLabels() != null && ns.getMetadata().getLabels().get("trial") != null ) {
+				if( ns.getMetadata().getLabels() != null && ns.getMetadata().getLabels().get("trial") != null
+						&& ns.getMetadata().getLabels().get("owner") != null) {
 					logger.info("[Main] Trial NameSpace : " + ns.getMetadata().getName());
 					Util.setTrialNSTimer(ns);
 				}

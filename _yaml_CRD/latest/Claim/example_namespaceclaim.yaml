@@ -3,7 +3,8 @@ kind: NamespaceClaim
 metadata:
   name: example-namespace
   labels: 
-    trial: example
+    trial: t
+    owner: exmaple-tmax.co.kr
 resourceName: example-namespace-claim
 spec:
   hard:

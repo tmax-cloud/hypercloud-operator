@@ -92,7 +92,8 @@ public class NamespaceClaimController extends Thread {
 										logger.info(" Create NameSpace [ " + nsResult.getMetadata().getName() + " ] Success");
 
 										// If Trial Type 
-										if ( nsResult.getMetadata().getLabels() != null && nsResult.getMetadata().getLabels().get("trial") !=null ) {
+										if ( nsResult.getMetadata().getLabels() != null && nsResult.getMetadata().getLabels().get("trial") !=null 
+												&& nsResult.getMetadata().getLabels().get("owner") !=null) {
 											// Make RoleBinding for Trial User
 											try{ 
 												createTrialRoleBinding ( nsResult );
@@ -171,7 +172,7 @@ public class NamespaceClaimController extends Thread {
 		V1Subject subject = new V1Subject();
 		subject.setApiGroup(Constants.RBAC_API_GROUP);
 		subject.setKind("User");
-		subject.setName(nsResult.getMetadata().getLabels().get("trial"));
+		subject.setName(nsResult.getMetadata().getLabels().get("owner"));
 		subjectList.add(subject);
 		rbcForTrial.setSubjects(subjectList);
 		

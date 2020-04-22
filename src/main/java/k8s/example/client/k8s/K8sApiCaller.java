@@ -3951,8 +3951,10 @@ public class K8sApiCaller {
 		label.put("fromClaim", claim.getMetadata().getName());
 		
 		//Add Trial Label if exists
-		if (claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") != null) {
+		if (claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") != null
+				 && claim.getMetadata().getLabels().get("owner") != null) {
 			label.put("trial", claim.getMetadata().getLabels().get("trial"));
+			label.put("owner", claim.getMetadata().getLabels().get("owner"));
 		}
 		namespaceMeta.setLabels(label);
 		namespaceMeta.setName(claim.getResourceName());
@@ -3997,8 +3999,10 @@ public class K8sApiCaller {
 		label.put("fromClaim", claim.getMetadata().getName());
 		
 		//Add Trial Label if exists
-		if (claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") != null) {
+		if (claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") != null 
+				&& claim.getMetadata().getLabels().get("owner") !=null) {
 			label.put("trial", claim.getMetadata().getLabels().get("trial"));
+			label.put("owner", claim.getMetadata().getLabels().get("owner"));
 		}
 		namespaceMeta.setLabels(label);
 		namespaceMeta.setName(claim.getResourceName());
@@ -4418,7 +4422,6 @@ public class K8sApiCaller {
 				nsList = api.listNamespace("true", false, null, null, null, 100, null, 60, false);
 			} else {
 				V1NamespaceList nsListK8S = api.listNamespace("true", false, null, null, null, 100, null, 60, false);
-
 				// 4. List of RoleBinding
 				if (nsListK8S.getItems() != null) {
 					for (V1Namespace ns : nsListK8S.getItems()) {
