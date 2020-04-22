@@ -233,7 +233,12 @@ public class InstanceOperator extends Thread {
 			        					if(replacedObject.get("metadata").has("namespace")) {
 			        						namespace = replacedObject.get("metadata").get("namespace").asText();
 			        					} else {
-			        						namespace = "default";
+			        						if (instanceObj.get("metadata").has("namespace")) {
+			        							namespace = instanceObj.get("metadata").get("namespace").asText();
+			        						} else {
+			        							namespace = "default";
+			        						}
+			        						
 			        					}
 			        					
 			        					if(replacedObject.has("kind")) {
