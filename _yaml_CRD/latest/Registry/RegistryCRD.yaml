@@ -3,7 +3,7 @@ kind: CustomResourceDefinition
 metadata:
   name: registries.tmax.io
   annotations:
-    operator.version: %latest%
+    operator.version: 4.1.0.17
 spec:
   group: tmax.io
   versions:
@@ -41,19 +41,62 @@ spec:
             customConfigYml:
               type: string
               description: "The name of the configmap where the registry config.yml content"
-            domainName:
-              type: string
-              description: "registry domain name"
+            replicaSet:
+              type: object
+              properties:
+                nodeSelector:
+                  type: object
+                  description: node selector
+                  additionalProperties:
+                    type: string
+                selector:
+                  type: object
+                  description: label selector
+                  properties:
+                    matchExpressions:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          key:
+                            type: string
+                          operator:
+                            type: string
+                          values:
+                            type: array
+                            items:
+                              type: string
+                    matchLabels:
+                      type: object
+                      additionalProperties:
+                        type: string
+                tolerations:
+                  type: array
+                  description: toleration
+                  items:
+                    type: object
+                    properties:
+                      effect:
+                        type: string
+                      key:
+                        type: string
+                      operator:
+                        type: string
+                      tolerationSeconds:
+                        type: integer
+                        format: int64
+                      value:
+                        type: string
             service:
               type: object
               required: [type]
               properties:
-                lbIP:
-                  type: string
-                  description: "external IP"
                 port:
                   type: integer
                   description: "external port (default: 443)"
+                nodeIP:
+                  type: string
+                  description: "if service type is NodePort, set NodeIP to assign to the registry"
                 nodePort:
                   type: integer
                   description: "if service type is NodePort, you can set 30000~32767"
@@ -75,6 +118,10 @@ spec:
                 storageClassName:
                   type: string
                   description: "enter storage class name available (ex: csi-cephfs-sc)"
+                volumeMode:
+                  type: string
+                  enum: [Filesystem, Block]
+                  description: "ref.url: https://kubernetes.io/docs/concepts/storage/persistent-volumes/#volume-mode (default: Filesystem)"
         status:
           type: object
           properties:
@@ -85,8 +132,8 @@ spec:
                 required: [type]
                 properties:
                   lastTrasnsitionTime:
-                    format: date-time
                     type: string
+                    format: date-time
                   message:
                     type: string
                   reason:
