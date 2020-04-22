@@ -43,7 +43,7 @@ parameters:
 - name: WAS_PORT
   displayName: wasPort
   description: WAS Port
-  value: number
+  valueType: number
   required: true
 - name: SERVICE_TYPE
   displayName: ServiceType
