@@ -248,7 +248,7 @@ public class Util {
 					e.printStackTrace();
 				}
 			}
-		}, createTime.plusSeconds(60).toDate());
+		}, createTime.plusMonths(1).minusWeeks(1).toDate());
 //		createTime.plusMonths(1).minusWeeks(1).toDate()
 		logger.info(" Set Trial NameSpace Sending Mail Timer Success ");
 
@@ -277,7 +277,7 @@ public class Util {
 					e.printStackTrace();
 				}
 			}
-		}, createTime.plusSeconds(300).toDate());	
+		}, createTime.plusMonths(1).toDate());	
 //		createTime.plusMonths(1).toDate()
 		logger.info(" Set Trial NameSpace Delete Timer Success ");
 

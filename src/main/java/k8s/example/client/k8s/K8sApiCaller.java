@@ -120,6 +120,7 @@ import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.V1ServiceList;
 import io.kubernetes.client.openapi.models.V1ServicePort;
 import io.kubernetes.client.openapi.models.V1ServiceSpec;
+import io.kubernetes.client.openapi.models.V1Status;
 import io.kubernetes.client.openapi.models.V1Subject;
 import io.kubernetes.client.openapi.models.V1Toleration;
 import io.kubernetes.client.openapi.models.V1Volume;
@@ -4815,18 +4816,20 @@ public class K8sApiCaller {
 	public static void deleteNameSpace(String nsName) throws Exception {
 		try {
 			logger.info("nameSpace [ " + nsName + " ] Delete Service Start");
+			V1Status deleteStatus = api.deleteNamespace(nsName, null, null, 0, null, "Background" , new V1DeleteOptions());
+			logger.info("delete Status : "  + deleteStatus.getStatus());
+			logger.info("delete message : "  + deleteStatus.getMessage());
+			logger.info("delete reason : "  + deleteStatus.getReason());
+			logger.info("delete whole : "  + deleteStatus.toString());
 
-			api.deleteNamespace(nsName, null, null, 0, null, null, new V1DeleteOptions());
 			logger.info("nameSpace [ " + nsName + " ] Deleted");
-
+		} catch (IllegalStateException e) {
 		} catch (ApiException e) {
 			logger.info("Response body: " + e.getResponseBody());
 			e.printStackTrace();
-			throw e;
 		} catch (Exception e) {
 			logger.info("Exception message: " + e.getMessage());
 			e.printStackTrace();
-			throw e;
 		}
 	}
 

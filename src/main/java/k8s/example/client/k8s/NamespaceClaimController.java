@@ -91,7 +91,6 @@ public class NamespaceClaimController extends Thread {
 										V1Namespace nsResult = K8sApiCaller.createNamespace( claim );
 										logger.info(" Create NameSpace [ " + nsResult.getMetadata().getName() + " ] Success");
 
-										
 										// If Trial Type 
 										if ( nsResult.getMetadata().getLabels() != null && nsResult.getMetadata().getLabels().get("trial") !=null ) {
 											// Make RoleBinding for Trial User
@@ -104,8 +103,6 @@ public class NamespaceClaimController extends Thread {
 											
 											// Set Timers to Send Mail (3 weeks later), Delete Trial NS (1 month later)
 											if ( !TimerMap.isExists(nsResult) ) {
-												logger.info("333");
-
 												Util.setTrialNSTimer( nsResult );
 												for (V1Namespace timerNs : TimerMap.getTimerList()) {
 													logger.info(" Registered NameSpace Timer : " + timerNs.getMetadata().getName() );
