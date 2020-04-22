@@ -211,9 +211,10 @@ public class Util {
     }
     
     public static void setTrialNSTimer(V1Namespace nsResult) throws Exception  {
-		
+		logger.info(" TrialNSTimer Sets Service Start ");
+
 		DateTime createTime = nsResult.getMetadata().getCreationTimestamp();
-		System.out.println(" CreateTime : " + createTime);
+		logger.info(" CreateTime : " + createTime);
 
 		Timer mailTimer = new Timer(nsResult.getMetadata().getUid() + "#" + nsResult.getMetadata().getName() + "#" + nsResult.getMetadata().getLabels().get("trial"));
 		Timer deleteTimer = new Timer(nsResult.getMetadata().getUid() + "#" + nsResult.getMetadata().getName() + "#" + nsResult.getMetadata().getLabels().get("trial"));
@@ -224,20 +225,20 @@ public class Util {
 					String nsId = Thread.currentThread().getName().split("#")[0];
 					String nsName = Thread.currentThread().getName().split("#")[1];
 					String userId = Thread.currentThread().getName().split("#")[2];
-					System.out.println(" Trial NameSpace [ " + nsName + " ] Mail Service before 1 weeks of deletion Start");
-					System.out.println(" User ID : " + userId );
+					logger.info(" Trial NameSpace [ " + nsName + " ] Mail Service before 1 weeks of deletion Start");
+					logger.info(" User ID : " + userId );
 					
 					V1Namespace nameSpace = K8sApiCaller.getNameSpace(nsName);
 					if ( nameSpace.getMetadata().getLabels() != null && nameSpace.getMetadata().getLabels().get("trial") != null ) {
-						System.out.println(" Still Trial NameSpace, Send Info Mail to User [ " + userId + " ]");
+						logger.info(" Still Trial NameSpace, Send Info Mail to User [ " + userId + " ]");
 						UserCR user = K8sApiCaller.getUser( userId );
 						String email = user.getUserInfo().getEmail();
-						System.out.println(" Email : " + email );
-						String subject = " 신청해주신 Trial NameSpace [ " + nameSpace + " ] 만료 안내 ";
-						String body = " 신청해주신 Trial NameSpace [ \" + nameSpace + \" ] 만료가 1주일 남았습니다. 유료버전으로 전환 해주세요 ";
+						logger.info(" Email : " + email );
+						String subject = " 신청해주신 Trial NameSpace [ " + nameSpace.getMetadata().getName() + " ] 만료 안내 ";
+						String body = " 신청해주신 Trial NameSpace [ " + nameSpace.getMetadata().getName() + " ] 만료가 1주일 남았습니다. 유료버전으로 전환 해주세요 ";
 						Util.sendMail(email, subject, body);
 					} else {
-						System.out.println(" Paid NameSpace, Nothing todo ");
+						logger.info(" Paid NameSpace, Nothing todo ");
 					}
 				} catch (Exception e) {
 					logger.info( "Exception : " + e.getMessage());
@@ -247,7 +248,9 @@ public class Util {
 					e.printStackTrace();
 				}
 			}
-		}, createTime.plusMonths(1).minusWeeks(1).toDate());
+		}, createTime.plusSeconds(60).toDate());
+//		createTime.plusMonths(1).minusWeeks(1).toDate()
+		logger.info(" Set Trial NameSpace Sending Mail Timer Success ");
 
 		deleteTimer.schedule(new TimerTask() {
 			public void run() {
@@ -255,16 +258,16 @@ public class Util {
 					String nsId = Thread.currentThread().getName().split("#")[0];
 					String nsName = Thread.currentThread().getName().split("#")[1];
 					String userId = Thread.currentThread().getName().split("#")[2];
-					System.out.println(" Trial NameSpace [ " + nsName + " ] Mail Service before 1 weeks of deletion Start");
-					System.out.println(" User ID : " + userId );
+					logger.info(" Trial NameSpace [ " + nsName + " ] deletion Start");
+					logger.info(" User ID : " + userId );
 					
 					V1Namespace nameSpace = K8sApiCaller.getNameSpace(nsName);
 					if ( nameSpace.getMetadata().getLabels() != null && nameSpace.getMetadata().getLabels().get("trial") != null ) {
-						System.out.println(" Still Trial NameSpace, Delete Expired Namespace [ " + nsName + " ]");
-						K8sApiCaller.deleteNameSpace(nsName);
+						logger.info(" Still Trial NameSpace, Delete Expired Namespace [ " + nsName + " ]");
 						K8sApiCaller.deleteRoleBinding(nsName, "trial-" + nsName);
+						K8sApiCaller.deleteNameSpace(nsName);
 					} else {
-						System.out.println(" Paid NameSpace, Nothing todo ");
+						logger.info(" Paid NameSpace, Nothing todo ");
 					}
 				} catch (Exception e) {
 					logger.info( "Exception : " + e.getMessage());
@@ -274,10 +277,16 @@ public class Util {
 					e.printStackTrace();
 				}
 			}
-		}, createTime.plusSeconds(10).toDate());	
-		
+		}, createTime.plusSeconds(300).toDate());	
+//		createTime.plusMonths(1).toDate()
+		logger.info(" Set Trial NameSpace Delete Timer Success ");
+
 		// Insert to TimerMap
 		TimerMap.addTimerList(nsResult);
+		for (V1Namespace timerNs : TimerMap.getTimerList()) {
+			logger.info(" Registered NameSpace Timer in test : " + timerNs.getMetadata().getName() );
+		}
+			
 	}
     
 }

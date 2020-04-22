@@ -89,18 +89,23 @@ public class NamespaceClaimController extends Thread {
 										replaceNscStatus( claimName, Constants.CLAIM_STATUS_SUCCESS, "namespace update success." );
 									} else if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && !K8sApiCaller.namespaceAlreadyExist( resourceName ) ) {
 										V1Namespace nsResult = K8sApiCaller.createNamespace( claim );
+										logger.info(" Create NameSpace [ " + nsResult.getMetadata().getName() + " ] Success");
+
 										
 										// If Trial Type 
 										if ( nsResult.getMetadata().getLabels() != null && nsResult.getMetadata().getLabels().get("trial") !=null ) {
 											// Make RoleBinding for Trial User
 											try{ 
 												createTrialRoleBinding ( nsResult );
+
 											} catch (ApiException e) {
 												logger.info(" TrialRoleBinding for Trial NameSpace [ " + nsResult.getMetadata().getName() + " ] Already Exists ");
 											}
 											
 											// Set Timers to Send Mail (3 weeks later), Delete Trial NS (1 month later)
 											if ( !TimerMap.isExists(nsResult) ) {
+												logger.info("333");
+
 												Util.setTrialNSTimer( nsResult );
 												for (V1Namespace timerNs : TimerMap.getTimerList()) {
 													logger.info(" Registered NameSpace Timer : " + timerNs.getMetadata().getName() );
@@ -109,7 +114,6 @@ public class NamespaceClaimController extends Thread {
 												logger.info(" Timer for Trial NameSpace [ " + nsResult.getMetadata().getName() + " ] Already Exists ");
 											}
 										}
-										
 										replaceNscStatus( claimName, Constants.CLAIM_STATUS_SUCCESS, "namespace create success." );
 									}
 									break;
@@ -147,11 +151,14 @@ public class NamespaceClaimController extends Thread {
 		}
 	}
 
+
 	private void createTrialRoleBinding(V1Namespace nsResult) throws ApiException {
 		RoleBindingClaim rbcForTrial = new RoleBindingClaim();
 		
 		V1ObjectMeta RoleBindingMeta = new V1ObjectMeta();
-		RoleBindingMeta.setName("trial-" + nsResult.getMetadata().getName());
+		rbcForTrial.setResourceName("trial-" + nsResult.getMetadata().getName());
+		RoleBindingMeta.setName( "trial-" + nsResult.getMetadata().getName());
+		RoleBindingMeta.setNamespace( nsResult.getMetadata().getName());
 		RoleBindingMeta.setLabels(nsResult.getMetadata().getLabels()); // label 넘겨주기
 		rbcForTrial.setMetadata(RoleBindingMeta);
 
@@ -178,7 +185,6 @@ public class NamespaceClaimController extends Thread {
 			throw e;
 		}
 	}
-
 
 
 	@SuppressWarnings("unchecked")

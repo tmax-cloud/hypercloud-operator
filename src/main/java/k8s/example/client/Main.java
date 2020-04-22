@@ -1,3 +1,4 @@
+
 package k8s.example.client;
 
 import org.quartz.CronScheduleBuilder;
@@ -33,14 +34,19 @@ public class Main {
 			logger.info("[Main] Start User Delete per Week");
 			startUserDeleteTimer();
 
-			logger.info("[Main] Init & start K8S watchers");
-			// Start Controllers
+			// Init K8S Client
+			logger.info("[Main] Init K8S Client");
 			K8sApiCaller.initK8SClient();
-			K8sApiCaller.startWatcher(); // Infinite loop
 			
 			// Start Trial Namespace Timer
 			logger.info("[Main] Start Trial Namespace Timer");
 			startTrialNSTimer();
+			
+			// Start Start K8S watchers & Controllers
+			logger.info("[Main] Start K8S watchers");
+			K8sApiCaller.startWatcher(); // Infinite loop
+			
+			
 			
 		} catch (Exception e) {
 			e.printStackTrace();

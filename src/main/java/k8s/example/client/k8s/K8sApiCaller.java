@@ -4789,6 +4789,8 @@ public class K8sApiCaller {
 		V1Namespace nameSpace = null;
 
 		try {
+			logger.info("nameSpace [ " + nsName + " ] Get Service Start");
+
 			nameSpace = api.readNamespace(nsName, "true", false, false);
 		
 		} catch (ApiException e) {
@@ -4805,6 +4807,8 @@ public class K8sApiCaller {
 	
 	public static void deleteNameSpace(String nsName) throws Exception {
 		try {
+			logger.info("nameSpace [ " + nsName + " ] Delete Service Start");
+
 			api.deleteNamespace(nsName, null, null, 0, null, null, new V1DeleteOptions());
 			logger.info("nameSpace [ " + nsName + " ] Deleted");
 
