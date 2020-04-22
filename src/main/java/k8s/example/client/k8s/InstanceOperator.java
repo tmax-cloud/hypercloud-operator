@@ -233,7 +233,12 @@ public class InstanceOperator extends Thread {
 			        					if(replacedObject.get("metadata").has("namespace")) {
 			        						namespace = replacedObject.get("metadata").get("namespace").asText();
 			        					} else {
-			        						namespace = "default";
+			        						if (instanceObj.get("metadata").has("namespace")) {
+			        							namespace = instanceObj.get("metadata").get("namespace").asText();
+			        						} else {
+			        							namespace = "default";
+			        						}
+			        						
 			        					}
 			        					
 			        					if(replacedObject.has("kind")) {
@@ -501,7 +506,7 @@ public class InstanceOperator extends Thread {
 		String dataType = null;
 		for(JsonNode parameter : parameters) {
 			if( parameter.has("name") && parameter.get("name").asText().toUpperCase().equals( paramName.toUpperCase() )) {
-				if( parameter.has("value") && parameter.get("value").asText().equals( Constants.TEMPLATE_DATA_TYPE_NUMBER )) {
+				if( parameter.has("valueType") && parameter.get("valueType").asText().equals( Constants.TEMPLATE_DATA_TYPE_NUMBER )) {
 					dataType = Constants.TEMPLATE_DATA_TYPE_NUMBER;
 				} else {
 					dataType = Constants.TEMPLATE_DATA_TYPE_STRING;

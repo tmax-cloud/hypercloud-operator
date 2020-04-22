@@ -90,6 +90,8 @@ spec:
                 type: boolean
               value:
                 x-kubernetes-int-or-string: true
+              valueType:
+                type: string
             required:
             - name
             type: object
