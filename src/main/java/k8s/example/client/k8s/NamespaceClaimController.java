@@ -2,6 +2,8 @@ package k8s.example.client.k8s;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.slf4j.Logger;
 
@@ -14,10 +16,17 @@ import com.google.gson.reflect.TypeToken;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CustomObjectsApi;
+import io.kubernetes.client.openapi.models.V1Namespace;
+import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import io.kubernetes.client.openapi.models.V1RoleRef;
+import io.kubernetes.client.openapi.models.V1Subject;
 import io.kubernetes.client.util.Watch;
 import k8s.example.client.Constants;
 import k8s.example.client.Main;
+import k8s.example.client.Util;
+import k8s.example.client.metering.TimerMap;
 import k8s.example.client.models.NamespaceClaim;
+import k8s.example.client.models.RoleBindingClaim;
 
 public class NamespaceClaimController extends Thread {
 	private Watch<NamespaceClaim> nscController;
@@ -79,7 +88,28 @@ public class NamespaceClaimController extends Thread {
 										K8sApiCaller.updateNamespace( claim );
 										replaceNscStatus( claimName, Constants.CLAIM_STATUS_SUCCESS, "namespace update success." );
 									} else if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && !K8sApiCaller.namespaceAlreadyExist( resourceName ) ) {
-										K8sApiCaller.createNamespace( claim );
+										V1Namespace nsResult = K8sApiCaller.createNamespace( claim );
+										
+										// If Trial Type 
+										if ( nsResult.getMetadata().getLabels() != null && nsResult.getMetadata().getLabels().get("trial") !=null ) {
+											// Make RoleBinding for Trial User
+											try{ 
+												createTrialRoleBinding ( nsResult );
+											} catch (ApiException e) {
+												logger.info(" TrialRoleBinding for Trial NameSpace [ " + nsResult.getMetadata().getName() + " ] Already Exists ");
+											}
+											
+											// Set Timers to Send Mail (3 weeks later), Delete Trial NS (1 month later)
+											if ( !TimerMap.isExists(nsResult) ) {
+												Util.setTrialNSTimer( nsResult );
+												for (V1Namespace timerNs : TimerMap.getTimerList()) {
+													logger.info(" Registered NameSpace Timer : " + timerNs.getMetadata().getName() );
+												}
+											} else {
+												logger.info(" Timer for Trial NameSpace [ " + nsResult.getMetadata().getName() + " ] Already Exists ");
+											}
+										}
+										
 										replaceNscStatus( claimName, Constants.CLAIM_STATUS_SUCCESS, "namespace create success." );
 									}
 									break;
@@ -116,6 +146,40 @@ public class NamespaceClaimController extends Thread {
 			logger.info(sw.toString());
 		}
 	}
+
+	private void createTrialRoleBinding(V1Namespace nsResult) throws ApiException {
+		RoleBindingClaim rbcForTrial = new RoleBindingClaim();
+		
+		V1ObjectMeta RoleBindingMeta = new V1ObjectMeta();
+		RoleBindingMeta.setName("trial-" + nsResult.getMetadata().getName());
+		RoleBindingMeta.setLabels(nsResult.getMetadata().getLabels()); // label 넘겨주기
+		rbcForTrial.setMetadata(RoleBindingMeta);
+
+		// RoleRef
+		V1RoleRef roleRef = new V1RoleRef();
+		roleRef.setApiGroup(Constants.RBAC_API_GROUP);
+		roleRef.setKind("ClusterRole");
+		roleRef.setName("namespace-owner");  //FIXME : policy 에 따라 변화해 줄 예정
+		rbcForTrial.setRoleRef(roleRef);
+
+		// subject
+		List< V1Subject > subjectList = new ArrayList<>();
+		V1Subject subject = new V1Subject();
+		subject.setApiGroup(Constants.RBAC_API_GROUP);
+		subject.setKind("User");
+		subject.setName(nsResult.getMetadata().getLabels().get("trial"));
+		subjectList.add(subject);
+		rbcForTrial.setSubjects(subjectList);
+		
+		try {
+			K8sApiCaller.createRoleBinding(rbcForTrial);	
+		} catch (ApiException e) {
+			logger.info(e.getResponseBody());
+			throw e;
+		}
+	}
+
+
 
 	@SuppressWarnings("unchecked")
 	private void replaceNscStatus( String name, String status, String reason ) throws ApiException {

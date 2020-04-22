@@ -4,22 +4,21 @@ import java.security.MessageDigest;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
-import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
 
-import javax.mail.BodyPart;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimeUtility;
 
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -31,7 +30,10 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import fi.iki.elonen.NanoHTTPD.Response;
+import io.kubernetes.client.openapi.models.V1Namespace;
+import k8s.example.client.DataObject.UserCR;
 import k8s.example.client.k8s.K8sApiCaller;
+import k8s.example.client.metering.TimerMap;
 
 public class Util {	
 	public static Logger logger = Main.logger;
@@ -207,5 +209,75 @@ public class Util {
     public static String parseImageName(String imageName) {
     	return imageName.replaceAll("[/]", "-s-").replaceAll("[_]", "-u-");
     }
+    
+    public static void setTrialNSTimer(V1Namespace nsResult) throws Exception  {
+		
+		DateTime createTime = nsResult.getMetadata().getCreationTimestamp();
+		System.out.println(" CreateTime : " + createTime);
+
+		Timer mailTimer = new Timer(nsResult.getMetadata().getUid() + "#" + nsResult.getMetadata().getName() + "#" + nsResult.getMetadata().getLabels().get("trial"));
+		Timer deleteTimer = new Timer(nsResult.getMetadata().getUid() + "#" + nsResult.getMetadata().getName() + "#" + nsResult.getMetadata().getLabels().get("trial"));
+
+		mailTimer.schedule(new TimerTask() {
+			public void run() {
+				try {
+					String nsId = Thread.currentThread().getName().split("#")[0];
+					String nsName = Thread.currentThread().getName().split("#")[1];
+					String userId = Thread.currentThread().getName().split("#")[2];
+					System.out.println(" Trial NameSpace [ " + nsName + " ] Mail Service before 1 weeks of deletion Start");
+					System.out.println(" User ID : " + userId );
+					
+					V1Namespace nameSpace = K8sApiCaller.getNameSpace(nsName);
+					if ( nameSpace.getMetadata().getLabels() != null && nameSpace.getMetadata().getLabels().get("trial") != null ) {
+						System.out.println(" Still Trial NameSpace, Send Info Mail to User [ " + userId + " ]");
+						UserCR user = K8sApiCaller.getUser( userId );
+						String email = user.getUserInfo().getEmail();
+						System.out.println(" Email : " + email );
+						String subject = " 신청해주신 Trial NameSpace [ " + nameSpace + " ] 만료 안내 ";
+						String body = " 신청해주신 Trial NameSpace [ \" + nameSpace + \" ] 만료가 1주일 남았습니다. 유료버전으로 전환 해주세요 ";
+						Util.sendMail(email, subject, body);
+					} else {
+						System.out.println(" Paid NameSpace, Nothing todo ");
+					}
+				} catch (Exception e) {
+					logger.info( "Exception : " + e.getMessage());
+					e.printStackTrace();
+				} catch (Throwable e) {
+					logger.info( "Exception : " + e.getMessage());
+					e.printStackTrace();
+				}
+			}
+		}, createTime.plusMonths(1).minusWeeks(1).toDate());
+
+		deleteTimer.schedule(new TimerTask() {
+			public void run() {
+				try {
+					String nsId = Thread.currentThread().getName().split("#")[0];
+					String nsName = Thread.currentThread().getName().split("#")[1];
+					String userId = Thread.currentThread().getName().split("#")[2];
+					System.out.println(" Trial NameSpace [ " + nsName + " ] Mail Service before 1 weeks of deletion Start");
+					System.out.println(" User ID : " + userId );
+					
+					V1Namespace nameSpace = K8sApiCaller.getNameSpace(nsName);
+					if ( nameSpace.getMetadata().getLabels() != null && nameSpace.getMetadata().getLabels().get("trial") != null ) {
+						System.out.println(" Still Trial NameSpace, Delete Expired Namespace [ " + nsName + " ]");
+						K8sApiCaller.deleteNameSpace(nsName);
+						K8sApiCaller.deleteRoleBinding(nsName, "trial-" + nsName);
+					} else {
+						System.out.println(" Paid NameSpace, Nothing todo ");
+					}
+				} catch (Exception e) {
+					logger.info( "Exception : " + e.getMessage());
+					e.printStackTrace();
+				} catch (Throwable e) {
+					logger.info( "Exception : " + e.getMessage());
+					e.printStackTrace();
+				}
+			}
+		}, createTime.plusSeconds(10).toDate());	
+		
+		// Insert to TimerMap
+		TimerMap.addTimerList(nsResult);
+	}
     
 }

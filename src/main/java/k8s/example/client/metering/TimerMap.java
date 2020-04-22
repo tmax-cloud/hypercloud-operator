@@ -2,13 +2,23 @@ package k8s.example.client.metering;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Timer;
+
+import io.kubernetes.client.openapi.models.V1Namespace;
 
 public class TimerMap {
-	private List<Timer> timerList = new ArrayList<>();
+	private static List<V1Namespace> nsTimerList = new ArrayList<>();
 	
-	public void addTimerList( Timer timer ) {
-		timerList.add(timer);
+	public static void addTimerList( V1Namespace nameSpace ) {
+		nsTimerList.add(nameSpace);
+	}
+	
+	public static boolean isExists( V1Namespace nameSpace ) {
+		if (nsTimerList.contains(nameSpace) ) return true;
+		return false;
+	}
+	
+	public static List<V1Namespace> getTimerList() {
+		return nsTimerList;
 	}
 }
 

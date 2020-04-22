@@ -11,6 +11,8 @@ import org.quartz.impl.StdSchedulerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.kubernetes.client.openapi.models.V1Namespace;
+import io.kubernetes.client.openapi.models.V1NamespaceList;
 import k8s.example.client.handler.UserDeleteJob;
 import k8s.example.client.k8s.K8sApiCaller;
 import k8s.example.client.metering.MeteringJob;
@@ -35,11 +37,29 @@ public class Main {
 			// Start Controllers
 			K8sApiCaller.initK8SClient();
 			K8sApiCaller.startWatcher(); // Infinite loop
+			
+			// Start Trial Namespace Timer
+			logger.info("[Main] Start Trial Namespace Timer");
+			startTrialNSTimer();
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 	
+	private static void startTrialNSTimer() {
+		try {
+			V1NamespaceList nsList = K8sApiCaller.listNameSpace();
+			for ( V1Namespace ns : nsList.getItems()) {
+				if( ns.getMetadata().getLabels() != null && ns.getMetadata().getLabels().get("trial") != null ) {
+					Util.setTrialNSTimer(ns);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
 	private static void startMeteringTimer() throws SchedulerException {
 		JobDetail job = JobBuilder.newJob( MeteringJob.class )
 				.withIdentity( "MeteringJob" ).build();

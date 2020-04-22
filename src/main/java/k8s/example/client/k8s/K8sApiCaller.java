@@ -3934,13 +3934,18 @@ public class K8sApiCaller {
 		return latestResourceVersion;
 	}
 
-	public static void createNamespace(NamespaceClaim claim) throws Throwable {
+	public static V1Namespace createNamespace(NamespaceClaim claim) throws Throwable {
 		logger.info("[K8S ApiCaller] Create Namespace Start");
 
 		V1Namespace namespace = new V1Namespace();
 		V1ObjectMeta namespaceMeta = new V1ObjectMeta();
 		Map<String, String> label = new HashMap<>();
 		label.put("fromClaim", claim.getMetadata().getName());
+		
+		//Add Trial Label if exists
+		if (claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") != null) {
+			label.put("trial", claim.getMetadata().getLabels().get("trial"));
+		}
 		namespaceMeta.setLabels(label);
 		namespaceMeta.setName(claim.getResourceName());
 		namespace.setMetadata(namespaceMeta);
@@ -3952,7 +3957,7 @@ public class K8sApiCaller {
 			logger.info(e.getResponseBody());
 			throw e;
 		}
-
+		
 		V1ResourceQuota quota = new V1ResourceQuota();
 		V1ObjectMeta quotaMeta = new V1ObjectMeta();
 		quotaMeta.setName(claim.getResourceName());
@@ -3971,6 +3976,8 @@ public class K8sApiCaller {
 			logger.info(e.getResponseBody());
 			throw e;
 		}
+		
+		return namespaceResult;
 	}
 
 	public static void updateNamespace(NamespaceClaim claim) throws Throwable {
@@ -3980,6 +3987,11 @@ public class K8sApiCaller {
 		V1ObjectMeta namespaceMeta = new V1ObjectMeta();
 		Map<String, String> label = new HashMap<>();
 		label.put("fromClaim", claim.getMetadata().getName());
+		
+		//Add Trial Label if exists
+		if (claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") != null) {
+			label.put("trial", claim.getMetadata().getLabels().get("trial"));
+		}
 		namespaceMeta.setLabels(label);
 		namespaceMeta.setName(claim.getResourceName());
 		namespace.setMetadata(namespaceMeta);
@@ -4260,6 +4272,21 @@ public class K8sApiCaller {
 			e.printStackTrace();
 			throw e;
 		}
+	}
+	
+	public static void deleteRoleBinding(String nsName, String roleBindingName) throws Exception {
+		try {
+			V1DeleteOptions body = new V1DeleteOptions();
+			rbacApi.deleteNamespacedRoleBinding(roleBindingName, nsName, null, null, 0, null, null, body);
+		} catch (ApiException e) {
+			logger.info("Response body: " + e.getResponseBody());
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			logger.info("Exception message: " + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		}		
 	}
 
 	/**
@@ -4741,6 +4768,58 @@ public class K8sApiCaller {
 		return textBuilder.toString();
 
 	}
+	
+	public static V1NamespaceList listNameSpace() throws Exception {
+		V1NamespaceList nsList = null;
+		try {
+			nsList = api.listNamespace("true", false, null, null, null, 100, null, 60, false);
+		} catch (ApiException e) {
+			logger.info("Response body: " + e.getResponseBody());
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			logger.info("Exception message: " + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		}
+		return nsList;
+	}
+	
+	public static V1Namespace getNameSpace(String nsName) throws Exception {
+		V1Namespace nameSpace = null;
+
+		try {
+			nameSpace = api.readNamespace(nsName, "true", false, false);
+		
+		} catch (ApiException e) {
+			logger.info("Response body: " + e.getResponseBody());
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			logger.info("Exception message: " + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		}
+		return nameSpace;
+	}
+	
+	public static void deleteNameSpace(String nsName) throws Exception {
+		try {
+			api.deleteNamespace(nsName, null, null, 0, null, null, new V1DeleteOptions());
+			logger.info("nameSpace [ " + nsName + " ] Deleted");
+
+		} catch (ApiException e) {
+			logger.info("Response body: " + e.getResponseBody());
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			logger.info("Exception message: " + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		}
+	}
+
+
 
 //	public static void updateClusterRoleBindingOfGroup(String userGroupName, String userId) throws Exception {
 //		V1ClusterRoleBindingList crbList = null;
