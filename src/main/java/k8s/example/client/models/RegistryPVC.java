@@ -9,6 +9,7 @@ public class RegistryPVC {
 	private List<String> accessModes = null;
 	private String storageSize = null;
 	private String storageClassName = null;
+	private String volumeMode = null;
 	
 	public List<String> getAccessModes() {
 		return accessModes;
@@ -28,7 +29,12 @@ public class RegistryPVC {
 	public void setStorageClassName(String storageClassName) {
 		this.storageClassName = storageClassName;
 	}
-	
+	public String getVolumeMode() {
+		return volumeMode;
+	}
+	public void setVolumeMode(String volumeMode) {
+		this.volumeMode = volumeMode;
+	}
 	public RegistryPVC addAccessModesItem(String accessMode) {
 		if (this.accessModes == null) {
 			this.accessModes = new ArrayList<String>();
@@ -45,6 +51,7 @@ public class RegistryPVC {
 				sb.append("    accessMode: ").append(toIndentedString(accessMode)).append("\n");
 		sb.append("    volumeSize: ").append(toIndentedString(storageSize)).append("\n");
 		sb.append("    storageClassName: ").append(toIndentedString(storageClassName)).append("\n");
+		sb.append("    volumeMode: ").append(toIndentedString(volumeMode)).append("\n");
 		sb.append("}");
 		return sb.toString();
 	}
