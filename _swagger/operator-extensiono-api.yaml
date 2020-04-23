@@ -212,7 +212,6 @@ paths:
               example:
                 {
                   "id" : "test-tmax.co.kr",
-                  "password": "tmax@23",
                   "alterPassword" : "tmax@2323"
                 }     
       responses:
