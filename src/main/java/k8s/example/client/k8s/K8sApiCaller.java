@@ -4498,6 +4498,7 @@ public class K8sApiCaller {
 					for (String nsName : nsNameList) {
 						if (nsList == null)
 							nsList = new V1NamespaceList();
+						nsList.setKind("NamespaceList");
 						nsList.addItemsItem(api.readNamespace(nsName, "true", false, false));
 					}
 				}
