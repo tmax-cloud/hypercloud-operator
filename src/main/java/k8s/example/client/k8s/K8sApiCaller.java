@@ -84,6 +84,7 @@ import io.kubernetes.client.openapi.models.V1Handler;
 import io.kubernetes.client.openapi.models.V1LabelSelector;
 import io.kubernetes.client.openapi.models.V1LabelSelectorRequirement;
 import io.kubernetes.client.openapi.models.V1Lifecycle;
+import io.kubernetes.client.openapi.models.V1ListMeta;
 import io.kubernetes.client.openapi.models.V1LoadBalancerIngress;
 import io.kubernetes.client.openapi.models.V1Namespace;
 import io.kubernetes.client.openapi.models.V1NamespaceList;
@@ -4499,7 +4500,13 @@ public class K8sApiCaller {
 						if (nsList == null)
 							nsList = new V1NamespaceList();
 						nsList.setKind("NamespaceList");
-						nsList.addItemsItem(api.readNamespace(nsName, "true", false, false));
+						V1ListMeta nsListMeta = new V1ListMeta();
+						nsListMeta.setSelfLink("/api/v1/namespaces");
+						nsList.setMetadata(nsListMeta);
+						V1Namespace ns = api.readNamespace(nsName, "true", false, false);
+						ns.setKind(null);
+						ns.setApiVersion(null);
+						nsList.addItemsItem(ns);
 					}
 				}
 			}
