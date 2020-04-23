@@ -1,0 +1,17 @@
+apiVersion: tmax.io/v1
+kind: TemplateInstance
+metadata:
+  name: devpi-package-server-instance
+  namespace: default
+spec:
+  template:
+    metadata:
+      name: devpi-package-server
+    parameters:
+    - name: DEPLOY_NAME
+      value: devpi-private-1
+    - name: NAMESPACE
+      value: default
+    - name: STORAGE
+      value: 10Gi
+
