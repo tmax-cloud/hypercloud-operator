@@ -155,7 +155,7 @@ public class MeteringJob implements Job{
 		MetricDataList publicIp = getMeteringData("count(kube_service_spec_type{type=\"LoadBalancer\"})by(namespace)");
 		for ( Metric metric : publicIp.getResult() ) {
 			if ( meteringData.containsKey(metric.getMetric().get("namespace"))) {
-				meteringData.get(metric.getMetric().get("namespace")).setStorage(Long.parseLong(metric.getValue().get(1)));
+				meteringData.get(metric.getMetric().get("namespace")).setPublicIp(Integer.parseInt(metric.getValue().get(1)));
 			} else {
 				Metering metering = new Metering();
 				metering.setNamespace(metric.getMetric().get("namespace"));
