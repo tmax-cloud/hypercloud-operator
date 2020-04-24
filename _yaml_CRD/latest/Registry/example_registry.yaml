@@ -10,11 +10,10 @@ spec:
   loginPassword: tmax123
   replicaSet:
     nodeSelector:
-      kubernetes.io/hostname: localhost
+      kubernetes.io/hostname: ck-2
   service:
      type: LoadBalancer
   persistentVolumeClaim:
      accessModes: [ReadWriteMany]
      storageSize: 10Gi
      storageClassName: csi-cephfs-sc
-     volumeMode: Filesystem
