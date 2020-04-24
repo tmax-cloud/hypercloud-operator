@@ -85,8 +85,8 @@ public class LoginHandler extends GeneralHandler {
 	        			// Login to ProAuth & Get Token
 	    	    		JsonObject loginOut = OAuthApiCaller.AuthenticateCreate(loginInDO.getId(), loginInDO.getPassword());
 	    	    		logger.info( "  loginOut.get(\"result\") : " + loginOut.get("result").toString() );
-	    	    		UserCR k8sUser = K8sApiCaller.getUser(loginInDO.getId());
-
+	    	    		UserCR k8sUser = null;
+	    	    		
 	    	    		if ( loginOut.get("result").toString().equalsIgnoreCase("\"true\"") ){
 	    	    			accessToken = loginOut.get("token").toString().replaceAll("\"", ""); 
 		    	    		refreshToken = loginOut.get("refresh_token").toString().replaceAll("\"", "");
@@ -95,6 +95,7 @@ public class LoginHandler extends GeneralHandler {
 		    	    		status = Status.OK; 
 		    	    		
 		    	    		//Check if retryCount is 10, if not set 0
+		    	    		k8sUser = K8sApiCaller.getUser(loginInDO.getId());
 		    	    		if(k8sUser.getUserInfo().getRetryCount()==10) {
 		    	    			throw new Exception(ErrorCode.BLOCKED_USER);
 		    	    		} else {
@@ -111,6 +112,7 @@ public class LoginHandler extends GeneralHandler {
 	    	    			logger.info(" outDO : " + outDO);		    			
 
 			    			if (outDO.equalsIgnoreCase("Wrong Password")) {
+			    	    		k8sUser = K8sApiCaller.getUser(loginInDO.getId());
 				    			retryCount = k8sUser.getUserInfo().getRetryCount();	
 		    	    			logger.info(" previous retryCount : " + retryCount);		    			
 		    					if (retryCount == 10) throw new Exception(ErrorCode.BLOCKED_USER);			    					
