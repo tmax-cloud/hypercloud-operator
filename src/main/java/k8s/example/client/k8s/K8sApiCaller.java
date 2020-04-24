@@ -1255,9 +1255,11 @@ public class K8sApiCaller {
 			sb.append("openssl req -newkey rsa:4096 -nodes -sha256 -keyout ");
 			sb.append(registryDir + "/" + Constants.CERT_KEY_FILE);
 			sb.append(" -x509 -days 1000 -subj \"/C=KR/ST=Seoul/O=tmax/CN=");
-			sb.append(registryIP + ":" + registryPort);
+//			sb.append(registryIP + ":" + registryPort);
+			sb.append(registryIP);
 			sb.append("\" -config <(cat /etc/ssl/openssl.cnf <(printf \"[v3_ca]\\nsubjectAltName=IP:");
 			sb.append(registryIP);
+			sb.append(",DNS:tmax2-registry");
 			sb.append("\")) -out ");
 			sb.append(registryDir + "/" + Constants.CERT_CRT_FILE);
 			commands.clear();
@@ -1534,7 +1536,18 @@ public class K8sApiCaller {
 
 			podLabels.put(Constants.K8S_PREFIX + registryId, "lb");
 			logger.info(Constants.K8S_PREFIX + registryId + ": lb");
-
+			
+			// add user label
+			if( registry.getSpec().getReplicaSet() != null) {
+				Map<String, String> userLabels = null;
+				 
+				if( (userLabels = registry.getSpec().getReplicaSet().getLabels()) != null) {
+					for( String key : userLabels.keySet() ) {
+						podLabels.put(key, userLabels.get(key));
+					}
+				}
+			}
+			
 			podMeta.setLabels(podLabels);
 			podTemplateSpec.setMetadata(podMeta);
 
