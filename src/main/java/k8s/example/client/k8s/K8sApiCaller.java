@@ -125,6 +125,7 @@ import io.kubernetes.client.openapi.models.V1Status;
 import io.kubernetes.client.openapi.models.V1Subject;
 import io.kubernetes.client.openapi.models.V1Toleration;
 import io.kubernetes.client.openapi.models.V1Volume;
+import io.kubernetes.client.openapi.models.V1VolumeDevice;
 import io.kubernetes.client.openapi.models.V1VolumeMount;
 import io.kubernetes.client.util.Config;
 import k8s.example.client.Constants;
@@ -1673,10 +1674,22 @@ public class K8sApiCaller {
 			container.addVolumeMountsItem(certMount);
 
 			// Registry Volume mount
-			V1VolumeMount registryMount = new V1VolumeMount();
-			registryMount.setName("registry");
-			registryMount.setMountPath("/var/lib/registry");
-			container.addVolumeMountsItem(registryMount);
+			String mode = null;
+			if( (mode = registry.getSpec().getPersistentVolumeClaim().getVolumeMode()) != null
+					&& mode.equals("Block")) {
+				V1VolumeDevice volumeDevicesItem = new V1VolumeDevice();
+				
+				volumeDevicesItem.setName("registry");
+				volumeDevicesItem.setDevicePath("/var/lib/registry");
+				container.addVolumeDevicesItem(volumeDevicesItem);
+			}
+			else {
+				V1VolumeMount registryMount = new V1VolumeMount();
+				
+				registryMount.setName("registry");
+				registryMount.setMountPath("/var/lib/registry");
+				container.addVolumeMountsItem(registryMount);
+			}
 
 			// Get loginAuth For Readiness Probe
 			String loginAuth = registry.getSpec().getLoginId() + ":" + registry.getSpec().getLoginPassword();
