@@ -1,6 +1,41 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.0.18 start -------------------->
+
+## HyperCloudServer_4.1.0.18 (Fri Apr 24 04:58:08 KST 2020)
+
+### Added
+  - [feat] catalog museum - private package server 추가 by Sunghyun Kim
+
+### Changed
+  - [mod] 로그인 서비스 버그 수정 by taegeon_woo
+  - [mod] default_namespaceclaim.yaml 변경 by taegeon_woo
+  - [mod] swagger수정 by taegeon_woo
+  - [mod] namespaceGet user의 경우 kind 추가 by taegeon_woo
+  - [mod] trial 기간 1달 --> 30일로 변경, owner label 추가 by taegeon_woo
+  - [mod] trial NameSpaceClaim 생성 서비스 및 Timer 서비스 구현 완료 by taegeon_woo
+  - [mod] 'template.parameter.valueType : number' 인 경우 json generate 할 때 숫자 특수 처리 되도록 수정 by seonho_choi
+  - [mod] 인증번호 메일 html 문서 적용 by taegeon_woo
+  - [mod] 메일인증번호 서비스 유효시간 30분 체크 로직 구현 by taegeon_woo
+  - [mod] 인증번호 유효시간 고려 by taegeon_woo
+  - [mod] login retryCount 버그 수정 by taegeon_woo
+  - [mod] 이메일 전송 서비스 버그 수정 by taegeon_woo
+  - [mod] EmailHandler 수정 : 가입된 유저에게도 이메일 보낼수 있게 validation 제거 by taegeon_woo
+
+### Fixed
+  - [ims][223283] template instance 생성 시 parameter 입력 값이 없는 경우 default value 가 들어가도록 구현. by seonho_choi
+  - [ims][223271] template object 들에 namespace 가 명시되어 있지 않는 경우 Template Instance Namespace 에 생성되도록 수정 by seonho_choi
+  - [ims][223234] operator 기동중 image sync를 위한 로직 수행할때 비정상 registry에 의한 오류발생하더라도 정상 기동 되도록 수정 by sukhee_yun
+
+### CRD yaml
+  - [crd] RegistryCRD.yaml 수정: nodeselector, matchlabels&matchExpressions, toleration 추가 by sukhee_yun
+  - [crd] Template/TemplateCRD_v1beta1.yaml parameter 에 valueType field 추가 by seonho_choi
+
+### Etc
+
+<!--------------------- v4.1.0.18 end --------------------->
+
 <!-------------------- v4.1.0.17 start -------------------->
 
 ## HyperCloudServer_4.1.0.17 (Mon Apr 20 06:30:14 KST 2020)
