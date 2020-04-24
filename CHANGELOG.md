@@ -29,7 +29,7 @@ All notable changes to this project will be documented in this file.
   - [ims][223234] operator 기동중 image sync를 위한 로직 수행할때 비정상 registry에 의한 오류발생하더라도 정상 기동 되도록 수정 by sukhee_yun
 
 ### CRD yaml
-  - [crd] RegistryCRD.yaml 수정: nodeselector, matchlabels&matchExpressions, toleration, volumeMode 추가 by sukhee_yun
+  - [crd] RegistryCRD.yaml 수정: nodeselector, matchlabels&matchExpressions, toleration 추가 by sukhee_yun
   - [crd] Template/TemplateCRD_v1beta1.yaml parameter 에 valueType field 추가 by seonho_choi
 
 ### Etc
