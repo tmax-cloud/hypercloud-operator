@@ -10,6 +10,21 @@ spec:
   #description: example # (optional) [string] a brief description of the registry.
   loginId: example # (required) [string] username for registry login
   loginPassword: example # (required) [string] password for registry login
+  #replicaSet:
+    #labels:
+      #mylabel1: v1
+      #mylabel2: v2
+    #selector:
+      #matchExpressions:
+      #- {key: mylabel2, operator: In, values: [v2]}
+      #matchLabels:
+        #mylabel1: v1
+    #nodeSelector:
+      #kubernetes.io/hostname: example
+    #tolerations:
+    #- effect: NoExecute
+      #key: node.kubernetes.io/not-ready
+      #tolerationSeconds: 10
   service:
      #port: example # (optional) [integer] external port (default: 443)
      #nodeIP: example # (optional) [string] if service type is NodePort, set NodeIP to assign to the registry
@@ -18,4 +33,4 @@ spec:
   persistentVolumeClaim:
      accessModes: [example] # (required) [array] (ex: [ReadWriteOnce, ReadWriteMany])
      storageSize: example # (required) [string] desired storage size (ex: 10Gi)
-     storageClassName: example # (required) [string] storage class name available (ex: csi-cephfs-sc)
+     storageClassName: example # (required) [string] Filesystem storage class name available (ex: csi-cephfs-sc)

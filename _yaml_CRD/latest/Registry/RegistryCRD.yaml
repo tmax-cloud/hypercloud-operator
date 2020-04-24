@@ -44,6 +44,10 @@ spec:
             replicaSet:
               type: object
               properties:
+                labels:
+                  type: object
+                  additionalProperties:
+                    type: string
                 nodeSelector:
                   type: object
                   description: node selector
@@ -118,10 +122,6 @@ spec:
                 storageClassName:
                   type: string
                   description: "enter storage class name available (ex: csi-cephfs-sc)"
-                volumeMode:
-                  type: string
-                  enum: [Filesystem, Block]
-                  description: "ref.url: https://kubernetes.io/docs/concepts/storage/persistent-volumes/#volume-mode (default: Filesystem)"
         status:
           type: object
           properties:

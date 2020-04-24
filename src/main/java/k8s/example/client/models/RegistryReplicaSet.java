@@ -7,10 +7,17 @@ import io.kubernetes.client.openapi.models.V1LabelSelector;
 import io.kubernetes.client.openapi.models.V1Toleration;
 
 public class RegistryReplicaSet {
+	private Map<String, String> labels = null;
 	private Map<String, String> nodeSelector = null;
 	private V1LabelSelector selector = null;
 	private List<V1Toleration> tolerations = null;
 	
+	public Map<String, String> getLabels() {
+		return labels;
+	}
+	public void setLabels(Map<String, String> labels) {
+		this.labels = labels;
+	}
 	public Map<String, String> getNodeSelector() {
 		return nodeSelector;
 	}

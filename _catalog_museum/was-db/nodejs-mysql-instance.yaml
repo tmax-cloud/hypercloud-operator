@@ -34,4 +34,6 @@ spec:
       value: master
     - name: IMAGE_URL
       value: 192.168.6.110:5000/nodejs-sample
+    - name: PACKAGE_SERVER_URL
+      value: ''
 

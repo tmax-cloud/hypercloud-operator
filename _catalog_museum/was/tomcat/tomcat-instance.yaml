@@ -24,3 +24,5 @@ spec:
       value: 8080
     - name: SERVICE_TYPE
       value: LoadBalancer
+    - name: PACKAGE_SERVER_URL
+      value: ''
