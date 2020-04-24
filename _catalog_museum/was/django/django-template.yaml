@@ -49,6 +49,11 @@ parameters:
   displayName: ServiceType
   description: Service Type (ClsuterIP/NodePort/LoadBalancer)
   required: true
+- name: PACKAGE_SERVER_URL
+  displayName: PackageServerUrl
+  description: URL (including protocol, ip, port, and path) of private package server
+    (e.g., devpi, pypi, verdaccio, ...)
+  required: false
 objects:
 - apiVersion: v1
   kind: Service
@@ -140,6 +145,8 @@ objects:
       params:
       - name: BUILDER_IMAGE
         value: 192.168.6.110:5000/s2i-django:35
+      - name: PACKAGE_SERVER_URL
+        value: ${PACKAGE_SERVER_URL}
       resources:
         inputs:
         - name: source

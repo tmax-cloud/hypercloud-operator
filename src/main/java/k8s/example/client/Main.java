@@ -1,3 +1,4 @@
+
 package k8s.example.client;
 
 import org.quartz.CronScheduleBuilder;
@@ -11,6 +12,8 @@ import org.quartz.impl.StdSchedulerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.kubernetes.client.openapi.models.V1Namespace;
+import io.kubernetes.client.openapi.models.V1NamespaceList;
 import k8s.example.client.handler.UserDeleteJob;
 import k8s.example.client.k8s.K8sApiCaller;
 import k8s.example.client.metering.MeteringJob;
@@ -31,15 +34,40 @@ public class Main {
 			logger.info("[Main] Start User Delete per Week");
 			startUserDeleteTimer();
 
-			logger.info("[Main] Init & start K8S watchers");
-			// Start Controllers
+			// Init K8S Client
+			logger.info("[Main] Init K8S Client");
 			K8sApiCaller.initK8SClient();
+			
+			// Start Trial Namespace Timer
+			logger.info("[Main] Start Trial Namespace Timer");
+			startTrialNSTimer();
+			
+			// Start Start K8S watchers & Controllers
+			logger.info("[Main] Start K8S watchers");
 			K8sApiCaller.startWatcher(); // Infinite loop
+			
+			
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 	
+	private static void startTrialNSTimer() {
+		try {
+			V1NamespaceList nsList = K8sApiCaller.listNameSpace();
+			for ( V1Namespace ns : nsList.getItems()) {
+				if( ns.getMetadata().getLabels() != null && ns.getMetadata().getLabels().get("trial") != null
+						&& ns.getMetadata().getLabels().get("owner") != null) {
+					logger.info("[Main] Trial NameSpace : " + ns.getMetadata().getName());
+					Util.setTrialNSTimer(ns);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
 	private static void startMeteringTimer() throws SchedulerException {
 		JobDetail job = JobBuilder.newJob( MeteringJob.class )
 				.withIdentity( "MeteringJob" ).build();

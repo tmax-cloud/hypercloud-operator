@@ -1,0 +1,17 @@
+apiVersion: tmax.io/v1
+kind: TemplateInstance
+metadata:
+  name: nexus-package-server-instance
+  namespace: default
+spec:
+  template:
+    metadata:
+      name: nexus-package-server
+    parameters:
+    - name: DEPLOY_NAME
+      value: nexus-private-1
+    - name: NAMESPACE
+      value: default
+    - name: STORAGE
+      value: 10Gi
+

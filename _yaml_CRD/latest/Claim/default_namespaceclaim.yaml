@@ -2,6 +2,9 @@ apiVersion: tmax.io/v1
 kind: NamespaceClaim
 metadata:
   name: example-claim
+  labels: 
+    #trial: t
+    #owner: example-tmax.co.kr
 resourceName: example-namespace
 spec:
   hard:

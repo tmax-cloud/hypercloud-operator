@@ -24,7 +24,7 @@ spec:
       # metadata.name ex) admin-tmax.co.kr -> @ Must be entered as -
       # userInfo.email ex) admin@tmax.co.kr -> Email and name should be the same
       # The user controller will encrypt the password and update label 'encrypted: t'
-      # user can be belong to usergroup bt add label 'group-"userGroupName" : t'
+      # user can be belong to usergroup by add label 'group-"userGroupName" : t'
       type: object
       required: [userInfo, status]
       properties:

@@ -84,6 +84,7 @@ import io.kubernetes.client.openapi.models.V1Handler;
 import io.kubernetes.client.openapi.models.V1LabelSelector;
 import io.kubernetes.client.openapi.models.V1LabelSelectorRequirement;
 import io.kubernetes.client.openapi.models.V1Lifecycle;
+import io.kubernetes.client.openapi.models.V1ListMeta;
 import io.kubernetes.client.openapi.models.V1LoadBalancerIngress;
 import io.kubernetes.client.openapi.models.V1Namespace;
 import io.kubernetes.client.openapi.models.V1NamespaceList;
@@ -120,6 +121,7 @@ import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.V1ServiceList;
 import io.kubernetes.client.openapi.models.V1ServicePort;
 import io.kubernetes.client.openapi.models.V1ServiceSpec;
+import io.kubernetes.client.openapi.models.V1Status;
 import io.kubernetes.client.openapi.models.V1Subject;
 import io.kubernetes.client.openapi.models.V1Toleration;
 import io.kubernetes.client.openapi.models.V1Volume;
@@ -3954,13 +3956,20 @@ public class K8sApiCaller {
 		return latestResourceVersion;
 	}
 
-	public static void createNamespace(NamespaceClaim claim) throws Throwable {
+	public static V1Namespace createNamespace(NamespaceClaim claim) throws Throwable {
 		logger.info("[K8S ApiCaller] Create Namespace Start");
 
 		V1Namespace namespace = new V1Namespace();
 		V1ObjectMeta namespaceMeta = new V1ObjectMeta();
 		Map<String, String> label = new HashMap<>();
 		label.put("fromClaim", claim.getMetadata().getName());
+		
+		//Add Trial Label if exists
+		if (claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") != null
+				 && claim.getMetadata().getLabels().get("owner") != null) {
+			label.put("trial", claim.getMetadata().getLabels().get("trial"));
+			label.put("owner", claim.getMetadata().getLabels().get("owner"));
+		}
 		namespaceMeta.setLabels(label);
 		namespaceMeta.setName(claim.getResourceName());
 		namespace.setMetadata(namespaceMeta);
@@ -3972,7 +3981,7 @@ public class K8sApiCaller {
 			logger.info(e.getResponseBody());
 			throw e;
 		}
-
+		
 		V1ResourceQuota quota = new V1ResourceQuota();
 		V1ObjectMeta quotaMeta = new V1ObjectMeta();
 		quotaMeta.setName(claim.getResourceName());
@@ -3991,6 +4000,8 @@ public class K8sApiCaller {
 			logger.info(e.getResponseBody());
 			throw e;
 		}
+		
+		return namespaceResult;
 	}
 
 	public static void updateNamespace(NamespaceClaim claim) throws Throwable {
@@ -4000,6 +4011,13 @@ public class K8sApiCaller {
 		V1ObjectMeta namespaceMeta = new V1ObjectMeta();
 		Map<String, String> label = new HashMap<>();
 		label.put("fromClaim", claim.getMetadata().getName());
+		
+		//Add Trial Label if exists
+		if (claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") != null 
+				&& claim.getMetadata().getLabels().get("owner") !=null) {
+			label.put("trial", claim.getMetadata().getLabels().get("trial"));
+			label.put("owner", claim.getMetadata().getLabels().get("owner"));
+		}
 		namespaceMeta.setLabels(label);
 		namespaceMeta.setName(claim.getResourceName());
 		namespace.setMetadata(namespaceMeta);
@@ -4281,6 +4299,21 @@ public class K8sApiCaller {
 			throw e;
 		}
 	}
+	
+	public static void deleteRoleBinding(String nsName, String roleBindingName) throws Exception {
+		try {
+			V1DeleteOptions body = new V1DeleteOptions();
+			rbacApi.deleteNamespacedRoleBinding(roleBindingName, nsName, null, null, 0, null, null, body);
+		} catch (ApiException e) {
+			logger.info("Response body: " + e.getResponseBody());
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			logger.info("Exception message: " + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		}		
+	}
 
 	/**
 	 * END method for Namespace Claim Controller by seonho_choi DO-NOT-DELETE
@@ -4403,7 +4436,6 @@ public class K8sApiCaller {
 				nsList = api.listNamespace("true", false, null, null, null, 100, null, 60, false);
 			} else {
 				V1NamespaceList nsListK8S = api.listNamespace("true", false, null, null, null, 100, null, 60, false);
-
 				// 4. List of RoleBinding
 				if (nsListK8S.getItems() != null) {
 					for (V1Namespace ns : nsListK8S.getItems()) {
@@ -4480,7 +4512,14 @@ public class K8sApiCaller {
 					for (String nsName : nsNameList) {
 						if (nsList == null)
 							nsList = new V1NamespaceList();
-						nsList.addItemsItem(api.readNamespace(nsName, "true", false, false));
+						nsList.setKind("NamespaceList");
+						V1ListMeta nsListMeta = new V1ListMeta();
+						nsListMeta.setSelfLink("/api/v1/namespaces");
+						nsList.setMetadata(nsListMeta);
+						V1Namespace ns = api.readNamespace(nsName, "true", false, false);
+						ns.setKind(null);
+						ns.setApiVersion(null);
+						nsList.addItemsItem(ns);
 					}
 				}
 			}
@@ -4761,6 +4800,64 @@ public class K8sApiCaller {
 		return textBuilder.toString();
 
 	}
+	
+	public static V1NamespaceList listNameSpace() throws Exception {
+		V1NamespaceList nsList = null;
+		try {
+			nsList = api.listNamespace("true", false, null, null, null, 100, null, 60, false);
+		} catch (ApiException e) {
+			logger.info("Response body: " + e.getResponseBody());
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			logger.info("Exception message: " + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		}
+		return nsList;
+	}
+	
+	public static V1Namespace getNameSpace(String nsName) throws Exception {
+		V1Namespace nameSpace = null;
+
+		try {
+			logger.info("nameSpace [ " + nsName + " ] Get Service Start");
+
+			nameSpace = api.readNamespace(nsName, "true", false, false);
+		
+		} catch (ApiException e) {
+			logger.info("Response body: " + e.getResponseBody());
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			logger.info("Exception message: " + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		}
+		return nameSpace;
+	}
+	
+	public static void deleteNameSpace(String nsName) throws Exception {
+		try {
+			logger.info("nameSpace [ " + nsName + " ] Delete Service Start");
+			V1Status deleteStatus = api.deleteNamespace(nsName, null, null, 0, null, "Background" , new V1DeleteOptions());
+			logger.info("delete Status : "  + deleteStatus.getStatus());
+			logger.info("delete message : "  + deleteStatus.getMessage());
+			logger.info("delete reason : "  + deleteStatus.getReason());
+			logger.info("delete whole : "  + deleteStatus.toString());
+
+			logger.info("nameSpace [ " + nsName + " ] Deleted");
+		} catch (IllegalStateException e) {
+		} catch (ApiException e) {
+			logger.info("Response body: " + e.getResponseBody());
+			e.printStackTrace();
+		} catch (Exception e) {
+			logger.info("Exception message: " + e.getMessage());
+			e.printStackTrace();
+		}
+	}
+
+
 
 //	public static void updateClusterRoleBindingOfGroup(String userGroupName, String userId) throws Exception {
 //		V1ClusterRoleBindingList crbList = null;

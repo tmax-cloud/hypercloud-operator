@@ -49,6 +49,11 @@ parameters:
   displayName: ServiceType
   description: Service Type (ClsuterIP/NodePort/LoadBalancer)
   required: true
+- name: PACKAGE_SERVER_URL
+  displayName: PackageServerUrl
+  description: URL (including protocol, ip, port, and path) of private package server
+    (e.g., devpi, pypi, verdaccio, ...)
+  required: false
 objects:
 - apiVersion: v1
   kind: Service
@@ -139,7 +144,9 @@ objects:
         kind: ClusterTask
       params:
       - name: BUILDER_IMAGE
-        value: centos/nodejs-12-centos7
+        value: 192.168.6.110:5000/s2i-nodejs:12
+      - name: PACKAGE_SERVER_URL
+        value: ${PACKAGE_SERVER_URL}
       resources:
         inputs:
         - name: source

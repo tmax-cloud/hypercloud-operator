@@ -1,0 +1,17 @@
+apiVersion: tmax.io/v1
+kind: TemplateInstance
+metadata:
+  name: pypi-package-server-instance
+  namespace: default
+spec:
+  template:
+    metadata:
+      name: pypi-package-server
+    parameters:
+    - name: DEPLOY_NAME
+      value: pypi-private-1
+    - name: NAMESPACE
+      value: default
+    - name: STORAGE
+      value: 10Gi
+
