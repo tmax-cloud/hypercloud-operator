@@ -1610,7 +1610,8 @@ public class K8sApiCaller {
 
 			V1EnvVar env4 = new V1EnvVar();
 			env4.setName("REGISTRY_HTTP_ADDR");
-			env4.setValue("0.0.0.0:" + registryPort);
+//			env4.setValue("0.0.0.0:" + registryPort);
+			env4.setValue("0.0.0.0:" + registrySVCTargetPort);
 			container.addEnvItem(env4);
 
 			V1EnvVar env5 = new V1EnvVar();
