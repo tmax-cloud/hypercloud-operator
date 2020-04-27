@@ -145,6 +145,10 @@ public class Constants {
 	public static final String QUERY_PARAMETER_ENDTIME = "endTime";
 	public static final String QUERY_PARAMETER_SORT = "sort";
 	
+	// Namespace 
+	public static final String QUERY_PARAMETER_PERIOD = "period";
+	public static final String TRIAL_PERIOD_EXTEND_FAILED = "Trial NameSpace Period Extend Success";
+
 	// User Get Query Parameters
 	public static final String QUERY_PARAMETER_ID = "id";
 	public static final String QUERY_PARAMETER_MODE = "mode";

@@ -4074,6 +4074,18 @@ public class K8sApiCaller {
 			throw e;
 		}
 	}
+	
+	public static void replaceNamespace(V1Namespace namespace) throws Throwable {
+		logger.info("[K8S ApiCaller] Update Namespace Start");
+
+		V1Namespace namespaceResult;
+		try {
+			namespaceResult = api.replaceNamespace(namespace.getMetadata().getName(), namespace, null, null, null);
+		} catch (ApiException e) {
+			logger.info(e.getResponseBody());
+			throw e;
+		}
+	}
 
 	public static void createResourceQuota(NamespaceClaim claim) throws Throwable {
 		logger.info("[K8S ApiCaller] Create Resource Quota Start");
