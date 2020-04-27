@@ -212,7 +212,7 @@ public class RefreshHandler extends GeneralHandler {
         				
         				// Make outDO
             			refreshOutDO = new Token();
-            			refreshOutDO.setAtExpireTime(Integer.parseInt(configurationUpdateOut.get("value").toString().replaceAll("\"", "")));
+            			refreshOutDO.setAtExpireTime(Integer.parseInt(configurationUpdateOut.get("value").toString().replaceAll("\"", ""))/60);
             			Gson gson = new GsonBuilder().setPrettyPrinting().create();
             			outDO = gson.toJson(refreshOutDO).toString();
     	    			status = Status.OK; 
