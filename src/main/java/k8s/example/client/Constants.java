@@ -46,6 +46,9 @@ public class Constants {
 	public static final int ACCESS_TOKEN_EXP_TIME = 3600; // 1 hour
 	public static final int REFRESH_TOKEN_EXP_TIME = 604800; // 7 days
 	
+	public static final String TOKEN_EXPIRED_TIME_KEY = "TokenExpiredTime";
+	public static final String REFRESH_TOKEN_EXPIRED_TIME_KEY = "RefreshTokenExpiredTime";
+	
 	public static final String CLAIM_USER_ID = "id";
 	public static final String CLAIM_USER_GROUP_NAME = "groupName";
 	public static final String CLAIM_TOKEN_ID = "tokenId";
@@ -115,10 +118,12 @@ public class Constants {
 	public static final String LOGIN_FAILED = "Wrong ID or Password";
 	public static final String LOGOUT_FAILED = "Log Out Failed, Token is not Exist or Valid";
 	public static final String REFRESH_FAILED = "Refresh Failed, Refresh Token is not Valid";
+	public static final String EXPIRE_TIME_UPDATE_FAILED = "Expire Time Update Failed";
 	public static final String PASSWORD_CHANGE_FAILED = "Password Change Failed";
 	public static final String EMPTY_PASSWORD = "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e";
 	public static final String SECRET_VERIFICATAION_CODE = "verification-code-for-user";
 	public static final int VERIFICATAION_DURATION_MINUTES = 30;
+	public static final String OPERATOR_TOKEN_EXPIRE_TIME = "operator-token-expire-time";
 	
 	// User Status
 	public static final String USER_STATUS_BLOCKED = "blocked";
