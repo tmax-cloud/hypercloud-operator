@@ -3447,7 +3447,6 @@ public class K8sApiCaller {
 			try {
 				Map<String, byte[]> secretMap = new HashMap<>();
 				result = api.patchNamespacedSecret(Constants.K8S_PREFIX + secretName.toLowerCase(), namespace, jsonPatch, "true", null, null, null);
-				
 //				logger.info("[result]" + result);
 				
 //				secretMap = result.getData();
