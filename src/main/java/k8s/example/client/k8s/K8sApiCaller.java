@@ -3448,7 +3448,6 @@ public class K8sApiCaller {
 			try {
 				Map<String, byte[]> secretMap = new HashMap<>();
 				result = api.patchNamespacedSecret(Constants.K8S_PREFIX + secretName.toLowerCase(), namespace, jsonPatch, "true", null, null, null);
-				
 //				logger.info("[result]" + result);
 				
 //				secretMap = result.getData();
@@ -3975,16 +3974,22 @@ public class K8sApiCaller {
 
 		V1Namespace namespace = new V1Namespace();
 		V1ObjectMeta namespaceMeta = new V1ObjectMeta();
-		Map<String, String> label = new HashMap<>();
-		label.put("fromClaim", claim.getMetadata().getName());
+		Map<String, String> labels = new HashMap<>();
+		labels.put("fromClaim", claim.getMetadata().getName());
 		
 		//Add Trial Label if exists
 		if (claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") != null
 				 && claim.getMetadata().getLabels().get("owner") != null) {
-			label.put("trial", claim.getMetadata().getLabels().get("trial"));
-			label.put("owner", claim.getMetadata().getLabels().get("owner"));
+			labels.put("trial", claim.getMetadata().getLabels().get("trial"));
+			labels.put("owner", claim.getMetadata().getLabels().get("owner"));
 		}
-		namespaceMeta.setLabels(label);
+		
+		//Add Trial Annotations if exists
+		if (claim.getMetadata().getAnnotations() != null ) {
+			namespaceMeta.setAnnotations(claim.getMetadata().getAnnotations());
+		}
+				
+		namespaceMeta.setLabels(labels);
 		namespaceMeta.setName(claim.getResourceName());
 		namespace.setMetadata(namespaceMeta);
 
@@ -4023,16 +4028,22 @@ public class K8sApiCaller {
 
 		V1Namespace namespace = new V1Namespace();
 		V1ObjectMeta namespaceMeta = new V1ObjectMeta();
-		Map<String, String> label = new HashMap<>();
-		label.put("fromClaim", claim.getMetadata().getName());
+		Map<String, String> labels = new HashMap<>();
+		labels.put("fromClaim", claim.getMetadata().getName());
 		
 		//Add Trial Label if exists
 		if (claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") != null 
 				&& claim.getMetadata().getLabels().get("owner") !=null) {
-			label.put("trial", claim.getMetadata().getLabels().get("trial"));
-			label.put("owner", claim.getMetadata().getLabels().get("owner"));
+			labels.put("trial", claim.getMetadata().getLabels().get("trial"));
+			labels.put("owner", claim.getMetadata().getLabels().get("owner"));
 		}
-		namespaceMeta.setLabels(label);
+		
+		//Add Trial Annotations if exists
+		if (claim.getMetadata().getAnnotations() != null ) {
+			namespaceMeta.setAnnotations(claim.getMetadata().getAnnotations());
+		}
+				
+		namespaceMeta.setLabels(labels);
 		namespaceMeta.setName(claim.getResourceName());
 		namespace.setMetadata(namespaceMeta);
 
