@@ -1,4 +1,3 @@
-
 # Private Package Server
 Private package server는 클러스터 내부에 배포되는 패키지 서버로, 폐쇄망 환경에서도 CI/CD 기능의 정상 작동이 가능함.
 
@@ -63,7 +62,7 @@ kubectl apply -f ../was/django/django-instance.yaml
 본 과정을 통해 생성된 Pipeline 실행 시 (PipelineRun 생성 시) 항상 설정된 package server를 이용함.
 
 ## 폐쇄망) 필수 패키지 업로드 가이드
-#### 주의: 본 가이드에서 제공하는 패키지 tar는 연구소에서 제공하는 일부 예시 어플리케이션만을 위한 패키지 묶음으로 (예시 어플리케이션은 각 WAS 별 instance.yaml의 GIT_URL 필드 참조), 다른 어플리케이션을 사용할 경우 해당 어플리케이션이 필요로 하는 패키지를 모두 패키지 서버에 따로 업로드 (publish) 해주어야 함. 패키지 publish 방법은 각각 [pypi](https://pypi.org/project/pypiserver/#uploading-packages-remotely) / [verdaccio](https://github.com/verdaccio/verdaccio#publishing) / [nexus](https://mincong.io/2018/08/04/maven-deploy-artifacts-to-nexus/) 매뉴얼 참조.
+#### 주의: 본 가이드에서 제공하는 패키지 tar는 연구소에서 제공하는 일부 예시 어플리케이션만을 위한 패키지 묶음으로 (예시 어플리케이션은 각 WAS 별 instance.yaml의 GIT_URL 필드 참조), 다른 어플리케이션을 사용할 경우 해당 어플리케이션이 필요로 하는 패키지를 모두 패키지 서버에 따로 업로드 (publish) 해주어야 함. 패키지 publish 방법은 각각 [pypi](https://pypi.org/project/pypiserver/#uploading-packages-remotely) / [verdaccio](https://github.com/verdaccio/verdaccio#publishing) / [archiva](https://archiva.apache.org/docs/2.1.1/userguide/deploy.html) 매뉴얼 참조.
 
 ### Python-Pypi
 1. [pypi.tar](http://192.168.1.150:9090/share/page/site/cloud-rnd-site/document-details?nodeRef=workspace://SpacesStore/ca04a89f-9cc3-41f5-a467-5ca40cd43fe6) 다운로드
