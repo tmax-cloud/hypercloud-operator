@@ -3,12 +3,14 @@ Private package server는 클러스터 내부에 배포되는 패키지 서버�
 
 현재는 아래의 언어/패키지 서버를 지원함.
 * Python - Pypi
-* Pyton - devpi
+* Pyton - devpi  
 : pypi.org 자동 미러링 가능, `192.168.6.110:5000/devpi:latest` 이미지 필요
-* Node.js - Verdaccio
+* Node.js - Verdaccio  
 : npmjs.org 자동 미러링 가능
-* Java(maven) - Nexus3
-: Maven central repository 자동 미러링 가능
+* Java(maven) - Archiva  
+: Maven repository 미러링 가능
+* Java(maven) - Nexus3  
+: Maven repository 미러링 가능
 
 #### 주의: 폐쇄망 환경에서는 위 패키지 서버를 배포한 이후 CI/CD에 필요한 패키지들을 해당 서버에 배포해 주어야 CI/CD가 정상 작동함.
 
@@ -49,6 +51,7 @@ spec:
 * Python-pypi : `http://[ip]:8080`
 * Python-devpi : `http://[ip]:3141/root/pypi`
 * Node.js-verdaccio : `http://[ip]:4873`
+* Java-archiva: `http://[ip]:8080/repository/internal`
 * Java-nexus: `http://[ip]:8081/repository/maven-central`
 
 3. Django CI/CD 파이프라인 실행
@@ -59,8 +62,7 @@ kubectl apply -f ../was/django/django-instance.yaml
 본 과정을 통해 생성된 Pipeline 실행 시 (PipelineRun 생성 시) 항상 설정된 package server를 이용함.
 
 ## 폐쇄망) 필수 패키지 업로드 가이드
-#### 주의: 본 가이드에서 제공하는 패키지 tar는 연구소에서 제공하는 일부 예시 어플리케이션만을 위한 패키지 묶음으로 (예시 어플리케이션은 각 WAS 별 instance.yaml의 GIT_URL 필드 참조), 다른 어플리케이션을 사용할 경우 해당 어플리케이션이 필요로 하는 패키지를 모두 패키지 서버에 따로 업로드 (publish) 해주어야 함. 패키지 publish 방법은 각각 [pypi](https://pypi.org/project/pypiserver/#uploading-packages-remotely)) / [verdaccio](https://github.com/verdaccio/verdaccio#publishing) / [nexus](https://mincong.io/2018/08/04/maven-deploy-artifacts-to-nexus/) 매뉴얼 참조
-.
+#### 주의: 본 가이드에서 제공하는 패키지 tar는 연구소에서 제공하는 일부 예시 어플리케이션만을 위한 패키지 묶음으로 (예시 어플리케이션은 각 WAS 별 instance.yaml의 GIT_URL 필드 참조), 다른 어플리케이션을 사용할 경우 해당 어플리케이션이 필요로 하는 패키지를 모두 패키지 서버에 따로 업로드 (publish) 해주어야 함. 패키지 publish 방법은 각각 [pypi](https://pypi.org/project/pypiserver/#uploading-packages-remotely) / [verdaccio](https://github.com/verdaccio/verdaccio#publishing) / [archiva](https://archiva.apache.org/docs/2.1.1/userguide/deploy.html) 매뉴얼 참조.
 
 ### Python-Pypi
 1. [pypi.tar](http://192.168.1.150:9090/share/page/site/cloud-rnd-site/document-details?nodeRef=workspace://SpacesStore/ca04a89f-9cc3-41f5-a467-5ca40cd43fe6) 다운로드
@@ -82,14 +84,13 @@ kubectl cp verdaccio.tar $POD_ID:/tmp/verdaccio.tar
 kubectl exec -ti $POD_ID -- tar -xvf /tmp/verdaccio.tar -C /verdaccio/storage
 ```
 
-### Java-Nexus3
-1. [nexus.tar](http://192.168.1.150:9090/share/page/site/cloud-rnd-site/document-details?nodeRef=workspace://SpacesStore/c6180f00-7c0e-4a1d-9635-ba31fd5ae695) 다운로드
+### Java-Archiva
+1. [archiva.tar](http://192.168.1.150:9090/share/page/site/cloud-rnd-site/document-details?nodeRef=workspace://SpacesStore/3347e70b-f44e-4e1f-8668-28fd5cd96fd1) 다운로드
 
 2. 적용
 ```bash
-POD_ID=$(kubectl get pod -l 'app=nexus-private-1' -o jsonpath='{.items[].metadata.name}')
-kubectl cp nexus.tar $POD_ID:/tmp/nexus.tar
-kubectl exec -ti $POD_ID -- tar -xvf /tmp/nexus.tar -C /nexus-data
-kubectl delete pod $POD_ID
+POD_ID=$(kubectl get pod -l 'app=archiva-private-1' -o jsonpath='{.items[].metadata.name}')
+kubectl cp archiva.tar $POD_ID:/tmp/archiva.tar
+kubectl exec -ti $POD_ID -- tar -xvf /tmp/archiva.tar -C /archiva-data/repositories/internal
 ```
 
