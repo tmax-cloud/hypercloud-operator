@@ -301,6 +301,8 @@ public class Util {
     	Timer timer = TimerMap.getTimer(nsName);
     	timer.cancel();
     	TimerMap.removeTimer(nsName);	
+		logger.info("   Delete Trial NameSpace Timer Success ");
+
     }
 
     
