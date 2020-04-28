@@ -110,13 +110,12 @@ public class Util {
         return numStr;
 	}
 	 
-	 public static void sendMail( String email, String subject, String body ) throws Throwable {	
+	 public static void sendMail( String recipient, String subject, String body ) throws Throwable {	
 		logger.info( " Send Verification Mail User ");
 		String host = "mail.tmax.co.kr";
 		int port = 25;
-		String sender = "taegeon_woo@tmax.co.kr";
-		String recipient = email; 
-
+		String sender = "no-reply-tc@tmax.co.kr";
+		
 		String charSetUtf = "UTF-8" ; 
 		Properties props = System.getProperties();
 		props.put( "mail.transport.protocol", "smtp" );
@@ -128,8 +127,8 @@ public class Util {
 		props.put("mail.smtp.ssl.protocols", "TLSv1.2");
 		
 		Session session = Session.getDefaultInstance( props, new javax.mail.Authenticator() {
-			String un = "taegeon_woo@tmax.co.kr";
-			String pw = "tg540315";
+			String un = "no-reply-tc@tmax.co.kr";
+			String pw = "!@tcdnsdudxla11";
 			protected PasswordAuthentication getPasswordAuthentication() {
 				return new PasswordAuthentication( un, pw );
 			}
