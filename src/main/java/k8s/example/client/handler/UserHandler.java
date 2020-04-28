@@ -93,21 +93,13 @@ public class UserHandler extends GeneralHandler {
 			K8sApiCaller.createUser(userInDO);
 			userInDO.setPassword(password);
 
-//    		// Create Role & RoleBinding 
-//    		K8sApiCaller.createClusterRoleForNewUser(userInDO);  		
-//    		K8sApiCaller.createClusterRoleBindingForNewUser(userInDO);  		
+    		// Create Role & RoleBinding 
+    		K8sApiCaller.createClusterRoleForNewUser(userInDO);  		
+    		K8sApiCaller.createClusterRoleBindingForNewUser(userInDO);  		
 
 			// Call UserCreate to ProAuth
 			OAuthApiCaller.createUser(userInDO);
 
-			// Login to ProAuth & Get Token
-//    		JsonObject loginOut = OAuthApiCaller.AuthenticateCreate(userInDO.getId(), userInDO.getPassword());
-////    		String refreshToken = loginOut.get("refresh_token").toString().replaceAll("\"", "");
-//    		String accessToken = loginOut.get("token").toString().replaceAll("\"", ""); //
-//    		logger.info( "  accessToken : " + accessToken );
-
-			// Send E-mail to User
-//    		sendMail(userInDO.getEmail(), accessToken, null); //FIXME : UI 연동 테스트 후 주석 풀어줘야함
 			status = Status.CREATED;
 			outDO = "User Create Success";
 

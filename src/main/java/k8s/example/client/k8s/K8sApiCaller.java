@@ -4253,20 +4253,23 @@ public class K8sApiCaller {
 		rule.addVerbsItem("*");
 		rules.add(rule);
 
-		// Cluster Rule
+		// ClusterRole & ClusterRoleBinding Rule
 		rule = new V1PolicyRule();
 		rule.addApiGroupsItem(Constants.RBAC_API_GROUP);
 		rule.addResourcesItem("clusterroles");
-		rule.addResourceNamesItem(userInDO.getId());
-		rule.addVerbsItem("*");
-		rules.add(rule);
-
-		// ClusterRoleBinding Rule
-		rule = new V1PolicyRule();
-		rule.addApiGroupsItem(Constants.RBAC_API_GROUP);
 		rule.addResourcesItem("clusterrolebindings");
 		rule.addResourceNamesItem(userInDO.getId());
 		rule.addVerbsItem("*");
+		rules.add(rule);
+	
+		// Claims Rule
+		rule = new V1PolicyRule();
+		rule.addApiGroupsItem(Constants.CUSTOM_OBJECT_GROUP);
+		rule.addResourcesItem("rolebindingclaims");
+		rule.addResourcesItem("resourcequotaclaims");
+		rule.addResourcesItem("namespaceclaims");
+		rule.addVerbsItem("create");
+		rule.addVerbsItem("list");		
 		rules.add(rule);
 
 		clusterRole.setRules(rules);
