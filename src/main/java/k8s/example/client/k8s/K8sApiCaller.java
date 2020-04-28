@@ -4443,8 +4443,14 @@ public class K8sApiCaller {
 			if (clusterRoleList != null) {
 				for (String clusterRoleName : clusterRoleList) {
 					logger.info("User [ " + userId + " ] has ClusterRole [ " + clusterRoleName + " ]");
-					V1ClusterRole clusterRole = rbacApi.readClusterRole(clusterRoleName, "true");
-					List<V1PolicyRule> rules = clusterRole.getRules();
+					V1ClusterRole clusterRole = null;
+					List<V1PolicyRule> rules = null;
+					try{
+						clusterRole = rbacApi.readClusterRole(clusterRoleName, "true"); // rolebinding은 있는데 role을 지웠을 경우를 대비
+						rules = clusterRole.getRules();
+					} catch (ApiException e) {
+						if( !e.getResponseBody().contains("NotFound") ) throw e;			
+					}
 					if (rules != null) {
 						for (V1PolicyRule rule : rules) {
 							if (rule.getResources() != null) {
@@ -4494,9 +4500,14 @@ public class K8sApiCaller {
 									if (roleRef.getKind().equalsIgnoreCase("Role")) {
 										logger.info(
 												"User [ " + userId + " ] has Role [" + roleRef.getName() + " ]");
-										V1Role role = rbacApi.readNamespacedRole(roleRef.getName(),
-												ns.getMetadata().getName(), "true");
-										List<V1PolicyRule> rules = role.getRules();
+										V1Role role = null;
+										List<V1PolicyRule> rules = null;
+										try{
+											role = rbacApi.readNamespacedRole(roleRef.getName(), ns.getMetadata().getName(), "true");  // rolebinding은 있는데 role을 지웠을 경우를 대비
+											rules = role.getRules();
+										} catch (ApiException e) {
+											if( !e.getResponseBody().contains("NotFound") ) throw e;			
+										}
 										if (rules != null) {
 											for (V1PolicyRule rule : rules) {
 												if (rule.getResources() != null) {
@@ -4520,8 +4531,15 @@ public class K8sApiCaller {
 										// 6. Check if ClusterRole has NameSpace GET rule
 									} else if (roleRef.getKind().equalsIgnoreCase("ClusterRole")) {
 										logger.info("User [ " + userId + " ] has ClusterRole [" + roleRef.getName() + " ]");
-										V1ClusterRole role = rbacApi.readClusterRole(roleRef.getName(), "true");
-										List<V1PolicyRule> rules = role.getRules();
+										
+										V1ClusterRole role = null;
+										List<V1PolicyRule> rules = null;
+										try{
+											role = rbacApi.readClusterRole(roleRef.getName(), "true"); // rolebinding은 있는데 role을 지웠을 경우를 대비
+											rules = role.getRules();
+										} catch (ApiException e) {
+											if( !e.getResponseBody().contains("NotFound") ) throw e;			
+										}
 										if (rules != null) {
 											for (V1PolicyRule rule : rules) {
 												if (rule.getResources() != null) {
