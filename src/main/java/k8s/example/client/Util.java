@@ -114,9 +114,10 @@ public class Util {
 		logger.info( " Send Verification Mail User ");
 		String host = "mail.tmax.co.kr";
 		int port = 25;
+		String sender = "taegeon_woo@tmax.co.kr";
 		String recipient = email; 
 
-		String charSetUtf = "UTF-8" ; //FIXME : 제목 한글 여전히 깨짐 ㅠㅠ
+		String charSetUtf = "UTF-8" ; 
 		Properties props = System.getProperties();
 		props.put( "mail.transport.protocol", "smtp" );
 		props.put( "mail.smtp.host", host );
@@ -137,9 +138,9 @@ public class Util {
 		session.setDebug( true );
 
 		MimeMessage mimeMessage = new MimeMessage(session);
-		
+
 		// Sender
-		mimeMessage.setFrom( new InternetAddress(recipient, recipient, charSetUtf));
+		mimeMessage.setFrom( new InternetAddress(sender, sender, charSetUtf));
 		
 		// Receiver
 		mimeMessage.setRecipient( Message.RecipientType.TO, new InternetAddress( recipient ) );
