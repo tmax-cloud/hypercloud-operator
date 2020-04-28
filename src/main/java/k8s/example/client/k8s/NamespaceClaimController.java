@@ -103,10 +103,10 @@ public class NamespaceClaimController extends Thread {
 											}
 											
 											// Set Timers to Send Mail (3 weeks later), Delete Trial NS (1 month later)
-											if ( !TimerMap.isExists(nsResult) ) {
+											if ( !TimerMap.isExists(nsResult.getMetadata().getName()) ) {
 												Util.setTrialNSTimer( nsResult );
-												for (V1Namespace timerNs : TimerMap.getTimerList()) {
-													logger.info(" Registered NameSpace Timer : " + timerNs.getMetadata().getName() );
+												for (String nsName : TimerMap.getTimerList()) {
+													logger.info("   Registered NameSpace Timer in test : " + nsName );
 												}
 											} else {
 												logger.info(" Timer for Trial NameSpace [ " + nsResult.getMetadata().getName() + " ] Already Exists ");

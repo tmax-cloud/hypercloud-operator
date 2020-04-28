@@ -104,6 +104,9 @@ components:
         refreshToken:
           type: string
           description: "Refresh Token"
+        atExpireTime:
+          type: integer
+          description: "Access Token Expire Time [min]"  
     StatusDO:
       type: object
       description: "HyperCloud4 CRDs Status DO"
@@ -364,6 +367,27 @@ paths:
                   {
                     "accessToken": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
                   }
+    put:
+      tags:
+      - "Integrated Auth"
+      summary: "Integrated Hyper Cloud4 Token Expire Time Update Service"        
+      requestBody:
+        description: "Token"
+        required: true  
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                dto:
+                  $ref: "#/components/schemas/TokenDO"    
+              example:
+                {
+                  "atExpireTime": 60
+                }     
+      responses:
+        200:
+          description: Integrated Hyper Cloud4 User ID Duplication Check Service or Meta,Password Change Service Success                  
   /authClient:
     post:
       tags:
@@ -690,4 +714,22 @@ paths:
     }
   ]
 }            
+    put:
+      tags:
+      - "Trial"
+      summary: "Trial Namespace Period Extend Service"    
+      parameters:
+      - in: "query"
+        name: "namespace"
+        description: "trial namespace name"
+        schema:
+          type: "string" 
+      - in: "query"
+        name: "period"
+        description: "trial namespace period"
+        schema:
+          type: "string"     
+      responses:
+        200:
+          description: "Trial NameSpace Period Extend Success"     
 # EOF

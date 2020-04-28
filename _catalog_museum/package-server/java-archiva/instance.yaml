@@ -1,0 +1,17 @@
+apiVersion: tmax.io/v1
+kind: TemplateInstance
+metadata:
+  name: archiva-package-server-instance
+  namespace: default
+spec:
+  template:
+    metadata:
+      name: archiva-package-server
+    parameters:
+    - name: DEPLOY_NAME
+      value: archiva-private-1
+    - name: NAMESPACE
+      value: default
+    - name: STORAGE
+      value: 10Gi
+

@@ -125,6 +125,7 @@ import io.kubernetes.client.openapi.models.V1Status;
 import io.kubernetes.client.openapi.models.V1Subject;
 import io.kubernetes.client.openapi.models.V1Toleration;
 import io.kubernetes.client.openapi.models.V1Volume;
+import io.kubernetes.client.openapi.models.V1VolumeDevice;
 import io.kubernetes.client.openapi.models.V1VolumeMount;
 import io.kubernetes.client.util.Config;
 import k8s.example.client.Constants;
@@ -1026,7 +1027,7 @@ public class K8sApiCaller {
 			v1port.setProtocol(RegistryService.REGISTRY_PORT_PROTOCOL);
 			v1port.setPort(registrySVCPort);
 			v1port.setName(RegistryService.REGISTRY_PORT_NAME);
-			v1port.setTargetPort(new IntOrString(registrySVCPort));
+			v1port.setTargetPort(new IntOrString(registrySVCTargetPort));
 			if (regService.getType().equals(RegistryService.SVC_TYPE_NODE_PORT)) {
 				if (registrySVCNodePort != 0)
 					v1port.setNodePort(registrySVCNodePort);
@@ -1257,11 +1258,11 @@ public class K8sApiCaller {
 			sb.append("openssl req -newkey rsa:4096 -nodes -sha256 -keyout ");
 			sb.append(registryDir + "/" + Constants.CERT_KEY_FILE);
 			sb.append(" -x509 -days 1000 -subj \"/C=KR/ST=Seoul/O=tmax/CN=");
-//			sb.append(registryIP + ":" + registryPort);
-			sb.append(registryIP);
+			sb.append(registryIP + ":" + registryPort);
+//			sb.append(registryIP);
 			sb.append("\" -config <(cat /etc/ssl/openssl.cnf <(printf \"[v3_ca]\\nsubjectAltName=IP:");
 			sb.append(registryIP);
-			sb.append(",DNS:tmax2-registry");
+//			sb.append(",DNS:tmax2-registry");
 			sb.append("\")) -out ");
 			sb.append(registryDir + "/" + Constants.CERT_CRT_FILE);
 			commands.clear();
@@ -1609,7 +1610,8 @@ public class K8sApiCaller {
 
 			V1EnvVar env4 = new V1EnvVar();
 			env4.setName("REGISTRY_HTTP_ADDR");
-			env4.setValue("0.0.0.0:" + registryPort);
+//			env4.setValue("0.0.0.0:" + registryPort);
+			env4.setValue("0.0.0.0:" + registrySVCTargetPort);
 			container.addEnvItem(env4);
 
 			V1EnvVar env5 = new V1EnvVar();
@@ -1673,10 +1675,22 @@ public class K8sApiCaller {
 			container.addVolumeMountsItem(certMount);
 
 			// Registry Volume mount
-			V1VolumeMount registryMount = new V1VolumeMount();
-			registryMount.setName("registry");
-			registryMount.setMountPath("/var/lib/registry");
-			container.addVolumeMountsItem(registryMount);
+			String mode = null;
+			if( (mode = registry.getSpec().getPersistentVolumeClaim().getVolumeMode()) != null
+					&& mode.equals("Block")) {
+				V1VolumeDevice volumeDevicesItem = new V1VolumeDevice();
+				
+				volumeDevicesItem.setName("registry");
+				volumeDevicesItem.setDevicePath("/var/lib/registry");
+				container.addVolumeDevicesItem(volumeDevicesItem);
+			}
+			else {
+				V1VolumeMount registryMount = new V1VolumeMount();
+				
+				registryMount.setName("registry");
+				registryMount.setMountPath("/var/lib/registry");
+				container.addVolumeMountsItem(registryMount);
+			}
 
 			// Get loginAuth For Readiness Probe
 			String loginAuth = registry.getSpec().getLoginId() + ":" + registry.getSpec().getLoginPassword();
@@ -1692,7 +1706,8 @@ public class K8sApiCaller {
 			headers.add(authHeader);
 
 			httpGet.setPath("v2/_catalog");
-			httpGet.setPort(new IntOrString(registryPort));
+//			httpGet.setPort(new IntOrString(registryPort));
+			httpGet.setPort(new IntOrString(registrySVCTargetPort));
 			httpGet.setScheme("HTTPS");
 			httpGet.setHttpHeaders(headers);
 			readinessProbe.setHttpGet(httpGet);
@@ -1714,7 +1729,8 @@ public class K8sApiCaller {
 			headers2.add(authHeader2);
 
 			httpGet2.setPath("v2/_catalog");
-			httpGet2.setPort(new IntOrString(registryPort));
+//			httpGet2.setPort(new IntOrString(registryPort));
+			httpGet2.setPort(new IntOrString(registrySVCTargetPort));
 			httpGet2.setScheme("HTTPS");
 			httpGet2.setHttpHeaders(headers2);
 			livenessProbe.setHttpGet(httpGet2);
@@ -3434,7 +3450,6 @@ public class K8sApiCaller {
 			try {
 				Map<String, byte[]> secretMap = new HashMap<>();
 				result = api.patchNamespacedSecret(Constants.K8S_PREFIX + secretName.toLowerCase(), namespace, jsonPatch, "true", null, null, null);
-				
 //				logger.info("[result]" + result);
 				
 //				secretMap = result.getData();
@@ -3961,16 +3976,22 @@ public class K8sApiCaller {
 
 		V1Namespace namespace = new V1Namespace();
 		V1ObjectMeta namespaceMeta = new V1ObjectMeta();
-		Map<String, String> label = new HashMap<>();
-		label.put("fromClaim", claim.getMetadata().getName());
+		Map<String, String> labels = new HashMap<>();
+		labels.put("fromClaim", claim.getMetadata().getName());
 		
 		//Add Trial Label if exists
 		if (claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") != null
 				 && claim.getMetadata().getLabels().get("owner") != null) {
-			label.put("trial", claim.getMetadata().getLabels().get("trial"));
-			label.put("owner", claim.getMetadata().getLabels().get("owner"));
+			labels.put("trial", claim.getMetadata().getLabels().get("trial"));
+			labels.put("owner", claim.getMetadata().getLabels().get("owner"));
 		}
-		namespaceMeta.setLabels(label);
+		
+		//Add Trial Annotations if exists
+		if (claim.getMetadata().getAnnotations() != null ) {
+			namespaceMeta.setAnnotations(claim.getMetadata().getAnnotations());
+		}
+				
+		namespaceMeta.setLabels(labels);
 		namespaceMeta.setName(claim.getResourceName());
 		namespace.setMetadata(namespaceMeta);
 
@@ -4009,16 +4030,22 @@ public class K8sApiCaller {
 
 		V1Namespace namespace = new V1Namespace();
 		V1ObjectMeta namespaceMeta = new V1ObjectMeta();
-		Map<String, String> label = new HashMap<>();
-		label.put("fromClaim", claim.getMetadata().getName());
+		Map<String, String> labels = new HashMap<>();
+		labels.put("fromClaim", claim.getMetadata().getName());
 		
 		//Add Trial Label if exists
 		if (claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") != null 
 				&& claim.getMetadata().getLabels().get("owner") !=null) {
-			label.put("trial", claim.getMetadata().getLabels().get("trial"));
-			label.put("owner", claim.getMetadata().getLabels().get("owner"));
+			labels.put("trial", claim.getMetadata().getLabels().get("trial"));
+			labels.put("owner", claim.getMetadata().getLabels().get("owner"));
 		}
-		namespaceMeta.setLabels(label);
+		
+		//Add Trial Annotations if exists
+		if (claim.getMetadata().getAnnotations() != null ) {
+			namespaceMeta.setAnnotations(claim.getMetadata().getAnnotations());
+		}
+				
+		namespaceMeta.setLabels(labels);
 		namespaceMeta.setName(claim.getResourceName());
 		namespace.setMetadata(namespaceMeta);
 
@@ -4045,6 +4072,18 @@ public class K8sApiCaller {
 		try {
 			quotaResult = api.replaceNamespacedResourceQuota(claim.getResourceName(), claim.getResourceName(), quota,
 					null, null, null);
+		} catch (ApiException e) {
+			logger.info(e.getResponseBody());
+			throw e;
+		}
+	}
+	
+	public static void replaceNamespace(V1Namespace namespace) throws Throwable {
+		logger.info("[K8S ApiCaller] Update Namespace Start");
+
+		V1Namespace namespaceResult;
+		try {
+			namespaceResult = api.replaceNamespace(namespace.getMetadata().getName(), namespace, null, null, null);
 		} catch (ApiException e) {
 			logger.info(e.getResponseBody());
 			throw e;
