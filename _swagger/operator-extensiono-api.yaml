@@ -714,4 +714,22 @@ paths:
     }
   ]
 }            
+    put:
+      tags:
+      - "Trial"
+      summary: "Trial Namespace Period Extend Service"    
+      parameters:
+      - in: "query"
+        name: "namespace"
+        description: "trial namespace name"
+        schema:
+          type: "string" 
+      - in: "query"
+        name: "period"
+        description: "trial namespace period"
+        schema:
+          type: "string"     
+      responses:
+        200:
+          description: "Trial NameSpace Period Extend Success"     
 # EOF

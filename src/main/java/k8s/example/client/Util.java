@@ -215,11 +215,18 @@ public class Util {
 
 		DateTime createTime = nsResult.getMetadata().getCreationTimestamp();
 		logger.info(" CreateTime : " + createTime);
+		
+		// Set Mail, Delete Time 
+		DateTime mailTime = createTime.plusDays(23);
+		DateTime deleteTime = createTime.plusDays(30);
+		if ( nsResult.getMetadata().getLabels().get("period") != null ) {
+			deleteTime = createTime.plusDays( Integer.parseInt(nsResult.getMetadata().getLabels().get("period")) * 30 );
+			mailTime = deleteTime.minusDays(7);
+		}
 
-		Timer mailTimer = new Timer(nsResult.getMetadata().getUid() + "#" + nsResult.getMetadata().getName() + "#" + nsResult.getMetadata().getLabels().get("owner"));
-		Timer deleteTimer = new Timer(nsResult.getMetadata().getUid() + "#" + nsResult.getMetadata().getName() + "#" + nsResult.getMetadata().getLabels().get("owner"));
+		Timer timer = new Timer(nsResult.getMetadata().getUid() + "#" + nsResult.getMetadata().getName() + "#" + nsResult.getMetadata().getLabels().get("owner"));
 
-		mailTimer.schedule(new TimerTask() {
+		timer.schedule(new TimerTask() {
 			public void run() {
 				try {
 					String nsId = Thread.currentThread().getName().split("#")[0];
@@ -249,11 +256,11 @@ public class Util {
 					e.printStackTrace();
 				}
 			}
-		}, createTime.plusDays(23).toDate());
+		}, mailTime.toDate());
 		
 		logger.info("   Set Trial NameSpace Sending Mail Timer Success ");
 
-		deleteTimer.schedule(new TimerTask() {
+		timer.schedule(new TimerTask() {
 			public void run() {
 				try {
 					String nsId = Thread.currentThread().getName().split("#")[0];
@@ -279,16 +286,24 @@ public class Util {
 					e.printStackTrace();
 				}
 			}
-		}, createTime.plusDays(30).toDate());
+		}, deleteTime.toDate());
 		
 		logger.info("   Set Trial NameSpace Delete Timer Success ");
 
 		// Insert to TimerMap
-		TimerMap.addTimerList(nsResult);
-		for (V1Namespace timerNs : TimerMap.getTimerList()) {
-			logger.info("   Registered NameSpace Timer in test : " + timerNs.getMetadata().getName() );
-		}
-			
+		TimerMap.addTimer(nsResult.getMetadata().getName(), timer );
+		for (String nsName : TimerMap.getTimerList()) {
+			logger.info("   Registered NameSpace Timer in test : " + nsName );
+		}	
 	}
+    
+    public static void deleteTrialNSTimer( String nsName ) throws Exception  {
+    	Timer timer = TimerMap.getTimer(nsName);
+    	timer.cancel();
+    	TimerMap.removeTimer(nsName);	
+		logger.info("   Delete Trial NameSpace Timer Success ");
+
+    }
+
     
 }
