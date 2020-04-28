@@ -22,6 +22,7 @@ import fi.iki.elonen.NanoHTTPD.Response.Status;
 import fi.iki.elonen.router.RouterNanoHTTPD.GeneralHandler;
 import fi.iki.elonen.router.RouterNanoHTTPD.UriResource;
 import io.kubernetes.client.openapi.ApiException;
+import io.kubernetes.client.openapi.models.V1Secret;
 import k8s.example.client.Constants;
 import k8s.example.client.DataObject.Client;
 import k8s.example.client.DataObject.CommonOutDO;
@@ -129,12 +130,10 @@ public class LoginHandler extends GeneralHandler {
 	        		}
 	    	    } 
 	        	if (System.getenv( "PROAUTH_EXIST" ) == null || !System.getenv( "PROAUTH_EXIST" ).equalsIgnoreCase("1") ){	
-	        		// 그대로 아이디 비번 오류 구분O  //TODO
-	        		// TODO 추가 요건: 동일 계정에 대해서 10번 로그인 실패시, 계정 잠금 --> 무조건 비밀번호 재설정  ( 4/30 요건 )
 	        		
 	        		logger.info( "  [[ OpenAuth System! ]]" );  			
 		    		// Get user info
-		    		String userId = loginInDO.getId().replace("@", "-");
+		    		String userId = loginInDO.getId();
 		    		UserCR user = K8sApiCaller.getUser(userId);
 		    		String encryptedPassword = Util.Crypto.encryptSHA256(loginInDO.getPassword() + loginInDO.getId() + user.getUserInfo().getPasswordSalt());
 		    		logger.info("  DB password: " + user.getUserInfo().getPassword() + " / Input password: " + encryptedPassword);
@@ -148,8 +147,18 @@ public class LoginHandler extends GeneralHandler {
 			    			// Make token & refresh token
 			    			String tokenId = UUID.randomUUID().toString();
 			    			
+			    			//Get Access Token Expire Time from secret
+			    			int atExpireTimeSec = Constants.ACCESS_TOKEN_EXP_TIME;
+			    			try {
+			    				V1Secret secretReturn = K8sApiCaller.readSecret(Constants.TEMPLATE_NAMESPACE, Constants.K8S_PREFIX + Constants.OPERATOR_TOKEN_EXPIRE_TIME );
+		        				atExpireTimeSec = Integer.parseInt(secretReturn.getStringData().get(Constants.TOKEN_EXPIRED_TIME_KEY));
+				    			logger.info(" AccessToken Expire Time is set to "+  atExpireTimeSec/60 +"min ");
+			    			} catch ( ApiException e ) {
+				    			logger.info(" AccessToken Expire Time is set to default value 60 min ");
+		        				e.printStackTrace(); //TODO : 없애
+			    			}
 			    			Builder tokenBuilder = JWT.create().withIssuer(Constants.ISSUER)
-									.withExpiresAt(Util.getDateFromSecond(Constants.ACCESS_TOKEN_EXP_TIME))
+									.withExpiresAt(Util.getDateFromSecond(atExpireTimeSec))
 									.withClaim(Constants.CLAIM_USER_ID, loginInDO.getId())
 			    					.withClaim(Constants.CLAIM_TOKEN_ID, tokenId);
 			    			

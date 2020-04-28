@@ -49,10 +49,10 @@ public class UserWatcher extends Thread {
 					
 					// Logic here
 					try {
-						logger.info("[UserWatcher] Encrypt password of " + response.object.getUserInfo().getEmail());
+						logger.info("[UserWatcher] Encrypt password of User " + response.object.getMetadata().getName());
 
 						K8sApiCaller.encryptUserPassword(
-								response.object.getUserInfo().getEmail().replace("@", "-"), 
+								response.object.getMetadata().getName(), 
 								response.object.getUserInfo().getPassword(),
 								response.object);
 					} catch (ApiException e) {

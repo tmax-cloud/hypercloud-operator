@@ -865,7 +865,7 @@ public class K8sApiCaller {
 			// Encrypt password
 			String passwordSalt = UUID.randomUUID().toString();
 			String encryptedPassword = Util.Crypto
-					.encryptSHA256(password + user.getUserInfo().getEmail() + passwordSalt);
+					.encryptSHA256(password + userId + passwordSalt);
 
 			// Patch user CR
 			user.getUserInfo().setPassword(encryptedPassword);
