@@ -25,6 +25,9 @@ spec:
     #- effect: NoExecute
       #key: node.kubernetes.io/not-ready
       #tolerationSeconds: 10
+    #- effect: NoExecute
+      #key: node.kubernetes.io/unreachable
+      #tolerationSeconds: 10
   service:
      #port: example # (optional) [integer] external port (default: 443)
      #nodeIP: example # (optional) [string] if service type is NodePort, set NodeIP to assign to the registry
