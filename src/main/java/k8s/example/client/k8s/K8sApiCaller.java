@@ -3765,7 +3765,7 @@ public class K8sApiCaller {
 		try {
 			instance.setApiVersion(Constants.CUSTOM_OBJECT_GROUP + "/" + Constants.CUSTOM_OBJECT_VERSION);
 			instance.setKind(Constants.CUSTOM_OBJECT_KIND_TEMPLATE_INSTANCE);
-			instanceMeta.setName(instanceId);
+			instanceMeta.setName(instanceName + "." + instanceId);
 			instanceMeta.setNamespace(inDO.getContext().getNamespace());
 			instance.setMetadata(instanceMeta);
 
