@@ -16,8 +16,10 @@ import com.google.gson.reflect.TypeToken;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CustomObjectsApi;
+import io.kubernetes.client.openapi.models.V1ClusterRole;
 import io.kubernetes.client.openapi.models.V1Namespace;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import io.kubernetes.client.openapi.models.V1PolicyRule;
 import io.kubernetes.client.openapi.models.V1RoleRef;
 import io.kubernetes.client.openapi.models.V1Subject;
 import io.kubernetes.client.util.Watch;
@@ -78,8 +80,14 @@ public class NamespaceClaimController extends Thread {
 									if ( K8sApiCaller.namespaceAlreadyExist( resourceName ) ) {
 										replaceNscStatus( claimName, Constants.CLAIM_STATUS_REJECT, "Duplicated NameSpaceName" );
 									} else {
-									// Patch Status to Awaiting
-									replaceNscStatus( claimName, Constants.CLAIM_STATUS_AWAITING, "wait for admin permission" );
+										// Patch Status to Awaiting
+										replaceNscStatus( claimName, Constants.CLAIM_STATUS_AWAITING, "wait for admin permission" );
+										// If Trial Type 
+										if ( claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") !=null 
+												&& claim.getMetadata().getLabels().get("owner") !=null) {
+											// give owner all verbs of NSC of 
+											patchUserRole ( claim.getMetadata().getLabels().get("owner"), claim.getMetadata().getName() );
+										}
 									}
 									break;
 								case Constants.EVENT_TYPE_MODIFIED : 
@@ -149,6 +157,19 @@ public class NamespaceClaimController extends Thread {
 		}
 	}
 
+
+	private void patchUserRole(String clusterRoleName, String claimName ) {
+		V1ClusterRole clusterRole = null;
+		clusterRole = K8sApiCaller.readClusterRole(clusterRoleName);
+		V1PolicyRule rule = new V1PolicyRule();
+		rule.addApiGroupsItem(Constants.CUSTOM_OBJECT_GROUP);
+		rule.addResourcesItem("namespaceclaims");
+		rule.addVerbsItem("*");
+		rule.addResourceNamesItem(claimName);
+		clusterRole.addRulesItem(rule);
+		V1ClusterRole replaceResult = K8sApiCaller.replaceClusterRole( clusterRole );	
+		logger.info("Add rules of NameSpace claim [ " + claimName + " ] to Trial Owner [ " + clusterRoleName + " ] Success");
+	}
 
 	private void createTrialRoleBinding(V1Namespace nsResult) throws ApiException {
 		RoleBindingClaim rbcForTrial = new RoleBindingClaim();

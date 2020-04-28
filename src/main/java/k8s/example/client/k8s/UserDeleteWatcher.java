@@ -87,6 +87,10 @@ public class UserDeleteWatcher extends Thread {
 									if (deleteUser.get("result").toString().equalsIgnoreCase("\"true\"")) {
 										logger.info(" User [ " + response.object.getMetadata().getName()
 												+ " ] delete Success in proAuth");
+										K8sApiCaller.deleteClusterRole(response.object.getMetadata().getName());
+										K8sApiCaller.deleteClusterRoleBinding(response.object.getMetadata().getName());
+										logger.info(" ClusterRole & ClusterRoleBinding [ " + response.object.getMetadata().getName()
+												+ " ] delete Success in K8S");
 									} else {
 										logger.info("  User Delete by ProAuth Failed.");
 										logger.info(detailUser.get("error").toString());

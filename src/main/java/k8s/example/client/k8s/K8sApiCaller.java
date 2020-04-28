@@ -4265,8 +4265,8 @@ public class K8sApiCaller {
 		// Claims Rule
 		rule = new V1PolicyRule();
 		rule.addApiGroupsItem(Constants.CUSTOM_OBJECT_GROUP);
-		rule.addResourcesItem("rolebindingclaims");
-		rule.addResourcesItem("resourcequotaclaims");
+//		rule.addResourcesItem("rolebindingclaims");
+//		rule.addResourcesItem("resourcequotaclaims");
 		rule.addResourcesItem("namespaceclaims");
 		rule.addVerbsItem("create");
 		rule.addVerbsItem("list");		
@@ -4355,6 +4355,37 @@ public class K8sApiCaller {
 			e.printStackTrace();
 			throw e;
 		}		
+	}
+	
+	public static V1ClusterRole readClusterRole(String clusterRoleName) {
+		V1ClusterRole clusterRole = null;
+		try {
+			clusterRole = rbacApi.readClusterRole(clusterRoleName, "true"); 
+
+		} catch (ApiException e) {
+			logger.info("Response body: " + e.getResponseBody());
+			e.printStackTrace();
+		} catch (Exception e) {
+			logger.info("Exception: " + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		}
+		return clusterRole;
+	}
+	
+	public static V1ClusterRole replaceClusterRole(V1ClusterRole clusterRole) {
+		V1ClusterRole replaceResult = null;
+		try {
+			replaceResult = rbacApi.replaceClusterRole(clusterRole.getMetadata().getName(), clusterRole, null, null, null);
+		} catch (ApiException e) {
+			logger.info("Response body: " + e.getResponseBody());
+			e.printStackTrace();
+		} catch (Exception e) {
+			logger.info("Exception: " + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		}
+		return replaceResult;
 	}
 
 	/**
