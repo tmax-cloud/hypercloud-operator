@@ -2,10 +2,13 @@ apiVersion: tmax.io/v1
 kind: Template
 metadata:
   name: nginx-template
-  namespace: hypercloud4-system
+  namespace: default
 imageUrl: example.com/example.gif
 provider: tmax
 recommend: true
+urlDescription: http://url.example.com
+tags:
+- nginx
 objects:
 - apiVersion: apps/v1
   kind: Deployment
@@ -57,6 +60,15 @@ objects:
     name: ${NAME}
   data:
     host: ZHVtbXk=
+parameters:
+- name: NAME
+  description: Application name
+  valueType: string
+  value: nginx
+- name: IMAGE
+  description: Application Docker Image
+  valueType: string
+  value: nginx
 plans:
 - name: example-plan1
   description: example

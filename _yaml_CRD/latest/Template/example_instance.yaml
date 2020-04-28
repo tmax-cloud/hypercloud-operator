@@ -8,13 +8,7 @@ spec:
     metadata:
       name: nginx-template
     parameters:
-    - description: Deployment and Service Name.
-      displayName: Name
-      name: NAME
-      required: true
+    - name: NAME
       value: nginx
-    - description: Nginx Image.
-      displayName: Image
-      name: IMAGE
-      required: true
+    - name: IMAGE
       value: nginx:1
