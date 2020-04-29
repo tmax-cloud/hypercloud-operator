@@ -43,13 +43,14 @@ public class LoginHandler extends GeneralHandler {
     public Response post(
       UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
 		logger.info("***** POST /login");
-		
 		Map<String, String> body = new HashMap<String, String>();
         try {
 			session.parseBody( body );
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+        
+        
    
 		LoginInDO loginInDO = null;
 		String outDO = null;
