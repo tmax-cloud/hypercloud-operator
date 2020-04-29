@@ -163,11 +163,11 @@ public class EmailHandler extends GeneralHandler {
 	 		        		// Delete Secret 
 	 		        		K8sApiCaller.deleteSecret(Constants.TEMPLATE_NAMESPACE, Util.makeK8sFieldValue( userInDO.getEmail() ), null);	 
     				  } else {
-    					status = Status.UNAUTHORIZED;
+    					status = Status.OK; //ui요청
     		    		outDO = "Verification Number is Wrong";		
     				  }
     			 } else {
-    				 status = Status.UNAUTHORIZED;
+    				 status = Status.OK;//ui요청
  		    		 outDO = "Authentication time has expired";
     			 }		
     		}	

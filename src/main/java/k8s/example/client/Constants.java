@@ -198,7 +198,8 @@ public class Constants {
 	
 	//html
 	
-	public static final String TRIAL_CONFIRM_MAIL_CONTENTS = "" ;
+	public static final String TRIAL_SUCCESS_CONFIRM_MAIL_CONTENTS = "" ;
+	public static final String TRIAL_FAIL_CONFIRM_MAIL_CONTENTS = "" ;
 	public static final String VERIFY_MAIL_CONTENTS = "<!DOCTYPE html>\r\n" + 
 			"<html lang=\"en\">\r\n" + 
 			"<head>\r\n" + 
