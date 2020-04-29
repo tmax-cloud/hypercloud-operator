@@ -276,7 +276,7 @@ public class Constants {
 			"                <br>\r\n" + 
 			"                리소스 정보 <br>\r\n" + 
 			"                -CPU : 1 Core <br>\r\n" + 
-			"                -메모리 : 4 GIB <br>\r\n" + 
+			"                -Memory : 1 GIB <br>\r\n" + 
 			"                -Storage : 4 GIB <br>\r\n" + 
 			"                <br>\r\n" +  			
 			"                <br>\r\n" + 
