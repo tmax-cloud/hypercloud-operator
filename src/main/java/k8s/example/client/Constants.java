@@ -124,6 +124,7 @@ public class Constants {
 	public static final String SECRET_VERIFICATAION_CODE = "verification-code-for-user";
 	public static final int VERIFICATAION_DURATION_MINUTES = 30;
 	public static final String OPERATOR_TOKEN_EXPIRE_TIME = "operator-token-expire-time";
+	public static final String SECRET_MAIL_PASSWORD = "secret-mail-password";
 	
 	// User Status
 	public static final String USER_STATUS_BLOCKED = "blocked";
