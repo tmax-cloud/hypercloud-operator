@@ -3,7 +3,7 @@ kind: CustomResourceDefinition
 metadata:
   name: templates.tmax.io
   annotations:
-    operator.version: 4.1.0.16
+    operator.version: 4.1.0.21
 spec:
   group: tmax.io
   versions:
