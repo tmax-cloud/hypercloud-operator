@@ -1,6 +1,24 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.0.21 start -------------------->
+
+## HyperCloudServer_4.1.0.21 (Wed Apr 29 11:32:10 KST 2020)
+
+### Added
+
+### Changed
+  - [mod] trial 관련 메일 html 파일 적용, trial user에게 부여할 clusterRoleBinding설계 및 구현 by taegeon_woo
+  - [mod] trial 신청 승인 / 미승인시 메일 전송 기능 추가, 인증번호 인증 서비스 리스폰스 변경 by taegeon_woo
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.0.21 end --------------------->
+
 <!-------------------- v4.1.0.20 start -------------------->
 
 ## HyperCloudServer_4.1.0.20 (Tue Apr 28 12:18:57 KST 2020)
