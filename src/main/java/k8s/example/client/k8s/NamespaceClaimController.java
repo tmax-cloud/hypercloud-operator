@@ -24,6 +24,7 @@ import io.kubernetes.client.openapi.models.V1RoleRef;
 import io.kubernetes.client.openapi.models.V1Subject;
 import io.kubernetes.client.util.Watch;
 import k8s.example.client.Constants;
+import k8s.example.client.DataObject.UserCR;
 import k8s.example.client.Main;
 import k8s.example.client.Util;
 import k8s.example.client.metering.TimerMap;
@@ -119,8 +120,17 @@ public class NamespaceClaimController extends Thread {
 											} else {
 												logger.info(" Timer for Trial NameSpace [ " + nsResult.getMetadata().getName() + " ] Already Exists ");
 											}
+											// Send Success confirm Mail
+//											sendConfirmMail ( claim.getMetadata().getLabels().get("owner"), true );
 										}
 										replaceNscStatus( claimName, Constants.CLAIM_STATUS_SUCCESS, "namespace create success." );
+									} else if ( status.equals( Constants.CLAIM_STATUS_REJECT )) {
+										if ( claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") !=null 
+												&& claim.getMetadata().getLabels().get("owner") !=null ) {
+											// Send Fail confirm Mail
+//											sendConfirmMail ( claim.getMetadata().getLabels().get("owner"), false );
+										}
+										
 									}
 									break;
 								case Constants.EVENT_TYPE_DELETED : 
@@ -157,6 +167,29 @@ public class NamespaceClaimController extends Thread {
 		}
 	}
 
+
+	private void sendConfirmMail(String userId, boolean flag) throws Throwable {
+		UserCR user = null;
+		String subject = null;
+		String body = null;
+		try {
+			user = K8sApiCaller.getUser(userId);
+			if (flag) {
+				subject = " HyperCloud 서비스 신청 승인 완료 ";
+				body = Constants.TRIAL_SUCCESS_CONFIRM_MAIL_CONTENTS;
+			}else {
+				subject = " HyperCloud 서비스 신청 승인 거절  ";
+				body = Constants.TRIAL_FAIL_CONFIRM_MAIL_CONTENTS;
+			}
+			Util.sendMail(user.getUserInfo().getEmail(), subject, body);
+		} catch (Throwable e) {
+			e.printStackTrace();
+			logger.info(e.getMessage());
+			throw e;
+		}
+		
+		
+	}
 
 	private void patchUserRole(String clusterRoleName, String claimName ) {
 		V1ClusterRole clusterRole = null;

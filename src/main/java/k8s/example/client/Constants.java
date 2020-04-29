@@ -124,6 +124,7 @@ public class Constants {
 	public static final String SECRET_VERIFICATAION_CODE = "verification-code-for-user";
 	public static final int VERIFICATAION_DURATION_MINUTES = 30;
 	public static final String OPERATOR_TOKEN_EXPIRE_TIME = "operator-token-expire-time";
+	public static final String SECRET_MAIL_PASSWORD = "secret-mail-password";
 	
 	// User Status
 	public static final String USER_STATUS_BLOCKED = "blocked";
@@ -196,6 +197,9 @@ public class Constants {
 	public static final String TEMPLATE_DATA_TYPE_STRING = "string";
 	
 	//html
+	
+	public static final String TRIAL_SUCCESS_CONFIRM_MAIL_CONTENTS = "" ;
+	public static final String TRIAL_FAIL_CONFIRM_MAIL_CONTENTS = "" ;
 	public static final String VERIFY_MAIL_CONTENTS = "<!DOCTYPE html>\r\n" + 
 			"<html lang=\"en\">\r\n" + 
 			"<head>\r\n" + 

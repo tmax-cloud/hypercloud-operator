@@ -75,7 +75,7 @@ kubectl exec -ti $POD_ID -- tar -xvf /tmp/pypi.tar -C /data/packages
 ```
 
 ### Node.js-Verdaccio
-1. [verdaccio.tar](http://192.168.1.150:9090/share/page/site/cloud-rnd-site/document-details?nodeRef=workspace://SpacesStore/2b1de285-8533-4dae-8163-c2dffdd3b2d7) 다운로드
+1. [verdaccio.tar](http://192.168.1.150:9090/share/page/site/cloud-rnd-site/document-details?nodeRef=workspace://SpacesStore/305689c0-9ae8-47bc-8109-e475a5fee486) 다운로드
 
 2. 적용
 ```bash

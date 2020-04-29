@@ -129,6 +129,7 @@ public class Util {
 		Session session = Session.getDefaultInstance( props, new javax.mail.Authenticator() {
 			String un = "no-reply-tc@tmax.co.kr";
 			String pw = "!@tcdnsdudxla11";
+//			String pw = K8sApiCaller.readSecret(Constants.TEMPLATE_NAMESPACE, Constants.SECRET_MAIL_PASSWORD).getStringData().get("password");
 			protected PasswordAuthentication getPasswordAuthentication() {
 				return new PasswordAuthentication( un, pw );
 			}
