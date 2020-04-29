@@ -154,6 +154,9 @@ public class InstanceOperator extends Thread {
 	    					
 	    					JSONArray objArr = new JSONArray();
 		        			
+	    					JSONObject parmPatch = null;
+	    					JSONArray parmPatchArray = null;
+	    					
 		        			if(templateObjs.isArray()) {
 		        				for(JsonNode object : templateObjs) {
 			        				String objStr = object.toString();
@@ -185,7 +188,10 @@ public class InstanceOperator extends Thread {
 						        					objStr = objStr.replace( replaceString, paramValue );
 						        				}
 					        				}
-					        			}
+			        					}
+			        				}
+
+			        				if ( objectToJsonNode(template).get("parameters") != null ) {
 			        					for(JsonNode parameter : objectToJsonNode(template).get("parameters")) {
 			        						String defaultValue = "";
 		        							if( parameter.has("value") ) {
@@ -196,16 +202,28 @@ public class InstanceOperator extends Thread {
 		        								if( parameter.has("valueType") && parameter.get("valueType").asText().equals( Constants.TEMPLATE_DATA_TYPE_NUMBER )) {
 			        								String replaceString = "\"${" + paramName + "}\"";
 					        						if( objStr.contains( replaceString ) ) {
-							        					logger.info("[Instance Operator] Parameter Number Name to be replaced : " + replaceString);
-								        				logger.info("[Instance Operator] Parameter Number Value to be replaced : " + defaultValue);
+							        					logger.info("[Instance Operator] Default Parameter Number Name to be replaced : " + replaceString);
+								        				logger.info("[Instance Operator] Default Parameter Number Value to be replaced : " + defaultValue);
 							        					objStr = objStr.replace( replaceString, defaultValue );
+							        					
+							        					if (parmPatchArray == null) parmPatchArray = new JSONArray();
+							        					parmPatch = new JSONObject();
+							        					parmPatch.put("name", paramName);
+							        					parmPatch.put("value", defaultValue);
+							        					parmPatchArray.add(parmPatch);
 							        				}
 				        						}
 		        								String replaceString = "${" + paramName + "}";
 					        					if( objStr.contains( replaceString ) ) {
-						        					logger.info("[Instance Operator] Parameter Name to be replaced : " + replaceString);
-							        				logger.info("[Instance Operator] Parameter Value to be replaced : " + defaultValue);
+						        					logger.info("[Instance Operator] Default Parameter Name to be replaced : " + replaceString);
+							        				logger.info("[Instance Operator] Default Parameter Value to be replaced : " + defaultValue);
 						        					objStr = objStr.replace( replaceString, defaultValue );
+						        					
+						        					if (parmPatchArray == null) parmPatchArray = new JSONArray();
+						        					parmPatch = new JSONObject();
+						        					parmPatch.put("name", paramName);
+						        					parmPatch.put("value", defaultValue);
+						        					parmPatchArray.add(parmPatch);
 						        				}
 		        							}
 			        					}
@@ -311,6 +329,22 @@ public class InstanceOperator extends Thread {
 	    					} catch (ApiException e) {
 	    						throw new Exception(e.getResponseBody());
 	    					}
+	    					
+	    					/*if ( parmPatchArray != null ) {
+	    						JSONObject patch2 = new JSONObject();
+		    					JSONArray patchArray2 = new JSONArray();
+		    					patch.put("op", "add");
+		    					patch.put("path", "/spec/template/parameters");
+		    					patch.put("value", parmPatchArray);
+		    					patchArray2.add(patch2);
+		    					
+		    					try{
+		    						Object result = tpApi.patchNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, instanceNamespace, Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, instanceObj.get("metadata").get("name").asText(), patchArray2);
+		    						logger.info(result.toString());
+		    					} catch (ApiException e) {
+		    						throw new Exception(e.getResponseBody());
+		    					}
+	    					}*/
 	    					
 		        		} else if(response.type.toString().equals("DELETED")) {
 		        			V1DeleteOptions body = new V1DeleteOptions();
