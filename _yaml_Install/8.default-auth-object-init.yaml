@@ -163,3 +163,18 @@ rules:
 - apiGroups: ['tmax.io']
   resources: ['template','templateinstances','registries','namespaceclaims','users']
   verbs: ['*']
+  
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: clusterrole-trial
+  labels:
+    purpose: clusterrole-for-trial-user
+    madeby: tmax
+rules:
+- apiGroups: ['servicecatalog.k8s.io']
+  resources: ['*']
+  verbs: ['*']
+

@@ -4204,6 +4204,7 @@ public class K8sApiCaller {
 		V1ObjectMeta roleBindingMeta = new V1ObjectMeta();
 		roleBindingMeta.setName(claim.getResourceName());
 		roleBindingMeta.setNamespace(claim.getMetadata().getNamespace());
+		roleBindingMeta.setLabels(claim.getMetadata().getLabels());
 		roleBinding.setMetadata(roleBindingMeta);
 		roleBinding.setSubjects(claim.getSubjects());
 		roleBinding.setRoleRef(claim.getRoleRef());
@@ -4212,9 +4213,31 @@ public class K8sApiCaller {
 			rbacApi.createNamespacedRoleBinding(claim.getMetadata().getNamespace(), roleBinding, null, null, null);
 		} catch (ApiException e) {
 			logger.info(e.getResponseBody());
+			e.printStackTrace();
 			throw e;
 		}
 	}
+	
+	public static void createClusterRoleBinding(RoleBindingClaim claim) throws ApiException {
+		logger.info("[K8S ApiCaller] Create ClusterRoleBinding Start");
+
+		V1ClusterRoleBinding clusterRoleBinding = new V1ClusterRoleBinding();
+		V1ObjectMeta clusterRoleBindingMeta = new V1ObjectMeta();
+		clusterRoleBindingMeta.setName(claim.getResourceName());
+		clusterRoleBindingMeta.setLabels(claim.getMetadata().getLabels());
+		clusterRoleBinding.setMetadata(clusterRoleBindingMeta);
+		clusterRoleBinding.setSubjects(claim.getSubjects());
+		clusterRoleBinding.setRoleRef(claim.getRoleRef());
+
+		try {
+			rbacApi.createClusterRoleBinding( clusterRoleBinding, null, null, null);
+		} catch (ApiException e) {
+			logger.info(e.getResponseBody());
+			e.printStackTrace();
+			throw e;
+		}
+	}
+	
 
 	public static void updateRoleBinding(RoleBindingClaim claim) throws Throwable {
 		logger.info("[K8S ApiCaller] Update Role Binding Start");

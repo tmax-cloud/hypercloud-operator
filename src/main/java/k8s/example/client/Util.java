@@ -225,7 +225,7 @@ public class Util {
 			mailTime = deleteTime.minusDays(7);
 		}
 
-		Timer timer = new Timer(nsResult.getMetadata().getUid() + "#" + nsResult.getMetadata().getName() + "#" + nsResult.getMetadata().getLabels().get("owner"));
+		Timer timer = new Timer(nsResult.getMetadata().getUid() + "#" + nsResult.getMetadata().getName() + "#" + nsResult.getMetadata().getLabels().get("owner") + "#" + deleteTime.toDateTime().toString("yyyy-MM-dd") );
 
 		timer.schedule(new TimerTask() {
 			public void run() {
@@ -233,6 +233,7 @@ public class Util {
 					String nsId = Thread.currentThread().getName().split("#")[0];
 					String nsName = Thread.currentThread().getName().split("#")[1];
 					String userId = Thread.currentThread().getName().split("#")[2];
+					String deleteTime = Thread.currentThread().getName().split("#")[3];
 					logger.info("   Trial NameSpace [ " + nsName + " ] Mail Service before 1 weeks of deletion Start");
 					logger.info("   User ID : " + userId );
 					
@@ -244,7 +245,8 @@ public class Util {
 						String email = user.getUserInfo().getEmail();
 						logger.info("   Email : " + email );
 						String subject = " 신청해주신 Trial NameSpace [ " + nameSpace.getMetadata().getName() + " ] 만료 안내 ";
-						String body = " 신청해주신 Trial NameSpace [ " + nameSpace.getMetadata().getName() + " ] 만료가 1주일 남았습니다. 유료버전으로 전환 해주세요 ";
+						String body = Constants.TRIAL_TIME_OUT_CONTENTS;
+						body = body.replaceAll("%%TRIAL_END_TIME%%", deleteTime);
 						Util.sendMail(email, subject, body);
 					} else {
 						logger.info("   Paid NameSpace, Nothing to do ");
