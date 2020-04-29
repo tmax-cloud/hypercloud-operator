@@ -197,6 +197,8 @@ public class Constants {
 	public static final String TEMPLATE_DATA_TYPE_STRING = "string";
 	
 	//html
+	
+	public static final String TRIAL_CONFIRM_MAIL_CONTENTS = "" ;
 	public static final String VERIFY_MAIL_CONTENTS = "<!DOCTYPE html>\r\n" + 
 			"<html lang=\"en\">\r\n" + 
 			"<head>\r\n" + 

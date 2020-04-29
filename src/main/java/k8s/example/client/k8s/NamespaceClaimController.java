@@ -24,6 +24,7 @@ import io.kubernetes.client.openapi.models.V1RoleRef;
 import io.kubernetes.client.openapi.models.V1Subject;
 import io.kubernetes.client.util.Watch;
 import k8s.example.client.Constants;
+import k8s.example.client.DataObject.UserCR;
 import k8s.example.client.Main;
 import k8s.example.client.Util;
 import k8s.example.client.metering.TimerMap;
@@ -87,6 +88,7 @@ public class NamespaceClaimController extends Thread {
 												&& claim.getMetadata().getLabels().get("owner") !=null) {
 											// give owner all verbs of NSC of 
 											patchUserRole ( claim.getMetadata().getLabels().get("owner"), claim.getMetadata().getName() );
+											sendConfirmMail ( claim.getMetadata().getLabels().get("owner") );
 										}
 									}
 									break;
@@ -157,6 +159,22 @@ public class NamespaceClaimController extends Thread {
 		}
 	}
 
+
+	private void sendConfirmMail(String userId) throws Throwable {
+		UserCR user;
+		try {
+			user = K8sApiCaller.getUser(userId);
+			String subject = " TmaxConsole Trial 서비스 구독이 신청되었습니다. ";
+			String body = Constants.TRIAL_CONFIRM_MAIL_CONTENTS;
+			Util.sendMail(user.getUserInfo().getEmail(), subject, body);
+		} catch (Throwable e) {
+			e.printStackTrace();
+			logger.info(e.getMessage());
+			throw e;
+		}
+		
+		
+	}
 
 	private void patchUserRole(String clusterRoleName, String claimName ) {
 		V1ClusterRole clusterRole = null;
