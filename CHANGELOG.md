@@ -1,6 +1,25 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.0.23 start -------------------->
+
+## HyperCloudServer_4.1.0.23 (Mon May  4 08:21:10 KST 2020)
+
+### Added
+
+### Changed
+  - [mod] trial 신청 승인 메일 수정 by taegeon_woo
+  - [mod] UserSecurityPolicyCRD.yaml 추가 by taegeon_woo
+
+### Fixed
+  - [ims][223799] ResourceQuotaClaimCRD.yaml 필수 field 추가 by taegeon_woo
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.0.23 end --------------------->
+
 <!-------------------- v4.1.0.22 start -------------------->
 
 ## HyperCloudServer_4.1.0.22 (Wed Apr 29 13:13:49 KST 2020)
