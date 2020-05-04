@@ -41,9 +41,20 @@ spec:
               name:
                 type: string
           spec:
-            # Equal Resource Quota
+            # Equal Resource Quota Spec
             type: object
             x-kubernetes-preserve-unknown-fields: true
+            required: [hard]
+            properties:
+              hard:
+                type: object
+                x-kubernetes-preserve-unknown-fields: true
+                required: [limits.cpu,limits.memory]
+                properties:
+                  limits.cpu:
+                    x-kubernetes-int-or-string: true
+                  limits.memory:
+                    x-kubernetes-int-or-string: true
           status:
             type: object
             properties:

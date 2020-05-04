@@ -49,8 +49,7 @@ public class LoginHandler extends GeneralHandler {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-        
-        
+		logger.info("session.getRemoteIpAddress() : "  + session.getRemoteIpAddress());
    
 		LoginInDO loginInDO = null;
 		String outDO = null;
