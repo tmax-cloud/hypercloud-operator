@@ -162,13 +162,13 @@ public class LoginHandler extends GeneralHandler {
 									.withClaim(Constants.CLAIM_USER_ID, loginInDO.getId())
 			    					.withClaim(Constants.CLAIM_TOKEN_ID, tokenId);
 			    			
-			    			if ( K8sApiCaller.verifyAdmin(loginInDO.getId()) ) {
-			    				logger.info("ADMIN!!!");
-			    				tokenBuilder.withClaim( Constants.CLAIM_ROLE, Constants.ROLE_ADMIN );
-			    			} else {
-			    				logger.info("USER!!!");
-			    				tokenBuilder.withClaim( Constants.CLAIM_ROLE, Constants.ROLE_USER );
-			    			}
+//			    			if ( K8sApiCaller.verifyAdmin(loginInDO.getId()) ) {
+//			    				logger.info("ADMIN!!!");
+//			    				tokenBuilder.withClaim( Constants.CLAIM_ROLE, Constants.ROLE_ADMIN );
+//			    			} else {
+//			    				logger.info("USER!!!");
+//			    				tokenBuilder.withClaim( Constants.CLAIM_ROLE, Constants.ROLE_USER );
+//			    			}
 			    			
 			    			accessToken = tokenBuilder.sign(Algorithm.HMAC256(Constants.ACCESS_TOKEN_SECRET_KEY));
 			    			tokenBuilder = JWT.create().withIssuer(Constants.ISSUER)
