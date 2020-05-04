@@ -286,7 +286,7 @@ public class Constants {
 			"                TmaxCloud 드림.\r\n" + 
 			"            </p>\r\n" + 
 			"            <p style=\"margin: 3rem 0;\">\r\n" + 
-			"                <a href=\"console.tmaxcloud.co.kr\">Tmax Console 바로가기 ></a>\r\n" + 
+			"                <a href=\"https://console.tmaxcloud.com\">Tmax Console 바로가기 ></a>\r\n" + 
 			"            </p>\r\n" + 
 			"        </div>\r\n" + 
 			"    </section>\r\n" + 
@@ -298,7 +298,7 @@ public class Constants {
 			"    </div>\r\n" + 
 			"</footer>\r\n" + 
 			"</body>\r\n" + 
-			"</html>" ;
+			"</html>";
 	public static final String TRIAL_FAIL_CONFIRM_MAIL_CONTENTS = "<!DOCTYPE html>\r\n" + 
 			"<html lang=\"en\">\r\n" + 
 			"<head>\r\n" + 
