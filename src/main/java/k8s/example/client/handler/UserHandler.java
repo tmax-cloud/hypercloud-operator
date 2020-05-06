@@ -95,7 +95,7 @@ public class UserHandler extends GeneralHandler {
 
     		// Create Role & RoleBinding 
     		K8sApiCaller.createClusterRoleForNewUser(userInDO);  		
-    		K8sApiCaller.createClusterRoleBindingForNewUser(userInDO);  		
+    		K8sApiCaller.createClusterRoleBindingForNewUser(userInDO);  			
 
 			// Call UserCreate to ProAuth
 			OAuthApiCaller.createUser(userInDO);

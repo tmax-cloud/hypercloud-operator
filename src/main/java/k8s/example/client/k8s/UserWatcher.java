@@ -55,6 +55,13 @@ public class UserWatcher extends Thread {
 								response.object.getMetadata().getName(), 
 								response.object.getUserInfo().getPassword(),
 								response.object);
+			    		
+			    		// Create UserSecurityPolicy with otpEnable false
+						try {
+							K8sApiCaller.createUserSecurityPolicy(response.object.getMetadata().getName());  
+							logger.info("[UserWatcher] UserSecurityPolicy of User" + response.object.getMetadata().getName() + " Create Success");
+						} catch (ApiException e) {
+						}
 					} catch (ApiException e) {
 						logger.info("ApiException: " + e.getMessage());
 						logger.info(e.getResponseBody());

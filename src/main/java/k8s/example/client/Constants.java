@@ -16,6 +16,7 @@ public class Constants {
 	public static final String CUSTOM_OBJECT_GROUP = "tmax.io";
 	public static final String CUSTOM_OBJECT_VERSION = "v1";
 	public static final String CUSTOM_OBJECT_PLURAL_USER = "users";
+	public static final String CUSTOM_OBJECT_PLURAL_USER_SECURITY_POLICY = "usersecuritypolicies";
 	public static final String CUSTOM_OBJECT_PLURAL_TOKEN = "tokens";
 	public static final String CUSTOM_OBJECT_PLURAL_TEMPLATE = "templates";
 	public static final String CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE = "templateinstances";
@@ -115,6 +116,7 @@ public class Constants {
 	public static final String LOGOUT_SUCCESS = "Logout Success";
 	public static final String REFRESH_SUCCESS = "Refresh Success";
 	public static final String PASSWORD_CHANGE_SUCCESS = "Password Change Success";
+	public static final String OTP_VERIFICATION_FAILED = "Wrong OTP Number";
 	public static final String LOGIN_FAILED = "Wrong ID or Password";
 	public static final String LOGOUT_FAILED = "Log Out Failed, Token is not Exist or Valid";
 	public static final String REFRESH_FAILED = "Refresh Failed, Refresh Token is not Valid";

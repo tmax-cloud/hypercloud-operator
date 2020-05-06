@@ -21,14 +21,14 @@ spec:
   validation:
     openAPIV3Schema:     
         type: object
-        required: [otpEnable, otp]
+        required: [otpEnable]
         description: User Security Policy for OTP info
         properties:
           otpEnable:
             description: t/f
             type: string
           otp:
-            type: string
+            type: integer
             description: OTP Number 
           ipRange:
             type: string

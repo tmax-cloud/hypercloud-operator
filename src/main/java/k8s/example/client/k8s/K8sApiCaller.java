@@ -135,6 +135,7 @@ import k8s.example.client.DataObject.RegistryEvent;
 import k8s.example.client.DataObject.TokenCR;
 import k8s.example.client.DataObject.User;
 import k8s.example.client.DataObject.UserCR;
+import k8s.example.client.DataObject.UserSecurityPolicyCR;
 import k8s.example.client.ErrorCode;
 import k8s.example.client.Main;
 import k8s.example.client.StringUtil;
@@ -4970,7 +4971,81 @@ public class K8sApiCaller {
 			e.printStackTrace();
 		}
 	}
+	
+	
+	public static UserSecurityPolicyCR getUserSecurityPolicy(String uspName) throws Exception {
+		UserSecurityPolicyCR uspCR = new UserSecurityPolicyCR();
+		logger.info("UserSecurityPolicy [ " + uspName + " ] Get Service Start");
 
+		try {
+			Object response = customObjectApi.getClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP,
+					Constants.CUSTOM_OBJECT_VERSION, Constants.CUSTOM_OBJECT_PLURAL_USER_SECURITY_POLICY, uspName);
+			JsonObject respJson = (JsonObject) new JsonParser().parse((new Gson()).toJson(response));
+
+			mapper.registerModule(new JodaModule());
+			uspCR = mapper.readValue((new Gson()).toJson(respJson), new TypeReference<UserSecurityPolicyCR>() {
+			});
+		} catch (ApiException e) {
+			logger.info("Response body: " + e.getResponseBody());
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			logger.info("Exception message: " + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		}
+
+		return uspCR;
+	}
+
+	public static void createUserSecurityPolicy(String uspName) throws Exception {
+		try {
+			UserSecurityPolicyCR uspCR = new UserSecurityPolicyCR();
+			// Set name & label
+			V1ObjectMeta metadata = new V1ObjectMeta();
+			metadata.setName( uspName );
+			uspCR.setMetadata( metadata );
+
+			// Set otpEnable false
+			uspCR.setOtpEnable("f");
+
+			// Make body
+			JSONParser parser = new JSONParser();
+			JSONObject bodyObj = (JSONObject) parser.parse(new Gson().toJson(uspCR));
+
+			customObjectApi.createClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION,
+					Constants.CUSTOM_OBJECT_PLURAL_USER_SECURITY_POLICY, bodyObj, null);
+		} catch (ApiException e) {
+			logger.info("Response body: " + e.getResponseBody());
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			logger.info("Exception message: " + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		}		
+	}
+	
+	public static void patchUserSecurityPolicy( String uspName, String value) throws Throwable {
+		logger.info("[K8S ApiCaller] patchUserSecurityPolicy Service Start");
+		logger.info("uspName : " + uspName);
+		logger.info("otp value : " + value);
+			
+		try {
+			String jsonPatchStr = "[{\"op\":\"replace\",\"path\":\"/otp\",\"value\": " + Integer.parseInt(value) + " }]";
+			logger.info("JsonPatchStr: " + jsonPatchStr);
+
+			JsonElement jsonPatch = (JsonElement) new JsonParser().parse(jsonPatchStr);
+			customObjectApi.patchClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, Constants.CUSTOM_OBJECT_PLURAL_USER_SECURITY_POLICY, uspName, jsonPatch);
+		
+		} catch (ApiException e) {
+			logger.info(e.getResponseBody());
+			e.printStackTrace();
+			throw e;
+		}
+		
+		
+	}
 
 
 //	public static void updateClusterRoleBindingOfGroup(String userGroupName, String userId) throws Exception {
