@@ -1,0 +1,20 @@
+apiVersion: audit.k8s.io/v1 # This is required.
+kind: Policy
+omitStages:
+  - "ResponseStarted"
+rules:
+
+  # Don't log system requests.
+  - level: None
+    userGroups: ["system:serviceaccounts:hypercloud4-system", "system:nodes", "system:serviceaccounts", "system:masters"]
+    
+  # Don't log requests by hypercloud4-admin and kube-system user.
+  - level: None
+    users: ["system:serviceaccount:hypercloud4-system:hypercloud4-admin", "system:kube-controller-manager", "system:kube-scheduler", "system:apiserver"]
+    
+  # Don't log watch and get request
+  - level: None
+    verbs: ["watch", "get", "list"]
+    
+  # Log the request body of configmap changes in kube-system.
+  - level: Metadata

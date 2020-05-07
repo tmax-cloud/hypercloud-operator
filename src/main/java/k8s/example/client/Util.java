@@ -1,5 +1,7 @@
 package k8s.example.client;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.security.MessageDigest;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -308,5 +310,10 @@ public class Util {
 
     }
 
+	public static String printExceptionError(Exception e) {
+		StringWriter sw = new StringWriter();
+		e.printStackTrace(new PrintWriter(sw));
+		return sw.toString();
+	}
     
 }

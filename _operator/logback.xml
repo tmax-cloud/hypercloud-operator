@@ -42,11 +42,30 @@
         </rollingPolicy>
     </appender>
     
+    <appender name="AUDIT" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOGS_ABSOLUTE_PATH}/audit.log</file>
+        <encoder>
+            <pattern>%d{yyyy.MM.dd HH:mm:ss} [%level] [%thread] [%C{0}:%L] %msg%n</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOGS_ABSOLUTE_PATH}/audit_%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <!-- or whenever the file size reaches 100MB -->
+                <maxFileSize>20MB</maxFileSize>
+                <!-- kb, mb, gb -->
+            </timeBasedFileNamingAndTriggeringPolicy>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+    </appender>
+    
     <logger name="K8SOperator" level="INFO">
         <appender-ref ref="K8SOPERATOR"/>
     </logger>
     <logger name="OkhttpInterceptor" level="INFO">
         <appender-ref ref="OKHTTPINTERCEPTOR"/>
+    </logger>
+    <logger name="Audit" level="INFO">
+        <appender-ref ref="AUDIT"/>
     </logger>
     
 </configuration>
