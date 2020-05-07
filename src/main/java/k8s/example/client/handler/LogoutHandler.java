@@ -55,6 +55,11 @@ public class LogoutHandler extends GeneralHandler {
     		if (System.getenv( "PROAUTH_EXIST" ) != null) {   		
         		if( System.getenv( "PROAUTH_EXIST" ).equalsIgnoreCase("1")) {
     	    		logger.info( "  [[ Integrated OAuth System! ]] " );
+        			JWTVerifier verifier = JWT.require(Algorithm.HMAC256(Constants.ACCESS_TOKEN_SECRET_KEY)).build();
+        			DecodedJWT jwt = verifier.verify(accessToken);
+        			String userId = jwt.getClaims().get("id").toString();
+    	    		logger.info( "!!!!!!!!!!!!! userId : " + userId);
+
     	    		JsonObject logOutOut = OAuthApiCaller.AuthenticateDelete(accessToken);
     	    		logger.info( "  logOutOut.get(\"result\") : " + logOutOut.get("result").toString() );
     	    		if ( logOutOut.get("result").toString().equalsIgnoreCase("\"true\"") ){
@@ -76,7 +81,7 @@ public class LogoutHandler extends GeneralHandler {
         		// Verify access token	
     			JWTVerifier verifier = JWT.require(Algorithm.HMAC256(Constants.ACCESS_TOKEN_SECRET_KEY)).build();
     			DecodedJWT jwt = verifier.verify(accessToken);
-    			
+
     			String issuer = jwt.getIssuer();
     			String userId = jwt.getClaims().get(Constants.CLAIM_USER_ID).asString();
     			String tokenId = jwt.getClaims().get(Constants.CLAIM_TOKEN_ID).asString();
