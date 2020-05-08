@@ -1,0 +1,17 @@
+apiVersion: tmax.io/v1
+kind: TemplateInstance
+metadata:
+  name: cicd-trigger-sample-instance
+  namespace: default
+spec:
+  template:
+    metadata:
+      name: cicd-trigger-template
+    parameters:
+    - name: APP_NAME
+      value: nodejs-sample-app
+    - name: NAMESPACE
+      value: default
+    - name: SERVICE_ACCOUNT_NAME
+      value: tutorial-service
+
