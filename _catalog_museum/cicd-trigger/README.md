@@ -6,6 +6,63 @@ CI/CD Trigger Template은 WAS CI/CD Template과 함께 쓰는 템플릿으로, G
 1. Tekton Pipeline 및 Tekton Trigger 설치  
 : [링크](http://192.168.1.150:10080/hypercloud/hypercloud/wikis/Tekton-Pipeline-Installation-Guide) 참조
 
+2. ServiceAccount/Role/RoleBinding 생성
+```yaml
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: tekton-triggers-example-sa
+  namespace: default
+```
+```yaml
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: tekton-triggers-example-minimal
+  namespace: default
+rules:
+  - verbs:
+      - get
+    apiGroups:
+      - tekton.dev
+    resources:
+      - eventlisteners
+      - triggerbindings
+      - triggertemplates
+  - verbs:
+      - get
+      - list
+      - watch
+    apiGroups:
+      - ''
+    resources:
+      - configmaps
+      - secrets
+  - verbs:
+      - create
+    apiGroups:
+      - tekton.dev
+    resources:
+      - pipelineruns
+      - pipelineresources
+      - taskruns
+```
+```yaml
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: tekton-triggers-example-binding
+  namespace: default
+subjects:
+  - kind: ServiceAccount
+    name: tekton-triggers-example-sa
+    namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: tekton-triggers-example-minimal
+```
+
 ## Step.1 - WAS CI/CD Pipeline 생성
 1. WAS CI/CD Pipeline Template/TemplateInstance 생성  
 (Trigger Template이 아님을 주의)
@@ -99,5 +156,4 @@ kubectl get pipelinerun -l "tekton.dev/pipeline=nodejs-sample-app-pipeline"
 ```bash
 kubectl get deployment nodejs-sample-app
 ```
-
 
