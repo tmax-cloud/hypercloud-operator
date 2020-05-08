@@ -57,7 +57,7 @@ public class LogoutHandler extends GeneralHandler {
     	    		logger.info( "  [[ Integrated OAuth System! ]] " );
         			JWTVerifier verifier = JWT.require(Algorithm.HMAC256(Constants.ACCESS_TOKEN_SECRET_KEY)).build();
         			DecodedJWT jwt = verifier.verify(accessToken);
-        			String userId = jwt.getClaims().get("id").toString();
+        			String userId = jwt.getClaims().get(Constants.CLAIM_USER_ID).asString();;
     	    		logger.info( "!!!!!!!!!!!!! userId : " + userId);
 
     	    		JsonObject logOutOut = OAuthApiCaller.AuthenticateDelete(accessToken);
