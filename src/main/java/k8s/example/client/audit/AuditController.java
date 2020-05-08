@@ -3,11 +3,18 @@ package k8s.example.client.audit;
 import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import k8s.example.client.Constants;
 import k8s.example.client.Util;
+import k8s.example.client.audit.AuditDataObject.Event;
+import k8s.example.client.audit.AuditDataObject.ObjectReference;
+import k8s.example.client.audit.AuditDataObject.ResponseStatus;
+import k8s.example.client.audit.AuditDataObject.User;
 
 public class AuditController {
 	
@@ -59,6 +66,42 @@ public class AuditController {
 	
 	public static EventQueue getQueue() {
 		return queue;
+	}
+	
+	public static void auditLoginActivity(String username, String useragent, int code, String reason) {
+		auditUserActivity("login", username, useragent, code, reason);
+	}
+	
+	public static void auditLogoutActivity(String username, String useragent, int code, String reason) {
+		auditUserActivity("logout", username, useragent, code, reason);
+	}
+	
+	public static void auditUserActivity(String verb, String username, String useragent, int code, String reason) {
+		try {
+			Event event = new Event();
+			event.setAuditID(UUID.randomUUID().toString());
+			event.setUser(new User());
+			event.getUser().setUsername(username);
+			event.setUserAgent(useragent);
+			event.setObjectRef(new ObjectReference());
+			event.getObjectRef().setApiGroup(Constants.CUSTOM_OBJECT_GROUP);
+			event.getObjectRef().setApiVersion(Constants.CUSTOM_OBJECT_VERSION);
+			event.getObjectRef().setResource(Constants.CUSTOM_OBJECT_PLURAL_USER);
+			event.getObjectRef().setName(username);
+			event.setStage("ResponseComplete");
+			event.setStageTimestamp(new DateTime());
+			event.setVerb(verb);
+			event.setResponseStatus(new ResponseStatus());
+			event.getResponseStatus().setCode(code);
+			event.getResponseStatus().setStatus(code/100 == 2 ? "Success" : "Failure");
+			event.getResponseStatus().setReason(reason);
+			event.getResponseStatus().setMessage(verb + " " + (code/100 == 2 ? "success" : "failed"));
+			
+			queue.put(event);
+		} catch(Exception e) {
+			logger.error("Failed to record user activity, verb=\"" + verb + ", username=\"" + username + "\"\n" + Util.printExceptionError(e));
+		}
+		
 	}
 
 }

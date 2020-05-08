@@ -35,6 +35,7 @@ import k8s.example.client.ErrorCode;
 import k8s.example.client.Main;
 import k8s.example.client.StringUtil;
 import k8s.example.client.Util;
+import k8s.example.client.audit.AuditController;
 import k8s.example.client.k8s.K8sApiCaller;
 import k8s.example.client.k8s.OAuthApiCaller;
 
@@ -254,6 +255,7 @@ public class LoginHandler extends GeneralHandler {
 			
 			
 			// Make OutDO
+			String reason = null;
 			if (status.equals(Status.OK)){
         		// Make outDO
 				Token loginOutDO = new Token();
@@ -271,18 +273,21 @@ public class LoginHandler extends GeneralHandler {
 				CommonOutDO out = new CommonOutDO();
 				out.setStatus(Constants.LOGIN_FAILED);
 				out.setMsg(outDO);
+				reason = outDO;
 				Gson gson = new GsonBuilder().setPrettyPrinting().create();
 				outDO = gson.toJson(out).toString();
 				
 			} else if ( status.equals(Status.BAD_REQUEST)) { 
 				CommonOutDO out = new CommonOutDO();
 				out.setMsg(outDO);
+				reason = outDO;
 				if ( retryCount != 0 ) out.setEvent( Integer.toString(retryCount) );
     			status = Status.OK; //ui요청
 				Gson gson = new GsonBuilder().setPrettyPrinting().create();
 				outDO = gson.toJson(out).toString();
 			}	
-			
+		
+		AuditController.auditLoginActivity(loginInDO.getId(), session.getHeaders().get("user-agent"), status.getRequestStatus(), reason);
  		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO));
     }
 	
