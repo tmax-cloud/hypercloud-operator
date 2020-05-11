@@ -6,8 +6,10 @@
 		- PVC: hpcd-{REGISTRY_NAME}
 		- Secret(Registry Info, type: Opaque): hpcd-{REGISTRY_NAME}
 		- Secret(ImagePullSecret, type: kubernetes.io/dockerconfigjson): hpcd-registry-{REGISTRY_NAME}
+		- Secret(tls, type: kubernetes.io/tls): hpcd-tls-{REGISTRY_NAME}
 		- RS: hpcd-registry-{REGISTRY_NAME}
 		- CM: hpcd-{REGISTRY_NAME}  (Note: /spec/customConfigYml에 입력한 string의 configmap이 없는 경우 생성)
+		- Ingress: hpcd-{REGISTRY_NAME}
 	
 # Resource 상태
 	- Status: Creating 
@@ -16,8 +18,6 @@
 		- Registry의  SVC, Secret, RS가 존재하고 Pod내 container가 ready인 상태
 	- Status: NotReady
 		- Container가 ready가 아닌 상태
-		- RS가 ready가 아닌 상태
-		- Pod가 Running이 아닌 상태
 	- Status: Error
 		- Registry의 리소스(svc, pvc, rs, secret) 생성에 실패한 상태
 		- Reigstry의 리소스(svc, rs, secret)가 존재하지 않는 상태

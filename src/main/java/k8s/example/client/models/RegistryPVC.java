@@ -10,6 +10,9 @@ public class RegistryPVC {
 	private String storageSize = null;
 	private String storageClassName = null;
 	private String volumeMode = null;
+	private String mountPath = null;
+	private String existPvcName = null;
+	private Boolean deleteWithPvc = null;
 	
 	public List<String> getAccessModes() {
 		return accessModes;
@@ -42,7 +45,24 @@ public class RegistryPVC {
 		this.accessModes.add(accessMode);
 		return this;
 	}
-	
+	public String getMountPath() {
+		return mountPath;
+	}
+	public void setMountPath(String mountPath) {
+		this.mountPath = mountPath;
+	}
+	public String getExistPvcName() {
+		return existPvcName;
+	}
+	public void setExistPvcName(String existPvcName) {
+		this.existPvcName = existPvcName;
+	}
+	public Boolean getDeleteWithPvc() {
+		return deleteWithPvc;
+	}
+	public void setDeleteWithPvc(Boolean deleteWithPvc) {
+		this.deleteWithPvc = deleteWithPvc;
+	}
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("class RegistryPVC {\n");
@@ -52,6 +72,9 @@ public class RegistryPVC {
 		sb.append("    volumeSize: ").append(toIndentedString(storageSize)).append("\n");
 		sb.append("    storageClassName: ").append(toIndentedString(storageClassName)).append("\n");
 		sb.append("    volumeMode: ").append(toIndentedString(volumeMode)).append("\n");
+		sb.append("    mountPath: ").append(toIndentedString(mountPath)).append("\n");
+		sb.append("    existPvcName: ").append(toIndentedString(existPvcName)).append("\n");
+		sb.append("    deleteWithPvc: ").append(toIndentedString(deleteWithPvc)).append("\n");
 		sb.append("}");
 		return sb.toString();
 	}

@@ -8,22 +8,22 @@ import org.slf4j.Logger;
 import com.google.gson.reflect.TypeToken;
 
 import io.kubernetes.client.openapi.ApiClient;
-import io.kubernetes.client.openapi.apis.CoreV1Api;
-import io.kubernetes.client.openapi.models.V1Secret;
+import io.kubernetes.client.openapi.apis.ExtensionsV1beta1Api;
+import io.kubernetes.client.openapi.models.ExtensionsV1beta1Ingress;
 import io.kubernetes.client.util.Watch;
 import k8s.example.client.Main;
 
-public class RegistryCertSecretWatcher extends Thread {
-	private final Watch<V1Secret> watchRegistrySecret;
+public class RegistryIngressWatcher extends Thread {
+	private final Watch<ExtensionsV1beta1Ingress> watchRegistryIngress;
 	private static String latestResourceVersion = "0";
 
     private Logger logger = Main.logger;
-    
-	RegistryCertSecretWatcher(ApiClient client, CoreV1Api api, String resourceVersion) throws Exception {
-		watchRegistrySecret = Watch.createWatch(
+
+	RegistryIngressWatcher(ApiClient client, ExtensionsV1beta1Api api, String resourceVersion) throws Exception {
+		watchRegistryIngress = Watch.createWatch(
 		        client,
-		        api.listSecretForAllNamespacesCall(null, null, null, "secret=cert", null, null, null, null, Boolean.TRUE, null),
-		        new TypeToken<Watch.Response<V1Secret>>(){}.getType()
+		        api.listIngressForAllNamespacesCall(null, null, null, "app=registry", null, null, null, null, Boolean.TRUE, null),
+		        new TypeToken<Watch.Response<ExtensionsV1beta1Ingress>>(){}.getType()
         );
 		
 		latestResourceVersion = resourceVersion;	
@@ -32,11 +32,11 @@ public class RegistryCertSecretWatcher extends Thread {
 	@Override
 	public void run() {
 		try {
-			watchRegistrySecret.forEach(response -> {
+			watchRegistryIngress.forEach(response -> {
 				try {
 					if (Thread.interrupted()) {
 						logger.info("Interrupted!");
-						watchRegistrySecret.close();
+						watchRegistryIngress.close();
 					}
 				} catch (Exception e) {
 					logger.info(e.getMessage());
@@ -45,16 +45,17 @@ public class RegistryCertSecretWatcher extends Thread {
 				
 				// Logic here
 				try {
-					V1Secret secret = response.object;
+					ExtensionsV1beta1Ingress ingress = response.object;
 					
-					if( secret != null
-							&& Integer.parseInt(secret.getMetadata().getResourceVersion()) > Integer.parseInt(latestResourceVersion)) {
+					if( ingress != null
+							&& Integer.parseInt(ingress.getMetadata().getResourceVersion()) > Integer.parseInt(latestResourceVersion)) {
 						
 						latestResourceVersion = response.object.getMetadata().getResourceVersion();
 						String eventType = response.type.toString();
-						logger.info("[RegistryCertSecretWatcher] Registry Cert Secret " + eventType + "\n");
+						logger.info("[RegistryIngressWatcher] Registry Ingress " + eventType + "\n"
+						);
 
-						K8sApiCaller.updateRegistryStatus(secret, eventType);
+						K8sApiCaller.updateRegistryStatus(ingress, eventType);
 						
 					}
 //				} catch (ApiException e) {
@@ -70,7 +71,7 @@ public class RegistryCertSecretWatcher extends Thread {
 					e.printStackTrace();
 				}
 			});
-			logger.info("@@@@@@@@@@@@@@@@@@@@ Registry Cert Secret 'For Each' END @@@@@@@@@@@@@@@@@@@@");
+			logger.info("@@@@@@@@@@@@@@@@@@@@ Registry Ingress 'For Each' END @@@@@@@@@@@@@@@@@@@@");
 		} catch (Exception e) {
 			logger.info("Registry Watcher Exception: " + e.getMessage());
 			StringWriter sw = new StringWriter();

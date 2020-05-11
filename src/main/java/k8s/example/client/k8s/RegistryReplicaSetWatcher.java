@@ -56,7 +56,6 @@ public class RegistryReplicaSetWatcher extends Thread {
 
 						K8sApiCaller.updateRegistryStatus(rs, eventType);
 						
-						
 					}
 //				} catch (ApiException e) {
 //					logger.info("ApiException: " + e.getMessage());
