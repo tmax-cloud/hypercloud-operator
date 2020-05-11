@@ -5,7 +5,7 @@ metadata:
   labels: 
     encrypted: f
     group-ck2-3: t
-userGroupInfo:
+userInfo:
   name: example
   password: "example"
   email: example@tmax.co.kr

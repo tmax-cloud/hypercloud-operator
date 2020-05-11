@@ -104,7 +104,7 @@ public class AuthHandler extends GeneralHandler {
 
 			// UserGroup GET	
 			List < String > userGroupNameList = null;
-			UserCR user = K8sApiCaller.getUser(userId.replace("@", "-"));
+			UserCR user = K8sApiCaller.getUser(userId);
 			if (user.getMetadata().getLabels()!= null ) {
 				Iterator<String> iter = user.getMetadata().getLabels().keySet().iterator();
 				 while(iter.hasNext()) {
@@ -133,7 +133,7 @@ public class AuthHandler extends GeneralHandler {
 	private boolean verifyAccessToken (String accessToken, String userId, String tokenId, String issuer) throws Exception {
 		boolean result = false;		
 
-		String tokenName = userId.replace("@", "-") + "-" + tokenId;
+		String tokenName = userId + "-" + tokenId;
 		TokenCR token = K8sApiCaller.getToken(tokenName);
 		
 		accessToken = Util.Crypto.encryptSHA256(accessToken);

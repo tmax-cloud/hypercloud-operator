@@ -141,6 +141,7 @@ import k8s.example.client.DataObject.RegistryEvent;
 import k8s.example.client.DataObject.TokenCR;
 import k8s.example.client.DataObject.User;
 import k8s.example.client.DataObject.UserCR;
+import k8s.example.client.DataObject.UserSecurityPolicyCR;
 import k8s.example.client.ErrorCode;
 import k8s.example.client.Main;
 import k8s.example.client.StringUtil;
@@ -693,7 +694,7 @@ public class K8sApiCaller {
 			String jsonPatchStr = "[";
 			
 			if ( !retryCountFlag ) {
-				jsonPatchStr = jsonPatchStr + "{\"op\":\"replace\",\"path\":\"/userInfo/dateOfBirth\",\"value\": " + userInfo.getDateOfBirth() + "}";
+				jsonPatchStr = jsonPatchStr + "{\"op\":\"replace\",\"path\":\"/userInfo/dateOfBirth\",\"value\": \"" + userInfo.getDateOfBirth() + "\"}";
 				if (userInfo.getName() != null) jsonPatchStr = jsonPatchStr + ", {\"op\":\"replace\",\"path\":\"/userInfo/name\",\"value\": " + userInfo.getName() + "}";
 				if (userInfo.getDepartment() != null) jsonPatchStr = jsonPatchStr + ", {\"op\":\"replace\",\"path\":\"/userInfo/department\",\"value\": " + userInfo.getDepartment() + "}";
 				if (userInfo.getPosition() != null) jsonPatchStr = jsonPatchStr + ", {\"op\":\"replace\",\"path\":\"/userInfo/position\",\"value\": " + userInfo.getPosition() + "}";
@@ -950,7 +951,7 @@ public class K8sApiCaller {
 			// Encrypt password
 			String passwordSalt = UUID.randomUUID().toString();
 			String encryptedPassword = Util.Crypto
-					.encryptSHA256(password + user.getUserInfo().getEmail() + passwordSalt);
+					.encryptSHA256(password + userId + passwordSalt);
 
 			// Patch user CR
 			user.getUserInfo().setPassword(encryptedPassword);
@@ -3925,7 +3926,7 @@ public class K8sApiCaller {
 		try {
 			instance.setApiVersion(Constants.CUSTOM_OBJECT_GROUP + "/" + Constants.CUSTOM_OBJECT_VERSION);
 			instance.setKind(Constants.CUSTOM_OBJECT_KIND_TEMPLATE_INSTANCE);
-			instanceMeta.setName(instanceId);
+			instanceMeta.setName(instanceName + "." + instanceId);
 			instanceMeta.setNamespace(inDO.getContext().getNamespace());
 			instance.setMetadata(instanceMeta);
 
@@ -4349,6 +4350,7 @@ public class K8sApiCaller {
 		V1ObjectMeta roleBindingMeta = new V1ObjectMeta();
 		roleBindingMeta.setName(claim.getResourceName());
 		roleBindingMeta.setNamespace(claim.getMetadata().getNamespace());
+		roleBindingMeta.setLabels(claim.getMetadata().getLabels());
 		roleBinding.setMetadata(roleBindingMeta);
 		roleBinding.setSubjects(claim.getSubjects());
 		roleBinding.setRoleRef(claim.getRoleRef());
@@ -4357,9 +4359,31 @@ public class K8sApiCaller {
 			rbacApi.createNamespacedRoleBinding(claim.getMetadata().getNamespace(), roleBinding, null, null, null);
 		} catch (ApiException e) {
 			logger.info(e.getResponseBody());
+			e.printStackTrace();
 			throw e;
 		}
 	}
+	
+	public static void createClusterRoleBinding(RoleBindingClaim claim) throws ApiException {
+		logger.info("[K8S ApiCaller] Create ClusterRoleBinding Start");
+
+		V1ClusterRoleBinding clusterRoleBinding = new V1ClusterRoleBinding();
+		V1ObjectMeta clusterRoleBindingMeta = new V1ObjectMeta();
+		clusterRoleBindingMeta.setName(claim.getResourceName());
+		clusterRoleBindingMeta.setLabels(claim.getMetadata().getLabels());
+		clusterRoleBinding.setMetadata(clusterRoleBindingMeta);
+		clusterRoleBinding.setSubjects(claim.getSubjects());
+		clusterRoleBinding.setRoleRef(claim.getRoleRef());
+
+		try {
+			rbacApi.createClusterRoleBinding( clusterRoleBinding, null, null, null);
+		} catch (ApiException e) {
+			logger.info(e.getResponseBody());
+			e.printStackTrace();
+			throw e;
+		}
+	}
+	
 
 	public static void updateRoleBinding(RoleBindingClaim claim) throws Throwable {
 		logger.info("[K8S ApiCaller] Update Role Binding Start");
@@ -4398,20 +4422,23 @@ public class K8sApiCaller {
 		rule.addVerbsItem("*");
 		rules.add(rule);
 
-		// Cluster Rule
+		// ClusterRole & ClusterRoleBinding Rule
 		rule = new V1PolicyRule();
 		rule.addApiGroupsItem(Constants.RBAC_API_GROUP);
 		rule.addResourcesItem("clusterroles");
-		rule.addResourceNamesItem(userInDO.getId());
-		rule.addVerbsItem("*");
-		rules.add(rule);
-
-		// ClusterRoleBinding Rule
-		rule = new V1PolicyRule();
-		rule.addApiGroupsItem(Constants.RBAC_API_GROUP);
 		rule.addResourcesItem("clusterrolebindings");
 		rule.addResourceNamesItem(userInDO.getId());
 		rule.addVerbsItem("*");
+		rules.add(rule);
+	
+		// Claims Rule
+		rule = new V1PolicyRule();
+		rule.addApiGroupsItem(Constants.CUSTOM_OBJECT_GROUP);
+//		rule.addResourcesItem("rolebindingclaims");
+//		rule.addResourcesItem("resourcequotaclaims");
+		rule.addResourcesItem("namespaceclaims");
+		rule.addVerbsItem("create");
+		rule.addVerbsItem("list");		
 		rules.add(rule);
 
 		clusterRole.setRules(rules);
@@ -4497,6 +4524,37 @@ public class K8sApiCaller {
 			e.printStackTrace();
 			throw e;
 		}		
+	}
+	
+	public static V1ClusterRole readClusterRole(String clusterRoleName) {
+		V1ClusterRole clusterRole = null;
+		try {
+			clusterRole = rbacApi.readClusterRole(clusterRoleName, "true"); 
+
+		} catch (ApiException e) {
+			logger.info("Response body: " + e.getResponseBody());
+			e.printStackTrace();
+		} catch (Exception e) {
+			logger.info("Exception: " + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		}
+		return clusterRole;
+	}
+	
+	public static V1ClusterRole replaceClusterRole(V1ClusterRole clusterRole) {
+		V1ClusterRole replaceResult = null;
+		try {
+			replaceResult = rbacApi.replaceClusterRole(clusterRole.getMetadata().getName(), clusterRole, null, null, null);
+		} catch (ApiException e) {
+			logger.info("Response body: " + e.getResponseBody());
+			e.printStackTrace();
+		} catch (Exception e) {
+			logger.info("Exception: " + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		}
+		return replaceResult;
 	}
 
 	/**
@@ -4585,8 +4643,14 @@ public class K8sApiCaller {
 			if (clusterRoleList != null) {
 				for (String clusterRoleName : clusterRoleList) {
 					logger.info("User [ " + userId + " ] has ClusterRole [ " + clusterRoleName + " ]");
-					V1ClusterRole clusterRole = rbacApi.readClusterRole(clusterRoleName, "true");
-					List<V1PolicyRule> rules = clusterRole.getRules();
+					V1ClusterRole clusterRole = null;
+					List<V1PolicyRule> rules = null;
+					try{
+						clusterRole = rbacApi.readClusterRole(clusterRoleName, "true"); // rolebinding은 있는데 role을 지웠을 경우를 대비
+						rules = clusterRole.getRules();
+					} catch (ApiException e) {
+						if( !e.getResponseBody().contains("NotFound") ) throw e;			
+					}
 					if (rules != null) {
 						for (V1PolicyRule rule : rules) {
 							if (rule.getResources() != null) {
@@ -4636,9 +4700,14 @@ public class K8sApiCaller {
 									if (roleRef.getKind().equalsIgnoreCase("Role")) {
 										logger.info(
 												"User [ " + userId + " ] has Role [" + roleRef.getName() + " ]");
-										V1Role role = rbacApi.readNamespacedRole(roleRef.getName(),
-												ns.getMetadata().getName(), "true");
-										List<V1PolicyRule> rules = role.getRules();
+										V1Role role = null;
+										List<V1PolicyRule> rules = null;
+										try{
+											role = rbacApi.readNamespacedRole(roleRef.getName(), ns.getMetadata().getName(), "true");  // rolebinding은 있는데 role을 지웠을 경우를 대비
+											rules = role.getRules();
+										} catch (ApiException e) {
+											if( !e.getResponseBody().contains("NotFound") ) throw e;			
+										}
 										if (rules != null) {
 											for (V1PolicyRule rule : rules) {
 												if (rule.getResources() != null) {
@@ -4662,8 +4731,15 @@ public class K8sApiCaller {
 										// 6. Check if ClusterRole has NameSpace GET rule
 									} else if (roleRef.getKind().equalsIgnoreCase("ClusterRole")) {
 										logger.info("User [ " + userId + " ] has ClusterRole [" + roleRef.getName() + " ]");
-										V1ClusterRole role = rbacApi.readClusterRole(roleRef.getName(), "true");
-										List<V1PolicyRule> rules = role.getRules();
+										
+										V1ClusterRole role = null;
+										List<V1PolicyRule> rules = null;
+										try{
+											role = rbacApi.readClusterRole(roleRef.getName(), "true"); // rolebinding은 있는데 role을 지웠을 경우를 대비
+											rules = role.getRules();
+										} catch (ApiException e) {
+											if( !e.getResponseBody().contains("NotFound") ) throw e;			
+										}
 										if (rules != null) {
 											for (V1PolicyRule rule : rules) {
 												if (rule.getResources() != null) {
@@ -5040,7 +5116,81 @@ public class K8sApiCaller {
 			e.printStackTrace();
 		}
 	}
+	
+	
+	public static UserSecurityPolicyCR getUserSecurityPolicy(String uspName) throws Exception {
+		UserSecurityPolicyCR uspCR = new UserSecurityPolicyCR();
+		logger.info("UserSecurityPolicy [ " + uspName + " ] Get Service Start");
 
+		try {
+			Object response = customObjectApi.getClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP,
+					Constants.CUSTOM_OBJECT_VERSION, Constants.CUSTOM_OBJECT_PLURAL_USER_SECURITY_POLICY, uspName);
+			JsonObject respJson = (JsonObject) new JsonParser().parse((new Gson()).toJson(response));
+
+			mapper.registerModule(new JodaModule());
+			uspCR = mapper.readValue((new Gson()).toJson(respJson), new TypeReference<UserSecurityPolicyCR>() {
+			});
+		} catch (ApiException e) {
+			logger.info("Response body: " + e.getResponseBody());
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			logger.info("Exception message: " + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		}
+
+		return uspCR;
+	}
+
+	public static void createUserSecurityPolicy(String uspName) throws Exception {
+		try {
+			UserSecurityPolicyCR uspCR = new UserSecurityPolicyCR();
+			// Set name & label
+			V1ObjectMeta metadata = new V1ObjectMeta();
+			metadata.setName( uspName );
+			uspCR.setMetadata( metadata );
+
+			// Set otpEnable false
+			uspCR.setOtpEnable("f");
+
+			// Make body
+			JSONParser parser = new JSONParser();
+			JSONObject bodyObj = (JSONObject) parser.parse(new Gson().toJson(uspCR));
+
+			customObjectApi.createClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION,
+					Constants.CUSTOM_OBJECT_PLURAL_USER_SECURITY_POLICY, bodyObj, null);
+		} catch (ApiException e) {
+			logger.info("Response body: " + e.getResponseBody());
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			logger.info("Exception message: " + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		}		
+	}
+	
+	public static void patchUserSecurityPolicy( String uspName, String value) throws Throwable {
+		logger.info("[K8S ApiCaller] patchUserSecurityPolicy Service Start");
+		logger.info("uspName : " + uspName);
+		logger.info("otp value : " + value);
+			
+		try {
+			String jsonPatchStr = "[{\"op\":\"replace\",\"path\":\"/otp\",\"value\": " + Integer.parseInt(value) + " }]";
+			logger.info("JsonPatchStr: " + jsonPatchStr);
+
+			JsonElement jsonPatch = (JsonElement) new JsonParser().parse(jsonPatchStr);
+			customObjectApi.patchClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, Constants.CUSTOM_OBJECT_PLURAL_USER_SECURITY_POLICY, uspName, jsonPatch);
+		
+		} catch (ApiException e) {
+			logger.info(e.getResponseBody());
+			e.printStackTrace();
+			throw e;
+		}
+		
+		
+	}
 
 
 //	public static void updateClusterRoleBindingOfGroup(String userGroupName, String userId) throws Exception {

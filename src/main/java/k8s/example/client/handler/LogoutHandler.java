@@ -24,6 +24,7 @@ import k8s.example.client.Constants;
 import k8s.example.client.Main;
 import k8s.example.client.DataObject.Token;
 import k8s.example.client.DataObject.TokenCR;
+import k8s.example.client.audit.AuditController;
 import k8s.example.client.Util;
 import k8s.example.client.k8s.K8sApiCaller;
 import k8s.example.client.k8s.OAuthApiCaller;
@@ -44,6 +45,7 @@ public class LogoutHandler extends GeneralHandler {
 		
         Token logoutInDO = null;
 		String outDO = null;
+		String userId = null;
 		IStatus status = null;
 		try {
 			// Read inDO
@@ -55,7 +57,11 @@ public class LogoutHandler extends GeneralHandler {
     		if (System.getenv( "PROAUTH_EXIST" ) != null) {   		
         		if( System.getenv( "PROAUTH_EXIST" ).equalsIgnoreCase("1")) {
     	    		logger.info( "  [[ Integrated OAuth System! ]] " );
-    	    		JsonObject logOutOut = OAuthApiCaller.AuthenticateDelete(accessToken);
+					JWTVerifier verifier = JWT.require(Algorithm.HMAC256(Constants.ACCESS_TOKEN_SECRET_KEY)).build();
+        			DecodedJWT jwt = verifier.verify(accessToken);
+        			
+        			userId = jwt.getClaims().get(Constants.CLAIM_USER_ID).asString();
+        			logger.info(" User ID: " + userId);    	    		JsonObject logOutOut = OAuthApiCaller.AuthenticateDelete(accessToken);
     	    		logger.info( "  logOutOut.get(\"result\") : " + logOutOut.get("result").toString() );
     	    		if ( logOutOut.get("result").toString().equalsIgnoreCase("\"true\"") ){
         				logger.info( "  Logout success." );
@@ -76,9 +82,9 @@ public class LogoutHandler extends GeneralHandler {
         		// Verify access token	
     			JWTVerifier verifier = JWT.require(Algorithm.HMAC256(Constants.ACCESS_TOKEN_SECRET_KEY)).build();
     			DecodedJWT jwt = verifier.verify(accessToken);
-    			
+
+    			userId = jwt.getClaims().get(Constants.CLAIM_USER_ID).asString();
     			String issuer = jwt.getIssuer();
-    			String userId = jwt.getClaims().get(Constants.CLAIM_USER_ID).asString();
     			String tokenId = jwt.getClaims().get(Constants.CLAIM_TOKEN_ID).asString();
     			logger.info( "  Issuer: " + issuer );
     			logger.info( "  User ID: " + userId );
@@ -121,6 +127,7 @@ public class LogoutHandler extends GeneralHandler {
 		}
 		
 //		logger.info();
+		AuditController.auditLogoutActivity(userId, session.getHeaders().get("user-agent"), status.getRequestStatus(), outDO);
 		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO));
 
 	}

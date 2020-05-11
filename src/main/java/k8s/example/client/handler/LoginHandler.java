@@ -22,6 +22,7 @@ import fi.iki.elonen.NanoHTTPD.Response.Status;
 import fi.iki.elonen.router.RouterNanoHTTPD.GeneralHandler;
 import fi.iki.elonen.router.RouterNanoHTTPD.UriResource;
 import io.kubernetes.client.openapi.ApiException;
+import io.kubernetes.client.openapi.models.V1Secret;
 import k8s.example.client.Constants;
 import k8s.example.client.DataObject.Client;
 import k8s.example.client.DataObject.CommonOutDO;
@@ -29,20 +30,22 @@ import k8s.example.client.DataObject.LoginInDO;
 import k8s.example.client.DataObject.Token;
 import k8s.example.client.DataObject.User;
 import k8s.example.client.DataObject.UserCR;
+import k8s.example.client.DataObject.UserSecurityPolicyCR;
 import k8s.example.client.ErrorCode;
 import k8s.example.client.Main;
 import k8s.example.client.StringUtil;
 import k8s.example.client.Util;
+import k8s.example.client.audit.AuditController;
 import k8s.example.client.k8s.K8sApiCaller;
 import k8s.example.client.k8s.OAuthApiCaller;
 
 public class LoginHandler extends GeneralHandler {
     private Logger logger = Main.logger;
+
 	@Override
     public Response post(
       UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
 		logger.info("***** POST /login");
-		
 		Map<String, String> body = new HashMap<String, String>();
         try {
 			session.parseBody( body );
@@ -58,7 +61,9 @@ public class LoginHandler extends GeneralHandler {
 		String appNameRequestParameter = null;
 		String accessToken = null;
 		String refreshToken = null;
+		Token token = null;
 		int retryCount = 0;
+		boolean otpEnable = false;
 			try {
 				// Read inDO
 	    		loginInDO = new ObjectMapper().readValue(body.get( "postData" ), LoginInDO.class);
@@ -129,12 +134,10 @@ public class LoginHandler extends GeneralHandler {
 	        		}
 	    	    } 
 	        	if (System.getenv( "PROAUTH_EXIST" ) == null || !System.getenv( "PROAUTH_EXIST" ).equalsIgnoreCase("1") ){	
-	        		// 그대로 아이디 비번 오류 구분O  //TODO
-	        		// TODO 추가 요건: 동일 계정에 대해서 10번 로그인 실패시, 계정 잠금 --> 무조건 비밀번호 재설정  ( 4/30 요건 )
 	        		
 	        		logger.info( "  [[ OpenAuth System! ]]" );  			
 		    		// Get user info
-		    		String userId = loginInDO.getId().replace("@", "-");
+		    		String userId = loginInDO.getId();
 		    		UserCR user = K8sApiCaller.getUser(userId);
 		    		String encryptedPassword = Util.Crypto.encryptSHA256(loginInDO.getPassword() + loginInDO.getId() + user.getUserInfo().getPasswordSalt());
 		    		logger.info("  DB password: " + user.getUserInfo().getPassword() + " / Input password: " + encryptedPassword);
@@ -145,32 +148,46 @@ public class LoginHandler extends GeneralHandler {
 			    			
 			    			status = Status.OK;
 			    			
-			    			// Make token & refresh token
-			    			String tokenId = UUID.randomUUID().toString();
-			    			
-			    			Builder tokenBuilder = JWT.create().withIssuer(Constants.ISSUER)
-									.withExpiresAt(Util.getDateFromSecond(Constants.ACCESS_TOKEN_EXP_TIME))
-									.withClaim(Constants.CLAIM_USER_ID, loginInDO.getId())
-			    					.withClaim(Constants.CLAIM_TOKEN_ID, tokenId);
-			    			
-			    			if ( K8sApiCaller.verifyAdmin(loginInDO.getId()) ) {
-			    				logger.info("ADMIN!!!");
-			    				tokenBuilder.withClaim( Constants.CLAIM_ROLE, Constants.ROLE_ADMIN );
-			    			} else {
-			    				logger.info("USER!!!");
-			    				tokenBuilder.withClaim( Constants.CLAIM_ROLE, Constants.ROLE_USER );
+			            	UserSecurityPolicyCR uspCR = K8sApiCaller.getUserSecurityPolicy( loginInDO.getId() );
+
+			            	// 1. OTP in loginInDO is Empty && otpEnable true
+			    			if (loginInDO.getOtp() == 0 && uspCR.getOtpEnable().equalsIgnoreCase("t")) {
+			            		// Issue otpCode
+			        			String otpCode = Util.numberGen(6, 1);
+			        			logger.info(" otpCode: " + otpCode);
+
+			        			// Send E-mail to User
+			        			String subject = "[ OTP : " + otpCode + " ] OTP를 인증해 주세요";
+			        			String content = Constants.VERIFY_MAIL_CONTENTS.replaceAll("@@otpCode@@", otpCode);
+			        			Util.sendMail(user.getUserInfo().getEmail(), subject, content); 
+			        			K8sApiCaller.patchUserSecurityPolicy(loginInDO.getId(), otpCode);
+			        			otpEnable = true;
 			    			}
 			    			
-			    			accessToken = tokenBuilder.sign(Algorithm.HMAC256(Constants.ACCESS_TOKEN_SECRET_KEY));
-			    			tokenBuilder = JWT.create().withIssuer(Constants.ISSUER)
-			    					.withExpiresAt(Util.getDateFromSecond(Constants.REFRESH_TOKEN_EXP_TIME));
-			    			refreshToken = tokenBuilder.sign(Algorithm.HMAC256(Constants.REFRESH_TOKEN_SECRET_KEY));
-		
-			    			// Save tokens in token CR
-			            	K8sApiCaller.saveToken(userId, tokenId, Util.Crypto.encryptSHA256(accessToken), Util.Crypto.encryptSHA256(refreshToken));
-			    		} else {
-			    			logger.info("  Login fail. Wrong password.");
+			    			// 2. OTP in loginInDO is not Empty && otpEnable true
+			    			if ( loginInDO.getOtp() != 0 && uspCR.getOtpEnable().equalsIgnoreCase("t") ) {
+			    				if (uspCR.getOtp() == loginInDO.getOtp()) {
+			    					token = openAuthloginSuccess( loginInDO );
+			    					accessToken = token.getAccessToken();
+			    					refreshToken = token.getRefreshToken();
+				        			otpEnable = true;
+
+			    				} else {
+			    					logger.info("  Login fail. Wrong OTP.");
+					    			status = Status.BAD_REQUEST; 
+					    			outDO = Constants.OTP_VERIFICATION_FAILED;
+			    				}
+			    			}
 			    			
+			    			// 3. otpEnable false
+			    			if ( uspCR.getOtpEnable().equalsIgnoreCase("f") ) {
+			    				token = openAuthloginSuccess( loginInDO );
+			    				accessToken = token.getAccessToken();
+		    					refreshToken = token.getRefreshToken();
+			    			}
+
+			    		} else {
+			    			logger.info("  Login fail. Wrong password.");	
 			    			status = Status.BAD_REQUEST; 
 			    			outDO = Constants.LOGIN_FAILED;
 			    		}
@@ -229,17 +246,25 @@ public class LoginHandler extends GeneralHandler {
 				}else {
 					outDO = Constants.LOGIN_FAILED;
 				}
+			} catch (Throwable e) {
+				logger.info("Exception message: " + e.getMessage());
+				e.printStackTrace();
+				status = Status.UNAUTHORIZED;
+				outDO = Constants.LOGIN_FAILED;
 			}
 			
 			
 			// Make OutDO
+			String reason = null;
 			if (status.equals(Status.OK)){
         		// Make outDO
-    			Token loginOutDO = new Token();
-    			loginOutDO.setAccessToken(accessToken);
-    			loginOutDO.setRefreshToken(refreshToken);
+				Token loginOutDO = new Token();
+				loginOutDO.setAccessToken(accessToken);
+				loginOutDO.setRefreshToken(refreshToken);
+    			loginOutDO.setOtpEnable(otpEnable);
     			logger.info("  Access token: " + accessToken);
     			logger.info("  Refresh token: " + refreshToken);
+    			logger.info("  otpEnable: " + otpEnable);
     			
     			Gson gson = new GsonBuilder().setPrettyPrinting().create();
     			outDO = gson.toJson(loginOutDO).toString();
@@ -248,18 +273,21 @@ public class LoginHandler extends GeneralHandler {
 				CommonOutDO out = new CommonOutDO();
 				out.setStatus(Constants.LOGIN_FAILED);
 				out.setMsg(outDO);
+				reason = outDO;
 				Gson gson = new GsonBuilder().setPrettyPrinting().create();
 				outDO = gson.toJson(out).toString();
 				
 			} else if ( status.equals(Status.BAD_REQUEST)) { 
 				CommonOutDO out = new CommonOutDO();
 				out.setMsg(outDO);
+				reason = outDO;
 				if ( retryCount != 0 ) out.setEvent( Integer.toString(retryCount) );
     			status = Status.OK; //ui요청
 				Gson gson = new GsonBuilder().setPrettyPrinting().create();
 				outDO = gson.toJson(out).toString();
 			}	
-			
+		
+		AuditController.auditLoginActivity(loginInDO.getId(), session.getHeaders().get("user-agent"), status.getRequestStatus(), reason);
  		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO));
     }
 	
@@ -270,4 +298,43 @@ public class LoginHandler extends GeneralHandler {
 		
 		return Util.setCors(NanoHTTPD.newFixedLengthResponse(""));
     }
+	
+	private Token openAuthloginSuccess(LoginInDO loginInDO ) throws Exception {
+		Token token = new Token();
+		
+		// Make token & refresh token
+		String tokenId = UUID.randomUUID().toString();
+		
+		//Get Access Token Expire Time from secret
+		int atExpireTimeSec = Constants.ACCESS_TOKEN_EXP_TIME;
+		try {
+			V1Secret secretReturn = K8sApiCaller.readSecret(Constants.TEMPLATE_NAMESPACE, Constants.K8S_PREFIX + Constants.OPERATOR_TOKEN_EXPIRE_TIME );
+			atExpireTimeSec = Integer.parseInt(secretReturn.getStringData().get(Constants.TOKEN_EXPIRED_TIME_KEY));
+			logger.info(" AccessToken Expire Time is set to "+  atExpireTimeSec/60 +"min ");
+		} catch ( ApiException e ) {
+			logger.info(" AccessToken Expire Time is set to default value 60 min ");
+		}
+		Builder tokenBuilder = JWT.create().withIssuer(Constants.ISSUER)
+				.withExpiresAt(Util.getDateFromSecond(atExpireTimeSec))
+				.withClaim(Constants.CLAIM_USER_ID, loginInDO.getId())
+				.withClaim(Constants.CLAIM_TOKEN_ID, tokenId);
+		
+//		if ( K8sApiCaller.verifyAdmin(loginInDO.getId()) ) {
+//			logger.info("ADMIN!!!");
+//			tokenBuilder.withClaim( Constants.CLAIM_ROLE, Constants.ROLE_ADMIN );
+//		} else {
+//			logger.info("USER!!!");
+//			tokenBuilder.withClaim( Constants.CLAIM_ROLE, Constants.ROLE_USER );
+//		}
+		
+		token.setAccessToken(tokenBuilder.sign(Algorithm.HMAC256(Constants.ACCESS_TOKEN_SECRET_KEY)));
+		tokenBuilder = JWT.create().withIssuer(Constants.ISSUER)
+				.withExpiresAt(Util.getDateFromSecond(Constants.REFRESH_TOKEN_EXP_TIME));
+		token.setRefreshToken( tokenBuilder.sign(Algorithm.HMAC256(Constants.REFRESH_TOKEN_SECRET_KEY)));
+
+		// Save tokens in token CR
+    	K8sApiCaller.saveToken(loginInDO.getId(), tokenId, Util.Crypto.encryptSHA256(token.getAccessToken()), Util.Crypto.encryptSHA256(token.getRefreshToken()));
+    	
+		return token;
+	}
 }

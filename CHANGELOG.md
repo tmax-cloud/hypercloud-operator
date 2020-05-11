@@ -1,6 +1,110 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.0.23 start -------------------->
+
+## HyperCloudServer_4.1.0.23 (Mon May  4 08:21:10 KST 2020)
+
+### Added
+
+### Changed
+  - [mod] trial 신청 승인 메일 수정 by taegeon_woo
+  - [mod] UserSecurityPolicyCRD.yaml 추가 by taegeon_woo
+
+### Fixed
+  - [ims][223799] ResourceQuotaClaimCRD.yaml 필수 field 추가 by taegeon_woo
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.0.23 end --------------------->
+
+<!-------------------- v4.1.0.22 start -------------------->
+
+## HyperCloudServer_4.1.0.22 (Wed Apr 29 13:13:49 KST 2020)
+
+### Added
+
+### Changed
+  - [mod] template instance 생성 시 parameter 가 하나도 없는 경우 default value 가 들어갈 수 있도록 수정 by seonho_choi
+  - [mod] trial 메일 형식 변경 by taegeon_woo
+
+### Fixed
+
+### CRD yaml
+  - [crd] NamespaceClaimCRD.yaml 수정. hard:limits.cpu & hard:limits.memory required 처리 by seonho_choi
+
+### Etc
+
+<!--------------------- v4.1.0.22 end --------------------->
+
+<!-------------------- v4.1.0.21 start -------------------->
+
+## HyperCloudServer_4.1.0.21 (Wed Apr 29 11:32:10 KST 2020)
+
+### Added
+
+### Changed
+  - [mod] trial 관련 메일 html 파일 적용, trial user에게 부여할 clusterRoleBinding설계 및 구현 by taegeon_woo
+  - [mod] trial 신청 승인 / 미승인시 메일 전송 기능 추가, 인증번호 인증 서비스 리스폰스 변경 by taegeon_woo
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.0.21 end --------------------->
+
+<!-------------------- v4.1.0.20 start -------------------->
+
+## HyperCloudServer_4.1.0.20 (Tue Apr 28 12:18:57 KST 2020)
+
+### Added
+
+### Changed
+  - [mod] 보내는 공식 메일 변경 by taegeon_woo
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.0.20 end --------------------->
+
+<!-------------------- v4.1.0.19 start -------------------->
+
+## HyperCloudServer_4.1.0.19 (Tue Apr 28 11:36:59 KST 2020)
+
+### Added
+
+### Changed
+  - [mod] 메일 서비스 송신자 수정 by taegeon_woo
+  - [mod] openAuth 환경 id, e-mail 분리 작업 구현 by taegeon_woo
+  - [mod] trial 최초 요청시 user에게 해당 trial에 관한 권한만 주는 로직 구현 by taegeon_woo
+  - [mod] namespace GET 에서 rolebinding은 있는데 role만 지웠을 경우 고려 코드 추가 by taegeon_woo
+  - [mod] 유저 생성시 줘야할 clusterrole설계 by taegeon_woo
+  - [mod] service instance -> template instance 생성 시 template instance 이름에 service instance 이름이 들어가도록 수정 by seonho_choi
+  - [mod] Template/example_instance.yaml Template/example_template.yaml 수정 by seonho_choi
+  - [mod]  swagger update by taegeon_woo
+  - [mod] Trial Timer 1달 시간 연장 기능 구현 by taegeon_woo
+  - [mod] Registry NodePort로 만들었을 때 docker login 안되는 버그 수정 by sukhee_yun
+  - [mod] trial meta annotation으로 처리 by taegeon_woo
+  - [mod] swagger Update by taegeon_woo
+  - [mod] 통합auth 토큰 만료 시간 변경 서비스 구현 by taegeon_woo
+  - [mod] metering publicIp 조회 가능하도록 변경 by taegeon_woo
+
+### Fixed
+
+### CRD yaml
+  - [crd] Registry volumeMode 필드 추가 by sukhee_yun
+
+### Etc
+
+<!--------------------- v4.1.0.19 end --------------------->
+
 <!-------------------- v4.1.0.18 start -------------------->
 
 ## HyperCloudServer_4.1.0.18 (Fri Apr 24 04:58:08 KST 2020)

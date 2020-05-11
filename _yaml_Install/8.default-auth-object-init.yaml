@@ -8,7 +8,7 @@ metadata:
   generation: 3
   labels:
     app: test
-    encrypted: t
+    encrypted: f
   name: admin-tmax.co.kr
   resourceVersion: "8268758"
   selfLink: /apis/tmax.io/v1/users/admin-tmax.co.kr
@@ -18,6 +18,7 @@ userInfo:
   department: CK2-3
   description: For test
   email: admin@tmax.co.kr
+  password: c7ad44cbad762a5da0a452f9e854fdc1e0e7a52a38015f23f3eab1d80b931dd472634dfac71cd34ebc35d16ab7fb8a90c81f975113d6c7538dc69dd8de9077ec
   name: Admin
   phone: 010-4878-8544
   position: administration
@@ -163,3 +164,18 @@ rules:
 - apiGroups: ['tmax.io']
   resources: ['template','templateinstances','registries','namespaceclaims','users']
   verbs: ['*']
+  
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: clusterrole-trial
+  labels:
+    purpose: clusterrole-for-trial-user
+    madeby: tmax
+rules:
+- apiGroups: ['servicecatalog.k8s.io']
+  resources: ['*']
+  verbs: ['*']
+

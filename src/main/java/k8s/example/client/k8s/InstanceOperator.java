@@ -3,8 +3,10 @@ package k8s.example.client.k8s;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.joda.time.DateTime;
@@ -154,6 +156,10 @@ public class InstanceOperator extends Thread {
 	    					
 	    					JSONArray objArr = new JSONArray();
 		        			
+	    					JSONObject parmPatch = null;
+	    					JSONArray parmPatchArray = null;
+	    					List<String> existParm = new ArrayList<>();
+	    					
 		        			if(templateObjs.isArray()) {
 		        				for(JsonNode object : templateObjs) {
 			        				String objStr = object.toString();
@@ -165,27 +171,41 @@ public class InstanceOperator extends Thread {
 					        				if(parameter.has("name") && parameter.has("value")) {
 					        					paramName = parameter.get("name").asText();
 						        				paramValue = parameter.get("value").asText();
-					        				}
-					        				String dataType = existParameter( objectToJsonNode(template).get("parameters"), paramName );
-					        				if ( objectToJsonNode(template).get("parameters") != null && dataType != null ) {
-					        					
-					        					if (dataType.equals(Constants.TEMPLATE_DATA_TYPE_NUMBER)) {
-					        						String replaceString = "\"${" + paramName + "}\"";
-					        						if( objStr.contains( replaceString ) ) {
-							        					logger.info("[Instance Operator] Parameter Number Name to be replaced : " + replaceString);
-								        				logger.info("[Instance Operator] Parameter Number Value to be replaced : " + paramValue);
+						        				
+						        				if ( !existParm.contains( paramName ) ) {
+						        					if (parmPatchArray == null) parmPatchArray = new JSONArray();
+						        					parmPatch = new JSONObject();
+						        					parmPatch.put("name", paramName);
+						        					parmPatch.put("value", paramValue);
+						        					parmPatchArray.add(parmPatch);
+						        					existParm.add( paramName );
+						        				}
+
+						        				String dataType = existParameter( objectToJsonNode(template).get("parameters"), paramName );
+						        				if ( objectToJsonNode(template).get("parameters") != null && dataType != null ) {
+						        					
+						        					if (dataType.equals(Constants.TEMPLATE_DATA_TYPE_NUMBER)) {
+						        						String replaceString = "\"${" + paramName + "}\"";
+						        						if( objStr.contains( replaceString ) ) {
+								        					logger.info("[Instance Operator] Parameter Number Name to be replaced : " + replaceString);
+									        				logger.info("[Instance Operator] Parameter Number Value to be replaced : " + paramValue);
+								        					objStr = objStr.replace( replaceString, paramValue );
+								        				}
+						        					}
+						        					
+						        					String replaceString = "${" + paramName + "}";
+						        					if( objStr.contains( replaceString ) ) {
+							        					logger.info("[Instance Operator] Parameter Name to be replaced : " + replaceString);
+								        				logger.info("[Instance Operator] Parameter Value to be replaced : " + paramValue);
 							        					objStr = objStr.replace( replaceString, paramValue );
 							        				}
-					        					}
-					        					
-					        					String replaceString = "${" + paramName + "}";
-					        					if( objStr.contains( replaceString ) ) {
-						        					logger.info("[Instance Operator] Parameter Name to be replaced : " + replaceString);
-							        				logger.info("[Instance Operator] Parameter Value to be replaced : " + paramValue);
-						        					objStr = objStr.replace( replaceString, paramValue );
 						        				}
 					        				}
-					        			}
+					        				
+			        					}
+			        				}
+
+			        				if ( objectToJsonNode(template).get("parameters") != null ) {
 			        					for(JsonNode parameter : objectToJsonNode(template).get("parameters")) {
 			        						String defaultValue = "";
 		        							if( parameter.has("value") ) {
@@ -196,16 +216,34 @@ public class InstanceOperator extends Thread {
 		        								if( parameter.has("valueType") && parameter.get("valueType").asText().equals( Constants.TEMPLATE_DATA_TYPE_NUMBER )) {
 			        								String replaceString = "\"${" + paramName + "}\"";
 					        						if( objStr.contains( replaceString ) ) {
-							        					logger.info("[Instance Operator] Parameter Number Name to be replaced : " + replaceString);
-								        				logger.info("[Instance Operator] Parameter Number Value to be replaced : " + defaultValue);
+							        					logger.info("[Instance Operator] Default Parameter Number Name to be replaced : " + replaceString);
+								        				logger.info("[Instance Operator] Default Parameter Number Value to be replaced : " + defaultValue);
 							        					objStr = objStr.replace( replaceString, defaultValue );
+							        					
+							        					if ( !existParm.contains( paramName ) ) {
+								        					if (parmPatchArray == null) parmPatchArray = new JSONArray();
+								        					parmPatch = new JSONObject();
+								        					parmPatch.put("name", paramName);
+								        					parmPatch.put("value", defaultValue);
+								        					parmPatchArray.add(parmPatch);
+								        					existParm.add( paramName );
+								        				}
 							        				}
 				        						}
 		        								String replaceString = "${" + paramName + "}";
 					        					if( objStr.contains( replaceString ) ) {
-						        					logger.info("[Instance Operator] Parameter Name to be replaced : " + replaceString);
-							        				logger.info("[Instance Operator] Parameter Value to be replaced : " + defaultValue);
+						        					logger.info("[Instance Operator] Default Parameter Name to be replaced : " + replaceString);
+							        				logger.info("[Instance Operator] Default Parameter Value to be replaced : " + defaultValue);
 						        					objStr = objStr.replace( replaceString, defaultValue );
+						        					
+						        					if ( !existParm.contains( paramName ) ) {
+							        					if (parmPatchArray == null) parmPatchArray = new JSONArray();
+							        					parmPatch = new JSONObject();
+							        					parmPatch.put("name", paramName);
+							        					parmPatch.put("value", defaultValue);
+							        					parmPatchArray.add(parmPatch);
+							        					existParm.add( paramName );
+							        				}
 						        				}
 		        							}
 			        					}
@@ -310,6 +348,25 @@ public class InstanceOperator extends Thread {
 	    						logger.info(result.toString());
 	    					} catch (ApiException e) {
 	    						throw new Exception(e.getResponseBody());
+	    					}
+	    					
+	    					if ( parmPatchArray != null ) {
+	    						for ( int i = 0; i < parmPatchArray.size(); i++ ) {
+	    							parmPatchArray.get(i).toString();
+	    						}
+	    						JSONObject parmPatchInput = new JSONObject();
+		    					JSONArray parmPatchArrayInput = new JSONArray();
+		    					parmPatchInput.put("op", "replace");
+		    					parmPatchInput.put("path", "/spec/template/parameters");
+		    					parmPatchInput.put("value", parmPatchArray);
+		    					parmPatchArrayInput.add(parmPatchInput);
+		    					
+		    					try{
+		    						Object result = tpApi.patchNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, instanceNamespace, Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, instanceObj.get("metadata").get("name").asText(), parmPatchArrayInput);
+		    						logger.info(result.toString());
+		    					} catch (ApiException e) {
+		    						throw new Exception(e.getResponseBody());
+		    					}
 	    					}
 	    					
 		        		} else if(response.type.toString().equals("DELETED")) {

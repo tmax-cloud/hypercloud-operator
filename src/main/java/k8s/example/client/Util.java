@@ -1,5 +1,7 @@
 package k8s.example.client;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.security.MessageDigest;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -110,13 +112,13 @@ public class Util {
         return numStr;
 	}
 	 
-	 public static void sendMail( String email, String subject, String body ) throws Throwable {	
+	 public static void sendMail( String recipient, String subject, String body ) throws Throwable {	
 		logger.info( " Send Verification Mail User ");
 		String host = "mail.tmax.co.kr";
 		int port = 25;
-		String recipient = email; 
-
-		String charSetUtf = "UTF-8" ; //FIXME : 제목 한글 여전히 깨짐 ㅠㅠ
+		String sender = "no-reply-tc@tmax.co.kr";
+		
+		String charSetUtf = "UTF-8" ; 
 		Properties props = System.getProperties();
 		props.put( "mail.transport.protocol", "smtp" );
 		props.put( "mail.smtp.host", host );
@@ -127,8 +129,9 @@ public class Util {
 		props.put("mail.smtp.ssl.protocols", "TLSv1.2");
 		
 		Session session = Session.getDefaultInstance( props, new javax.mail.Authenticator() {
-			String un = "taegeon_woo@tmax.co.kr";
-			String pw = "tg540315";
+			String un = "no-reply-tc@tmax.co.kr";
+			String pw = "!@tcdnsdudxla11";
+//			String pw = K8sApiCaller.readSecret(Constants.TEMPLATE_NAMESPACE, Constants.SECRET_MAIL_PASSWORD).getStringData().get("password");
 			protected PasswordAuthentication getPasswordAuthentication() {
 				return new PasswordAuthentication( un, pw );
 			}
@@ -137,9 +140,9 @@ public class Util {
 		session.setDebug( true );
 
 		MimeMessage mimeMessage = new MimeMessage(session);
-		
+
 		// Sender
-		mimeMessage.setFrom( new InternetAddress(recipient, recipient, charSetUtf));
+		mimeMessage.setFrom( new InternetAddress(sender, sender, charSetUtf));
 		
 		// Receiver
 		mimeMessage.setRecipient( Message.RecipientType.TO, new InternetAddress( recipient ) );
@@ -224,7 +227,7 @@ public class Util {
 			mailTime = deleteTime.minusDays(7);
 		}
 
-		Timer timer = new Timer(nsResult.getMetadata().getUid() + "#" + nsResult.getMetadata().getName() + "#" + nsResult.getMetadata().getLabels().get("owner"));
+		Timer timer = new Timer(nsResult.getMetadata().getUid() + "#" + nsResult.getMetadata().getName() + "#" + nsResult.getMetadata().getLabels().get("owner") + "#" + deleteTime.toDateTime().toString("yyyy-MM-dd") );
 
 		timer.schedule(new TimerTask() {
 			public void run() {
@@ -232,6 +235,7 @@ public class Util {
 					String nsId = Thread.currentThread().getName().split("#")[0];
 					String nsName = Thread.currentThread().getName().split("#")[1];
 					String userId = Thread.currentThread().getName().split("#")[2];
+					String deleteTime = Thread.currentThread().getName().split("#")[3];
 					logger.info("   Trial NameSpace [ " + nsName + " ] Mail Service before 1 weeks of deletion Start");
 					logger.info("   User ID : " + userId );
 					
@@ -243,7 +247,8 @@ public class Util {
 						String email = user.getUserInfo().getEmail();
 						logger.info("   Email : " + email );
 						String subject = " 신청해주신 Trial NameSpace [ " + nameSpace.getMetadata().getName() + " ] 만료 안내 ";
-						String body = " 신청해주신 Trial NameSpace [ " + nameSpace.getMetadata().getName() + " ] 만료가 1주일 남았습니다. 유료버전으로 전환 해주세요 ";
+						String body = Constants.TRIAL_TIME_OUT_CONTENTS;
+						body = body.replaceAll("%%TRIAL_END_TIME%%", deleteTime);
 						Util.sendMail(email, subject, body);
 					} else {
 						logger.info("   Paid NameSpace, Nothing to do ");
@@ -305,5 +310,10 @@ public class Util {
 
     }
 
+	public static String printExceptionError(Exception e) {
+		StringWriter sw = new StringWriter();
+		e.printStackTrace(new PrintWriter(sw));
+		return sw.toString();
+	}
     
 }

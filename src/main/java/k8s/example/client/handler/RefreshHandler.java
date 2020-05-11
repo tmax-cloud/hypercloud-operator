@@ -99,7 +99,7 @@ public class RefreshHandler extends GeneralHandler {
         		String tokenId = jwt.getClaim(Constants.CLAIM_TOKEN_ID).asString();
         		logger.info( "  User ID: " + userId );
         		logger.info( "  Token ID: " + tokenId );
-        		String tokenName = userId.replace("@", "-") + "-" + tokenId;
+        		String tokenName = userId + "-" + tokenId;
         		
     			// Verify refresh token	
     			JWTVerifier verifier = JWT.require(Algorithm.HMAC256(Constants.REFRESH_TOKEN_SECRET_KEY)).build();
@@ -125,7 +125,7 @@ public class RefreshHandler extends GeneralHandler {
 
         			} catch (ApiException e) {
         				logger.info("Token Expire Time Secret does not exist Yet, Set Default value 60 min");
-        				e.printStackTrace();
+        				e.printStackTrace(); //TODO : 없애
         			}
     				
     				// Make a new access token	  				
@@ -230,20 +230,21 @@ public class RefreshHandler extends GeneralHandler {
         		try {
     				V1Secret secretReturn = K8sApiCaller.readSecret(Constants.TEMPLATE_NAMESPACE, Constants.K8S_PREFIX + Constants.OPERATOR_TOKEN_EXPIRE_TIME );
 
-    				// Create new secret
-    				Map<String, String> createMap = new HashMap<>();
-    				createMap.put(Constants.TOKEN_EXPIRED_TIME_KEY, Integer.toString(atExpireTimeSec));
-    				K8sApiCaller.createSecret(Constants.TEMPLATE_NAMESPACE, createMap, Constants.OPERATOR_TOKEN_EXPIRE_TIME ,null, null, null);
-    			} catch (ApiException e) {
-    				logger.info("Exception message: " + e.getResponseBody());
-    				e.printStackTrace();
     				Map<String, String> patchMap = new HashMap<>();
     				patchMap.put(Constants.TOKEN_EXPIRED_TIME_KEY, Integer.toString(atExpireTimeSec));
     				try {
 						K8sApiCaller.patchSecret(Constants.TEMPLATE_NAMESPACE, patchMap, Constants.OPERATOR_TOKEN_EXPIRE_TIME, null);
 					} catch (Throwable e1) {
 						e1.printStackTrace();
-					}   				
+					} 
+    			} catch (ApiException e) {
+    				logger.info("Exception message: " + e.getResponseBody());
+    				e.printStackTrace();
+    				
+    				// Create new secret
+    				Map<String, String> createMap = new HashMap<>();
+    				createMap.put(Constants.TOKEN_EXPIRED_TIME_KEY, Integer.toString(atExpireTimeSec));
+    				K8sApiCaller.createSecret(Constants.TEMPLATE_NAMESPACE, createMap, Constants.OPERATOR_TOKEN_EXPIRE_TIME ,null, null, null);
     			}
         		
         		logger.info( " Token Expire Time Change Service success." );

@@ -2,21 +2,20 @@ package k8s.example.client;
 
 import java.util.List;
 
-import org.joda.time.DateTime;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
-import io.kubernetes.client.proto.Meta.Time;
 
 public class DataObject {
 	
 	public static class LoginInDO {
     	private String id;
     	private String password;
+    	private int otp;
     	
     	public String getId() { return id; }    	
     	public String getPassword() { return password; }
+    	public int getOtp() { return otp; }
     }
 	
 	@JsonIgnoreProperties(ignoreUnknown = true)
@@ -44,14 +43,17 @@ public class DataObject {
     	private String accessToken;
     	private String refreshToken;
     	private int atExpireTime;
+    	private boolean otpEnable;
     	
     	public String getAccessToken() { return accessToken; }    	
     	public String getRefreshToken() { return refreshToken; }
     	public int getAtExpireTime() { return atExpireTime; }
+    	public boolean getOtpEnable() { return otpEnable; }
     	
     	public void setAccessToken(String accessToken) { this.accessToken = accessToken; }    	
     	public void setRefreshToken(String refreshToken) { this.refreshToken = refreshToken; }
     	public void setAtExpireTime(int atExpireTime) { this.atExpireTime = atExpireTime; }
+    	public void setOtpEnable(boolean otpEnable) { this.otpEnable = otpEnable; }
     }
     
     @JsonIgnoreProperties(ignoreUnknown = true)
@@ -352,8 +354,6 @@ public class DataObject {
 		public void setTag(String tag) {
 			this.tag = tag;
 		}
-    	
-    	
     }
     
     public static class RequestRecord {
@@ -392,8 +392,6 @@ public class DataObject {
 		public void setUseragent(String useragent) {
 			this.useragent = useragent;
 		}
-    	
-    	
     }
 
     public static class ActorRecord {
@@ -405,9 +403,7 @@ public class DataObject {
 
 		public void setName(String name) {
 			this.name = name;
-		}
-    	
-    	
+		}   	
     }
     
     public static class SourceRecord {
@@ -426,7 +422,43 @@ public class DataObject {
 		public void setInstanceID(String instanceID) {
 			this.instanceID = instanceID;
 		}
+    }
+    
+	@JsonIgnoreProperties(ignoreUnknown = true)
+    public static class UserSecurityPolicyCR {
+    	private String apiVersion = "tmax.io/v1";
+    	private String kind = "Usersecuritypolicy";
+    	private V1ObjectMeta metadata;
+    	private String otpEnable;
+    	private int otp;
+    	private String ipRange;
     	
+    	public String getApiVersion() { return apiVersion; }
+    	public String getKind() { return kind; }
+    	public V1ObjectMeta getMetadata() { return metadata; }
+    	public String getOtpEnable() { return otpEnable; }
+    	public int getOtp() { return otp; }
+    	public String getIpRange() { return ipRange; }
     	
+    	public void setApiVersion(String apiVersion) { this.apiVersion = apiVersion; }
+    	public void setKind(String kind) { this.kind = kind; }
+    	public void setMetadata(V1ObjectMeta metadata) { this.metadata = metadata; }
+    	public void setOtpEnable(String otpEnable) { this.otpEnable = otpEnable; }    	
+    	public void setOtpE(int otp) { this.otp = otp; }    	
+    	public void setIpRange(String ipRange) { this.ipRange = ipRange; }    	
+    }
+    
+    public static class UserSecurityPolicy {
+    	private String otpEnable;
+    	private int otp;
+    	private String ipRange;
+
+    	public String getOtpEnable() { return otpEnable; }
+    	public int getOtp() { return otp; }
+    	public String getIpRange() { return ipRange; }
+
+    	public void setOtpEnable(String otpEnable) { this.otpEnable = otpEnable; }    	
+    	public void setOtpE(int otp) { this.otp = otp; }    	
+    	public void setIpRange(String ipRange) { this.ipRange = ipRange; }    	
     }
 }

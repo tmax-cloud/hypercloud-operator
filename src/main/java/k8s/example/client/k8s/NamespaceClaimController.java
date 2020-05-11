@@ -5,6 +5,7 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 
 import com.google.gson.Gson;
@@ -16,12 +17,15 @@ import com.google.gson.reflect.TypeToken;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CustomObjectsApi;
+import io.kubernetes.client.openapi.models.V1ClusterRole;
 import io.kubernetes.client.openapi.models.V1Namespace;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import io.kubernetes.client.openapi.models.V1PolicyRule;
 import io.kubernetes.client.openapi.models.V1RoleRef;
 import io.kubernetes.client.openapi.models.V1Subject;
 import io.kubernetes.client.util.Watch;
 import k8s.example.client.Constants;
+import k8s.example.client.DataObject.UserCR;
 import k8s.example.client.Main;
 import k8s.example.client.Util;
 import k8s.example.client.metering.TimerMap;
@@ -78,8 +82,14 @@ public class NamespaceClaimController extends Thread {
 									if ( K8sApiCaller.namespaceAlreadyExist( resourceName ) ) {
 										replaceNscStatus( claimName, Constants.CLAIM_STATUS_REJECT, "Duplicated NameSpaceName" );
 									} else {
-									// Patch Status to Awaiting
-									replaceNscStatus( claimName, Constants.CLAIM_STATUS_AWAITING, "wait for admin permission" );
+										// Patch Status to Awaiting
+										replaceNscStatus( claimName, Constants.CLAIM_STATUS_AWAITING, "wait for admin permission" );
+										// If Trial Type 
+										if ( claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") !=null 
+												&& claim.getMetadata().getLabels().get("owner") !=null) {
+											// give owner all verbs of NSC of 
+											patchUserRole ( claim.getMetadata().getLabels().get("owner"), claim.getMetadata().getName() );
+										}
 									}
 									break;
 								case Constants.EVENT_TYPE_MODIFIED : 
@@ -97,6 +107,7 @@ public class NamespaceClaimController extends Thread {
 											// Make RoleBinding for Trial User
 											try{ 
 												createTrialRoleBinding ( nsResult );
+												createTrialClusterRoleBinding ( nsResult );
 
 											} catch (ApiException e) {
 												logger.info(" TrialRoleBinding for Trial NameSpace [ " + nsResult.getMetadata().getName() + " ] Already Exists ");
@@ -111,8 +122,17 @@ public class NamespaceClaimController extends Thread {
 											} else {
 												logger.info(" Timer for Trial NameSpace [ " + nsResult.getMetadata().getName() + " ] Already Exists ");
 											}
+											// Send Success confirm Mail
+											sendConfirmMail ( claim, nsResult.getMetadata().getCreationTimestamp(),  true );
 										}
 										replaceNscStatus( claimName, Constants.CLAIM_STATUS_SUCCESS, "namespace create success." );
+									} else if ( status.equals( Constants.CLAIM_STATUS_REJECT )) {
+										if ( claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") !=null 
+												&& claim.getMetadata().getLabels().get("owner") !=null ) {
+											// Send Fail confirm Mail
+											sendConfirmMail ( claim, null, false );
+										}
+										
 									}
 									break;
 								case Constants.EVENT_TYPE_DELETED : 
@@ -149,6 +169,46 @@ public class NamespaceClaimController extends Thread {
 		}
 	}
 
+	private void sendConfirmMail(NamespaceClaim claim, DateTime createTime, boolean flag) throws Throwable {
+		UserCR user = null;
+		String subject = null;
+		String body = null;
+		try {
+			user = K8sApiCaller.getUser(claim.getMetadata().getLabels().get("owner"));
+			if (flag) {
+				subject = " HyperCloud 서비스 신청 승인 완료 ";
+				body = Constants.TRIAL_SUCCESS_CONFIRM_MAIL_CONTENTS;
+				body = body.replaceAll("%%NAMESPACE_NAME%%", claim.getResourceName());
+				body = body.replaceAll("%%TRIAL_START_TIME%%", createTime.toDateTime().toString("yyyy-MM-dd"));
+				body = body.replaceAll("%%TRIAL_END_TIME%%", createTime.plusDays(30).toDateTime().toString("yyyy-MM-dd"));
+//				body = body.replaceAll("%%SUCCESS_REASON%%", claim.getStatus().getReason());
+			}else {
+				subject = " HyperCloud 서비스 신청 승인 거절  ";
+				body = Constants.TRIAL_FAIL_CONFIRM_MAIL_CONTENTS;
+				body = body.replaceAll("%%FAIL_REASON%%", claim.getStatus().getReason());
+			}
+			Util.sendMail(user.getUserInfo().getEmail(), subject, body);
+		} catch (Throwable e) {
+			e.printStackTrace();
+			logger.info(e.getMessage());
+			throw e;
+		}
+		
+		
+	}
+
+	private void patchUserRole(String clusterRoleName, String claimName ) {
+		V1ClusterRole clusterRole = null;
+		clusterRole = K8sApiCaller.readClusterRole(clusterRoleName);
+		V1PolicyRule rule = new V1PolicyRule();
+		rule.addApiGroupsItem(Constants.CUSTOM_OBJECT_GROUP);
+		rule.addResourcesItem("namespaceclaims");
+		rule.addVerbsItem("*");
+		rule.addResourceNamesItem(claimName);
+		clusterRole.addRulesItem(rule);
+		V1ClusterRole replaceResult = K8sApiCaller.replaceClusterRole( clusterRole );	
+		logger.info("Add rules of NameSpace claim [ " + claimName + " ] to Trial Owner [ " + clusterRoleName + " ] Success");
+	}
 
 	private void createTrialRoleBinding(V1Namespace nsResult) throws ApiException {
 		RoleBindingClaim rbcForTrial = new RoleBindingClaim();
@@ -178,6 +238,39 @@ public class NamespaceClaimController extends Thread {
 		
 		try {
 			K8sApiCaller.createRoleBinding(rbcForTrial);	
+		} catch (ApiException e) {
+			logger.info(e.getResponseBody());
+			throw e;
+		}
+	}
+	
+	private void createTrialClusterRoleBinding(V1Namespace nsResult) throws ApiException {
+		RoleBindingClaim rbcForTrial = new RoleBindingClaim();
+		
+		V1ObjectMeta RoleBindingMeta = new V1ObjectMeta();
+		rbcForTrial.setResourceName("trial-" + nsResult.getMetadata().getName());
+		RoleBindingMeta.setName( "trial-" + nsResult.getMetadata().getName());
+		RoleBindingMeta.setLabels(nsResult.getMetadata().getLabels()); // label 넘겨주기
+		rbcForTrial.setMetadata(RoleBindingMeta);
+
+		// RoleRef
+		V1RoleRef roleRef = new V1RoleRef();
+		roleRef.setApiGroup(Constants.RBAC_API_GROUP);
+		roleRef.setKind("ClusterRole");
+		roleRef.setName("clusterrole-trial");  //FIXME : policy 에 따라 변화해 줄 예정
+		rbcForTrial.setRoleRef(roleRef);
+
+		// subject
+		List< V1Subject > subjectList = new ArrayList<>();
+		V1Subject subject = new V1Subject();
+		subject.setApiGroup(Constants.RBAC_API_GROUP);
+		subject.setKind("User");
+		subject.setName(nsResult.getMetadata().getLabels().get("owner"));
+		subjectList.add(subject);
+		rbcForTrial.setSubjects(subjectList);
+		
+		try {
+			K8sApiCaller.createClusterRoleBinding(rbcForTrial);	
 		} catch (ApiException e) {
 			logger.info(e.getResponseBody());
 			throw e;
