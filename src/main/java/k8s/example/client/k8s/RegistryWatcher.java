@@ -10,6 +10,10 @@ import org.slf4j.Logger;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
 import io.kubernetes.client.openapi.ApiClient;
@@ -30,6 +34,9 @@ public class RegistryWatcher extends Thread {
 	private CustomObjectsApi api = null;
 	ApiClient client;
     private Logger logger = Main.logger;
+
+	private static ObjectMapper mapper = new ObjectMapper();
+	private static Gson gson = new GsonBuilder().create();
 	
 	RegistryWatcher(ApiClient client, CustomObjectsApi api, String resourceVersion) throws Exception {
 		watchRegistry = Watch.createWatch(client,
@@ -39,6 +46,7 @@ public class RegistryWatcher extends Thread {
 		this.api = api;
 		this.client = client;
 		latestResourceVersion = resourceVersion;
+		mapper.registerModule(new JodaModule());
 	}
 	
 	@Override
@@ -60,9 +68,19 @@ public class RegistryWatcher extends Thread {
 					try {
 						Registry registry = response.object;
 						
+//						Registry registry = null;
+//						try {
+//
+//							logger.info("response.object.toString(): " + response.object.toString());
+//							registry = mapper.readValue(gson.toJson(response.object), Registry.class);
+//							logger.info("registry: " + registry.toString());
+//						} catch (JsonParseException | JsonMappingException e) {
+//							logger.info(e.getMessage());
+//						}
+						
 						if( registry != null
 								&& Integer.parseInt(registry.getMetadata().getResourceVersion()) > Integer.parseInt(latestResourceVersion)) {
-							latestResourceVersion = response.object.getMetadata().getResourceVersion();
+							latestResourceVersion = registry.getMetadata().getResourceVersion();
 							String eventType = response.type.toString();
 							logger.info("====================== Registry " + eventType + " ====================== \n");
 							

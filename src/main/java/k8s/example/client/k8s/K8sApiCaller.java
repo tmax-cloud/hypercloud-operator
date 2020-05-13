@@ -1280,7 +1280,8 @@ public class K8sApiCaller {
 						throw e2;
 					}
 
-					throw e;
+					if(e.getCode() != 409) // 409: Already exist
+						throw e;
 				}
 			}
 

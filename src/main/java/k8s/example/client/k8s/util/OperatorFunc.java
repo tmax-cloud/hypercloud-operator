@@ -103,7 +103,7 @@ public class OperatorFunc {
 		pluralMapper.put("TriggerBinding", "triggerbindings");
 		pluralMapper.put("TriggerTemplate", "triggertemplates");
 		pluralMapper.put("EventListener", "eventlisteners");
-//		pluralMapper.put("", "");
+		pluralMapper.put("HelmRelease", "helmreleases");
 //		pluralMapper.put("", "");
 //		pluralMapper.put("", "");
 //		pluralMapper.put("", "");
