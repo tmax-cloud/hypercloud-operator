@@ -63,6 +63,7 @@ public class Constants {
 	public static final String REGISTRY_CONFIG_MAP_NAME = "registry-config";
 	
 	public static final String K8S_REGISTRY_PREFIX = "registry-";
+	public static final String K8S_TLS_PREFIX = "tls-";
 	public static final String REGISTRY_CPU_STRING = "0.2";
 	public static final String REGISTRY_MEMORY_STRING = "512Mi";
 
@@ -89,6 +90,11 @@ public class Constants {
 	// Secret Type
 	public static final String K8S_SECRET_TYPE_DOCKER_CONFIG_JSON = "kubernetes.io/dockerconfigjson";
 	public static final String K8S_SECRET_TYPE_OPAQUE = "opaque";
+	public static final String K8S_SECRET_TYPE_TLS = "kubernetes.io/tls";
+	
+	// Secret TLS Data Key
+	public static final String K8S_SECRET_TLS_CRT = "tls.crt";
+	public static final String K8S_SECRET_TLS_KEY = "tls.key";
 	
 	// Status
 	public static final String STATUS_RUNNING = "Running";

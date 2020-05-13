@@ -13,16 +13,16 @@ import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.util.Watch;
 import k8s.example.client.Main;
 
-public class RegistryCertSecretWatcher extends Thread {
+public class RegistryTlsSecretWatcher extends Thread {
 	private final Watch<V1Secret> watchRegistrySecret;
 	private static String latestResourceVersion = "0";
 
     private Logger logger = Main.logger;
     
-	RegistryCertSecretWatcher(ApiClient client, CoreV1Api api, String resourceVersion) throws Exception {
+	RegistryTlsSecretWatcher(ApiClient client, CoreV1Api api, String resourceVersion) throws Exception {
 		watchRegistrySecret = Watch.createWatch(
 		        client,
-		        api.listSecretForAllNamespacesCall(null, null, null, "secret=cert", null, null, null, null, Boolean.TRUE, null),
+		        api.listSecretForAllNamespacesCall(null, null, null, "secret=tls", null, null, null, null, Boolean.TRUE, null),
 		        new TypeToken<Watch.Response<V1Secret>>(){}.getType()
         );
 		
@@ -52,7 +52,7 @@ public class RegistryCertSecretWatcher extends Thread {
 						
 						latestResourceVersion = response.object.getMetadata().getResourceVersion();
 						String eventType = response.type.toString();
-						logger.info("[RegistryCertSecretWatcher] Registry Cert Secret " + eventType + "\n");
+						logger.info("[RegistryTlsSecretWatcher] Registry Cert Secret " + eventType + "\n");
 
 						K8sApiCaller.updateRegistryStatus(secret, eventType);
 						
@@ -70,7 +70,7 @@ public class RegistryCertSecretWatcher extends Thread {
 					e.printStackTrace();
 				}
 			});
-			logger.info("@@@@@@@@@@@@@@@@@@@@ Registry Cert Secret 'For Each' END @@@@@@@@@@@@@@@@@@@@");
+			logger.info("@@@@@@@@@@@@@@@@@@@@ Registry Tls Secret 'For Each' END @@@@@@@@@@@@@@@@@@@@");
 		} catch (Exception e) {
 			logger.info("Registry Watcher Exception: " + e.getMessage());
 			StringWriter sw = new StringWriter();

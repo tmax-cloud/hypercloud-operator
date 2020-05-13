@@ -10,6 +10,10 @@ import org.slf4j.Logger;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
 import io.kubernetes.client.openapi.ApiClient;
@@ -21,6 +25,7 @@ import k8s.example.client.Main;
 import k8s.example.client.Util;
 import k8s.example.client.models.Registry;
 import k8s.example.client.models.RegistryCondition;
+import k8s.example.client.models.RegistryService;
 import k8s.example.client.models.RegistryStatus;
 
 public class RegistryWatcher extends Thread {
@@ -29,6 +34,9 @@ public class RegistryWatcher extends Thread {
 	private CustomObjectsApi api = null;
 	ApiClient client;
     private Logger logger = Main.logger;
+
+	private static ObjectMapper mapper = new ObjectMapper();
+	private static Gson gson = new GsonBuilder().create();
 	
 	RegistryWatcher(ApiClient client, CustomObjectsApi api, String resourceVersion) throws Exception {
 		watchRegistry = Watch.createWatch(client,
@@ -38,6 +46,7 @@ public class RegistryWatcher extends Thread {
 		this.api = api;
 		this.client = client;
 		latestResourceVersion = resourceVersion;
+		mapper.registerModule(new JodaModule());
 	}
 	
 	@Override
@@ -59,11 +68,23 @@ public class RegistryWatcher extends Thread {
 					try {
 						Registry registry = response.object;
 						
+//						Registry registry = null;
+//						try {
+//
+//							logger.info("response.object.toString(): " + response.object.toString());
+//							registry = mapper.readValue(gson.toJson(response.object), Registry.class);
+//							logger.info("registry: " + registry.toString());
+//						} catch (JsonParseException | JsonMappingException e) {
+//							logger.info(e.getMessage());
+//						}
+						
 						if( registry != null
 								&& Integer.parseInt(registry.getMetadata().getResourceVersion()) > Integer.parseInt(latestResourceVersion)) {
-							latestResourceVersion = response.object.getMetadata().getResourceVersion();
+							latestResourceVersion = registry.getMetadata().getResourceVersion();
 							String eventType = response.type.toString();
 							logger.info("====================== Registry " + eventType + " ====================== \n");
+							
+							String serviceType = registry.getSpec().getService().getType();
 							
 							switch(eventType) {
 							case Constants.EVENT_TYPE_ADDED: 
@@ -93,13 +114,20 @@ public class RegistryWatcher extends Thread {
 									String changeReason = null;
 									Map <RegistryCondition.Condition, Boolean> statusMap = getStatusMap(registry);
 									
-									
+									// Registry Is Running.
 									if( statusMap.get(RegistryCondition.Condition.REPLICA_SET)
 											&& statusMap.get(RegistryCondition.Condition.POD)
 											&& statusMap.get(RegistryCondition.Condition.CONTAINER)
 											&& statusMap.get(RegistryCondition.Condition.SERVICE)
 											&& statusMap.get(RegistryCondition.Condition.SECRET_OPAQUE)
 											&& statusMap.get(RegistryCondition.Condition.SECRET_DOCKER_CONFIG_JSON) ) {
+										
+										if(serviceType.equals(RegistryService.SVC_TYPE_INGRESS)) {
+											if( !statusMap.get(RegistryCondition.Condition.SECRET_TLS)
+													|| !statusMap.get(RegistryCondition.Condition.INGRESS) ) {
+												break;
+											}
+										}
 										
 										changePhase = RegistryStatus.StatusPhase.RUNNING.getStatus();
 										changeMessage = "Registry is running. All registry resources are operating normally.";
@@ -112,22 +140,33 @@ public class RegistryWatcher extends Thread {
 												&& !statusMap.get(RegistryCondition.Condition.CONTAINER)
 												&& !statusMap.get(RegistryCondition.Condition.SERVICE)
 												&& !statusMap.get(RegistryCondition.Condition.SECRET_OPAQUE)
-												&& !statusMap.get(RegistryCondition.Condition.SECRET_DOCKER_CONFIG_JSON) ) {
+												&& !statusMap.get(RegistryCondition.Condition.SECRET_DOCKER_CONFIG_JSON)
+												&& !statusMap.get(RegistryCondition.Condition.SECRET_TLS)
+												&& !statusMap.get(RegistryCondition.Condition.INGRESS) ) {
 
 											K8sApiCaller.createRegistry(registry);
 											break;
 										} 
-										else if(statusMap.get(RegistryCondition.Condition.SERVICE)
+										else if(statusMap.get(RegistryCondition.Condition.REPLICA_SET)
+												&& statusMap.get(RegistryCondition.Condition.POD)
+												&& statusMap.get(RegistryCondition.Condition.SERVICE)
 												&& statusMap.get(RegistryCondition.Condition.SECRET_OPAQUE)
 												&& statusMap.get(RegistryCondition.Condition.SECRET_DOCKER_CONFIG_JSON)) {
 
+											if(serviceType.equals(RegistryService.SVC_TYPE_INGRESS)) {
+												if( !statusMap.get(RegistryCondition.Condition.SECRET_TLS)
+														|| !statusMap.get(RegistryCondition.Condition.INGRESS) ) {
+													break;
+												}
+											}
+											
 											changePhase = RegistryStatus.StatusPhase.NOT_READY.getStatus();
 											changeMessage = "Registry is not ready.";
 											changeReason = "NotReady";
 										}
 
 									}
-									// Registry Is NotReady, Error or  Running.
+									// Registry Is NotReady or Error.
 									else {
 										if(!statusMap.get(RegistryCondition.Condition.SERVICE)) {
 											changePhase = RegistryStatus.StatusPhase.ERROR.getStatus();
@@ -144,18 +183,25 @@ public class RegistryWatcher extends Thread {
 											changeMessage = "Registry docker config json type secret is not exist.";
 											changeReason = "SecretNotFound";
 										}
-										else if(!statusMap.get(RegistryCondition.Condition.REPLICA_SET)
-												|| !statusMap.get(RegistryCondition.Condition.POD)
-												|| !statusMap.get(RegistryCondition.Condition.CONTAINER)) {
-
+										else if(!statusMap.get(RegistryCondition.Condition.CONTAINER)) {
 											changePhase = RegistryStatus.StatusPhase.NOT_READY.getStatus();
 											changeMessage = "Registry is not ready.";
 											changeReason = "NotReady";
 										}
+										else if(serviceType.equals(RegistryService.SVC_TYPE_INGRESS)) {
+											if(!statusMap.get(RegistryCondition.Condition.SECRET_TLS)) {
+												changePhase = RegistryStatus.StatusPhase.ERROR.getStatus();
+												changeMessage = "Registry tls type secret is not exist.";
+												changeReason = "SecretNotFound";
+											} else if(!statusMap.get(RegistryCondition.Condition.INGRESS)) {
+												changePhase = RegistryStatus.StatusPhase.ERROR.getStatus();
+												changeMessage = "Registry ingress is not exist.";
+												changeReason = "IngressNotFound";
+											}
+										}
 									}
 									
-									
-									K8sApiCaller.updateReigstryPhase(registry, changePhase, changeMessage, changeReason);
+									K8sApiCaller.patchRegistryStatus(registry, changePhase, changeMessage, changeReason);
 									
 									if(phase.equals(RegistryStatus.StatusPhase.RUNNING.getStatus())) {
 										if( registry.getMetadata().getAnnotations().get(Constants.CUSTOM_OBJECT_GROUP + "/" + Registry.REGISTRY_LOGIN_URL) == null) {
@@ -173,7 +219,7 @@ public class RegistryWatcher extends Thread {
 
 								if(diff.size() > 0 ) {
 									K8sApiCaller.updateRegistryAnnotationLastCR(registry);
-									K8sApiCaller.updateRegistrySubResources(registry, diff);
+									K8sApiCaller.updateRegistrySubresources(registry, diff);
 								}
 
 								break;
@@ -248,6 +294,16 @@ public class RegistryWatcher extends Thread {
 		= registry.getStatus().getConditions().get(RegistryCondition.Condition.INDEX_SECRET_DOCKER_CONFIG_JSON); 
 		statusMap.put(RegistryCondition.Condition.SECRET_DOCKER_CONFIG_JSON, 
 				secretDockerCondtion.getStatus().equals(RegistryStatus.Status.TRUE.getStatus()));
+		
+		RegistryCondition secretTlsCondtion
+		= registry.getStatus().getConditions().get(RegistryCondition.Condition.INDEX_SECRET_TLS); 
+		statusMap.put(RegistryCondition.Condition.SECRET_TLS, 
+				secretTlsCondtion.getStatus().equals(RegistryStatus.Status.TRUE.getStatus()));
+		
+		RegistryCondition ingressCondtion
+		= registry.getStatus().getConditions().get(RegistryCondition.Condition.INDEX_INGRESS); 
+		statusMap.put(RegistryCondition.Condition.INGRESS, 
+				ingressCondtion.getStatus().equals(RegistryStatus.Status.TRUE.getStatus()));
 		
 		return statusMap;
 	}

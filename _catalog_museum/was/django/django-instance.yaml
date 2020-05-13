@@ -20,6 +20,12 @@ spec:
       value: master
     - name: IMAGE_URL
       value: 192.168.6.110:5000/django-sample:latest
+    - name: REGISTRY_SECRET
+      value: ''
+    - name: REGISTRY_ID
+      value: ''
+    - name: REGISTRY_PW
+      value: ''
     - name: WAS_PORT
       value: 8080
     - name: SERVICE_TYPE

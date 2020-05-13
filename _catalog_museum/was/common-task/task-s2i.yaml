@@ -11,6 +11,12 @@ spec:
     - default: .
       description: The location of the path to run s2i from.
       name: PATH_CONTEXT
+    - name: REGISTRY_ID
+      description: Docker registry ID
+      default: ''
+    - name: REGISTRY_PW
+      description: Docker registry PW
+      default: ''
     - default: 'false'
       description: Verify the TLS on the registry endpoint (for push/pull to a non-TLS
         registry)
@@ -94,14 +100,22 @@ spec:
       name: gen-source
     workingdir: /gen-source
   - script: |
+      [ "$REGISTRY_ID" != "" ] && CRED="--creds=$REGISTRY_ID:$REGISTRY_PW"
+
       buildah \
       push \
       --tls-verify=$(inputs.params.TLSVERIFY) \
       --storage-driver=vfs \
+      $CRED \
       $(cat $(results.image-url.path)) \
       docker://$(cat $(results.image-url.path))
     image: quay.io/buildah/stable
     name: push
+    env:
+    - name: REGISTRY_ID
+      value: $(inputs.params.REGISTRY_ID)
+    - name: REGISTRY_PW
+      value: $(inputs.params.REGISTRY_PW)
     securityContext:
       privileged: true
     volumeMounts:

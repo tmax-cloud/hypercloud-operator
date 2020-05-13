@@ -46,7 +46,7 @@ public class RegistryCondition {
 	public void setType(String type) {
 		this.type = type;
 	}
-	
+
 	/* 
 	 * condition types
 	 * 0: Phase
@@ -55,7 +55,9 @@ public class RegistryCondition {
 	 * 3: Service
 	 * 4: Secret Opaque
 	 * 5: Secret kubernetes.io/dockerconfigjson
-	*/
+	 * 6: Secret kubernetes.io/tls
+	 * 7: Ingress
+	 */
 	public static enum Condition {
 		REPLICA_SET("ReplicaSetReady", "/status/conditions/" + Condition.INDEX_REPLICA_SET),
 		POD("PodRunning", "/status/conditions/" + Condition.INDEX_POD),
@@ -63,6 +65,8 @@ public class RegistryCondition {
 		SERVICE("ServiceExist", "/status/conditions/" + Condition.INDEX_SERVICE),
 		SECRET_OPAQUE("SecretOpaqueExist", "/status/conditions/" + Condition.INDEX_SECRET_OPAQUE),
 		SECRET_DOCKER_CONFIG_JSON("SecretDockerConfigJsonExist", "/status/conditions/" + Condition.INDEX_SECRET_DOCKER_CONFIG_JSON),
+		SECRET_TLS("SecretTlsExist", "/status/conditions/" + Condition.INDEX_SECRET_TLS),
+		INGRESS("IngressExist", "/status/conditions/" + Condition.INDEX_INGRESS),
 		;
 
 		public static final int INDEX_REPLICA_SET = 0;
@@ -71,6 +75,8 @@ public class RegistryCondition {
 		public static final int INDEX_SERVICE = 3;
 		public static final int INDEX_SECRET_OPAQUE = 4;
 		public static final int INDEX_SECRET_DOCKER_CONFIG_JSON = 5;
+		public static final int INDEX_SECRET_TLS = 6;
+		public static final int INDEX_INGRESS = 7;
 		private String type;
 		private String path;
 
