@@ -157,8 +157,8 @@ public class LoginHandler extends GeneralHandler {
 			        			logger.info(" otpCode: " + otpCode);
 
 			        			// Send E-mail to User
-			        			String subject = "[ OTP : " + otpCode + " ] OTP를 인증해 주세요";
-			        			String content = Constants.VERIFY_MAIL_CONTENTS.replaceAll("@@otpCode@@", otpCode);
+			        			String subject = "인증번호 : " + otpCode;
+			        			String content = Constants.OTP_VERIFICATION_CONTENTS.replaceAll("%%otpCode%%", otpCode);
 			        			Util.sendMail(user.getUserInfo().getEmail(), subject, content); 
 			        			K8sApiCaller.patchUserSecurityPolicy(loginInDO.getId(), otpCode);
 			        			otpEnable = true;
