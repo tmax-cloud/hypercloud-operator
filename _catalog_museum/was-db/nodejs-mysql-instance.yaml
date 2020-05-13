@@ -34,6 +34,12 @@ spec:
       value: master
     - name: IMAGE_URL
       value: 192.168.6.110:5000/nodejs-sample
+    - name: REGISTRY_SECRET
+      value: ''
+    - name: REGISTRY_ID
+      value: ''
+    - name: REGISTRY_PW
+      value: ''
     - name: PACKAGE_SERVER_URL
       value: ''
 

@@ -14,7 +14,7 @@ spec:
       description: A Namespace Name
       value: default
     - name: DB_STORAGE
-      value: "20Gi"
+      value: "10Gi"
     - name: SERVICE_TYPE
       value: ClusterIP
     - name: POSTGRESQL_USER
