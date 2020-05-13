@@ -61,7 +61,8 @@ public class LogoutHandler extends GeneralHandler {
         			DecodedJWT jwt = verifier.verify(accessToken);
         			
         			userId = jwt.getClaims().get(Constants.CLAIM_USER_ID).asString();
-        			logger.info(" User ID: " + userId);    	    		JsonObject logOutOut = OAuthApiCaller.AuthenticateDelete(accessToken);
+        			logger.info(" User ID: " + userId);    	    		
+        			JsonObject logOutOut = OAuthApiCaller.AuthenticateDelete(accessToken);
     	    		logger.info( "  logOutOut.get(\"result\") : " + logOutOut.get("result").toString() );
     	    		if ( logOutOut.get("result").toString().equalsIgnoreCase("\"true\"") ){
         				logger.info( "  Logout success." );
