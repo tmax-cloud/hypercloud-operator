@@ -94,6 +94,12 @@ objects:
           volumeMounts:
           - name: postgresql-persistent-storage
             mountPath: /var/lib/pgsql/data
+          readinessProbe:
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            exec:
+              command:
+              - /usr/libexec/check-container
         volumes:
         - name: postgresql-persistent-storage
           persistentVolumeClaim:

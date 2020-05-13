@@ -64,6 +64,21 @@ parameters:
   displayName: ImageURL
   description: Output Image URL
   required: true
+- name: REGISTRY_SECRET
+  displayName: RegistrySecret
+  description: Secret for accessing image registry
+  required: false
+  value: ''
+- name: REGISTRY_ID
+  displayName: RegistryId
+  description: ID for accessing image registry
+  required: false
+  value: ''
+- name: REGISTRY_PW
+  displayName: RegistryPw
+  description: PW for accessing image registry
+  required: false
+  value: ''
 - name: SERVICE_ACCOUNT_NAME
   displayName: serviceAccountName
   description: Service Account Name
@@ -196,6 +211,15 @@ objects:
             mountPath: /var/lib/mysql/data
           - name: mysql-init-cfg
             mountPath: /opt/app-root/src/mysql-init
+          readinessProbe:
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            exec:
+              command:
+              - /bin/bash
+              - -c
+              - MYSQL_PWD="$MYSQL_PASSWORD" mysql -h 127.0.0.1 -u $MYSQL_USER -D $MYSQL_DATABASE
+                -e 'SELECT 1'
         volumes:
         - name: mysql-persistent-storage
           persistentVolumeClaim:
@@ -220,6 +244,8 @@ objects:
               app: ${APP_NAME}
               tier: nodejs
           spec:
+            imagePullSecrets:
+            - name: ${REGISTRY_SECRET}
             containers:
             - env:
               - name: DB_HOST
@@ -300,6 +326,10 @@ objects:
         value: 192.168.6.110:5000/s2i-nodejs:12
       - name: PACKAGE_SERVER_URL
         value: ${PACKAGE_SERVER_URL}
+      - name: REGISTRY_ID
+        value: ${REGISTRY_ID}
+      - name: REGISTRY_PW
+        value: ${REGISTRY_PW}
       resources:
         inputs:
         - name: source

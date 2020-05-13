@@ -88,6 +88,14 @@ objects:
           volumeMounts:
           - name: redis-persistent-storage
             mountPath: /var/lib/redis/data
+          readinessProbe:
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            exec:
+              command:
+              - /bin/bash
+              - -c
+              - redis-cli -h 127.0.0.1 -a $REDIS_PASSWORD ping
         volumes:
         - name: redis-persistent-storage
           persistentVolumeClaim:

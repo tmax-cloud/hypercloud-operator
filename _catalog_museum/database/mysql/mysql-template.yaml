@@ -94,6 +94,15 @@ objects:
           volumeMounts:
           - name: mysql-persistent-storage
             mountPath: /var/lib/mysql/data
+          readinessProbe:
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            exec:
+              command:
+              - /bin/bash
+              - -c
+              - MYSQL_PWD="$MYSQL_PASSWORD" mysql -h 127.0.0.1 -u $MYSQL_USER -D $MYSQL_DATABASE
+                -e 'SELECT 1'
         volumes:
         - name: mysql-persistent-storage
           persistentVolumeClaim:
