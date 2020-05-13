@@ -309,7 +309,8 @@ public class LoginHandler extends GeneralHandler {
 		int atExpireTimeSec = Constants.ACCESS_TOKEN_EXP_TIME;
 		try {
 			V1Secret secretReturn = K8sApiCaller.readSecret(Constants.TEMPLATE_NAMESPACE, Constants.K8S_PREFIX + Constants.OPERATOR_TOKEN_EXPIRE_TIME );
-			atExpireTimeSec = Integer.parseInt(secretReturn.getStringData().get(Constants.TOKEN_EXPIRED_TIME_KEY));
+			atExpireTimeSec = Integer.parseInt(new String(secretReturn.getData().get(Constants.TOKEN_EXPIRED_TIME_KEY)));
+
 			logger.info(" AccessToken Expire Time is set to "+  atExpireTimeSec/60 +"min ");
 		} catch ( ApiException e ) {
 			logger.info(" AccessToken Expire Time is set to default value 60 min ");

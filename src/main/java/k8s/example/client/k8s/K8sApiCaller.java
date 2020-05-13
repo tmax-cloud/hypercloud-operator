@@ -3630,9 +3630,11 @@ public class K8sApiCaller {
 		logger.info(" [k8sApiCaller] Read Secret Service Start ");
 		V1Secret secretReturn = null;
 		try {
+			logger.info(" secretName.toLowerCase() :  " + secretName.toLowerCase());
 			secretReturn = api.readNamespacedSecret(secretName.toLowerCase(), namespace, null, null, null);
 
 		} catch (ApiException e) {
+			e.getStackTrace();
 			logger.info(e.getResponseBody());
 			throw e;
 		}
