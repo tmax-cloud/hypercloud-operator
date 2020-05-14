@@ -58,6 +58,7 @@ import com.google.gson.JsonParser;
 
 import io.kubernetes.client.custom.IntOrString;
 import io.kubernetes.client.custom.Quantity;
+import io.kubernetes.client.custom.V1Patch;
 import io.kubernetes.client.openapi.ApiCallback;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
@@ -831,7 +832,7 @@ public class K8sApiCaller {
 			V1DeleteOptions body = new V1DeleteOptions();
 
 			customObjectApi.deleteClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION,
-					Constants.CUSTOM_OBJECT_PLURAL_TOKEN, tokenName, body, 0, null, null);
+					Constants.CUSTOM_OBJECT_PLURAL_TOKEN, tokenName, 0, null, null, body);
 		} catch (ApiException e) {
 			logger.info("Response body: " + e.getResponseBody());
 			e.printStackTrace();
@@ -848,7 +849,7 @@ public class K8sApiCaller {
 			V1DeleteOptions body = new V1DeleteOptions();
 
 			customObjectApi.deleteClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION,
-					Constants.CUSTOM_OBJECT_PLURAL_USER, userName, body, 0, null, null);
+					Constants.CUSTOM_OBJECT_PLURAL_USER, userName, 0, null, null, body);
 		} catch (ApiException e) {
 			logger.info("Response body: " + e.getResponseBody());
 			e.printStackTrace();
@@ -2065,7 +2066,7 @@ public class K8sApiCaller {
 
 		try {
 			V1ReplicaSet result = appApi.patchNamespacedReplicaSet(
-					Constants.K8S_PREFIX + Constants.K8S_REGISTRY_PREFIX + registryId, namespace, patchJson, null, null,
+					Constants.K8S_PREFIX + Constants.K8S_REGISTRY_PREFIX + registryId, namespace, new V1Patch(patchJson.toString()), null, null,
 					null, null);
 			logger.info("patchNamespacedReplicaSet result: " + result.toString());
 		} catch (ApiException e) {
@@ -2081,7 +2082,7 @@ public class K8sApiCaller {
 		logger.info("updateRegistrySecret's Json: " + patchJson.toString());
 
 		try {
-			V1Secret result = api.patchNamespacedSecret(Constants.K8S_PREFIX + registryId, namespace, patchJson, null,
+			V1Secret result = api.patchNamespacedSecret(Constants.K8S_PREFIX + registryId, namespace, new V1Patch(patchJson.toString()), null,
 					null, null, null);
 			logger.info("patchNamespacedSecret result: " + result.toString());
 		} catch (ApiException e) {
@@ -3134,8 +3135,7 @@ public class K8sApiCaller {
 		try {
 			Object result = customObjectApi.deleteNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
 					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_IMAGE, imageCRName,
-					new V1DeleteOptions(), null, null, null);
-
+					0, null, null, null);
 			logger.info("deleteNamespacedCustomObject result: " + result.toString());
 		} catch (ApiException e) {
 			logger.info(e.getResponseBody());
@@ -3333,7 +3333,7 @@ public class K8sApiCaller {
 		try {
 			Object result = customObjectApi.deleteNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
 					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_IMAGE, imageCRName,
-					new V1DeleteOptions(), null, null, null);
+					0, null, null, null);
 			logger.info("deleteNamespacedCustomObject result: " + result.toString());
 
 		} catch (ApiException e) {
@@ -3588,7 +3588,7 @@ public class K8sApiCaller {
 			JsonElement jsonPatch = (JsonElement) new JsonParser().parse(jsonPatchStr);
 			try {
 				Map<String, byte[]> secretMap = new HashMap<>();
-				result = api.patchNamespacedSecret(Constants.K8S_PREFIX + secretName.toLowerCase(), namespace, jsonPatch, "true", null, null, null);
+				result = api.patchNamespacedSecret(Constants.K8S_PREFIX + secretName.toLowerCase(), namespace, new V1Patch(jsonPatch.toString()), "true", null, null, null);
 //				logger.info("[result]" + result);
 				
 //				secretMap = result.getData();
