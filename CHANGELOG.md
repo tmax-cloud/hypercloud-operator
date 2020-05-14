@@ -1,6 +1,31 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.0.24 start -------------------->
+
+## HyperCloudServer_4.1.0.24 (Fri May 15 03:01:01 KST 2020)
+
+### Added
+  - [feat] login/logout 이력관리되도록 추가 by jaihwan
+  - [feat] audit 기능 추가 by jaihwan
+
+### Changed
+  - [mod] token 만료시간 secret으로 부터 받아오는 부분 구현 by taegeon_woo
+  - [mod] otp email html 문서 적용, master 토큰 발급 by taegeon_woo
+  - [mod] USP CRD 생성 및 활성화 가이드 추가 guide_usersecuritypolicy by taegeon_woo
+  - [mod] 로그인시 otp고려하는 로직 구현 및 테스트 완료 by taegeon_woo
+
+### Fixed
+  - [ims][223283] defaultValue 도 template instance 의 parameter 로 추가되어 parameter count 에 포함되도록 수정 by seonho_choi
+
+### CRD yaml
+  - [crd] Registry Service Type 수정: ClusterIP, NodePort 삭제 및 Ingress 타입 추가 by sukhee_yun
+  - [crd] Registry 필드추가: ingressDomain, existPvcName, deleteWithPvc by sukhee_yun
+
+### Etc
+
+<!--------------------- v4.1.0.24 end --------------------->
+
 <!-------------------- v4.1.0.23 start -------------------->
 
 ## HyperCloudServer_4.1.0.23 (Mon May  4 08:21:10 KST 2020)
