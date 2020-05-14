@@ -1475,7 +1475,7 @@ public class K8sApiCaller {
 				logger.info("apps: " + metadata.getName());
 				metadata.setLabels(ingressLabels);
 				
-				annotations.put("kubernetes.io/ingress.class", "nginx");
+				annotations.put("kubernetes.io/ingress.class", "nginx"); 
 				annotations.put("nginx.ingress.kubernetes.io/proxy-connect-timeout", "3600");
 				annotations.put("nginx.ingress.kubernetes.io/proxy-read-timeout", "3600");
 				annotations.put("nginx.ingress.kubernetes.io/ssl-redirect", "true");
