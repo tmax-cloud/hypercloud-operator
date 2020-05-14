@@ -157,8 +157,8 @@ public class LoginHandler extends GeneralHandler {
 			        			logger.info(" otpCode: " + otpCode);
 
 			        			// Send E-mail to User
-			        			String subject = "[ OTP : " + otpCode + " ] OTP를 인증해 주세요";
-			        			String content = Constants.VERIFY_MAIL_CONTENTS.replaceAll("@@otpCode@@", otpCode);
+			        			String subject = "인증번호 : " + otpCode;
+			        			String content = Constants.OTP_VERIFICATION_CONTENTS.replaceAll("%%otpCode%%", otpCode);
 			        			Util.sendMail(user.getUserInfo().getEmail(), subject, content); 
 			        			K8sApiCaller.patchUserSecurityPolicy(loginInDO.getId(), otpCode);
 			        			otpEnable = true;
@@ -309,7 +309,8 @@ public class LoginHandler extends GeneralHandler {
 		int atExpireTimeSec = Constants.ACCESS_TOKEN_EXP_TIME;
 		try {
 			V1Secret secretReturn = K8sApiCaller.readSecret(Constants.TEMPLATE_NAMESPACE, Constants.K8S_PREFIX + Constants.OPERATOR_TOKEN_EXPIRE_TIME );
-			atExpireTimeSec = Integer.parseInt(secretReturn.getStringData().get(Constants.TOKEN_EXPIRED_TIME_KEY));
+			atExpireTimeSec = Integer.parseInt(new String(secretReturn.getData().get(Constants.TOKEN_EXPIRED_TIME_KEY)));
+
 			logger.info(" AccessToken Expire Time is set to "+  atExpireTimeSec/60 +"min ");
 		} catch ( ApiException e ) {
 			logger.info(" AccessToken Expire Time is set to default value 60 min ");
