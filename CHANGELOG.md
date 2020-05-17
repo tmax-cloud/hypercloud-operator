@@ -1,6 +1,25 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.0.25 start -------------------->
+
+## HyperCloudServer_4.1.0.25 (Mon May 18 08:18:28 KST 2020)
+
+### Added
+
+### Changed
+  - [mod] otp 만료시간 추가 (default : 30 min) by taegeon_woo
+  - [mod] 이메일을 보내기전에 인증번호 & otp 저장하도록 로직 수정 by taegeon_woo
+  - [mod] trial 네임스페이스 스펙 변경 by taegeon_woo
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.0.25 end --------------------->
+
 <!-------------------- v4.1.0.24 start -------------------->
 
 ## HyperCloudServer_4.1.0.24 (Fri May 15 03:01:01 KST 2020)
