@@ -152,15 +152,15 @@ public class LoginHandler extends GeneralHandler {
 
 			            	// 1. OTP in loginInDO is Empty && otpEnable true
 			    			if (loginInDO.getOtp() == 0 && uspCR.getOtpEnable().equalsIgnoreCase("t")) {
-			            		// Issue otpCode
+			            		// Issue otpCode & Save into K8s
 			        			String otpCode = Util.numberGen(6, 1);
 			        			logger.info(" otpCode: " + otpCode);
+			        			K8sApiCaller.patchUserSecurityPolicy(loginInDO.getId(), otpCode);
 
 			        			// Send E-mail to User
 			        			String subject = "인증번호 : " + otpCode;
 			        			String content = Constants.OTP_VERIFICATION_CONTENTS.replaceAll("%%otpCode%%", otpCode);
 			        			Util.sendMail(user.getUserInfo().getEmail(), subject, content); 
-			        			K8sApiCaller.patchUserSecurityPolicy(loginInDO.getId(), otpCode);
 			        			otpEnable = true;
 			    			}
 			    			

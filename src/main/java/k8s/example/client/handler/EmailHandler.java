@@ -58,12 +58,7 @@ public class EmailHandler extends GeneralHandler {
 
 			// Issue VerifyCode
 			String verifyCode = Util.numberGen(4, 1);
-			logger.info(" verifyCode: " + verifyCode);
-
-			// Send E-mail to User
-			String subject = "[ 인증번호 : " + verifyCode + " ] 이메일을 인증해 주세요";
-			String content = Constants.VERIFY_MAIL_CONTENTS.replaceAll("@@verifyNumber@@", verifyCode);
-			Util.sendMail(userInDO.getEmail(), subject, content); 
+			logger.info(" verifyCode: " + verifyCode); 
 
 			// Insert VerifyCode into Secret
 			try {
@@ -86,6 +81,12 @@ public class EmailHandler extends GeneralHandler {
 				K8sApiCaller.createSecret(Constants.TEMPLATE_NAMESPACE, createMap, Util.makeK8sFieldValue( userInDO.getEmail() ),
 						null, null, null);
 			}
+			
+			// Send E-mail to User
+			String subject = "[ 인증번호 : " + verifyCode + " ] 이메일을 인증해 주세요";
+			String content = Constants.VERIFY_MAIL_CONTENTS.replaceAll("@@verifyNumber@@", verifyCode);
+			Util.sendMail(userInDO.getEmail(), subject, content);
+			
 			status = Status.CREATED;
 			outDO = "User Email Authenticate Code Send Success";
 
