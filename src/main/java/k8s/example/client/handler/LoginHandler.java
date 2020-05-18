@@ -4,6 +4,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 
 import com.auth0.jwt.JWT;
@@ -166,17 +169,30 @@ public class LoginHandler extends GeneralHandler {
 			    			
 			    			// 2. OTP in loginInDO is not Empty && otpEnable true
 			    			if ( loginInDO.getOtp() != 0 && uspCR.getOtpEnable().equalsIgnoreCase("t") ) {
-			    				if (uspCR.getOtp() == loginInDO.getOtp()) {
-			    					token = openAuthloginSuccess( loginInDO );
-			    					accessToken = token.getAccessToken();
-			    					refreshToken = token.getRefreshToken();
-				        			otpEnable = true;
+			    				DateTime currentTime = new DateTime();
+			        			logger.info(" currentTime: " + currentTime);
 
-			    				} else {
-			    					logger.info("  Login fail. Wrong OTP.");
+			    				DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS+hh:mm");
+			    				DateTime otpRegisterTime = formatter.parseDateTime(uspCR.getOtpRegisterTime());
+			        			logger.info(" otpRegisterTime: " + otpRegisterTime);
+
+			       			 	if( currentTime.minusMinutes(Constants.VERIFICATAION_DURATION_MINUTES).isBefore( otpRegisterTime ) ) {
+				       			 	if (uspCR.getOtp() == loginInDO.getOtp()) {
+				    					token = openAuthloginSuccess( loginInDO );
+				    					accessToken = token.getAccessToken();
+				    					refreshToken = token.getRefreshToken();
+					        			otpEnable = true;
+	
+				    				} else {
+				    					logger.info("  Login fail. Wrong OTP.");
+						    			status = Status.BAD_REQUEST; 
+						    			outDO = Constants.WRONG_OTP_NUMBER;
+				    				}
+			       			 	}else {
+				       			 	logger.info("  Login fail. OTP Verification Time has Expired.");
 					    			status = Status.BAD_REQUEST; 
-					    			outDO = Constants.OTP_VERIFICATION_FAILED;
-			    				}
+					    			outDO = Constants.OTP_TIME_EXPIRED;
+			       			 	}
 			    			}
 			    			
 			    			// 3. otpEnable false

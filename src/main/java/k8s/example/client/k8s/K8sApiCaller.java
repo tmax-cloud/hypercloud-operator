@@ -31,6 +31,7 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
 
 import org.apache.commons.codec.binary.Base64;
+import org.joda.time.DateTime;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
@@ -5178,9 +5179,13 @@ public class K8sApiCaller {
 		logger.info("[K8S ApiCaller] patchUserSecurityPolicy Service Start");
 		logger.info("uspName : " + uspName);
 		logger.info("otp value : " + value);
+		
+		DateTime currentTime = new DateTime();
+		logger.info("Current Time : " + currentTime );
 			
 		try {
-			String jsonPatchStr = "[{\"op\":\"replace\",\"path\":\"/otp\",\"value\": " + Integer.parseInt(value) + " }]";
+			String jsonPatchStr = "[{\"op\":\"replace\",\"path\":\"/otp\",\"value\": " + Integer.parseInt(value) + " },"
+					+ "{\"op\":\"replace\",\"path\":\"/otpRegisterTime\",\"value\": \"" + currentTime.toString() + "\" }]";
 			logger.info("JsonPatchStr: " + jsonPatchStr);
 
 			JsonElement jsonPatch = (JsonElement) new JsonParser().parse(jsonPatchStr);

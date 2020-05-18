@@ -122,7 +122,8 @@ public class Constants {
 	public static final String LOGOUT_SUCCESS = "Logout Success";
 	public static final String REFRESH_SUCCESS = "Refresh Success";
 	public static final String PASSWORD_CHANGE_SUCCESS = "Password Change Success";
-	public static final String OTP_VERIFICATION_FAILED = "Wrong OTP Number";
+	public static final String WRONG_OTP_NUMBER = "Wrong OTP Number";
+	public static final String OTP_TIME_EXPIRED = "OTP Verification Time has Expired";
 	public static final String LOGIN_FAILED = "Wrong ID or Password";
 	public static final String LOGOUT_FAILED = "Log Out Failed, Token is not Exist or Valid";
 	public static final String REFRESH_FAILED = "Refresh Failed, Refresh Token is not Valid";

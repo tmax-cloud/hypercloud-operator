@@ -2,6 +2,8 @@ package k8s.example.client;
 
 import java.util.List;
 
+import org.joda.time.DateTime;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
@@ -432,6 +434,7 @@ public class DataObject {
     	private String otpEnable;
     	private int otp;
     	private String ipRange;
+    	private String otpRegisterTime;
     	
     	public String getApiVersion() { return apiVersion; }
     	public String getKind() { return kind; }
@@ -439,6 +442,7 @@ public class DataObject {
     	public String getOtpEnable() { return otpEnable; }
     	public int getOtp() { return otp; }
     	public String getIpRange() { return ipRange; }
+    	public String getOtpRegisterTime() { return otpRegisterTime; }
     	
     	public void setApiVersion(String apiVersion) { this.apiVersion = apiVersion; }
     	public void setKind(String kind) { this.kind = kind; }
@@ -446,6 +450,7 @@ public class DataObject {
     	public void setOtpEnable(String otpEnable) { this.otpEnable = otpEnable; }    	
     	public void setOtpE(int otp) { this.otp = otp; }    	
     	public void setIpRange(String ipRange) { this.ipRange = ipRange; }    	
+    	public void setOtpRegisterTime(String otpRegisterTime) { this.otpRegisterTime = otpRegisterTime; }    	
     }
     
     public static class UserSecurityPolicy {
