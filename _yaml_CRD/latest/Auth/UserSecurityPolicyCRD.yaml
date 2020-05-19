@@ -34,5 +34,5 @@ spec:
             type: string
             description: ip range for otp enable user   
           otpRegisterTime:
-            type: dateTime   
+            type: string   
             description: New otp issue Time
