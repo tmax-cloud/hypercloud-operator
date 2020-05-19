@@ -117,15 +117,14 @@ public class RefreshHandler extends GeneralHandler {
     				logger.info( "  Refresh success" );	
     				status = Status.OK;
     				
-    				//Get Access Token Expire Time from secret
+    				// Get Access Token Expire Time from secret
     				int atExpireTimeSec = 3600;
     				try {
         				V1Secret secretReturn = K8sApiCaller.readSecret(Constants.TEMPLATE_NAMESPACE, Constants.K8S_PREFIX + Constants.OPERATOR_TOKEN_EXPIRE_TIME );
-        				atExpireTimeSec = Integer.parseInt(secretReturn.getStringData().get(Constants.TOKEN_EXPIRED_TIME_KEY));
+        				atExpireTimeSec = Integer.parseInt( new String(secretReturn.getData().get(Constants.TOKEN_EXPIRED_TIME_KEY)));
 
         			} catch (ApiException e) {
         				logger.info("Token Expire Time Secret does not exist Yet, Set Default value 60 min");
-        				e.printStackTrace(); //TODO : 없애
         			}
     				
     				// Make a new access token	  				
