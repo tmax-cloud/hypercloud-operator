@@ -7,8 +7,6 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
@@ -27,6 +25,7 @@ import k8s.example.client.models.Registry;
 import k8s.example.client.models.RegistryCondition;
 import k8s.example.client.models.RegistryService;
 import k8s.example.client.models.RegistryStatus;
+import k8s.example.client.models.StateCheckInfo;
 
 public class RegistryWatcher extends Thread {
 	private Watch<Registry> watchRegistry;
@@ -49,10 +48,15 @@ public class RegistryWatcher extends Thread {
 		mapper.registerModule(new JodaModule());
 	}
 	
+	
 	@Override
 	public void run() {
 		try {
+			StateCheckInfo sci = new StateCheckInfo();
+			
 			while(true) {
+				sci.checkThreadState();
+				
 				watchRegistry.forEach(response -> {
 					try {
 						if (Thread.interrupted()) {
@@ -255,6 +259,10 @@ public class RegistryWatcher extends Thread {
 			StringWriter sw = new StringWriter();
 			e.printStackTrace(new PrintWriter(sw));
 			logger.info(sw.toString());
+			if( e.getMessage().equals("abnormal") ) {
+				logger.info("Catch abnormal conditions!! Exit process");
+				System.exit(1);
+			}
 		}
 	}
 

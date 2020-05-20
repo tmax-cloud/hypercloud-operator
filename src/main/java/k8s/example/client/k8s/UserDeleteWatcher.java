@@ -15,6 +15,7 @@ import k8s.example.client.Constants;
 import k8s.example.client.DataObject.UserCR;
 import k8s.example.client.ErrorCode;
 import k8s.example.client.Main;
+import k8s.example.client.models.StateCheckInfo;
 
 public class UserDeleteWatcher extends Thread {
 	private Watch<UserCR> watchUser;
@@ -22,6 +23,7 @@ public class UserDeleteWatcher extends Thread {
 	private ApiClient client;
 	private CustomObjectsApi api;
 	private Logger logger = Main.logger;
+	StateCheckInfo sci = new StateCheckInfo();
 
 	UserDeleteWatcher(ApiClient client, CustomObjectsApi api, String resourceVersion) throws Exception {
 		watchUser = Watch.createWatch(client,
@@ -40,6 +42,7 @@ public class UserDeleteWatcher extends Thread {
 	public void run() {
 		try {
 			while (true) {
+				sci.checkThreadState();
 				watchUser.forEach(response -> {
 					try {
 						if (Thread.interrupted()) {
@@ -123,6 +126,10 @@ public class UserDeleteWatcher extends Thread {
 			StringWriter sw = new StringWriter();
 			e.printStackTrace(new PrintWriter(sw));
 			logger.info(sw.toString());
+			if( e.getMessage().equals("abnormal") ) {
+				logger.info("Catch abnormal conditions!! Exit process");
+				System.exit(1);
+			}
 		}
 	}
 

@@ -25,11 +25,13 @@ import io.kubernetes.client.util.Watch;
 import k8s.example.client.Constants;
 import k8s.example.client.Main;
 import k8s.example.client.k8s.apis.CustomResourceApi;
+import k8s.example.client.models.StateCheckInfo;
 
 public class TemplateOperator extends Thread {
 	private Watch<Object> watchInstance;
 	private static long latestResourceVersion = 0;
     private Logger logger = Main.logger;
+	StateCheckInfo sci = new StateCheckInfo();
 	
 	ApiClient client = null;
 	CustomResourceApi tpApi = null;
@@ -53,6 +55,7 @@ public class TemplateOperator extends Thread {
 	public void run() {
 		try {
 			while(true) {
+				sci.checkThreadState();
 				watchInstance.forEach(response -> {
 					try {
 						if(Thread.interrupted()) {
@@ -129,6 +132,10 @@ public class TemplateOperator extends Thread {
 			}
 		} catch (Exception e) {
 			logger.info("[Template Operator] Template Operator Exception: " + e.getMessage());
+			if( e.getMessage().equals("abnormal") ) {
+				logger.info("Catch abnormal conditions!! Exit process");
+				System.exit(1);
+			}
 		}
 	}
 	

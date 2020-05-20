@@ -31,6 +31,7 @@ import k8s.example.client.Util;
 import k8s.example.client.metering.TimerMap;
 import k8s.example.client.models.NamespaceClaim;
 import k8s.example.client.models.RoleBindingClaim;
+import k8s.example.client.models.StateCheckInfo;
 
 public class NamespaceClaimController extends Thread {
 	private Watch<NamespaceClaim> nscController;
@@ -39,6 +40,7 @@ public class NamespaceClaimController extends Thread {
 	ApiClient client = null;
 	
     private Logger logger = Main.logger;
+	StateCheckInfo sci = new StateCheckInfo();
 
 	NamespaceClaimController(ApiClient client, CustomObjectsApi api, long resourceVersion) throws Exception {
 		nscController = Watch.createWatch(client,
@@ -53,6 +55,7 @@ public class NamespaceClaimController extends Thread {
 	public void run() {
 		try {
 			while(true) {
+				sci.checkThreadState();
 				nscController.forEach(response -> {
 					try {
 						if (Thread.interrupted()) {
@@ -166,6 +169,10 @@ public class NamespaceClaimController extends Thread {
 			StringWriter sw = new StringWriter();
 			e.printStackTrace(new PrintWriter(sw));
 			logger.info(sw.toString());
+			if( e.getMessage().equals("abnormal") ) {
+				logger.info("Catch abnormal conditions!! Exit process");
+				System.exit(1);
+			}
 		}
 	}
 

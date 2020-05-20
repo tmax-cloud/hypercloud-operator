@@ -18,6 +18,7 @@ import io.kubernetes.client.util.Watch;
 import k8s.example.client.Constants;
 import k8s.example.client.Main;
 import k8s.example.client.models.NamespaceClaim;
+import k8s.example.client.models.StateCheckInfo;
 
 public class ResourceQuotaClaimController extends Thread {
 	private Watch<NamespaceClaim> rqcController;
@@ -25,6 +26,7 @@ public class ResourceQuotaClaimController extends Thread {
 	private CustomObjectsApi api = null;
 	ApiClient client = null;
     private Logger logger = Main.logger;
+	StateCheckInfo sci = new StateCheckInfo();
 
 	ResourceQuotaClaimController(ApiClient client, CustomObjectsApi api, long resourceVersion) throws Exception {
 		rqcController = Watch.createWatch(client,
@@ -39,6 +41,7 @@ public class ResourceQuotaClaimController extends Thread {
 	public void run() {
 		try {
 			while(true) {
+				sci.checkThreadState();
 				rqcController.forEach(response -> {
 					try {
 						if (Thread.interrupted()) {
@@ -111,6 +114,10 @@ public class ResourceQuotaClaimController extends Thread {
 			StringWriter sw = new StringWriter();
 			e.printStackTrace(new PrintWriter(sw));
 			logger.info(sw.toString());
+			if( e.getMessage().equals("abnormal") ) {
+				logger.info("Catch abnormal conditions!! Exit process");
+				System.exit(1);
+			}
 		}
 	}
 
