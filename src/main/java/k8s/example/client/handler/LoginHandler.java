@@ -129,6 +129,7 @@ public class LoginHandler extends GeneralHandler {
 		    						status = Status.FORBIDDEN; 
 					    			outDO = ErrorCode.BLOCKED_USER; 
 			    	    			logger.info(" outDO : " + outDO);
+			    					retryCount--;
 			    	    		}
 		    					retryCount++;
 		    					User newUser = new User();
