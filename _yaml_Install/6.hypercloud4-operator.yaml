@@ -8,6 +8,8 @@ metadata:
     name: hypercloud4-operator
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       hypercloud4: operator
