@@ -41,6 +41,7 @@ import io.kubernetes.client.util.Watch;
 import k8s.example.client.Constants;
 import k8s.example.client.Main;
 import k8s.example.client.k8s.apis.CustomResourceApi;
+import k8s.example.client.models.StateCheckInfo;
 import okio.ByteString;
 
 public class InstanceOperator extends Thread {
@@ -52,6 +53,7 @@ public class InstanceOperator extends Thread {
 	CustomResourceApi tpApi = null;
 	ObjectMapper mapper = new ObjectMapper();
 	Gson gson = new GsonBuilder().create();
+	StateCheckInfo sci = new StateCheckInfo();
 	
 	private DateTypeAdapter dateTypeAdapter = new DateTypeAdapter();
 	private SqlDateTypeAdapter sqlDateTypeAdapter = new SqlDateTypeAdapter();
@@ -95,6 +97,7 @@ public class InstanceOperator extends Thread {
 	public void run() {
 		try {
 			while(true) {
+				sci.checkThreadState();
 				watchInstance.forEach(response -> {
 					try {
 						if(Thread.interrupted()) {
@@ -425,6 +428,10 @@ public class InstanceOperator extends Thread {
 
 		} catch (Exception e) {
 			logger.info("[Instance Operator] Instance Operator Exception: " + e.getMessage());
+			if( e.getMessage().equals("abnormal") ) {
+				logger.info("Catch abnormal conditions!! Exit process");
+				System.exit(1);
+			}
 		}
 	}
 	

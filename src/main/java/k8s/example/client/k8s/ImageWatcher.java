@@ -13,6 +13,7 @@ import io.kubernetes.client.util.Watch;
 import k8s.example.client.Constants;
 import k8s.example.client.Main;
 import k8s.example.client.models.Image;
+import k8s.example.client.models.StateCheckInfo;
 
 public class ImageWatcher extends Thread {
 	private Watch<Image> watchImage;
@@ -20,6 +21,7 @@ public class ImageWatcher extends Thread {
 	private CustomObjectsApi api = null;
 	ApiClient client;
     private Logger logger = Main.logger;
+    StateCheckInfo sci = new StateCheckInfo();
 	
 	ImageWatcher(ApiClient client, CustomObjectsApi api, String resourceVersion) throws Exception {
 		watchImage = Watch.createWatch(client,
@@ -35,6 +37,7 @@ public class ImageWatcher extends Thread {
 	public void run() {
 		try {
 			while(true) {
+				sci.checkThreadState();
 				watchImage.forEach(response -> {
 					try {
 						if (Thread.interrupted()) {
@@ -44,12 +47,12 @@ public class ImageWatcher extends Thread {
 					} catch (Exception e) {
 						logger.info(e.getMessage());
 					}
-					
-					
+
+
 					// Logic here
 					try {
 						Image image = response.object;
-						
+
 						if( image != null
 								&& Long.parseLong(image.getMetadata().getResourceVersion()) > Long.parseLong(latestResourceVersion)) {
 							
@@ -95,6 +98,10 @@ public class ImageWatcher extends Thread {
 			StringWriter sw = new StringWriter();
 			e.printStackTrace(new PrintWriter(sw));
 			logger.info(sw.toString());
+			if( e.getMessage().equals("abnormal") ) {
+				logger.info("Catch abnormal conditions!! Exit process");
+				System.exit(1);
+			}
 		}
 	}
 

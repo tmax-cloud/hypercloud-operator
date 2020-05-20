@@ -19,6 +19,7 @@ import k8s.example.client.Constants;
 import k8s.example.client.Main;
 import k8s.example.client.models.NamespaceClaim;
 import k8s.example.client.models.RoleBindingClaim;
+import k8s.example.client.models.StateCheckInfo;
 
 public class RoleBindingClaimController extends Thread {
 	private Watch<RoleBindingClaim> rbcController;
@@ -26,6 +27,7 @@ public class RoleBindingClaimController extends Thread {
 	private CustomObjectsApi api = null;
 	ApiClient client = null;
     private Logger logger = Main.logger;
+	StateCheckInfo sci = new StateCheckInfo();
 
 	RoleBindingClaimController(ApiClient client, CustomObjectsApi api, long resourceVersion) throws Exception {
 		rbcController = Watch.createWatch(client,
@@ -40,6 +42,7 @@ public class RoleBindingClaimController extends Thread {
 	public void run() {
 		try {
 			while(true) {
+				sci.checkThreadState();
 				rbcController.forEach(response -> {
 					try {
 						if (Thread.interrupted()) {
@@ -113,6 +116,10 @@ public class RoleBindingClaimController extends Thread {
 			StringWriter sw = new StringWriter();
 			e.printStackTrace(new PrintWriter(sw));
 			logger.info(sw.toString());
+			if( e.getMessage().equals("abnormal") ) {
+				logger.info("Catch abnormal conditions!! Exit process");
+				System.exit(1);
+			}
 		}
 	}
 

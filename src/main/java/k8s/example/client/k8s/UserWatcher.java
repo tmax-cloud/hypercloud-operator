@@ -11,8 +11,9 @@ import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CustomObjectsApi;
 import io.kubernetes.client.util.Watch;
-import k8s.example.client.Main;
 import k8s.example.client.DataObject.UserCR;
+import k8s.example.client.Main;
+import k8s.example.client.models.StateCheckInfo;
 
 public class UserWatcher extends Thread {
 	private Watch<UserCR> watchUser;
@@ -20,6 +21,7 @@ public class UserWatcher extends Thread {
 	private ApiClient client;
 	private CustomObjectsApi api;
     private Logger logger = Main.logger;
+	StateCheckInfo sci = new StateCheckInfo();
 
 	UserWatcher(ApiClient client, CustomObjectsApi api, String resourceVersion) throws Exception {
 		watchUser = Watch.createWatch(client,
@@ -35,6 +37,7 @@ public class UserWatcher extends Thread {
 	public void run() {
 		try {
 			while(true) {
+				sci.checkThreadState();
 				watchUser.forEach(response -> {
 					try {
 						if (Thread.interrupted()) {
@@ -82,6 +85,10 @@ public class UserWatcher extends Thread {
 			StringWriter sw = new StringWriter();
 			e.printStackTrace(new PrintWriter(sw));
 			logger.info(sw.toString());
+			if( e.getMessage().equals("abnormal") ) {
+				logger.info("Catch abnormal conditions!! Exit process");
+				System.exit(1);
+			}
 		}
 	}
 
