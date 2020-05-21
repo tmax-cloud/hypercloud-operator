@@ -403,7 +403,13 @@ public class UserHandler extends GeneralHandler {
 						userInDO.getAlterPassword());
 				logger.info("  result : " + setPasswordOut.get("result").toString());
 				if (setPasswordOut.get("result").toString().equalsIgnoreCase("\"true\"")) {
-					logger.info("  Password Change success.");
+					User newUser = new User();
+					newUser.setId(userInDO.getId());
+					newUser.setRetryCount(0);
+	    			logger.info(" set Retry Count to 0");		    			
+					K8sApiCaller.updateUserMeta(newUser, true);
+					
+					logger.info("  Password Change success.");			
 					outDO = Constants.PASSWORD_CHANGE_SUCCESS;
 					status = Status.OK;
 				} else {
