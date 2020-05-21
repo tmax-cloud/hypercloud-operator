@@ -1,5 +1,35 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
+
+<!-------------------- v4.1.0.27 start -------------------->
+
+## HyperCloudServer_4.1.0.27 (Fri May 22 07:12:00 KST 2020)
+
+### Added
+
+### Changed
+  - [mod] otp send 서비스 swagger 수정 by taegeon_woo
+  - [mod] otpHandler 추가 by taegeon_woo
+  - [mod] public 비밀번호 변경시 user의 retryCount를 0으로 만들어주는 로직 추가 by taegeon_woo
+  - [mod] retryCount 10회 도달시 에러코드 출력가능하게끔 200ok 출력으로 변경 by taegeon_woo
+  - [mod] proauth-server 새로운 이미지 설치에 반영 by taegeon_woo
+  - [mod] RefreshHandler.java secret 에서 만료시간 가져오는 버그 수정 by taegeon_woo
+
+### Fixed
+  - [ims][220310] TZ 환경변수를 설정 시 date 명령어 에서도 반영되도록 alpine image 에 tzdata package 설치 by seonho_choi
+  - [ims][225652] ingress type 사용시 domainName 필수갑으로 설정, Exception 발생시 Error로 상태 변경 처리 by sukhee_yun
+  - [ims][225777] exist pvc mount 안되는 버그 수정 / pvc의 exist, create 필드 분리하여 두가지 모두 사용하는 경우가 없도록 수정 by sukhee_yun
+  - [ims][223283] Template Instance 생성 시 parameter value 가 빈 스트링인 경우 default value 가 들어갈 수 있도록 수정 by seonho_choi
+  - [ims][225516] hypercloud-operator 재기동 전략 수정 Rolling --> Recreate by taegeon_woo
+
+### CRD yaml
+  - [crd] default_registry.yaml 수정 by sukhee_yun
+  - [crd] Registry service 필드 내용 수정 by sukhee_yun
+  - [crd] Registry CRD의 PersistentVolumeClaim 필드 내용 수정 by sukhee_yun
+
+### Etc
+
+<!--------------------- v4.1.0.27 end --------------------->
 <!-------------------- v4.1.0.26 start -------------------->
 
 ## HyperCloudServer_4.1.0.25 (Mon May 18 08:18:28 KST 2020)
