@@ -263,7 +263,32 @@ paths:
                 }     
       responses:
         200:
-          description: User Email Vefification Code Verify Success          
+          description: User Email Vefification Code Verify Success    
+
+  /otp:
+    post:
+      tags:
+      - "Auth"
+      summary: "Auth OTP Number Email Send Service"
+      requestBody:
+        description: "OTP"
+        required: true  
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                dto:
+                  $ref: "#/components/schemas/User"    
+              example:
+                {
+                   "id":"shin-test2",
+                   "password":"ee26b0dd4af7e749aa1a8ee3c10ae9923f618980772e473f8819a5d4940e0db27ac185f8a0e1d5f84f88bc887fd67b143732c304cc5fa9ad8e6f57f50028a8ff"
+                }     
+      responses:
+        200:
+          description: OTP Number Email Send Success
+                
   /login:
     post:
       tags:
