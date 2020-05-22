@@ -5220,9 +5220,6 @@ public class K8sApiCaller {
 		logger.info("otp value : " + value);
 		
 		DateTime currentTime = new DateTime();
-		DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:m:ss");
-		currentTime = formatter.parseDateTime(currentTime.toString("yyyy-MM-dd'T'HH:mm:ss"));
-
 		logger.info("Current Time : " + currentTime );
 			
 		try {
