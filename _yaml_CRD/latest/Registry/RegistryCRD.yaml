@@ -94,17 +94,30 @@ spec:
                         type: string
             service:
               type: object
-              required: [type]
+              description: "supported service types are ingress and loadBalancer."
+              oneOf:
+              - required: [ingress]
+              - required: [loadBalancer]
               properties:
-                port:
-                  type: integer
-                  description: "external port (default: 443)"
-                ingressDomain:
-                  type: string
-                  description: "(example: 192.168.6.110.nip.io)"
-                type:
-                  type: string
-                  enum: [LoadBalancer, Ingress]
+                ingress:
+                  type: object
+                  description: "use ingress service type"
+                  required: [domainName, port]
+                  properties:
+                    domainName: 
+                      type: string
+                      description: "(example: 192.168.6.110.nip.io)"
+                    port:
+                      type: integer
+                      description: "external port. Generally use 443 port"
+                loadBalancer:
+                  type: object
+                  description: "use loadBalancer service type"
+                  required: [port]
+                  properties:
+                    port:
+                      type: integer
+                      description: "external port. Generally use 443 port"
             persistentVolumeClaim:
               type: object
               oneOf:
@@ -178,7 +191,7 @@ spec:
   - name: Capacity
     type: string
     description: Registry PVC Size
-    JSONPath: .spec.persistentVolumeClaim.storageSize
+    JSONPath: .spec.persistentVolumeClaim.create.storageSize
   - name: Status
     type: string
     description: Registry Status
@@ -186,4 +199,3 @@ spec:
   - name: Age
     type: date
     JSONPath: .metadata.creationTimestamp
-

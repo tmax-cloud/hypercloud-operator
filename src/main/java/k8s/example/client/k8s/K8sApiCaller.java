@@ -1087,26 +1087,26 @@ public class K8sApiCaller {
 			}
 
 			if(serviceType.equals(RegistryService.SVC_TYPE_INGRESS)) {
-				if( StringUtil.isEmpty(ingressDomain)) {
-					V1Service service = api.readNamespacedService("ingress-nginx", "ingress-nginx", null, null, null);
-					String ingressLbIP = null;
-
-					if (service.getSpec().getType().equals("LoadBalancer")) {
-						if (service.getStatus().getLoadBalancer().getIngress() != null
-								&& service.getStatus().getLoadBalancer().getIngress().size() == 1) {
-							if (service.getStatus().getLoadBalancer().getIngress().get(0).getHostname() == null) {
-								ingressLbIP = service.getStatus().getLoadBalancer().getIngress().get(0).getIp();
-							} else {
-								ingressLbIP = service.getStatus().getLoadBalancer().getIngress().get(0).getHostname();
-							}
-							logger.info("[ingress-nginx LoadBalancerIP]:" + ingressLbIP);
-
-							ingressDomain = ingressLbIP + ".nip.io";
-							logger.info("[ingressDomain]:" + ingressDomain);
-
-						}
-					}
-				}
+//				if( StringUtil.isEmpty(ingressDomain)) {
+//					V1Service service = api.readNamespacedService("ingress-nginx", "ingress-nginx", null, null, null);
+//					String ingressLbIP = null;
+//
+//					if (service.getSpec().getType().equals("LoadBalancer")) {
+//						if (service.getStatus().getLoadBalancer().getIngress() != null
+//								&& service.getStatus().getLoadBalancer().getIngress().size() == 1) {
+//							if (service.getStatus().getLoadBalancer().getIngress().get(0).getHostname() == null) {
+//								ingressLbIP = service.getStatus().getLoadBalancer().getIngress().get(0).getIp();
+//							} else {
+//								ingressLbIP = service.getStatus().getLoadBalancer().getIngress().get(0).getHostname();
+//							}
+//							logger.info("[ingress-nginx LoadBalancerIP]:" + ingressLbIP);
+//
+//							ingressDomain = ingressLbIP + ".nip.io";
+//							logger.info("[ingressDomain]:" + ingressDomain);
+//
+//						}
+//					}
+//				}
 
 				registryDomain = registryId + "." + ingressDomain;
 				logger.info("[registryDomain]:" + registryDomain);
@@ -1386,7 +1386,7 @@ public class K8sApiCaller {
 			}
 
 			// Read cert files & Create Secret Object
-			logger.info("Read cert files & Create Secret Object");
+			logger.info("Read cert files & Create Secret Object"); 
 			Map<String, String> secrets = new HashMap<>();
 
 			secrets.put(Constants.CERT_KEY_FILE, readFile(registryDir + "/" + Constants.CERT_KEY_FILE));
