@@ -15,6 +15,7 @@ import k8s.example.client.handler.LoginHandler;
 import k8s.example.client.handler.LoginPageHandler;
 import k8s.example.client.handler.LogoutHandler;
 import k8s.example.client.handler.NameSpaceHandler;
+import k8s.example.client.handler.OtpHandler;
 import k8s.example.client.handler.RefreshHandler;
 import k8s.example.client.handler.RegistryEventHandler;
 import k8s.example.client.handler.ServiceBindingHandler;
@@ -49,5 +50,6 @@ public class WebHookServer extends RouterNanoHTTPD {
     	addRoute("/nameSpace", NameSpaceHandler.class);
     	addRoute("/registry/event", RegistryEventHandler.class);
     	addRoute("/audit", AuditApiHandler.class);
+    	addRoute("/otp", OtpHandler.class);
     }
 }
