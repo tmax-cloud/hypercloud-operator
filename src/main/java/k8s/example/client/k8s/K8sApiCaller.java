@@ -1386,7 +1386,7 @@ public class K8sApiCaller {
 			}
 
 			// Read cert files & Create Secret Object
-			logger.info("Read cert files & Create Secret Object");
+			logger.info("Read cert files & Create Secret Object"); 
 			Map<String, String> secrets = new HashMap<>();
 
 			secrets.put(Constants.CERT_KEY_FILE, readFile(registryDir + "/" + Constants.CERT_KEY_FILE));
