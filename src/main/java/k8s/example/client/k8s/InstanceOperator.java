@@ -5,6 +5,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +41,7 @@ import io.kubernetes.client.openapi.models.V1DeleteOptions;
 import io.kubernetes.client.util.Watch;
 import k8s.example.client.Constants;
 import k8s.example.client.Main;
+import k8s.example.client.StringUtil;
 import k8s.example.client.k8s.apis.CustomResourceApi;
 import k8s.example.client.models.StateCheckInfo;
 import okio.ByteString;
@@ -163,18 +165,38 @@ public class InstanceOperator extends Thread {
 	    					JSONArray parmPatchArray = null;
 	    					List<String> existParm = new ArrayList<>();
 	    					
+	    					Map<String,String> defaultValueMap = new HashMap<>();
+	    					if ( objectToJsonNode(template).get("parameters") != null ) {
+	        					for(JsonNode parameter : objectToJsonNode(template).get("parameters")) {
+	        						String name = "";
+	        						String defaultValue = "";
+        							if( parameter.has("value") ) {
+        								defaultValue = parameter.get("value").asText();
+	        						}
+        							if ( parameter.has("name") ) {
+        								name = parameter.get("name").asText();
+        							}
+        							if ( !defaultValueMap.containsKey(name) ) {
+        								defaultValueMap.put(name, defaultValue);
+        							}
+	        					}
+	    					}
+        							
 		        			if(templateObjs.isArray()) {
 		        				for(JsonNode object : templateObjs) {
 			        				String objStr = object.toString();
 			        				//logger.info("[Instance Operator] Template Object : " + objStr);
 			        				if ( parameters != null ) {
+			        					
 			        					for(JsonNode parameter : parameters) {
 					        				String paramName = null;
 					        				String paramValue = null;
 					        				if(parameter.has("name") && parameter.has("value")) {
 					        					paramName = parameter.get("name").asText();
 						        				paramValue = parameter.get("value").asText();
-						        				
+						        				if ( StringUtil.isEmpty(paramValue) && defaultValueMap.containsKey(paramName) ) {
+						        					paramValue = defaultValueMap.get(paramName);
+						        				}
 						        				if ( !existParm.contains( paramName ) ) {
 						        					if (parmPatchArray == null) parmPatchArray = new JSONArray();
 						        					parmPatch = new JSONObject();
@@ -206,6 +228,7 @@ public class InstanceOperator extends Thread {
 					        				}
 					        				
 			        					}
+			        					
 			        				}
 
 			        				if ( objectToJsonNode(template).get("parameters") != null ) {
