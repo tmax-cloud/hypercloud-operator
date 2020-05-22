@@ -166,6 +166,7 @@ import k8s.example.client.models.ProvisionInDO;
 import k8s.example.client.models.Registry;
 import k8s.example.client.models.RegistryCondition;
 import k8s.example.client.models.RegistryPVC;
+import k8s.example.client.models.RegistryPVC.CreatePvc;
 import k8s.example.client.models.RegistryService;
 import k8s.example.client.models.RegistryStatus;
 import k8s.example.client.models.RoleBindingClaim;
@@ -1206,20 +1207,31 @@ public class K8sApiCaller {
 			}
 
 			
-			boolean existPvcName = (registryPVC.getExistPvcName() != null);
+			boolean existPvcName = (registryPVC.getExist() != null);
+			String volumeMode = null;
 			
 			if( existPvcName ) {
 				try {
-					api.readNamespacedPersistentVolumeClaim(registryPVC.getExistPvcName(), namespace, null, null, null);
+					V1PersistentVolumeClaim result = api.readNamespacedPersistentVolumeClaim(registryPVC.getExist().getPvcName(), namespace, null, null, null);
+					volumeMode = result.getSpec().getVolumeMode();
 				}catch (ApiException e) {
-					if(e.getCode() == 404) {
-						existPvcName = false;
+//					if(e.getCode() == 404) {
+//						existPvcName = false;
+//					}
+					try {
+						patchRegistryStatus(registry, RegistryStatus.StatusPhase.ERROR.getStatus(),
+								"Creating a registry is failed. " + registryPVC.getExist().getPvcName() + " PVC is not found", "PVCNotFound");
+					} catch (ApiException e2) {
+						logger.info(e2.getResponseBody());
+						throw e2;
 					}
+					throw e;
 				}
 			}
 
 			if( !existPvcName) {
 				// ----- Create PVC
+				CreatePvc createPvc = registryPVC.getCreate();
 				V1PersistentVolumeClaim pvc = new V1PersistentVolumeClaim();
 				V1ObjectMeta pvcMeta = new V1ObjectMeta();
 				V1PersistentVolumeClaimSpec pvcSpec = new V1PersistentVolumeClaimSpec();
@@ -1227,8 +1239,9 @@ public class K8sApiCaller {
 				Map<String, Quantity> limit = new HashMap<>();
 				List<String> accessModes = new ArrayList<>();
 
+				
 				//			String storageClassName = StringUtil.isEmpty(registryPVC.getStorageClassName()) ? RegistryPVC.STORAGE_CLASS_DEFAULT : registryPVC.getStorageClassName();
-				String storageClassName = registryPVC.getStorageClassName();
+				String storageClassName = createPvc.getStorageClassName();
 
 				pvcMeta.setName(Constants.K8S_PREFIX + registryId);
 
@@ -1236,13 +1249,13 @@ public class K8sApiCaller {
 				//			pvcLabels.put("app", Constants.K8S_PREFIX.substring(0, Constants.K8S_PREFIX.length() - 1));
 				//			pvcMeta.setLabels(pvcLabels);
 
-				boolean deleteWitchPvc = (registryPVC.getDeleteWithPvc() == null ? false : registryPVC.getDeleteWithPvc());
+				boolean deleteWitchPvc = (createPvc.getDeleteWithPvc() == null ? false : createPvc.getDeleteWithPvc());
 				if( deleteWitchPvc ) {
 					pvcMeta.setOwnerReferences(ownerRefs);
 				}
 
 				// set storage quota.
-				limit.put("storage", new Quantity(registryPVC.getStorageSize()));
+				limit.put("storage", new Quantity(createPvc.getStorageSize()));
 				pvcResource.setRequests(limit);
 				pvcSpec.setResources(pvcResource);
 
@@ -1254,15 +1267,15 @@ public class K8sApiCaller {
 				//				accessModes.add(RegistryPVC.ACCESS_MODE_DEFAULT);
 				//			}
 				//			else {
-				for (String mode : registryPVC.getAccessModes()) {
+				for (String mode : createPvc.getAccessModes()) {
 					accessModes.add(mode);
 				}
 				//			}
 				pvcSpec.setAccessModes(accessModes);
 
 				// set volume mode
-				if (registryPVC.getVolumeMode() != null) 
-					pvcSpec.setVolumeMode(registryPVC.getVolumeMode());
+				if (createPvc.getVolumeMode() != null) 
+					pvcSpec.setVolumeMode(createPvc.getVolumeMode());
 
 				pvc.setMetadata(pvcMeta);
 				pvc.setSpec(pvcSpec);
@@ -1752,8 +1765,12 @@ public class K8sApiCaller {
 			// Registry Volume mount
 			String mode = null;
 			String pvcMountPath = registryPVC.getMountPath() == null ? "/var/lib/registry" : registryPVC.getMountPath();
-			if( (mode = registry.getSpec().getPersistentVolumeClaim().getVolumeMode()) != null
-					&& mode.equals("Block")) {
+			
+			if( !existPvcName && registry.getSpec().getPersistentVolumeClaim().getCreate().getVolumeMode() != null) {
+				volumeMode = registry.getSpec().getPersistentVolumeClaim().getCreate().getVolumeMode();
+			}
+			
+			if( volumeMode.equals("Block")) {
 				V1VolumeDevice volumeDevicesItem = new V1VolumeDevice();
 				
 				volumeDevicesItem.setName("registry");
@@ -1840,10 +1857,12 @@ public class K8sApiCaller {
 			volumes.add(certVolume);
 
 			// Registry Volume
+			String pvcName = registryPVC.getExist() != null ? registryPVC.getExist().getPvcName() : Constants.K8S_PREFIX + registryId;
 			V1Volume registryVolume = new V1Volume();
 			registryVolume.setName("registry");
 			V1PersistentVolumeClaimVolumeSource regPvc = new V1PersistentVolumeClaimVolumeSource();
-			regPvc.setClaimName(Constants.K8S_PREFIX + registryId);
+			
+			regPvc.setClaimName(pvcName);
 			registryVolume.setPersistentVolumeClaim(regPvc);
 
 			volumes.add(registryVolume);

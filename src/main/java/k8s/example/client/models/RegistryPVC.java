@@ -4,85 +4,87 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RegistryPVC {
+	public class ExistPvc {
+		private String pvcName = null;
+
+		public String getPvcName() {
+			return pvcName;
+		}
+
+		public void setPvcName(String pvcName) {
+			this.pvcName = pvcName;
+		}
+	}
+	
+	public class CreatePvc {
+		private List<String> accessModes = null;
+		private String storageSize = null;
+		private String storageClassName = null;
+		private String volumeMode = null;
+		private Boolean deleteWithPvc = null;
+		
+		public List<String> getAccessModes() {
+			return accessModes;
+		}
+		public void setAccessModes(List<String> accessModes) {
+			this.accessModes = accessModes;
+		}
+		public String getStorageSize() {
+			return storageSize;
+		}
+		public void setStorageSize(String storageSize) {
+			this.storageSize = storageSize;
+		}
+		public String getStorageClassName() {
+			return storageClassName;
+		}
+		public void setStorageClassName(String storageClassName) {
+			this.storageClassName = storageClassName;
+		}
+		public String getVolumeMode() {
+			return volumeMode;
+		}
+		public void setVolumeMode(String volumeMode) {
+			this.volumeMode = volumeMode;
+		}
+		public Boolean getDeleteWithPvc() {
+			return deleteWithPvc;
+		}
+		public void setDeleteWithPvc(Boolean deleteWithPvc) {
+			this.deleteWithPvc = deleteWithPvc;
+		}
+		public CreatePvc addAccessModesItem(String accessMode) {
+			if (this.accessModes == null) {
+				this.accessModes = new ArrayList<String>();
+			}
+			this.accessModes.add(accessMode);
+			return this;
+		}
+		
+	}
+	
 //	public static final String STORAGE_CLASS_DEFAULT = "csi-cephfs-sc";
 	public static final String ACCESS_MODE_DEFAULT = "ReadWriteMany";
-	private List<String> accessModes = null;
-	private String storageSize = null;
-	private String storageClassName = null;
-	private String volumeMode = null;
 	private String mountPath = null;
-	private String existPvcName = null;
-	private Boolean deleteWithPvc = null;
+	private ExistPvc exist = null;
+	private CreatePvc create = null;
 	
-	public List<String> getAccessModes() {
-		return accessModes;
-	}
-	public void setAccessModes(List<String> accessModes) {
-		this.accessModes = accessModes;
-	}
-	public String getStorageSize() {
-		return storageSize;
-	}
-	public void setStorageSize(String storageSize) {
-		this.storageSize = storageSize;
-	}
-	public String getStorageClassName() {
-		return storageClassName;
-	}
-	public void setStorageClassName(String storageClassName) {
-		this.storageClassName = storageClassName;
-	}
-	public String getVolumeMode() {
-		return volumeMode;
-	}
-	public void setVolumeMode(String volumeMode) {
-		this.volumeMode = volumeMode;
-	}
-	public RegistryPVC addAccessModesItem(String accessMode) {
-		if (this.accessModes == null) {
-			this.accessModes = new ArrayList<String>();
-		}
-		this.accessModes.add(accessMode);
-		return this;
-	}
 	public String getMountPath() {
 		return mountPath;
 	}
 	public void setMountPath(String mountPath) {
 		this.mountPath = mountPath;
 	}
-	public String getExistPvcName() {
-		return existPvcName;
+	public ExistPvc getExist() {
+		return exist;
 	}
-	public void setExistPvcName(String existPvcName) {
-		this.existPvcName = existPvcName;
+	public void setExist(ExistPvc exist) {
+		this.exist = exist;
 	}
-	public Boolean getDeleteWithPvc() {
-		return deleteWithPvc;
+	public CreatePvc getCreate() {
+		return create;
 	}
-	public void setDeleteWithPvc(Boolean deleteWithPvc) {
-		this.deleteWithPvc = deleteWithPvc;
-	}
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		sb.append("class RegistryPVC {\n");
-		if(accessModes != null ) 
-			for( String accessMode : accessModes)
-				sb.append("    accessMode: ").append(toIndentedString(accessMode)).append("\n");
-		sb.append("    volumeSize: ").append(toIndentedString(storageSize)).append("\n");
-		sb.append("    storageClassName: ").append(toIndentedString(storageClassName)).append("\n");
-		sb.append("    volumeMode: ").append(toIndentedString(volumeMode)).append("\n");
-		sb.append("    mountPath: ").append(toIndentedString(mountPath)).append("\n");
-		sb.append("    existPvcName: ").append(toIndentedString(existPvcName)).append("\n");
-		sb.append("    deleteWithPvc: ").append(toIndentedString(deleteWithPvc)).append("\n");
-		sb.append("}");
-		return sb.toString();
-	}
-	
-	private String toIndentedString(java.lang.Object o) {
-		if (o == null) {
-			return "null";
-		}
-		return o.toString().replace("\n", "\n    ");
+	public void setCreate(CreatePvc create) {
+		this.create = create;
 	}
 }
