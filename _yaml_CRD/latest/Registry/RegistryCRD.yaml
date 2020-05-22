@@ -3,7 +3,7 @@ kind: CustomResourceDefinition
 metadata:
   name: registries.tmax.io
   annotations:
-    operator.version: %latest%
+    operator.version: 4.1.0.100
 spec:
   group: tmax.io
   versions:
@@ -27,7 +27,8 @@ spec:
           type: string
         spec:
           type: object
-          required: [image, loginId, loginPassword, service, persistentVolumeClaim]
+          oneOf:
+          - required: [image, loginId, loginPassword, service, persistentVolumeClaim]
           description: registry information
           properties:
             image:
@@ -106,31 +107,41 @@ spec:
                   enum: [LoadBalancer, Ingress]
             persistentVolumeClaim:
               type: object
-              required: [accessModes, storageSize, storageClassName]
+              oneOf:
+              - required: [exist]
+              - required: [create]
               properties:
-                accessModes:
-                  type: array
-                  items:
-                    type: string
-                    enum: [ReadWriteOnce, ReadWriteMany]
-                storageSize:
-                  type: string
-                  description: "enter the desired storage size (ex: 10Gi)"
-                storageClassName:
-                  type: string
-                  description: "enter storage class name available (ex: csi-cephfs-sc)"
-                volumeMode:
-                  type: string
-                  enum: [Filesystem, Block]
                 mountPath:
                   type: string
                   description: "(default: /var/lib/registry)"
-                existPvcName:
-                  type: string
-                  description: "Use the pvc you have created"
-                deleteWithPvc:
-                  type: boolean
-                  description: "Delete the pvc as well when this registry is deleted"
+                exist:
+                  type: object
+                  required: [pvcName]
+                  properties:
+                    pvcName:
+                      type: string
+                      description: "Use the pvc you have created."
+                create:
+                  type: object
+                  required: [accessModes, storageSize, storageClassName]
+                  properties:
+                    accessModes:
+                      type: array
+                      items:
+                        type: string
+                        enum: [ReadWriteOnce, ReadWriteMany]
+                    storageSize:
+                      type: string
+                      description: "enter the desired storage size (ex: 10Gi)"
+                    storageClassName:
+                      type: string
+                      description: "enter storage class name available (ex: csi-cephfs-sc)"
+                    volumeMode:
+                      type: string
+                      enum: [Filesystem, Block]
+                    deleteWithPvc:
+                      type: boolean
+                      description: "Delete the pvc as well when this registry is deleted"
         status:
           type: object
           properties:

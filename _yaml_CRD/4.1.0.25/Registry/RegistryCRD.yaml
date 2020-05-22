@@ -27,7 +27,7 @@ spec:
           type: string
         spec:
           type: object
-          required: [image, loginId, loginPassword, service, persistentVolumeClaim]
+          required: [image, loginId, loginPassword, service]
           description: registry information
           properties:
             image:
@@ -104,6 +104,12 @@ spec:
                 type:
                   type: string
                   enum: [LoadBalancer, Ingress]
+            existPvcName:
+              type: string
+              description: "Use the pvc you have created"
+            pvcMountPath:
+              type: string
+              description: "(default: /var/lib/registry)"
             persistentVolumeClaim:
               type: object
               required: [accessModes, storageSize, storageClassName]
@@ -122,12 +128,6 @@ spec:
                 volumeMode:
                   type: string
                   enum: [Filesystem, Block]
-                mountPath:
-                  type: string
-                  description: "(default: /var/lib/registry)"
-                existPvcName:
-                  type: string
-                  description: "Use the pvc you have created"
                 deleteWithPvc:
                   type: boolean
                   description: "Delete the pvc as well when this registry is deleted"

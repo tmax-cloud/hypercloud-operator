@@ -29,11 +29,12 @@ spec:
       #key: node.kubernetes.io/unreachable
       #tolerationSeconds: 10
   service:
-     #port: example # (optional) [integer] external port (default: 443)
-     #nodeIP: example # (optional) [string] if service type is NodePort, set NodeIP to assign to the registry
-     #nodePort: example # (optional) [integer] if service type is NodePort, you can set 30000~32767
-     type: example # (required) [ClusterIP, NodePort, LoadBalancer]
+    port: 443 # (optional) [integer] external port (default: 443)
+    type: Ingress # (required) [LoadBalancer, Ingress]
   persistentVolumeClaim:
-     accessModes: [example] # (required) [array] (ex: [ReadWriteOnce, ReadWriteMany])
-     storageSize: example # (required) [string] desired storage size (ex: 10Gi)
-     storageClassName: example # (required) [string] Filesystem storage class name available (ex: csi-cephfs-sc)
+    create:
+      accessModes: [ReadWriteOnce] # (required) [array] (ex: [ReadWriteOnce, ReadWriteMany])
+      storageSize: 10Gi # (required) [string] desired storage size (ex: 10Gi)
+      storageClassName: example # (required) [string] Filesystem storage class name available (ex: csi-cephfs-sc)
+      volumeMode: Filesystem
+      deleteWithPvc: false
