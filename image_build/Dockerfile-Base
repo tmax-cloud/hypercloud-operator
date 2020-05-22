@@ -6,5 +6,4 @@ RUN apk update ; \
 	apk upgrade ; \
 	apk add openjdk8 ; \
 	apk add openssl ; \
-	apk add bash ; \
-	apk add tzdata
+	apk add bash
