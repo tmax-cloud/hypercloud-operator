@@ -91,10 +91,13 @@ public class Util {
 	        String numStr = ""; //난수가 저장될 변수
 	        
 	        for(int i=0;i<len;i++) {
-	            
-	            //0~9 까지 난수 생성
-	            String ran = Integer.toString(rand.nextInt(10));
-	            
+	        	String ran = null;
+	            //0~9 까지 난수 생성 ( 첫자리에 0 인 경우는 제외 )
+	        	if (i == 0) {
+	        		ran = Integer.toString(rand.nextInt(9)+1);
+	        	}else {
+		            ran = Integer.toString(rand.nextInt(10));
+	        	}    
 	            if(dupCd==1) {
 	                //중복 허용시 numStr에 append
 	                numStr += ran;

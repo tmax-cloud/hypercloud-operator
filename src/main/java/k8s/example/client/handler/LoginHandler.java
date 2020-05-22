@@ -169,10 +169,11 @@ public class LoginHandler extends GeneralHandler {
 			    				if ( loginInDO.getOtp() == 0 ) throw new Exception(ErrorCode.OTP_NUMBER_EMPTY);
 			    				
 			    				DateTime currentTime = new DateTime();
+			    				DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:m:ss");
+			    				currentTime = formatter.parseDateTime(currentTime.toString("yyyy-MM-dd'T'HH:mm:ss").substring(0,19));
 			        			logger.info(" currentTime: " + currentTime);
 
-			    				DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS+hh:mm");
-			    				DateTime otpRegisterTime = formatter.parseDateTime(uspCR.getOtpRegisterTime());
+			    				DateTime otpRegisterTime = formatter.parseDateTime(uspCR.getOtpRegisterTime().substring(0,19));
 			        			logger.info(" otpRegisterTime: " + otpRegisterTime);
 
 			       			 	if( currentTime.minusMinutes(Constants.VERIFICATAION_DURATION_MINUTES).isBefore( otpRegisterTime ) ) {
@@ -181,7 +182,7 @@ public class LoginHandler extends GeneralHandler {
 				    					accessToken = token.getAccessToken();
 				    					refreshToken = token.getRefreshToken();
 					        			otpEnable = true;
-	
+
 				    				} else {
 				    					logger.info("  Login fail. Wrong OTP.");
 						    			status = Status.BAD_REQUEST; 

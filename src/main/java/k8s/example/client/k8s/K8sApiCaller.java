@@ -32,6 +32,8 @@ import javax.net.ssl.SSLSocketFactory;
 
 import org.apache.commons.codec.binary.Base64;
 import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
@@ -5218,6 +5220,9 @@ public class K8sApiCaller {
 		logger.info("otp value : " + value);
 		
 		DateTime currentTime = new DateTime();
+		DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:m:ss");
+		currentTime = formatter.parseDateTime(currentTime.toString("yyyy-MM-dd'T'HH:mm:ss"));
+
 		logger.info("Current Time : " + currentTime );
 			
 		try {
