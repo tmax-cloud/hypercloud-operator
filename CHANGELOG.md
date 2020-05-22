@@ -1,6 +1,24 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.0.28 start -------------------->
+
+## HyperCloudServer_4.1.0.28 (Fri May 22 09:32:23 KST 2020)
+
+### Added
+
+### Changed
+  - [mod] 설치 yaml operator 버전업 by taegeon_woo
+  - [mod] otp 인증번호 발급 버그, registerTime 버그 수정 by taegeon_woo
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.0.28 end --------------------->
+
 <!-------------------- v4.1.0.27 start -------------------->
 
 ## HyperCloudServer_4.1.0.27 (Fri May 22 07:12:00 KST 2020)
