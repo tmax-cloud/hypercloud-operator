@@ -1060,35 +1060,53 @@ public class K8sApiCaller {
 			RegistryPVC registryPVC = registry.getSpec().getPersistentVolumeClaim();
 			String clusterIP = null;
 			String lbIP = null;
-			String ingressDomain = registryService.getIngressDomain();
+			String ingressDomain = null;
 			String registryDomain = null;
-
+			String serviceType 
+				= registry.getSpec().getService().getIngress() != null 
+				? RegistryService.SVC_TYPE_INGRESS : RegistryService.SVC_TYPE_LOAD_BALANCER;
+			
+			
 			// set default
 			int registrySVCTargetPort = RegistryService.REGISTRY_TARGET_PORT;
-			int registrySVCPort = registry.getSpec().getService().getPort() == 0 ? registrySVCTargetPort
-					: registry.getSpec().getService().getPort();
-
-			if(registryService.getType().equals(RegistryService.SVC_TYPE_INGRESS)) {
-				if( StringUtil.isEmpty(ingressDomain)) {
-					V1Service service = api.readNamespacedService("ingress-nginx", "ingress-nginx", null, null, null);
-					String ingressLbIP = null;
-
-					if (service.getSpec().getType().equals("LoadBalancer")) {
-						if (service.getStatus().getLoadBalancer().getIngress() != null
-								&& service.getStatus().getLoadBalancer().getIngress().size() == 1) {
-							if (service.getStatus().getLoadBalancer().getIngress().get(0).getHostname() == null) {
-								ingressLbIP = service.getStatus().getLoadBalancer().getIngress().get(0).getIp();
-							} else {
-								ingressLbIP = service.getStatus().getLoadBalancer().getIngress().get(0).getHostname();
-							}
-							logger.info("[ingress-nginx LoadBalancerIP]:" + ingressLbIP);
-
-							ingressDomain = ingressLbIP + ".nip.io";
-							logger.info("[ingressDomain]:" + ingressDomain);
-
-						}
-					}
+			int registrySVCPort = registrySVCTargetPort;
+			logger.info("registrySVCPort: " + registrySVCPort);
+			
+			if( serviceType.equals(RegistryService.SVC_TYPE_INGRESS) ) {
+				ingressDomain = registryService.getIngress().getDomainName();
+				
+				if( registryService.getIngress().getPort() != 0 ) {
+					registrySVCPort = registryService.getIngress().getPort();
+					logger.info("[Ingress]registrySVCPort: " + registrySVCPort);
 				}
+			}
+			else if( serviceType.equals(RegistryService.SVC_TYPE_LOAD_BALANCER) 
+					&& registryService.getLoadBalancer().getPort() != 0) {
+				registrySVCPort = registryService.getLoadBalancer().getPort();
+				logger.info("[LB]registrySVCPort: " + registrySVCPort);
+			}
+
+			if(serviceType.equals(RegistryService.SVC_TYPE_INGRESS)) {
+//				if( StringUtil.isEmpty(ingressDomain)) {
+//					V1Service service = api.readNamespacedService("ingress-nginx", "ingress-nginx", null, null, null);
+//					String ingressLbIP = null;
+//
+//					if (service.getSpec().getType().equals("LoadBalancer")) {
+//						if (service.getStatus().getLoadBalancer().getIngress() != null
+//								&& service.getStatus().getLoadBalancer().getIngress().size() == 1) {
+//							if (service.getStatus().getLoadBalancer().getIngress().get(0).getHostname() == null) {
+//								ingressLbIP = service.getStatus().getLoadBalancer().getIngress().get(0).getIp();
+//							} else {
+//								ingressLbIP = service.getStatus().getLoadBalancer().getIngress().get(0).getHostname();
+//							}
+//							logger.info("[ingress-nginx LoadBalancerIP]:" + ingressLbIP);
+//
+//							ingressDomain = ingressLbIP + ".nip.io";
+//							logger.info("[ingressDomain]:" + ingressDomain);
+//
+//						}
+//					}
+//				}
 
 				registryDomain = registryId + "." + ingressDomain;
 				logger.info("[registryDomain]:" + registryDomain);
@@ -1139,10 +1157,10 @@ public class K8sApiCaller {
 			lbSelector.put(Constants.K8S_PREFIX + registryId, "lb");
 			lbSpec.setSelector(lbSelector);
 
-			if(registryService.getType().equals(RegistryService.SVC_TYPE_INGRESS)) {
+			if(serviceType.equals(RegistryService.SVC_TYPE_INGRESS)) {
 				lbSpec.setType(RegistryService.SVC_TYPE_CLUSTER_IP);
 			}
-			else if(registryService.getType().equals(RegistryService.SVC_TYPE_LOAD_BALANCER)) {
+			else if(serviceType.equals(RegistryService.SVC_TYPE_LOAD_BALANCER)) {
 				lbSpec.setType(RegistryService.SVC_TYPE_LOAD_BALANCER);
 			}
 			else {
@@ -1314,7 +1332,7 @@ public class K8sApiCaller {
 			sb.append(" -x509 -days 1000 -subj \"/C=KR/ST=Seoul/O=tmax/CN=");
 			sb.append(clusterIP);
 			sb.append("\" -config <(cat /etc/ssl/openssl.cnf <(printf \"[v3_ca]\\nsubjectAltName=IP:" + clusterIP);
-			if(registryService.getType().equals(RegistryService.SVC_TYPE_LOAD_BALANCER)) {
+			if(serviceType.equals(RegistryService.SVC_TYPE_LOAD_BALANCER)) {
 				sb.append(",IP:" + lbIP);
 			}
 			else {
@@ -1368,7 +1386,7 @@ public class K8sApiCaller {
 			}
 
 			// Read cert files & Create Secret Object
-			logger.info("Read cert files & Create Secret Object");
+			logger.info("Read cert files & Create Secret Object"); 
 			Map<String, String> secrets = new HashMap<>();
 
 			secrets.put(Constants.CERT_KEY_FILE, readFile(registryDir + "/" + Constants.CERT_KEY_FILE));
@@ -1448,7 +1466,7 @@ public class K8sApiCaller {
 
 			
 			// ----- Create Tls Secret & Create Ingress
-			if(registryService.getType().equals(RegistryService.SVC_TYPE_INGRESS)) {
+			if(serviceType.equals(RegistryService.SVC_TYPE_INGRESS)) {
 				// Create Tls Secret
 				String tlsSecretName = null;
 				Map<String, String> tlsLabels = new HashMap<>();

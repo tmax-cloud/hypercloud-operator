@@ -6,7 +6,7 @@ metadata:
   name: example # (required) [string] registry's name
   namespace: example # (required) [string] registry's namespace
 spec:
-  image: example/registry:b004 # (required) [string] registry:b004 image's repository (ex: 192.168.6.110:5000/registry:b004)
+  image: registryIP:5000/registry:b004 # (required) [string] registry:b004 image's repository (ex: 192.168.6.110:5000/registry:b004)
   #description: example # (optional) [string] a brief description of the registry.
   loginId: example # (required) [string] username for registry login
   loginPassword: example # (required) [string] password for registry login
@@ -29,8 +29,9 @@ spec:
       #key: node.kubernetes.io/unreachable
       #tolerationSeconds: 10
   service:
-    port: 443 # (optional) [integer] external port (default: 443)
-    type: Ingress # (required) [LoadBalancer, Ingress]
+    ingress:
+      domainName: 192.168.6.110.nip.io
+      port: 443 # (optional) [integer] external port (default: 443)
   persistentVolumeClaim:
     create:
       accessModes: [ReadWriteOnce] # (required) [array] (ex: [ReadWriteOnce, ReadWriteMany])

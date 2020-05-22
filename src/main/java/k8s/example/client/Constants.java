@@ -125,6 +125,7 @@ public class Constants {
 	public static final String WRONG_OTP_NUMBER = "Wrong OTP Number";
 	public static final String OTP_TIME_EXPIRED = "OTP Verification Time has Expired";
 	public static final String LOGIN_FAILED = "Wrong ID or Password";
+	public static final String WRONG_PASSWORD = "Wrong Password";
 	public static final String LOGOUT_FAILED = "Log Out Failed, Token is not Exist or Valid";
 	public static final String REFRESH_FAILED = "Refresh Failed, Refresh Token is not Valid";
 	public static final String EXPIRE_TIME_UPDATE_FAILED = "Expire Time Update Failed";

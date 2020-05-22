@@ -53,6 +53,9 @@ public class MeteringHandler extends GeneralHandler {
 		StringBuilder sb = new StringBuilder();
 		makeTimeRange( timeUnit, startTime, endTime, sb );
 		
+		sb.append( " and status = 'Success'" );
+
+		
 		if ( StringUtil.isNotEmpty( namespace ) ){
 			sb.append( " and namespace like '%" + namespace + "%'" );
 		}
