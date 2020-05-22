@@ -88,7 +88,9 @@ public class RegistryWatcher extends Thread {
 							String eventType = response.type.toString();
 							logger.info("====================== Registry " + eventType + " ====================== \n");
 							
-							String serviceType = registry.getSpec().getService().getType();
+							String serviceType 
+							= registry.getSpec().getService().getIngress() != null ? 
+									RegistryService.SVC_TYPE_INGRESS : RegistryService.SVC_TYPE_LOAD_BALANCER;
 							
 							switch(eventType) {
 							case Constants.EVENT_TYPE_ADDED: 
