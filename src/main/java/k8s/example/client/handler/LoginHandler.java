@@ -182,6 +182,7 @@ public class LoginHandler extends GeneralHandler {
 				    					accessToken = token.getAccessToken();
 				    					refreshToken = token.getRefreshToken();
 					        			otpEnable = true;
+					        			K8sApiCaller.patchUserSecurityPolicy(loginInDO.getId(), "0");
 
 				    				} else {
 				    					logger.info("  Login fail. Wrong OTP.");
