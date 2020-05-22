@@ -105,7 +105,9 @@ public class LoginHandler extends GeneralHandler {
 		    	    		//Check if retryCount is 10, if not set 0
 		    	    		k8sUser = K8sApiCaller.getUser(loginInDO.getId());
 		    	    		if(k8sUser.getUserInfo().getRetryCount()==10) {
-		    	    			throw new Exception(ErrorCode.BLOCKED_USER);
+		    	    			status = Status.FORBIDDEN; 
+				    			outDO = ErrorCode.BLOCKED_USER; 
+		    	    			logger.info(" outDO : " + outDO);
 		    	    		} else {
 		    	    			User newUser = new User();
 		    					newUser.setId(loginInDO.getId());
@@ -123,14 +125,23 @@ public class LoginHandler extends GeneralHandler {
 			    	    		k8sUser = K8sApiCaller.getUser(loginInDO.getId());
 				    			retryCount = k8sUser.getUserInfo().getRetryCount();	
 		    	    			logger.info(" previous retryCount : " + retryCount);		    			
-		    					if (retryCount == 10) throw new Exception(ErrorCode.BLOCKED_USER);			    					
+		    					if (retryCount == 10) {
+		    						status = Status.FORBIDDEN; 
+					    			outDO = ErrorCode.BLOCKED_USER; 
+			    	    			logger.info(" outDO : " + outDO);
+			    					retryCount--;
+			    	    		}
 		    					retryCount++;
 		    					User newUser = new User();
 		    					newUser.setId(loginInDO.getId());
 		    					newUser.setRetryCount(retryCount);
 		    	    			logger.info(" current retryCount : " + retryCount);		    			
 		    					K8sApiCaller.updateUserMeta(newUser, true);
-		    					if (retryCount == 10) throw new Exception(ErrorCode.BLOCKED_USER);			    					
+		    					if (retryCount == 10) {
+		    						status = Status.FORBIDDEN; 
+					    			outDO = ErrorCode.BLOCKED_USER; 
+			    	    			logger.info(" outDO : " + outDO);
+		    					}
 			    			}
 	    	    		}
 	    	    		
@@ -301,7 +312,15 @@ public class LoginHandler extends GeneralHandler {
     			status = Status.OK; //ui요청
 				Gson gson = new GsonBuilder().setPrettyPrinting().create();
 				outDO = gson.toJson(out).toString();
-			}	
+			} else if ( status.equals(Status.FORBIDDEN)) {
+				CommonOutDO out = new CommonOutDO();
+				out.setMsg(outDO);
+				reason = outDO;
+				if ( retryCount != 0 ) out.setEvent( Integer.toString(retryCount) );
+    			status = Status.OK; //ui요청
+				Gson gson = new GsonBuilder().setPrettyPrinting().create();
+				outDO = gson.toJson(out).toString();
+			}
 		
 		AuditController.auditLoginActivity(loginInDO.getId(), session.getHeaders().get("user-agent"), status.getRequestStatus(), reason);
  		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO));
