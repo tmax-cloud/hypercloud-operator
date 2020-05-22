@@ -163,23 +163,11 @@ public class LoginHandler extends GeneralHandler {
 			    			status = Status.OK;
 			    			
 			            	UserSecurityPolicyCR uspCR = K8sApiCaller.getUserSecurityPolicy( loginInDO.getId() );
-
-			            	// 1. OTP in loginInDO is Empty && otpEnable true
-			    			if (loginInDO.getOtp() == 0 && uspCR.getOtpEnable().equalsIgnoreCase("t")) {
-			            		// Issue otpCode & Save into K8s
-			        			String otpCode = Util.numberGen(6, 1);
-			        			logger.info(" otpCode: " + otpCode);
-			        			K8sApiCaller.patchUserSecurityPolicy(loginInDO.getId(), otpCode);
-
-			        			// Send E-mail to User
-			        			String subject = "인증번호 : " + otpCode;
-			        			String content = Constants.OTP_VERIFICATION_CONTENTS.replaceAll("%%otpCode%%", otpCode);
-			        			Util.sendMail(user.getUserInfo().getEmail(), subject, content); 
-			        			otpEnable = true;
-			    			}
 			    			
-			    			// 2. OTP in loginInDO is not Empty && otpEnable true
-			    			if ( loginInDO.getOtp() != 0 && uspCR.getOtpEnable().equalsIgnoreCase("t") ) {
+			    			// 1. otpEnable true
+			    			if ( uspCR.getOtpEnable().equalsIgnoreCase("t") ) {
+			    				if ( loginInDO.getOtp() == 0 ) throw new Exception(ErrorCode.OTP_NUMBER_EMPTY);
+			    				
 			    				DateTime currentTime = new DateTime();
 			        			logger.info(" currentTime: " + currentTime);
 
@@ -204,10 +192,8 @@ public class LoginHandler extends GeneralHandler {
 					    			status = Status.BAD_REQUEST; 
 					    			outDO = Constants.OTP_TIME_EXPIRED;
 			       			 	}
-			    			}
-			    			
-			    			// 3. otpEnable false
-			    			if ( uspCR.getOtpEnable().equalsIgnoreCase("f") ) {
+			    			} else {
+				    			// 2. otpEnable false
 			    				token = openAuthloginSuccess( loginInDO );
 			    				accessToken = token.getAccessToken();
 		    					refreshToken = token.getRefreshToken();
@@ -325,6 +311,7 @@ public class LoginHandler extends GeneralHandler {
 		AuditController.auditLoginActivity(loginInDO.getId(), session.getHeaders().get("user-agent"), status.getRequestStatus(), reason);
  		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO));
     }
+	
 	
 	@Override
     public Response other(
