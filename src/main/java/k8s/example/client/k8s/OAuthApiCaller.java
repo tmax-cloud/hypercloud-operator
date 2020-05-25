@@ -7,14 +7,13 @@ import org.slf4j.Logger;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-import fi.iki.elonen.NanoHTTPD.Response.Status;
 import k8s.example.client.Constants;
-import k8s.example.client.ErrorCode;
 import k8s.example.client.DataObject.User;
+import k8s.example.client.ErrorCode;
 import k8s.example.client.Main;
+import k8s.example.client.StringUtil;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -29,7 +28,11 @@ public class OAuthApiCaller {
     static OkHttpClient client = new OkHttpClient();
 
 	private static String setAuthURL( String serviceName )  {
-		return Constants.OAUTH_URL + serviceName;
+		int proauthHttpPort = 8080;
+		if ( StringUtil.isNotEmpty(System.getenv( "PROAUTH_HTTP_PORT" ))){
+			proauthHttpPort = Integer.parseInt( System.getenv( "PROAUTH_HTTP_PORT" ) );
+		}
+		return Constants.OAUTH_URL + ":" + proauthHttpPort +"/" + serviceName;
 	}
 	
 //	public static void init() throws Exception {

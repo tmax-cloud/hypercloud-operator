@@ -32,6 +32,8 @@ spec:
           value: "oauth"
         - name: DBMS_PASSWORD
           value: "oauth"
+        - name: HTTP_PORT
+          value: "8080"
         - name: TZ
           value: Asia/Seoul
         resources:

@@ -62,6 +62,8 @@ spec:
           value: Asia/Seoul       
         - name: PROAUTH_EXIST    
           value: "1"   #If, OpenAuth set "0"
+        - name: PROAUTH_HTTP_PORT
+          value: "8080"  
         ports:
         - containerPort: 28677
         resources:

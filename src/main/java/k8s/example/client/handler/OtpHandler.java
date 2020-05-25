@@ -62,6 +62,8 @@ public class OtpHandler extends GeneralHandler {
 	        		if( System.getenv( "PROAUTH_EXIST" ).equalsIgnoreCase("1")) {
 	        			
 	        			//TODO : 요건 들어오면 하자
+		    			status = Status.OK;			    			
+
 	        		}
 	    	    } 
 	        	if (System.getenv( "PROAUTH_EXIST" ) == null || !System.getenv( "PROAUTH_EXIST" ).equalsIgnoreCase("1") ){	

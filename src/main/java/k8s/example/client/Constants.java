@@ -176,7 +176,7 @@ public class Constants {
 	public static final String DEFAULT_TAGS = "etc";
 	
 	// Oauth 
-	public static final String OAUTH_URL = "http://proauth-server-service.proauth-system:8080/";
+	public static final String OAUTH_URL = "http://proauth-server-service.proauth-system";
 	public static final String USER_CREATE_SUCCESS = "User Create Success";
 	public static final String USER_CREATE_FAILED = "User Create Failed";
 	public static final String USER_UPDATE_SUCCESS = "User Update Success";
