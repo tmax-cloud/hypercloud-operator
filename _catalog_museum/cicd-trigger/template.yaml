@@ -29,7 +29,7 @@ plans:
   description: Default Plan
   name: default
 objects:
-- apiVersion: tekton.dev/v1alpha1
+- apiVersion: triggers.tekton.dev/v1alpha1
   kind: TriggerTemplate
   metadata:
     name: ${APP_NAME}-template
@@ -68,7 +68,7 @@ objects:
         - name: image
           resourceRef:
             name: ${APP_NAME}-output-image
-- apiVersion: tekton.dev/v1alpha1
+- apiVersion: triggers.tekton.dev/v1alpha1
   kind: TriggerBinding
   metadata:
     name: ${APP_NAME}-gitlab-binding
@@ -78,7 +78,7 @@ objects:
       value: $(body.checkout_sha)
     - name: gitrepositoryurl
       value: $(body.repository.git_http_url)
-- apiVersion: tekton.dev/v1alpha1
+- apiVersion: triggers.tekton.dev/v1alpha1
   kind: EventListener
   metadata:
     name: ${APP_NAME}-listener
