@@ -3,6 +3,7 @@ package k8s.example.client.metering;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Calendar;
@@ -32,13 +33,12 @@ import k8s.example.client.metering.util.UIDGenerator;
 public class MeteringJob implements Job{
 	
 	private Map<String,Metering> meteringData = new HashMap<>();
-	long time = System.currentTimeMillis();
 	Connection conn = null;
     private Logger logger = Main.logger;
+	long time = System.currentTimeMillis();
 	
 	@Override
 	public void execute(JobExecutionContext context) throws JobExecutionException {
-		
 		try {
 			conn = getConnection();
 			conn.setAutoCommit(false);
@@ -53,6 +53,7 @@ public class MeteringJob implements Job{
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTimeInMillis(time);
 		logger.info( "============= Metering Time =============" );
+		logger.info("Current Time : " + time);
 		logger.info( "minute of hour	 : " + calendar.get(Calendar.MINUTE) );
 		logger.info( "hour of day	 : " + calendar.get(Calendar.HOUR_OF_DAY) );
 		logger.info( "day of month	 : " + calendar.get(Calendar.DAY_OF_MONTH) );
@@ -90,11 +91,14 @@ public class MeteringJob implements Job{
 	
 	private void insertMeteringData() {
 		try {
+			logger.info("Current Time : " + time);
+			logger.info("Insert into Mertering Start!!");
+			
 			String query = "insert into metering.metering (id,namespace,cpu,memory,storage,gpu,public_ip,private_ip,metering_time,status) "
 					+ "values (?,?,truncate(?,2),?,?,truncate(?,2),?,?,?,?)";
 			LogPreparedStatement pstmt = new LogPreparedStatement( conn, query );
 			for( String key : meteringData.keySet() ){
-				pstmt.setString( 1, UIDGenerator.getInstance().generate32( meteringData.get(key), 8, time ) );
+				pstmt.setString( 1, UIDGenerator.getInstance().generate32( meteringData.get(key), 16, time ) );
 				pstmt.setString( 2, key );
 				pstmt.setDouble( 3, meteringData.get(key).getCpu() );
 				pstmt.setLong( 4, meteringData.get(key).getMemory() );
@@ -210,41 +214,53 @@ public class MeteringJob implements Job{
 	
 	
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	@SuppressWarnings("resource")
 	private void insertMeteringHour() {
 		try {
-			String insertQuery = "insert into metering.metering_hour (" + 
-					"select id, namespace, truncate(sum(cpu)/count(*),2) as cpu, truncate(sum(memory)/count(*),0) as memory, truncate(sum(storage)/count(*),0) as storage, " + 
-					"truncate(sum(gpu)/count(*),2) as gpu, truncate(sum(public_ip)/count(*),0) as public_ip, truncate(sum(private_ip)/count(*),0) as private_ip, " + 
-					"date_format(metering_time,'%Y-%m-%d %H:00:00') as metering_time, status from metering.metering " + 
-					"group by hour(metering_time), namespace" + 
-					")";
-			LogPreparedStatement pstmt = new LogPreparedStatement( conn, insertQuery );
-			pstmt.execute();
-			
+			logger.info("Current Time : " + time);
+			logger.info("Insert into Metering_hour Start!!");
+
+			String insertQuery = "insert into metering.metering_hour values (?,?,?,?,?,?,?,?,?,?)"; 
+			String selectQuery = "select id, namespace, truncate(sum(cpu)/count(*),2) as cpu, truncate(sum(memory)/count(*),0) as memory, "
+					+ "truncate(sum(storage)/count(*),0) as storage, truncate(sum(gpu)/count(*),2) as gpu, "
+					+ "truncate(sum(public_ip)/count(*),0) as public_ip, truncate(sum(private_ip)/count(*),0) as private_ip, "
+					+ "date_format(metering_time,'%Y-%m-%d %H:00:00') as metering_time, status from metering.metering group by hour(metering_time), namespace"; 
+			LogPreparedStatement pstmtinsert = new LogPreparedStatement( conn, insertQuery );
+			LogPreparedStatement pstmtSelect = new LogPreparedStatement( conn, selectQuery );
+			ResultSet rsSelect = pstmtSelect.executeQuery();
+			while ( rsSelect.next() ) {
+				int i = 1;
+				pstmtinsert.setString(i++, UIDGenerator.getInstance().generate32( rsSelect.getString("id"), 16, time ) );
+				pstmtinsert.setString(i++, rsSelect.getString("namespace"));
+				pstmtinsert.setDouble(i++, rsSelect.getDouble("cpu"));
+				pstmtinsert.setLong(i++, rsSelect.getLong("memory"));
+				pstmtinsert.setLong(i++, rsSelect.getLong("storage"));
+				pstmtinsert.setDouble(i++, rsSelect.getDouble("gpu"));
+				pstmtinsert.setInt(i++, rsSelect.getInt("public_ip"));
+				pstmtinsert.setInt(i++, rsSelect.getInt("private_ip"));
+				pstmtinsert.setTimestamp(i++, rsSelect.getTimestamp("metering_time"));
+				pstmtinsert.setString(i++, rsSelect.getString("status"));
+				logger.info("pstmtinsert : " + pstmtinsert.getQueryString());
+				pstmtinsert.addBatch();							
+			}
+			try {
+				pstmtinsert.executeBatch();
+			}catch(SQLException e) {
+				logger.info("SQL Exception : " + e.getMessage());
+			}
+			pstmtinsert.close();
+			pstmtSelect.close();
+			logger.info("Insert into Metering_hour Success!!");
+
+			logger.info("Delete Metering for past 1 hour Start!!");
+
 			String deleteQuery = "truncate metering.metering";
-			pstmt = new LogPreparedStatement( conn, deleteQuery );
-			pstmt.execute();
+			LogPreparedStatement pstmtDelete = new LogPreparedStatement( conn, deleteQuery );
+			pstmtDelete.execute();
 			
-			pstmt.close();
+			pstmtDelete.close();
 			conn.commit();
-			
+
 		} catch (SQLException e) {
 			logger.info("SQL Exception : " + e.getMessage());
 			e.printStackTrace();
@@ -254,21 +270,47 @@ public class MeteringJob implements Job{
 	@SuppressWarnings("resource")
 	private void insertMeteringDay() {
 		try {
-			String insertQuery = "insert into metering.metering_day (" + 
-					"select id, namespace, truncate(sum(cpu),2) as cpu, sum(memory) as memory, sum(storage) as storage, " + 
-					"truncate(sum(gpu),2) as gpu, sum(public_ip) as public_ip, sum(private_ip) as private_ip, " + 
-					"date_format(metering_time,'%Y-%m-%d 00:00:00') as metering_time, status from metering.metering_hour " + 
-					"where status = 'Success' " + 
-					"group by day(metering_time), namespace" + 
-					")";
-			LogPreparedStatement pstmt = new LogPreparedStatement( conn, insertQuery );
-			pstmt.execute();
+			logger.info("Current Time : " + time);
+			logger.info("Insert into Metering_day Start!!");
+			
+			String insertQuery = "insert into metering.metering_day values (?,?,?,?,?,?,?,?,?,?)"; 
+			String selectQuery = "select id, namespace, truncate(sum(cpu)/count(*),2) as cpu, truncate(sum(memory)/count(*),0) as memory, "
+					+ "truncate(sum(storage)/count(*),0) as storage, truncate(sum(gpu)/count(*),2) as gpu, "
+					+ "truncate(sum(public_ip)/count(*),0) as public_ip, truncate(sum(private_ip)/count(*),0) as private_ip, "
+					+ "date_format(metering_time,'%Y-%m-%d %H:00:00') as metering_time, status from metering.metering_hour where status = 'Success' "
+					+ "group by day(metering_time), namespace"; 
+			LogPreparedStatement pstmtinsert = new LogPreparedStatement( conn, insertQuery );
+			LogPreparedStatement pstmtSelect = new LogPreparedStatement( conn, selectQuery );
+			ResultSet rsSelect = pstmtSelect.executeQuery();
+			while ( rsSelect.next() ) {
+				int i = 1;
+				pstmtinsert.setString(i++, UIDGenerator.getInstance().generate32( rsSelect.getString("id"), 16, time ) );
+				pstmtinsert.setString(i++, rsSelect.getString("namespace"));
+				pstmtinsert.setDouble(i++, rsSelect.getDouble("cpu"));
+				pstmtinsert.setLong(i++, rsSelect.getLong("memory"));
+				pstmtinsert.setLong(i++, rsSelect.getLong("storage"));
+				pstmtinsert.setDouble(i++, rsSelect.getDouble("gpu"));
+				pstmtinsert.setInt(i++, rsSelect.getInt("public_ip"));
+				pstmtinsert.setInt(i++, rsSelect.getInt("private_ip"));
+				pstmtinsert.setTimestamp(i++, rsSelect.getTimestamp("metering_time"));
+				pstmtinsert.setString(i++, rsSelect.getString("status"));
+				logger.info("pstmtinsert : " + pstmtinsert.getQueryString());
+				pstmtinsert.addBatch();							
+			}
+			try {
+				pstmtinsert.executeBatch();
+			}catch(SQLException e) {
+				logger.info("SQL Exception : " + e.getMessage());
+			}
+			pstmtinsert.close();
+			pstmtSelect.close();
+			logger.info("Insert into Metering_Day Success!!");
 			
 			String updateQuery = "update metering.metering_hour set status = 'Merged' where status = 'Success'";
-			pstmt = new LogPreparedStatement( conn, updateQuery );
-			pstmt.execute();
+			LogPreparedStatement pstmtUpdate = new LogPreparedStatement( conn, updateQuery );
+			pstmtUpdate.execute();
 			
-			pstmt.close();
+			pstmtUpdate.close();
 			conn.commit();
 
 		} catch (SQLException e) {
@@ -280,21 +322,47 @@ public class MeteringJob implements Job{
 	@SuppressWarnings("resource")
 	private void insertMeteringMonth() {
 		try {
-			String insertQuery = "insert into metering.metering_month (" + 
-					"select id, namespace, truncate(sum(cpu),2) as cpu, sum(memory) as memory, sum(storage) as storage, " + 
-					"truncate(sum(gpu),2) as gpu, sum(public_ip) as public_ip, sum(private_ip) as private_ip, " + 
-					"date_format(metering_time,'%Y-%m-01 00:00:00') as metering_time, status from metering.metering_day " + 
-					"where status = 'Success' " + 
-					"group by month(metering_time), namespace" + 
-					")";
-			LogPreparedStatement pstmt = new LogPreparedStatement( conn, insertQuery );
-			pstmt.execute();
+			logger.info("Current Time : " + time);
+			logger.info("Insert into Metering_Month Start!!");
+			
+			String insertQuery = "insert into metering.metering_month values (?,?,?,?,?,?,?,?,?,?)"; 
+			String selectQuery = "select id, namespace, truncate(sum(cpu)/count(*),2) as cpu, truncate(sum(memory)/count(*),0) as memory, "
+					+ "truncate(sum(storage)/count(*),0) as storage, truncate(sum(gpu)/count(*),2) as gpu, "
+					+ "truncate(sum(public_ip)/count(*),0) as public_ip, truncate(sum(private_ip)/count(*),0) as private_ip, "
+					+ "date_format(metering_time,'%Y-%m-%d %H:00:00') as metering_time, status from metering.metering_day where status = 'Success' "
+					+ "group by month(metering_time), namespace"; 
+			LogPreparedStatement pstmtinsert = new LogPreparedStatement( conn, insertQuery );
+			LogPreparedStatement pstmtSelect = new LogPreparedStatement( conn, selectQuery );
+			ResultSet rsSelect = pstmtSelect.executeQuery();
+			while ( rsSelect.next() ) {
+				int i = 1;
+				pstmtinsert.setString(i++, UIDGenerator.getInstance().generate32( rsSelect.getString("id"), 16, time ) );
+				pstmtinsert.setString(i++, rsSelect.getString("namespace"));
+				pstmtinsert.setDouble(i++, rsSelect.getDouble("cpu"));
+				pstmtinsert.setLong(i++, rsSelect.getLong("memory"));
+				pstmtinsert.setLong(i++, rsSelect.getLong("storage"));
+				pstmtinsert.setDouble(i++, rsSelect.getDouble("gpu"));
+				pstmtinsert.setInt(i++, rsSelect.getInt("public_ip"));
+				pstmtinsert.setInt(i++, rsSelect.getInt("private_ip"));
+				pstmtinsert.setTimestamp(i++, rsSelect.getTimestamp("metering_time"));
+				pstmtinsert.setString(i++, rsSelect.getString("status"));
+				logger.info("pstmtinsert : " + pstmtinsert.getQueryString());
+				pstmtinsert.addBatch();							
+			}
+			try {
+				pstmtinsert.executeBatch();
+			}catch(SQLException e) {
+				logger.info("SQL Exception : " + e.getMessage());
+			}
+			pstmtinsert.close();
+			pstmtSelect.close();
+			logger.info("Insert into Metering_Month Success!!");
 			
 			String updateQuery = "update metering.metering_day set status = 'Merged' where status = 'Success'";
-			pstmt = new LogPreparedStatement( conn, updateQuery );
-			pstmt.execute();
+			LogPreparedStatement pstmtUpdate = new LogPreparedStatement( conn, updateQuery );
+			pstmtUpdate.execute();
 			
-			pstmt.close();
+			pstmtUpdate.close();
 			conn.commit();
 
 		} catch (SQLException e) {
@@ -306,21 +374,47 @@ public class MeteringJob implements Job{
 	@SuppressWarnings("resource")
 	private void insertMeteringYear() {
 		try {
-			String insertQuery = "insert into metering.metering_year (" + 
-					"select id, namespace, truncate(sum(cpu),2) as cpu, sum(memory) as memory, sum(storage) as storage, " + 
-					"truncate(sum(gpu),2) as gpu, sum(public_ip) as public_ip, sum(private_ip) as private_ip, " + 
-					"date_format(metering_time,'%Y-01-01 00:00:00') as metering_time, status from metering.metering_month " + 
-					"where status = 'Success' " + 
-					"group by year(metering_time), namespace" + 
-					")";
-			LogPreparedStatement pstmt = new LogPreparedStatement( conn, insertQuery );
-			pstmt.execute();
+			logger.info("Current Time : " + time);
+			logger.info("Insert into Metering_Year Start!!");
+			
+			String insertQuery = "insert into metering.metering_year values (?,?,?,?,?,?,?,?,?,?)"; 
+			String selectQuery = "select id, namespace, truncate(sum(cpu)/count(*),2) as cpu, truncate(sum(memory)/count(*),0) as memory, "
+					+ "truncate(sum(storage)/count(*),0) as storage, truncate(sum(gpu)/count(*),2) as gpu, "
+					+ "truncate(sum(public_ip)/count(*),0) as public_ip, truncate(sum(private_ip)/count(*),0) as private_ip, "
+					+ "date_format(metering_time,'%Y-%m-%d %H:00:00') as metering_time, status from metering.metering_month where status = 'Success' "
+					+ "group by year(metering_time), namespace"; 
+			LogPreparedStatement pstmtinsert = new LogPreparedStatement( conn, insertQuery );
+			LogPreparedStatement pstmtSelect = new LogPreparedStatement( conn, selectQuery );
+			ResultSet rsSelect = pstmtSelect.executeQuery();
+			while ( rsSelect.next() ) {
+				int i = 1;
+				pstmtinsert.setString(i++, UIDGenerator.getInstance().generate32( rsSelect.getString("id"), 16, time ) );
+				pstmtinsert.setString(i++, rsSelect.getString("namespace"));
+				pstmtinsert.setDouble(i++, rsSelect.getDouble("cpu"));
+				pstmtinsert.setLong(i++, rsSelect.getLong("memory"));
+				pstmtinsert.setLong(i++, rsSelect.getLong("storage"));
+				pstmtinsert.setDouble(i++, rsSelect.getDouble("gpu"));
+				pstmtinsert.setInt(i++, rsSelect.getInt("public_ip"));
+				pstmtinsert.setInt(i++, rsSelect.getInt("private_ip"));
+				pstmtinsert.setTimestamp(i++, rsSelect.getTimestamp("metering_time"));
+				pstmtinsert.setString(i++, rsSelect.getString("status"));
+				logger.info("pstmtinsert : " + pstmtinsert.getQueryString());
+				pstmtinsert.addBatch();							
+			}
+			try {
+				pstmtinsert.executeBatch();
+			}catch(SQLException e) {
+				logger.info("SQL Exception : " + e.getMessage());
+			}
+			pstmtinsert.close();
+			pstmtSelect.close();
+			logger.info("Insert into Metering_Year Success!!");
 			
 			String updateQuery = "update metering.metering_month set status = 'Merged' where status = 'Success'";
-			pstmt = new LogPreparedStatement( conn, updateQuery );
-			pstmt.execute();
+			LogPreparedStatement pstmtUpdate = new LogPreparedStatement( conn, updateQuery );
+			pstmtUpdate.execute();
 			
-			pstmt.close();
+			pstmtUpdate.close();
 			conn.commit();
 
 		} catch (SQLException e) {
