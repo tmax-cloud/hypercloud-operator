@@ -6,4 +6,5 @@ metadata:
 resourceName: example-claim
 spec:
   hard:
-    limits.cpu: "2"
+    limits.cpu: "1"
+    limits.memory: "1Gi"
