@@ -153,11 +153,13 @@ import k8s.example.client.Util;
 import k8s.example.client.interceptor.ChunkedInterceptor;
 import k8s.example.client.k8s.apis.CustomResourceApi;
 import k8s.example.client.k8s.util.SecurityHelper;
+import k8s.example.client.metering.util.UIDGenerator;
 import k8s.example.client.models.BindingInDO;
 import k8s.example.client.models.BindingOutDO;
 import k8s.example.client.models.CommandExecOut;
 import k8s.example.client.models.Cost;
 import k8s.example.client.models.Endpoint;
+import k8s.example.client.models.GetPlanDO;
 import k8s.example.client.models.Image;
 import k8s.example.client.models.ImageSpec;
 import k8s.example.client.models.InputParametersSchema;
@@ -3868,14 +3870,15 @@ public class K8sApiCaller {
 									InputParametersSchema create = new InputParametersSchema();
 									Map<String, String> parameters = null;
 
+									String uuid = UIDGenerator.getInstance().generate32( plan, 8, System.currentTimeMillis() );
 									if (plan.get("name") == null) {
 										servicePlan.setId(template.get("metadata").get("name").asText() + "-plan"
-												+ defaultPlaneId);
+												+ defaultPlaneId + "." + uuid);
 										servicePlan.setName(template.get("metadata").get("name").asText() + "-plan"
-												+ defaultPlaneId);
+												+ defaultPlaneId + "." + uuid);
 									} else {
-										servicePlan.setId(plan.get("name").asText());
-										servicePlan.setName(plan.get("name").asText());
+										servicePlan.setId(plan.get("name").asText() + "." + uuid);
+										servicePlan.setName(plan.get("name").asText() + "." + uuid);
 									}
 									if (plan.get("description") == null) {
 										servicePlan.setDescription(template.get("metadata").get("name").asText()
@@ -3892,16 +3895,20 @@ public class K8sApiCaller {
 
 									logger.info("Catalog Debug 4");
 									try {
-										for (JsonNode bullet : plan.get("metadata").get("bullets")) {
-											bullets.add(bullet.asText());
+										if ( plan.get("metadata") != null ) {
+											if (plan.get("metadata").get("bullets") != null) {
+												for (JsonNode bullet : plan.get("metadata").get("bullets")) {
+													bullets.add(bullet.asText());
+												}
+												planMeta.setBullets(bullets);
+											}
+
+											planCost.setAmount(plan.get("metadata").get("costs").get("amount").asText());
+											planCost.setUnit(plan.get("metadata").get("costs").get("unit").asText());
+											planMeta.setCosts(planCost);
 										}
-										planMeta.setBullets(bullets);
-
-										planCost.setAmount(plan.get("metadata").get("costs").get("amount").asText());
-										planCost.setUnit(plan.get("metadata").get("costs").get("unit").asText());
-										planMeta.setCosts(planCost);
 										servicePlan.setMetadata(planMeta);
-
+										
 										parameters = mapper
 												.convertValue(
 														plan.get("schemas").get("service_instance").get("create")
@@ -3976,26 +3983,56 @@ public class K8sApiCaller {
 			templateMeta.setName(inDO.getService_id());
 			template.setMetadata(templateMeta);
 
+			Map<String,String> inputParameters = new HashMap<>();
+			
+			String planName = inDO.getPlan_id(); 
+			
+			try {
+				logger.info("Get Plan Prameters : " + planName);
+				
+				Object planResponse = customObjectApi.getClusterCustomObject("servicecatalog.k8s.io", "v1beta1","clusterserviceplans", planName);
+				GetPlanDO plan = mapper.readValue(gson.toJson(planResponse), GetPlanDO.class);
+						  
+				if(plan.getSpec().getInstanceCreateParameterSchema() != null) {
+					for(String key : plan.getSpec().getInstanceCreateParameterSchema().keySet()) {
+						
+						logger.info("Plan Prameter Key : " + key);
+						logger.info("Plan Prameter Value : " + plan.getSpec().getInstanceCreateParameterSchema().get(key));
+						
+						if (!inputParameters.containsKey(key)) {
+							inputParameters.put(key, plan.getSpec().getInstanceCreateParameterSchema().get(key));
+						}
+					}
+				}
+			} catch (ApiException e) {
+				logger.info("Response body: " + e.getResponseBody());
+				e.printStackTrace();
+				throw e;
+			} catch (Exception e) {
+				logger.info("Exception message: " + e.getMessage());
+				e.printStackTrace();
+				throw e;
+			}
+			
 			if (inDO.getParameters() != null) {
 				for (String key : inDO.getParameters().keySet()) {
-					TemplateParameter parameter = new TemplateParameter();
-					parameter.setName(key);
-					parameter.setValue(inDO.getParameters().get(key));
-					parameters.add(parameter);
+					if (!inputParameters.containsKey(key)) {
+						inputParameters.put(key, inDO.getParameters().get(key));
+					}
 				}
-				template.setParameters(parameters);
-			} /*
-				 * else { String planName = inDO.getPlan_id(); Object planResponse =
-				 * customObjectApi.getClusterCustomObject("servicecatalog.k8s.io", "v1beta1",
-				 * "clusterserviceplans", planName); GetPlanDO plan =
-				 * mapper.readValue(gson.toJson(planResponse), GetPlanDO.class);
-				 * if(plan.getSpec().getInstanceCreateParameterSchema() != null) { for(String
-				 * key : plan.getSpec().getInstanceCreateParameterSchema().keySet()) {
-				 * TemplateParameter parameter = new TemplateParameter();
-				 * parameter.setName(key); parameter.setValue(inDO.getParameters().get(key));
-				 * parameters.add(parameter); } } template.setParameters(parameters); }
-				 */
-
+			}
+			
+			for (String key : inputParameters.keySet()) {
+				logger.info("Template Instance Prameter Key : " + key);
+				logger.info("Template Instance Prameter Value : " + inputParameters.get(key));
+				
+				TemplateParameter parameter = new TemplateParameter();
+				parameter.setName(key);
+				parameter.setValue(inputParameters.get(key));
+				parameters.add(parameter);
+			}
+			template.setParameters(parameters);
+			
 			spec.setTemplate(template);
 			instance.setSpec(spec);
 
