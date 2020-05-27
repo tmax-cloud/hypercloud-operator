@@ -57,24 +57,27 @@ public class OAuthApiCaller {
 	    return userList.get("user").getAsJsonArray(); 
 	}
 	
-	public static JsonObject detailUser( String userId ) throws IOException {
+	public static JsonObject detailUser( String userId ) throws Exception {
 //		logger.info( " [OAuth] User Detail Get Service Start" );
 	    Request request = null;
-//		logger.info( " User ID : " + userId );
-
-		//GET svc
+	    JsonObject userDetail = null;
+	  //GET svc
 		HttpUrl.Builder urlBuilder = HttpUrl.parse(setAuthURL( Constants.SERVICE_NAME_OAUTH_USER_DETAIL )).newBuilder();
 		urlBuilder.addQueryParameter("userId", userId);
 	    String url = urlBuilder.build().toString();
 	    request = new Request.Builder().url(url).get().build();
-		
-	    Response response = client.newCall(request).execute();
+	    try {
+		    Response response = client.newCall(request).execute();
 
-	    String result = response.body().string();   
-//		logger.info(" result : " + result);
+		    String result = response.body().string();   
+//			logger.info(" result : " + result);
 
-	    Gson gson = new Gson();
-	    JsonObject userDetail = gson.fromJson(result, JsonObject.class);
+		    Gson gson = new Gson();
+		    userDetail = gson.fromJson(result, JsonObject.class);
+	    } catch (Exception e) {
+//	    	e.printStackTrace();
+	    	throw e;
+	    }
 	    return userDetail; 
 	}
 

@@ -80,12 +80,12 @@ public class UserHandler extends GeneralHandler {
 						throw new Exception(ErrorCode.USER_MAIL_DUPLICATED);
 				}
 			}
-			JsonArray userAuthList = OAuthApiCaller.listUser();
-			if (userAuthList != null) {
-				for (JsonElement userAuth : userAuthList) {
-					if (userAuth.getAsJsonObject().get("user_id").toString().equalsIgnoreCase(userInDO.getId()))
-						throw new Exception(ErrorCode.USER_ID_DUPLICATED);
-				}
+			
+			try {
+				JsonObject userAuthDetail = OAuthApiCaller.detailUser( userInDO.getId() );
+				throw new Exception(ErrorCode.USER_ID_DUPLICATED);
+			} catch (Exception e) {
+				// New User, Do Nothing
 			}
 
 			// UserCRD Create
