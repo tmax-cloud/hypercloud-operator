@@ -75,7 +75,7 @@ public class UserHandler extends GeneralHandler {
 			if (userCRList != null) {
 				for (UserCR userCR : userCRList) {
 					if (userCR.getMetadata().getName().equalsIgnoreCase(userInDO.getId()))
-						throw new Exception(ErrorCode.USER_ID_DUPLICATED); // 주의 : 회원가입 시 받은 ID를 k8s에는 Name으로 넣자
+						throw new Exception(ErrorCode.USER_ID_DUPLICATED);     // 주의 : 회원가입 시 받은 ID를 k8s에는 Name으로 넣자
 					if (userCR.getUserInfo().getEmail().equalsIgnoreCase(userInDO.getEmail()))
 						throw new Exception(ErrorCode.USER_MAIL_DUPLICATED);
 				}
@@ -85,12 +85,17 @@ public class UserHandler extends GeneralHandler {
 				JsonObject userAuthDetail = OAuthApiCaller.detailUser( userInDO.getId() );
 				throw new Exception(ErrorCode.USER_ID_DUPLICATED);
 			} catch (Exception e) {
-				// New User, Do Nothing
+				if (e.getMessage().equalsIgnoreCase(ErrorCode.USER_ID_DUPLICATED)) {
+					throw e;
+				}else { 
+					//New User, Do nothing
+				}
 			}
 
 			// UserCRD Create
 			String password = userInDO.getPassword();
 			K8sApiCaller.createUser(userInDO);
+
 			userInDO.setPassword(password);
 
     		// Create Role & RoleBinding 

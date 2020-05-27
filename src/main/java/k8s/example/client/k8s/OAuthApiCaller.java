@@ -58,7 +58,7 @@ public class OAuthApiCaller {
 	}
 	
 	public static JsonObject detailUser( String userId ) throws Exception {
-//		logger.info( " [OAuth] User Detail Get Service Start" );
+
 	    Request request = null;
 	    JsonObject userDetail = null;
 	  //GET svc
@@ -76,6 +76,7 @@ public class OAuthApiCaller {
 		    userDetail = gson.fromJson(result, JsonObject.class);
 	    } catch (Exception e) {
 //	    	e.printStackTrace();
+	    	
 	    	throw e;
 	    }
 	    return userDetail; 
