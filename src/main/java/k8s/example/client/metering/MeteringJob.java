@@ -246,7 +246,7 @@ public class MeteringJob implements Job{
 			try {
 				pstmtinsert.executeBatch();
 			}catch(SQLException e) {
-				logger.info("SQL Exception : " + e.getMessage());
+				logger.info("SQL11 Exception : " + e.getMessage());
 			}
 			pstmtinsert.close();
 			pstmtSelect.close();
@@ -262,7 +262,7 @@ public class MeteringJob implements Job{
 			conn.commit();
 
 		} catch (SQLException e) {
-			logger.info("SQL Exception : " + e.getMessage());
+			logger.info("SQL22 Exception : " + e.getMessage());
 			e.printStackTrace();
 		}
 	}
@@ -277,7 +277,7 @@ public class MeteringJob implements Job{
 			String selectQuery = "select id, namespace, truncate(sum(cpu)/count(*),2) as cpu, truncate(sum(memory)/count(*),0) as memory, "
 					+ "truncate(sum(storage)/count(*),0) as storage, truncate(sum(gpu)/count(*),2) as gpu, "
 					+ "truncate(sum(public_ip)/count(*),0) as public_ip, truncate(sum(private_ip)/count(*),0) as private_ip, "
-					+ "date_format(metering_time,'%Y-%m-%d %H:00:00') as metering_time, status from metering.metering_hour where status = 'Success' "
+					+ "date_format(metering_time,'%Y-%m-%d 00:00:00') as metering_time, status from metering.metering_hour where status = 'Success' "
 					+ "group by day(metering_time), namespace"; 
 			LogPreparedStatement pstmtinsert = new LogPreparedStatement( conn, insertQuery );
 			LogPreparedStatement pstmtSelect = new LogPreparedStatement( conn, selectQuery );
@@ -300,7 +300,7 @@ public class MeteringJob implements Job{
 			try {
 				pstmtinsert.executeBatch();
 			}catch(SQLException e) {
-				logger.info("SQL Exception : " + e.getMessage());
+				logger.info("SQL33 Exception : " + e.getMessage());
 			}
 			pstmtinsert.close();
 			pstmtSelect.close();
@@ -314,7 +314,7 @@ public class MeteringJob implements Job{
 			conn.commit();
 
 		} catch (SQLException e) {
-			logger.info("SQL Exception : " + e.getMessage());
+			logger.info("SQL44 Exception : " + e.getMessage());
 			e.printStackTrace();
 		}
 	}
@@ -329,7 +329,7 @@ public class MeteringJob implements Job{
 			String selectQuery = "select id, namespace, truncate(sum(cpu)/count(*),2) as cpu, truncate(sum(memory)/count(*),0) as memory, "
 					+ "truncate(sum(storage)/count(*),0) as storage, truncate(sum(gpu)/count(*),2) as gpu, "
 					+ "truncate(sum(public_ip)/count(*),0) as public_ip, truncate(sum(private_ip)/count(*),0) as private_ip, "
-					+ "date_format(metering_time,'%Y-%m-%d %H:00:00') as metering_time, status from metering.metering_day where status = 'Success' "
+					+ "date_format(metering_time,'%Y-%m-01 00:00:00') as metering_time, status from metering.metering_day where status = 'Success' "
 					+ "group by month(metering_time), namespace"; 
 			LogPreparedStatement pstmtinsert = new LogPreparedStatement( conn, insertQuery );
 			LogPreparedStatement pstmtSelect = new LogPreparedStatement( conn, selectQuery );
@@ -381,7 +381,7 @@ public class MeteringJob implements Job{
 			String selectQuery = "select id, namespace, truncate(sum(cpu)/count(*),2) as cpu, truncate(sum(memory)/count(*),0) as memory, "
 					+ "truncate(sum(storage)/count(*),0) as storage, truncate(sum(gpu)/count(*),2) as gpu, "
 					+ "truncate(sum(public_ip)/count(*),0) as public_ip, truncate(sum(private_ip)/count(*),0) as private_ip, "
-					+ "date_format(metering_time,'%Y-%m-%d %H:00:00') as metering_time, status from metering.metering_month where status = 'Success' "
+					+ "date_format(metering_time,'%Y-01-01 %H:00:00') as metering_time, status from metering.metering_month where status = 'Success' "
 					+ "group by year(metering_time), namespace"; 
 			LogPreparedStatement pstmtinsert = new LogPreparedStatement( conn, insertQuery );
 			LogPreparedStatement pstmtSelect = new LogPreparedStatement( conn, selectQuery );
