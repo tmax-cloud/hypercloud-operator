@@ -25,6 +25,15 @@ userInfo:
   
 ---
 
+apiVersion: tmax.io/v1
+kind: Usersecuritypolicy
+metadata:
+  name: admin-tmax.co.kr
+otpEnable: f
+otp: 0 
+  
+---
+
 apiVersion: rbac.authorization.k8s.io/v1
 # This role binding allows "jane" to read pods in the "default" namespace.
 kind: ClusterRoleBinding

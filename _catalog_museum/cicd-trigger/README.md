@@ -24,7 +24,7 @@ rules:
   - verbs:
       - get
     apiGroups:
-      - tekton.dev
+      - triggers.tekton.dev
     resources:
       - eventlisteners
       - triggerbindings

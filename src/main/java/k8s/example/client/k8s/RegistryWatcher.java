@@ -28,19 +28,18 @@ import k8s.example.client.models.RegistryStatus;
 import k8s.example.client.models.StateCheckInfo;
 
 public class RegistryWatcher extends Thread {
-	private Watch<Registry> watchRegistry;
+	private Watch<Object> watchRegistry;
 	private static String latestResourceVersion = "0";
 	private CustomObjectsApi api = null;
 	ApiClient client;
     private Logger logger = Main.logger;
 
 	private static ObjectMapper mapper = new ObjectMapper();
-	private static Gson gson = new GsonBuilder().create();
 	
 	RegistryWatcher(ApiClient client, CustomObjectsApi api, String resourceVersion) throws Exception {
 		watchRegistry = Watch.createWatch(client,
 				api.listClusterCustomObjectCall("tmax.io", "v1", "registries", null, null, null, null, null, resourceVersion, null, Boolean.TRUE, null),
-				new TypeToken<Watch.Response<Registry>>() {}.getType());
+				new TypeToken<Watch.Response<Object>>() {}.getType());
 
 		this.api = api;
 		this.client = client;
@@ -67,20 +66,29 @@ public class RegistryWatcher extends Thread {
 						logger.info(e.getMessage());
 					}
 					
-					
 					// Logic here
 					try {
-						Registry registry = response.object;
-						
-//						Registry registry = null;
-//						try {
+						Registry registry = null;
+						try {
+							logger.info("response.object.toString(): " + response.object.toString());
+							registry = mapper.treeToValue(mapper.valueToTree(response.object), Registry.class);
+							logger.info("registry: " + registry.toString());
+						} catch(Exception e) {
+							logger.info("[mapper error]: " + e.getMessage());
+//							String changePhase = RegistryStatus.StatusPhase.ERROR.getStatus();
+//							String changeMessage = "Read regsitry failed";
+//							String changeReason = "RegistrySpecInvaild";
+//							
+//							JsonNode errRegistry = mapper.valueToTree(response.object);
+//							String registryName = errRegistry.get("metadata").get("name").asText();
+//							String namespace = errRegistry.get("metadata").get("namespace").asText();
 //
-//							logger.info("response.object.toString(): " + response.object.toString());
-//							registry = mapper.readValue(gson.toJson(response.object), Registry.class);
-//							logger.info("registry: " + registry.toString());
-//						} catch (JsonParseException | JsonMappingException e) {
-//							logger.info(e.getMessage());
-//						}
+//							logger.info("[Registry Watcher] Event Type : " + response.type.toString()); //ADDED, MODIFIED, DELETED
+//							logger.info("[Registry Watcher] Registry Name : " + registryName);
+//							logger.info("[Registry Watcher] Registry Namespace : " + namespace);
+//				
+//							K8sApiCaller.patchRegistryStatus(registryName, namespace, changePhase, changeMessage, changeReason);
+						}
 						
 						if( registry != null
 								&& Integer.parseInt(registry.getMetadata().getResourceVersion()) > Integer.parseInt(latestResourceVersion)) {
@@ -210,7 +218,7 @@ public class RegistryWatcher extends Thread {
 									K8sApiCaller.patchRegistryStatus(registry, changePhase, changeMessage, changeReason);
 									
 									if(phase.equals(RegistryStatus.StatusPhase.RUNNING.getStatus())) {
-										if( registry.getMetadata().getAnnotations().get(Constants.CUSTOM_OBJECT_GROUP + "/" + Registry.REGISTRY_LOGIN_URL) == null) {
+										if( registry.getMetadata().getAnnotations().get(Registry.REGISTRY_LOGIN_URL) == null) {
 											K8sApiCaller.addRegistryAnnotation(registry);
 											logger.info("Update registry-login-url annotation");
 											break;
@@ -221,9 +229,9 @@ public class RegistryWatcher extends Thread {
 
 //								logger.info("afterJson = " + Util.toJson(registry).toString());
 								JsonNode diff = Util.jsonDiff(beforeJson, Util.toJson(registry).toString());
-								logger.info("diff: " + diff.toString());
 
 								if(diff.size() > 0 ) {
+									logger.info("[Updated Registry Spec]\ndiff: " + diff.toString());
 									K8sApiCaller.updateRegistryAnnotationLastCR(registry);
 									K8sApiCaller.updateRegistrySubresources(registry, diff);
 								}
@@ -254,7 +262,7 @@ public class RegistryWatcher extends Thread {
 				logger.info("=============== Registry 'For Each' END ===============");
 				watchRegistry = Watch.createWatch(client,
 						api.listClusterCustomObjectCall("tmax.io", "v1", "registries", null, null, null, null, null, latestResourceVersion, null, Boolean.TRUE, null),
-						new TypeToken<Watch.Response<Registry>>() {}.getType());
+						new TypeToken<Watch.Response<Object>>() {}.getType());
 			}
 		} catch (Exception e) {
 			logger.info("Registry Watcher Exception: " + e.getMessage());

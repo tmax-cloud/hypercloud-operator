@@ -1,6 +1,31 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.0.29 start -------------------->
+
+## HyperCloudServer_4.1.0.29 (Wed May 27 09:02:41 KST 2020)
+
+### Added
+
+### Changed
+  - [mod] 생성된 Registry 객체의 deleteWithPvc 수정시 반영(edit 기능) by sukhee_yun
+  - [mod] public환경 회원가입시 id 중복체크 로직 변경 (list --> detail) [mod] public환경 토큰 만료 시간 변경시, refresh Token 만료시간도 연장하는 로직 추가 by taegeon_woo
+  - [mod] private 설치 yaml 에 admin-tmax.co.kr USP 추가 by taegeon_woo
+  - [mod] default_resourcequotaclaim.yml 에 limits.memory 추가 [mod] metering mysql 각 테이블에 namespace, metering_time으로 unique 속성 추가 by taegeon_woo
+  - [mod] public 모델에서 otp 서비스를 불러도 otpEnable false로 반환하도로고 변경 [ims][225701] proauth HTTP port 변경 가능 하게 변경, hypercloud4-operator proauth 콜도 변수로 변경 by taegeon_woo
+
+### Fixed
+  - [ims][226364] registry 생성시 유효하지 않은 입력값 입력시에도 operator가 정상 동작 할 수 있도록 수정 by sukhee_yun
+  - [mod] public 모델에서 otp 서비스를 불러도 otpEnable false로 반환하도로고 변경 [ims][225701] proauth HTTP port 변경 가능 하게 변경, hypercloud4-operator proauth 콜도 변수로 변경 by taegeon_woo
+
+### CRD yaml
+  - [crd] Registry validation 추가(port, tolerationSeconds 필드에 minimum, maximum 설정) by sukhee_yun
+  - [crd] default_registry.yaml loadBalancer 사용 예제로 수정 by sukhee_yun
+
+### Etc
+
+<!--------------------- v4.1.0.29 end --------------------->
+
 <!-------------------- v4.1.0.28 start -------------------->
 
 ## HyperCloudServer_4.1.0.28 (Fri May 22 09:32:23 KST 2020)

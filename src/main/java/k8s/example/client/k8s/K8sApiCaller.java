@@ -2042,6 +2042,50 @@ public class K8sApiCaller {
 				if (!updateSubResources.contains("Secret"))
 					updateSubResources.add("Secret");
 			}
+			if(path.equals("/spec/persistentVolumeClaim/create/deleteWithPvc")) {
+				if( registry.getSpec().getPersistentVolumeClaim().getCreate().getDeleteWithPvc() ) {
+					JsonArray jArrayPatchPvc = new JsonArray();
+					JsonArray ownerRefs = new JsonArray();
+					JsonObject replJson = new JsonObject();
+					JsonObject ownerRef = new JsonObject();
+					
+					ownerRef.addProperty("apiVersion", Constants.CUSTOM_OBJECT_GROUP + "/" + Constants.CUSTOM_OBJECT_VERSION);
+					ownerRef.addProperty("blockOwnerDeletion", Boolean.TRUE);
+					ownerRef.addProperty("controller", Boolean.TRUE);
+					ownerRef.addProperty("kind", registry.getKind());
+					ownerRef.addProperty("name", registry.getMetadata().getName());
+					ownerRef.addProperty("uid", registry.getMetadata().getUid());
+					
+					ownerRefs.add(ownerRef);
+					
+					replJson.addProperty("op", "replace");
+					replJson.addProperty("path", "/metadata/ownerReferences");
+					replJson.add("value", ownerRefs);
+
+					jArrayPatchPvc.add(replJson);
+					
+					try {
+						Object result = api.patchNamespacedPersistentVolumeClaim(Constants.K8S_PREFIX + registryId, namespace, new V1Patch(jArrayPatchPvc.toString()), null, null, null, null);
+
+						logger.info("patchNamespacedPersistentVolumeClaim result: " + result.toString());
+					
+					} catch (ApiException e) {
+						logger.info(e.getResponseBody());
+					}
+				}
+				else {
+					try {
+						V1PersistentVolumeClaim pvc = api.readNamespacedPersistentVolumeClaim(Constants.K8S_PREFIX + registryId, namespace, null, null, null);
+						pvc.getMetadata().setOwnerReferences(null);
+						 
+						Object result = api.replaceNamespacedPersistentVolumeClaim(Constants.K8S_PREFIX + registryId, namespace, pvc, null, null, null);
+						logger.info("replaceNamespacedCustomObject result: " + result.toString());
+					} catch (ApiException e) {
+						logger.info(e.getResponseBody());
+						throw e;
+					}
+				}
+			}
 
 			if (renewLoginAuthRequired) {
 				String loginAuth = registry.getSpec().getLoginId() + ":" + registry.getSpec().getLoginPassword();
@@ -2223,6 +2267,41 @@ public class K8sApiCaller {
 				Object result = customObjectApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP,
 						Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY,
 						registry.getMetadata().getName(), patchStatusArray);
+				logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
+			} catch (ApiException e) {
+				logger.info(e.getResponseBody());
+				throw e;
+			}
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	public static void patchRegistryStatus(String registryName, String namespace, String phase, String message, String reason) throws ApiException{
+		JSONObject phaseObj = new JSONObject();
+		JSONObject messageObj = new JSONObject();
+		JSONObject reasonObj = new JSONObject();
+		JSONArray patchStatusArray = new JSONArray();
+
+		if (phase != null && message != null && reason != null) {
+			phaseObj.put("op", "replace");
+			phaseObj.put("path", "/status/phase");
+			phaseObj.put("value", phase);
+			patchStatusArray.add(phaseObj);
+
+			messageObj.put("op", "replace");
+			messageObj.put("path", "/status/message");
+			messageObj.put("value", message);
+			patchStatusArray.add(messageObj);
+
+			reasonObj.put("op", "replace");
+			reasonObj.put("path", "/status/reason");
+			reasonObj.put("value", reason);
+			patchStatusArray.add(reasonObj);
+
+			try {
+				Object result = customObjectApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP,
+						Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY,
+						registryName, patchStatusArray);
 				logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
 			} catch (ApiException e) {
 				logger.info(e.getResponseBody());
@@ -2784,6 +2863,7 @@ public class K8sApiCaller {
 
 	public static void initializeImageList() throws ApiException, Exception {
 		try {
+			logger.info("initializeImageList");
 			Object response = customObjectApi.listClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP,
 					Constants.CUSTOM_OBJECT_VERSION, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, null, null, null, null,
 					null, null, null, Boolean.FALSE);
@@ -2791,15 +2871,18 @@ public class K8sApiCaller {
 			JsonObject respJson = (JsonObject) new JsonParser().parse((new Gson()).toJson(response));
 
 			mapper.registerModule(new JodaModule());
-			List<Registry> registryList = mapper.readValue((new Gson()).toJson(respJson.get("items")),
-					new TypeReference<ArrayList<Registry>>() {
+			List<Object> registryList = mapper.readValue((new Gson()).toJson(respJson.get("items")),
+					new TypeReference<ArrayList<Object>>() {
 					});
 
 			if (registryList != null) {
-				for (Registry registry : registryList) {
-					logger.info(registry.getMetadata().getName() + "/" + registry.getMetadata().getNamespace()
-							+ " registry sync");
+				for (Object registryObj : registryList) {
 					try {
+						Registry registry = mapper.treeToValue(mapper.valueToTree(registryObj), Registry.class);
+						
+						logger.info(registry.getMetadata().getName() + "/" + registry.getMetadata().getNamespace()
+							+ " registry sync");
+					
 						syncImageList(registry);
 					} catch (ApiException e) {
 						logger.info(e.getResponseBody());
