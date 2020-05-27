@@ -81,16 +81,13 @@ public class UserHandler extends GeneralHandler {
 				}
 			}
 			
-			try {
-				JsonObject userAuthDetail = OAuthApiCaller.detailUser( userInDO.getId() );
+			JsonObject userAuthDetail = OAuthApiCaller.detailUser( userInDO.getId() );
+			if ( userAuthDetail.getAsJsonObject("user").get("user_id")!= null) {
 				throw new Exception(ErrorCode.USER_ID_DUPLICATED);
-			} catch (Exception e) {
-				if (e.getMessage().equalsIgnoreCase(ErrorCode.USER_ID_DUPLICATED)) {
-					throw e;
-				}else { 
-					//New User, Do nothing
-				}
+			}else { 
+				//New User, Do nothing
 			}
+			
 
 			// UserCRD Create
 			String password = userInDO.getPassword();

@@ -75,8 +75,7 @@ public class OAuthApiCaller {
 		    Gson gson = new Gson();
 		    userDetail = gson.fromJson(result, JsonObject.class);
 	    } catch (Exception e) {
-//	    	e.printStackTrace();
-	    	
+	    	e.printStackTrace();	    	
 	    	throw e;
 	    }
 	    return userDetail; 
