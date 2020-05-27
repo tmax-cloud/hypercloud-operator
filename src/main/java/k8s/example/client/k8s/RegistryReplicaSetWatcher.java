@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import com.google.gson.reflect.TypeToken;
 
 import io.kubernetes.client.openapi.ApiClient;
+import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.AppsV1Api;
 import io.kubernetes.client.openapi.models.V1ReplicaSet;
 import io.kubernetes.client.util.Watch;
@@ -57,7 +58,7 @@ public class RegistryReplicaSetWatcher extends Thread {
 						K8sApiCaller.updateRegistryStatus(rs, eventType);
 						
 					}
-//				} catch (ApiException e) {
+				} catch (ApiException e) {
 //					logger.info("ApiException: " + e.getMessage());
 //					logger.info(e.getResponseBody());
 				} catch (Exception e) {

@@ -42,12 +42,18 @@ public class RegistryEventHandler extends GeneralHandler {
 			// Read inDO
 			regEvent = new ObjectMapper().readValue(body.get( "postData" ), RegistryEventDO.class);
 			
-			logger.info("====== Registry Event ======\n" + body.get( "postData" ));
+			logger.info("====== Registry Event ======");
 			
 			logger.info("  Registry Event Count: " + regEvent.getEvents().size());
 			for( RegistryEvent event : regEvent.getEvents()) {
-				logger.info("    Registry Action: " + event.getAction());
+				
 				if (event.getAction().equals("push")) {
+					logger.info("    Registry Action: " + event.getAction());
+					logger.info("    Registry Target Repository: " + event.getTarget().getRepository());
+					logger.info("    Registry Target Url: " + event.getTarget().getUrl());
+					logger.info("    Registry Request Host: " + event.getRequest().getHost());
+					logger.info("    Registry Actor: " + event.getActor());
+					logger.info("    Registry Source Addr: " + event.getSource().getAddr());
 					try {
 						K8sApiCaller.createImage(event);
 					} catch (Throwable e) {
@@ -55,11 +61,23 @@ public class RegistryEventHandler extends GeneralHandler {
 					}
 				}
 				else if (event.getAction().equals("delete")) {
+					logger.info("    Registry Action: " + event.getAction());
+					logger.info("    Registry Target Repository: " + event.getTarget().getRepository());
+					logger.info("    Registry Target Url: " + event.getTarget().getUrl());
+					logger.info("    Registry Request Host: " + event.getRequest().getHost());
+					logger.info("    Registry Actor: " + event.getActor());
+					logger.info("    Registry Source Addr: " + event.getSource().getAddr());
+					
 					try {
 						K8sApiCaller.deleteImage(event);
 					} catch (Throwable e) {
 						e.printStackTrace();
 					}
+				}
+				else {
+					logger.info("    Registry Action: " + event.getAction());
+					logger.info("    Registry Target Repository: " + event.getTarget().getRepository());
+					logger.info("    Registry Target Url: " + event.getTarget().getUrl());
 				}
 			}
 

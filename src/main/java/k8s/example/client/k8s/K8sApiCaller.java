@@ -2326,11 +2326,17 @@ public class K8sApiCaller {
 			return;
 		}
 
-		if (!isCurrentRegistry(rs.getMetadata().getOwnerReferences().get(0).getUid(), registryName, namespace)) {
-			logger.info("This registry's event is not for current registry. So do not update registry status");
-			return;
+		try {
+			if (!isCurrentRegistry(rs.getMetadata().getOwnerReferences().get(0).getUid(), registryName, namespace, "RegistryReplicaSet")) {
+				logger.info("This registry's event is not for current registry. So do not update registry status");
+				return;
+			}
+		}catch(ApiException e) {
+			if(e.getCode() == 404) {
+				logger.info(rs.getMetadata().getName() + "/" + namespace + " replica set is deleted");
+			}
+			throw e;
 		}
-
 		JSONObject patchStatus = new JSONObject();
 		JSONObject condition = new JSONObject();
 		JSONArray patchStatusArray = new JSONArray();
@@ -2367,7 +2373,12 @@ public class K8sApiCaller {
 					patchStatusArray);
 			logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
 		} catch (ApiException e) {
-			logger.info(e.getResponseBody());
+			if(e.getCode() == 404) {
+				logger.info("[RegistryReplicaSet]" + registryName + "/" + namespace + " registry was deleted!!");
+			}
+			else {
+				logger.info("[RegistryReplicaSet]" + e.getResponseBody());
+			}
 			throw e;
 		}
 
@@ -2403,13 +2414,25 @@ public class K8sApiCaller {
 				}
 			}
 		} catch (ApiException e) {
-			logger.info(e.getResponseBody());
+			if(e.getCode() == 404) {
+				logger.info(registryName + "/" + namespace + " registry was deleted!!");
+			}
+			else {
+				logger.info(e.getResponseBody());
+			}
 			throw e;
 		}
-
-		if (!isCurrentRegistry(verifyUid, registryName, namespace)) {
-			logger.info("This registry's event is not for current registry. So do not update registry status");
-			return;
+		
+		try {
+			if (!isCurrentRegistry(verifyUid, registryName, namespace, "RegistryPod")) {
+				logger.info("This registry's event is not for current registry. So do not update registry status");
+				return;
+			}
+		}catch(ApiException e) {
+			if(e.getCode() == 404) {
+				logger.info(pod.getMetadata().getName() + "/" + namespace + " pod is deleted");
+			}
+			throw e;
 		}
 
 		if (pod.getStatus().getContainerStatuses() != null) {
@@ -2440,7 +2463,12 @@ public class K8sApiCaller {
 				logger.info("getNamespacedCustomObject result: " + response.toString());
 
 			} catch (ApiException e) {
-				logger.info(e.getResponseBody());
+				if(e.getCode() == 404) {
+					logger.info("[RegistryPod]" + registryName + "/" + namespace + " registry was deleted!!");
+				}
+				else {
+					logger.info("[RegistryPod]" + e.getResponseBody());
+				}
 				throw e;
 			}
 
@@ -2529,7 +2557,12 @@ public class K8sApiCaller {
 							registryName, patchStatusArray);
 					logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
 				} catch (ApiException e) {
-					logger.info(e.getResponseBody());
+					if(e.getCode() == 404) {
+						logger.info("[RegistryPod]" + registryName + "/" + namespace + " registry was deleted!!");
+					}
+					else {
+						logger.info("[RegistryPod]" + e.getResponseBody());
+					}
 					throw e;
 				}
 
@@ -2553,9 +2586,16 @@ public class K8sApiCaller {
 			return;
 		}
 
-		if (!isCurrentRegistry(svc.getMetadata().getOwnerReferences().get(0).getUid(), registryName, namespace)) {
-			logger.info("This registry's event is not for current registry. So do not update registry status");
-			return;
+		try {
+			if (!isCurrentRegistry(svc.getMetadata().getOwnerReferences().get(0).getUid(), registryName, namespace, "RegistryService")) {
+				logger.info("This registry's event is not for current registry. So do not update registry status");
+				return;
+			}
+		}catch(ApiException e) {
+			if(e.getCode() == 404) {
+				logger.info(svc.getMetadata().getName() + "/" + namespace + " service is deleted");
+			}
+			throw e;
 		}
 
 		JSONArray patchStatusArray = new JSONArray();
@@ -2594,7 +2634,12 @@ public class K8sApiCaller {
 					patchStatusArray);
 			logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
 		} catch (ApiException e) {
-			logger.info(e.getResponseBody());
+			if(e.getCode() == 404) {
+				logger.info("[RegistryService]" + registryName + "/" + namespace + " registry was deleted!!");
+			}
+			else {
+				logger.info("[RegistryService]" + e.getResponseBody());
+			}
 			throw e;
 		}
 
@@ -2625,10 +2670,17 @@ public class K8sApiCaller {
 			logger.info(secret.getMetadata().getName() + "/" + namespace + " secret ownerReference is null");
 			return;
 		}
-
-		if (!isCurrentRegistry(secret.getMetadata().getOwnerReferences().get(0).getUid(), registryName, namespace)) {
-			logger.info("This registry's event is not for current registry. So do not update registry status");
-			return;
+		
+		try {
+			if (!isCurrentRegistry(secret.getMetadata().getOwnerReferences().get(0).getUid(), registryName, namespace, "RegistrySecret")) {
+				logger.info("This registry's event is not for current registry. So do not update registry status");
+				return;
+			}
+		}catch(ApiException e) {
+			if(e.getCode() == 404) {
+				logger.info(secret.getMetadata().getName() + "/" + namespace + " secret is deleted");
+			}
+			throw e;
 		}
 
 		JSONArray patchStatusArray = new JSONArray();
@@ -2729,7 +2781,12 @@ public class K8sApiCaller {
 					registryName, patchStatusArray);
 			logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
 		} catch (ApiException e) {
-			logger.info(e.getResponseBody());
+			if(e.getCode() == 404) {
+				logger.info("[RegistrySecret]" + registryName + "/" + namespace + " registry was deleted!!");
+			}
+			else {
+				logger.info("[RegistrySecret]" + e.getResponseBody());
+			}
 			throw e;
 		}
 	}
@@ -2751,9 +2808,16 @@ public class K8sApiCaller {
 			return;
 		}
 
-		if (!isCurrentRegistry(ingress.getMetadata().getOwnerReferences().get(0).getUid(), registryName, namespace)) {
-			logger.info("This registry's event is not for current registry. So do not update registry status");
-			return;
+		try {
+			if (!isCurrentRegistry(ingress.getMetadata().getOwnerReferences().get(0).getUid(), registryName, namespace, "RegistryIngress")) {
+				logger.info("This registry's event is not for current registry. So do not update registry status");
+				return;
+			}
+		}catch(ApiException e) {
+			if(e.getCode() == 404) {
+				logger.info(ingress.getMetadata().getName() + "/" + namespace + " ingress is deleted");
+			}
+			throw e;
 		}
 
 		JSONArray patchStatusArray = new JSONArray();
@@ -2792,12 +2856,17 @@ public class K8sApiCaller {
 					patchStatusArray);
 			logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
 		} catch (ApiException e) {
-			logger.info(e.getResponseBody());
+			if(e.getCode() == 404) {
+				logger.info("[RegistryIngress]" + registryName + "/" + namespace + " registry was deleted!!");
+			}
+			else {
+				logger.info("[RegistryIngress]" + e.getResponseBody());
+			}
 			throw e;
 		}
 	}
 
-	public static boolean isCurrentRegistry(String verifyUid, String registryName, String namespace)
+	public static boolean isCurrentRegistry(String verifyUid, String registryName, String namespace, String callFrom)
 			throws ApiException, IOException {
 		String existRegistryUID = null;
 		Object response = null;
@@ -2811,7 +2880,12 @@ public class K8sApiCaller {
 			response = customObjectApi.getNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
 					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registryName);
 		} catch (ApiException e) {
-			logger.info(e.getResponseBody());
+			if(e.getCode() == 404) {
+				logger.info("[" + callFrom + "]" + registryName + "/" + namespace + " registry was deleted!!");
+			}
+			else {
+				logger.info("[" + callFrom + "]" + e.getResponseBody());
+			}
 			throw e;
 		}
 

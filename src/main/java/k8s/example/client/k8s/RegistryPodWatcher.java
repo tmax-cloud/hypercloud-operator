@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import com.google.gson.reflect.TypeToken;
 
 import io.kubernetes.client.openapi.ApiClient;
+import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.util.Watch;
@@ -59,7 +60,7 @@ public class RegistryPodWatcher extends Thread {
 						K8sApiCaller.updateRegistryStatus(pod);
 						
 					}
-//				} catch (ApiException e) {
+				} catch (ApiException e) {
 //					logger.info("ApiException: " + e.getMessage());
 //					logger.info(e.getResponseBody());
 				} catch (Exception e) {
