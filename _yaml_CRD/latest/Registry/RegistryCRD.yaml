@@ -90,6 +90,8 @@ spec:
                       tolerationSeconds:
                         type: integer
                         format: int64
+                        minimum: 0
+                        maximum: 9223372036854775807
                       value:
                         type: string
             service:
@@ -110,6 +112,8 @@ spec:
                     port:
                       type: integer
                       description: "external port. Generally use 443 port"
+                      minimum: 0
+                      maximum: 65535
                 loadBalancer:
                   type: object
                   description: "use loadBalancer service type"
@@ -118,6 +122,8 @@ spec:
                     port:
                       type: integer
                       description: "external port. Generally use 443 port"
+                      minimum: 0
+                      maximum: 65535
             persistentVolumeClaim:
               type: object
               oneOf:
