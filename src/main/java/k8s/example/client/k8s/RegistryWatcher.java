@@ -218,7 +218,7 @@ public class RegistryWatcher extends Thread {
 									K8sApiCaller.patchRegistryStatus(registry, changePhase, changeMessage, changeReason);
 									
 									if(phase.equals(RegistryStatus.StatusPhase.RUNNING.getStatus())) {
-										if( registry.getMetadata().getAnnotations().get(Constants.CUSTOM_OBJECT_GROUP + "/" + Registry.REGISTRY_LOGIN_URL) == null) {
+										if( registry.getMetadata().getAnnotations().get(Registry.REGISTRY_LOGIN_URL) == null) {
 											K8sApiCaller.addRegistryAnnotation(registry);
 											logger.info("Update registry-login-url annotation");
 											break;
@@ -229,9 +229,9 @@ public class RegistryWatcher extends Thread {
 
 //								logger.info("afterJson = " + Util.toJson(registry).toString());
 								JsonNode diff = Util.jsonDiff(beforeJson, Util.toJson(registry).toString());
-								logger.info("diff: " + diff.toString());
 
 								if(diff.size() > 0 ) {
+									logger.info("[Updated Registry Spec]\ndiff: " + diff.toString());
 									K8sApiCaller.updateRegistryAnnotationLastCR(registry);
 									K8sApiCaller.updateRegistrySubresources(registry, diff);
 								}

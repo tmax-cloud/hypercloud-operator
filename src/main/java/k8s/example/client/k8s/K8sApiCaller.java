@@ -2040,6 +2040,50 @@ public class K8sApiCaller {
 				if (!updateSubResources.contains("Secret"))
 					updateSubResources.add("Secret");
 			}
+			if(path.equals("/spec/persistentVolumeClaim/create/deleteWithPvc")) {
+				if( registry.getSpec().getPersistentVolumeClaim().getCreate().getDeleteWithPvc() ) {
+					JsonArray jArrayPatchPvc = new JsonArray();
+					JsonArray ownerRefs = new JsonArray();
+					JsonObject replJson = new JsonObject();
+					JsonObject ownerRef = new JsonObject();
+					
+					ownerRef.addProperty("apiVersion", Constants.CUSTOM_OBJECT_GROUP + "/" + Constants.CUSTOM_OBJECT_VERSION);
+					ownerRef.addProperty("blockOwnerDeletion", Boolean.TRUE);
+					ownerRef.addProperty("controller", Boolean.TRUE);
+					ownerRef.addProperty("kind", registry.getKind());
+					ownerRef.addProperty("name", registry.getMetadata().getName());
+					ownerRef.addProperty("uid", registry.getMetadata().getUid());
+					
+					ownerRefs.add(ownerRef);
+					
+					replJson.addProperty("op", "replace");
+					replJson.addProperty("path", "/metadata/ownerReferences");
+					replJson.add("value", ownerRefs);
+
+					jArrayPatchPvc.add(replJson);
+					
+					try {
+						Object result = api.patchNamespacedPersistentVolumeClaim(Constants.K8S_PREFIX + registryId, namespace, new V1Patch(jArrayPatchPvc.toString()), null, null, null, null);
+
+						logger.info("patchNamespacedPersistentVolumeClaim result: " + result.toString());
+					
+					} catch (ApiException e) {
+						logger.info(e.getResponseBody());
+					}
+				}
+				else {
+					try {
+						V1PersistentVolumeClaim pvc = api.readNamespacedPersistentVolumeClaim(Constants.K8S_PREFIX + registryId, namespace, null, null, null);
+						pvc.getMetadata().setOwnerReferences(null);
+						 
+						Object result = api.replaceNamespacedPersistentVolumeClaim(Constants.K8S_PREFIX + registryId, namespace, pvc, null, null, null);
+						logger.info("replaceNamespacedCustomObject result: " + result.toString());
+					} catch (ApiException e) {
+						logger.info(e.getResponseBody());
+						throw e;
+					}
+				}
+			}
 
 			if (renewLoginAuthRequired) {
 				String loginAuth = registry.getSpec().getLoginId() + ":" + registry.getSpec().getLoginPassword();
