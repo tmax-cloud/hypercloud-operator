@@ -2230,6 +2230,41 @@ public class K8sApiCaller {
 	}
 	
 	@SuppressWarnings("unchecked")
+	public static void patchRegistryStatus(String registryName, String namespace, String phase, String message, String reason) throws ApiException{
+		JSONObject phaseObj = new JSONObject();
+		JSONObject messageObj = new JSONObject();
+		JSONObject reasonObj = new JSONObject();
+		JSONArray patchStatusArray = new JSONArray();
+
+		if (phase != null && message != null && reason != null) {
+			phaseObj.put("op", "replace");
+			phaseObj.put("path", "/status/phase");
+			phaseObj.put("value", phase);
+			patchStatusArray.add(phaseObj);
+
+			messageObj.put("op", "replace");
+			messageObj.put("path", "/status/message");
+			messageObj.put("value", message);
+			patchStatusArray.add(messageObj);
+
+			reasonObj.put("op", "replace");
+			reasonObj.put("path", "/status/reason");
+			reasonObj.put("value", reason);
+			patchStatusArray.add(reasonObj);
+
+			try {
+				Object result = customObjectApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP,
+						Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY,
+						registryName, patchStatusArray);
+				logger.info("patchNamespacedCustomObjectStatus result: " + result.toString());
+			} catch (ApiException e) {
+				logger.info(e.getResponseBody());
+				throw e;
+			}
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
 	public static void updateRegistryStatus(V1ReplicaSet rs, String eventType)
 			throws ApiException, JsonParseException, JsonMappingException, IOException {
 		logger.info("[K8S ApiCaller] updateRegistryStatus(V1ReplicaSet, String) Start");
@@ -2782,6 +2817,7 @@ public class K8sApiCaller {
 
 	public static void initializeImageList() throws ApiException, Exception {
 		try {
+			logger.info("initializeImageList");
 			Object response = customObjectApi.listClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP,
 					Constants.CUSTOM_OBJECT_VERSION, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, null, null, null, null,
 					null, null, null, Boolean.FALSE);
@@ -2789,15 +2825,18 @@ public class K8sApiCaller {
 			JsonObject respJson = (JsonObject) new JsonParser().parse((new Gson()).toJson(response));
 
 			mapper.registerModule(new JodaModule());
-			List<Registry> registryList = mapper.readValue((new Gson()).toJson(respJson.get("items")),
-					new TypeReference<ArrayList<Registry>>() {
+			List<Object> registryList = mapper.readValue((new Gson()).toJson(respJson.get("items")),
+					new TypeReference<ArrayList<Object>>() {
 					});
 
 			if (registryList != null) {
-				for (Registry registry : registryList) {
-					logger.info(registry.getMetadata().getName() + "/" + registry.getMetadata().getNamespace()
-							+ " registry sync");
+				for (Object registryObj : registryList) {
 					try {
+						Registry registry = mapper.treeToValue(mapper.valueToTree(registryObj), Registry.class);
+						
+						logger.info(registry.getMetadata().getName() + "/" + registry.getMetadata().getNamespace()
+							+ " registry sync");
+					
 						syncImageList(registry);
 					} catch (ApiException e) {
 						logger.info(e.getResponseBody());
