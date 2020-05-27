@@ -9,7 +9,7 @@
 		- Secret(tls, type: kubernetes.io/tls): hpcd-tls-{REGISTRY_NAME}
 		- RS: hpcd-registry-{REGISTRY_NAME}
 		- CM: hpcd-{REGISTRY_NAME}  (Note: /spec/customConfigYml에 입력한 string의 configmap이 없는 경우 생성)
-		- Ingress: hpcd-{REGISTRY_NAME}
+		- Ingress: hpcd-{REGISTRY_NAME}  (registry의 service type이 ingress인 경우에만 생성)
 	
 # Resource 상태
 	- Status: Creating 
