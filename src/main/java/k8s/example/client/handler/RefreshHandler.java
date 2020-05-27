@@ -201,17 +201,17 @@ public class RefreshHandler extends GeneralHandler {
         		if( System.getenv( "PROAUTH_EXIST" ).equalsIgnoreCase("1")) {
         			
     	    		logger.info( "  [[ Integrated OAuth System! ]] " );
-    	    		JsonObject configurationUpdateOut = OAuthApiCaller.ConfigurationUpdate(Constants.TOKEN_EXPIRED_TIME_KEY, Integer.toString(atExpireTimeSec));
+    	    		JsonObject atExpireUpdateOut = OAuthApiCaller.ConfigurationUpdate(Constants.TOKEN_EXPIRED_TIME_KEY, Integer.toString(atExpireTimeSec));
+    	    		JsonObject rtExpireUpdateOut = OAuthApiCaller.ConfigurationUpdate(Constants.REFRESH_TOKEN_EXPIRED_TIME_KEY, Integer.toString(atExpireTimeSec));
 //    	    		logger.info( "  Oauth Call Result : " + configurationUpdateOut.get("result").toString() );
 //    	    		logger.info( "  Updated Key : " + configurationUpdateOut.get("key").toString() );
 //    	    		logger.info( "  Updated Value : " + configurationUpdateOut.get("value").toString() );
     	    		
-    	    		if ( configurationUpdateOut.get("result").toString().equalsIgnoreCase("\"true\"") ){
-        				logger.info( " Token Expire Time Change Service success." );
-        				
+    	    		if ( atExpireUpdateOut.get("result").toString().equalsIgnoreCase("\"true\"") && rtExpireUpdateOut.get("result").toString().equalsIgnoreCase("\"true\"")){
+        				logger.info( " Token Expire Time Change Service success." );     
         				// Make outDO
             			refreshOutDO = new Token();
-            			refreshOutDO.setAtExpireTime(Integer.parseInt(configurationUpdateOut.get("value").toString().replaceAll("\"", ""))/60);
+            			refreshOutDO.setAtExpireTime(Integer.parseInt(atExpireUpdateOut.get("value").toString().replaceAll("\"", ""))/60);
             			Gson gson = new GsonBuilder().setPrettyPrinting().create();
             			outDO = gson.toJson(refreshOutDO).toString();
     	    			status = Status.OK; 
@@ -228,7 +228,6 @@ public class RefreshHandler extends GeneralHandler {
         		logger.info( "  [[ OpenAuth System! ]]" );  			//TODO : 나중에 한번 다시 보자!
         		try {
     				V1Secret secretReturn = K8sApiCaller.readSecret(Constants.TEMPLATE_NAMESPACE, Constants.K8S_PREFIX + Constants.OPERATOR_TOKEN_EXPIRE_TIME );
-
     				Map<String, String> patchMap = new HashMap<>();
     				patchMap.put(Constants.TOKEN_EXPIRED_TIME_KEY, Integer.toString(atExpireTimeSec));
     				try {
