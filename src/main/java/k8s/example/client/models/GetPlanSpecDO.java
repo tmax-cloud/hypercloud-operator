@@ -11,8 +11,8 @@ public class GetPlanSpecDO {
 	private String externalName = null;
 	private Boolean free = null;
 	private Map<String, String> instanceCreateParameterSchema = null;
-	private String serviceBrokerName = null;
-	private Object serviceClassRef = null;
+	private String clusterServiceBrokerName = null;
+	private Object clusterServiceClassRef = null;
 	
 	public Boolean getBindable() {
 		return bindable;
@@ -56,23 +56,23 @@ public class GetPlanSpecDO {
 	public void setInstanceCreateParameterSchema(Map<String, String> instanceCreateParameterSchema) {
 		this.instanceCreateParameterSchema = instanceCreateParameterSchema;
 	}
-	public String getServiceBrokerName() {
-		return serviceBrokerName;
+	public String getClusterServiceBrokerName() {
+		return clusterServiceBrokerName;
 	}
-	public void setServiceBrokerName(String serviceBrokerName) {
-		this.serviceBrokerName = serviceBrokerName;
+	public void setClusterServiceBrokerName(String clusterServiceBrokerName) {
+		this.clusterServiceBrokerName = clusterServiceBrokerName;
 	}
-	public Object getServiceClassRef() {
-		return serviceClassRef;
+	public Object getClusterServiceClassRef() {
+		return clusterServiceClassRef;
 	}
-	public void setServiceClassRef(Object serviceClassRef) {
-		this.serviceClassRef = serviceClassRef;
+	public void setClusterServiceClassRef(Object clusterServiceClassRef) {
+		this.clusterServiceClassRef = clusterServiceClassRef;
 	}
 	@Override
 	public String toString() {
 		return "GetPlanSpecDO [bindable=" + bindable + ", description=" + description + ", externalID=" + externalID
 				+ ", externalMetadata=" + externalMetadata + ", externalName=" + externalName + ", free=" + free
-				+ ", instanceCreateParameterSchema=" + instanceCreateParameterSchema + ", serviceBrokerName="
-				+ serviceBrokerName + ", serviceClassRef=" + serviceClassRef + "]";
+				+ ", instanceCreateParameterSchema=" + instanceCreateParameterSchema + ", clusterServiceBrokerName="
+				+ clusterServiceBrokerName + ", clusterServiceClassRef=" + clusterServiceClassRef + "]";
 	}
 }
