@@ -4027,15 +4027,13 @@ public class K8sApiCaller {
 									InputParametersSchema create = new InputParametersSchema();
 									Map<String, String> parameters = null;
 
-									String uuid = UIDGenerator.getInstance().generate32( plan, 8, System.currentTimeMillis() );
+									String uuid = UUID.randomUUID().toString();
+									servicePlan.setId(uuid);
 									if (plan.get("name") == null) {
-										servicePlan.setId(template.get("metadata").get("name").asText() + "-plan"
-												+ defaultPlaneId + "." + uuid);
 										servicePlan.setName(template.get("metadata").get("name").asText() + "-plan"
-												+ defaultPlaneId + "." + uuid);
+												+ defaultPlaneId);
 									} else {
-										servicePlan.setId(plan.get("name").asText() + "." + uuid);
-										servicePlan.setName(plan.get("name").asText() + "." + uuid);
+										servicePlan.setName(plan.get("name").asText());
 									}
 									if (plan.get("description") == null) {
 										servicePlan.setDescription(template.get("metadata").get("name").asText()
