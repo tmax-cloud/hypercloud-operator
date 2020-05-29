@@ -82,7 +82,7 @@ public class UserHandler extends GeneralHandler {
 			}
 			
 			JsonObject userAuthDetail = OAuthApiCaller.detailUser( userInDO.getId() );
-			if ( userAuthDetail.getAsJsonObject("user").get("user_id")!= null) {
+			if ( userAuthDetail.getAsJsonObject("user")!= null) {
 				throw new Exception(ErrorCode.USER_ID_DUPLICATED);
 			}else { 
 				//New User, Do nothing
@@ -290,7 +290,7 @@ public class UserHandler extends GeneralHandler {
 				}
 
 				JsonObject userAuthDetail = OAuthApiCaller.detailUser( userInDO.getId() );
-				if ( userAuthDetail.getAsJsonObject("user").get("user_id")!= null) {
+				if ( userAuthDetail.getAsJsonObject("user")!= null) {
 					throw new Exception(ErrorCode.USER_ID_DUPLICATED);
 				}else { 
 					//New User, Do nothing
