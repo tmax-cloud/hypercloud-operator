@@ -91,8 +91,8 @@ public class MeteringJob implements Job{
 	
 	private void insertMeteringData() {
 		try {
-			logger.info("Current Time : " + time);
 			logger.info("Insert into Mertering Start!!");
+			logger.info("Current Time : " + time);
 			
 			String query = "insert into metering.metering (id,namespace,cpu,memory,storage,gpu,public_ip,private_ip,metering_time,status) "
 					+ "values (?,?,truncate(?,2),?,?,truncate(?,2),?,?,?,?)";
@@ -115,7 +115,8 @@ public class MeteringJob implements Job{
 			pstmt.close();
 			conn.commit();
 			conn.close();
-			
+			logger.info("Insert into Mertering Success!!");
+
 		} catch (SQLException e) {
 			logger.info("SQL Exception : " + e.getMessage());
 			e.printStackTrace();
@@ -217,8 +218,8 @@ public class MeteringJob implements Job{
 	@SuppressWarnings("resource")
 	private void insertMeteringHour() {
 		try {
-			logger.info("Current Time : " + time);
 			logger.info("Insert into Metering_hour Start!!");
+			logger.info("Current Time : " + time);
 
 			String insertQuery = "insert into metering.metering_hour values (?,?,?,?,?,?,?,?,?,?)"; 
 			String selectQuery = "select id, namespace, truncate(sum(cpu)/count(*),2) as cpu, truncate(sum(memory)/count(*),0) as memory, "
@@ -240,29 +241,29 @@ public class MeteringJob implements Job{
 				pstmtinsert.setInt(i++, rsSelect.getInt("private_ip"));
 				pstmtinsert.setTimestamp(i++, rsSelect.getTimestamp("metering_time"));
 				pstmtinsert.setString(i++, rsSelect.getString("status"));
-				logger.info("pstmtinsert : " + pstmtinsert.getQueryString());
+//				logger.info("pstmtinsert : " + pstmtinsert.getQueryString());
 				pstmtinsert.addBatch();							
 			}
 			try {
 				pstmtinsert.executeBatch();
 			}catch(SQLException e) {
-				logger.info("SQL11 Exception : " + e.getMessage());
+				logger.info("SQL Exception : " + e.getMessage());
 			}
 			pstmtinsert.close();
 			pstmtSelect.close();
 			logger.info("Insert into Metering_hour Success!!");
 
 			logger.info("Delete Metering for past 1 hour Start!!");
-
 			String deleteQuery = "truncate metering.metering";
 			LogPreparedStatement pstmtDelete = new LogPreparedStatement( conn, deleteQuery );
 			pstmtDelete.execute();
-			
 			pstmtDelete.close();
+			logger.info("Delete Metering for past 1 hour Success!!");
+
 			conn.commit();
 
 		} catch (SQLException e) {
-			logger.info("SQL22 Exception : " + e.getMessage());
+			logger.info("SQL Exception : " + e.getMessage());
 			e.printStackTrace();
 		}
 	}
@@ -270,9 +271,9 @@ public class MeteringJob implements Job{
 	@SuppressWarnings("resource")
 	private void insertMeteringDay() {
 		try {
-			logger.info("Current Time : " + time);
 			logger.info("Insert into Metering_day Start!!");
-			
+			logger.info("Current Time : " + time);
+
 			String insertQuery = "insert into metering.metering_day values (?,?,?,?,?,?,?,?,?,?)"; 
 			String selectQuery = "select id, namespace, truncate(sum(cpu)/count(*),2) as cpu, truncate(sum(memory)/count(*),0) as memory, "
 					+ "truncate(sum(storage)/count(*),0) as storage, truncate(sum(gpu)/count(*),2) as gpu, "
@@ -294,13 +295,13 @@ public class MeteringJob implements Job{
 				pstmtinsert.setInt(i++, rsSelect.getInt("private_ip"));
 				pstmtinsert.setTimestamp(i++, rsSelect.getTimestamp("metering_time"));
 				pstmtinsert.setString(i++, rsSelect.getString("status"));
-				logger.info("pstmtinsert : " + pstmtinsert.getQueryString());
+//				logger.info("pstmtinsert : " + pstmtinsert.getQueryString());
 				pstmtinsert.addBatch();							
 			}
 			try {
 				pstmtinsert.executeBatch();
 			}catch(SQLException e) {
-				logger.info("SQL33 Exception : " + e.getMessage());
+				logger.info("SQL Exception : " + e.getMessage());
 			}
 			pstmtinsert.close();
 			pstmtSelect.close();
@@ -309,12 +310,13 @@ public class MeteringJob implements Job{
 			String updateQuery = "update metering.metering_hour set status = 'Merged' where status = 'Success'";
 			LogPreparedStatement pstmtUpdate = new LogPreparedStatement( conn, updateQuery );
 			pstmtUpdate.execute();
-			
+			logger.info("Update Metering_hour Past data to 'Merged' Success!!");
+
 			pstmtUpdate.close();
 			conn.commit();
 
 		} catch (SQLException e) {
-			logger.info("SQL44 Exception : " + e.getMessage());
+			logger.info("SQL Exception : " + e.getMessage());
 			e.printStackTrace();
 		}
 	}
@@ -322,9 +324,9 @@ public class MeteringJob implements Job{
 	@SuppressWarnings("resource")
 	private void insertMeteringMonth() {
 		try {
-			logger.info("Current Time : " + time);
 			logger.info("Insert into Metering_Month Start!!");
-			
+			logger.info("Current Time : " + time);
+
 			String insertQuery = "insert into metering.metering_month values (?,?,?,?,?,?,?,?,?,?)"; 
 			String selectQuery = "select id, namespace, truncate(sum(cpu)/count(*),2) as cpu, truncate(sum(memory)/count(*),0) as memory, "
 					+ "truncate(sum(storage)/count(*),0) as storage, truncate(sum(gpu)/count(*),2) as gpu, "
@@ -360,9 +362,10 @@ public class MeteringJob implements Job{
 			
 			String updateQuery = "update metering.metering_day set status = 'Merged' where status = 'Success'";
 			LogPreparedStatement pstmtUpdate = new LogPreparedStatement( conn, updateQuery );
-			pstmtUpdate.execute();
-			
+			pstmtUpdate.execute();	
 			pstmtUpdate.close();
+			logger.info("Update Metering_day Past data to 'Merged' Success!!");
+
 			conn.commit();
 
 		} catch (SQLException e) {
@@ -374,9 +377,9 @@ public class MeteringJob implements Job{
 	@SuppressWarnings("resource")
 	private void insertMeteringYear() {
 		try {
-			logger.info("Current Time : " + time);
 			logger.info("Insert into Metering_Year Start!!");
-			
+			logger.info("Current Time : " + time);
+
 			String insertQuery = "insert into metering.metering_year values (?,?,?,?,?,?,?,?,?,?)"; 
 			String selectQuery = "select id, namespace, truncate(sum(cpu)/count(*),2) as cpu, truncate(sum(memory)/count(*),0) as memory, "
 					+ "truncate(sum(storage)/count(*),0) as storage, truncate(sum(gpu)/count(*),2) as gpu, "
@@ -413,8 +416,9 @@ public class MeteringJob implements Job{
 			String updateQuery = "update metering.metering_month set status = 'Merged' where status = 'Success'";
 			LogPreparedStatement pstmtUpdate = new LogPreparedStatement( conn, updateQuery );
 			pstmtUpdate.execute();
-			
 			pstmtUpdate.close();
+			logger.info("Update Metering_month Past data to 'Merged' Success!!");
+
 			conn.commit();
 
 		} catch (SQLException e) {

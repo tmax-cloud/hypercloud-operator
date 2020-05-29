@@ -289,14 +289,11 @@ public class UserHandler extends GeneralHandler {
 					}
 				}
 
-				JsonArray userAuthList = OAuthApiCaller.listUser();
-				if (userAuthList != null) {
-					for (JsonElement userAuth : userAuthList) {
-						if (userAuth.getAsJsonObject().get("user_id").toString().replaceAll("\"", "")
-								.equalsIgnoreCase(userInDO.getId()))
-							throw new Exception(ErrorCode.USER_ID_DUPLICATED);
-
-					}
+				JsonObject userAuthDetail = OAuthApiCaller.detailUser( userInDO.getId() );
+				if ( userAuthDetail.getAsJsonObject("user").get("user_id")!= null) {
+					throw new Exception(ErrorCode.USER_ID_DUPLICATED);
+				}else { 
+					//New User, Do nothing
 				}
 
 				status = Status.OK;
