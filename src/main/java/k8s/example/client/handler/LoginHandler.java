@@ -158,49 +158,60 @@ public class LoginHandler extends GeneralHandler {
 		    		
 		    		if (user.getUserInfo().getPassword() !=null ) {
 		    			if(user.getUserInfo().getPassword().equals(encryptedPassword)) {
-			    			logger.info(" Login success ");
-			    			
+			    			logger.info(" Login success ");		    			
 			    			status = Status.OK;
-			    			
-			            	UserSecurityPolicyCR uspCR = K8sApiCaller.getUserSecurityPolicy( loginInDO.getId() );
-			    			
-			    			// 1. otpEnable true
-			    			if ( uspCR.getOtpEnable().equalsIgnoreCase("t") ) {
-			    				if ( loginInDO.getOtp() == 0 ) throw new Exception(ErrorCode.OTP_NUMBER_EMPTY);
-			    				
-			    				DateTime currentTime = new DateTime();
-			    				DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:m:ss");
-			    				currentTime = formatter.parseDateTime(currentTime.toString("yyyy-MM-dd'T'HH:mm:ss").substring(0,19));
-			        			logger.info(" currentTime: " + currentTime);
+			    			try {
+			    				UserSecurityPolicyCR uspCR = K8sApiCaller.getUserSecurityPolicy( loginInDO.getId() );
+				    			
+				    			// 1. otpEnable true
+				    			if ( uspCR.getOtpEnable().equalsIgnoreCase("t") ) {
+				    				if ( loginInDO.getOtp() == 0 ) throw new Exception(ErrorCode.OTP_NUMBER_EMPTY);
+				    				
+				    				DateTime currentTime = new DateTime();
+				    				DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:m:ss");
+				    				currentTime = formatter.parseDateTime(currentTime.toString("yyyy-MM-dd'T'HH:mm:ss").substring(0,19));
+				        			logger.info(" currentTime: " + currentTime);
 
-			    				DateTime otpRegisterTime = formatter.parseDateTime(uspCR.getOtpRegisterTime().substring(0,19));
-			        			logger.info(" otpRegisterTime: " + otpRegisterTime);
+				    				DateTime otpRegisterTime = formatter.parseDateTime(uspCR.getOtpRegisterTime().substring(0,19));
+				        			logger.info(" otpRegisterTime: " + otpRegisterTime);
 
-			       			 	if( currentTime.minusMinutes(Constants.VERIFICATAION_DURATION_MINUTES).isBefore( otpRegisterTime ) ) {
-				       			 	if (uspCR.getOtp() == loginInDO.getOtp()) {
-				    					token = openAuthloginSuccess( loginInDO );
-				    					accessToken = token.getAccessToken();
-				    					refreshToken = token.getRefreshToken();
-					        			otpEnable = true;
-					        			K8sApiCaller.patchUserSecurityPolicy(loginInDO.getId(), "0");
+				       			 	if( currentTime.minusMinutes(Constants.VERIFICATAION_DURATION_MINUTES).isBefore( otpRegisterTime ) ) {
+					       			 	if (uspCR.getOtp() == loginInDO.getOtp()) {
+					    					token = openAuthloginSuccess( loginInDO );
+					    					accessToken = token.getAccessToken();
+					    					refreshToken = token.getRefreshToken();
+						        			otpEnable = true;
+						        			K8sApiCaller.patchUserSecurityPolicy(loginInDO.getId(), "0");
 
-				    				} else {
-				    					logger.info("  Login fail. Wrong OTP.");
+					    				} else {
+					    					logger.info("  Login fail. Wrong OTP.");
+							    			status = Status.BAD_REQUEST; 
+							    			outDO = Constants.WRONG_OTP_NUMBER;
+					    				}
+				       			 	}else {
+					       			 	logger.info("  Login fail. OTP Verification Time has Expired.");
 						    			status = Status.BAD_REQUEST; 
-						    			outDO = Constants.WRONG_OTP_NUMBER;
-				    				}
-			       			 	}else {
-				       			 	logger.info("  Login fail. OTP Verification Time has Expired.");
-					    			status = Status.BAD_REQUEST; 
-					    			outDO = Constants.OTP_TIME_EXPIRED;
-			       			 	}
-			    			} else {
-				    			// 2. otpEnable false
-			    				token = openAuthloginSuccess( loginInDO );
-			    				accessToken = token.getAccessToken();
-		    					refreshToken = token.getRefreshToken();
+						    			outDO = Constants.OTP_TIME_EXPIRED;
+				       			 	}
+				    			} else {
+					    			// 2. otpEnable false
+				    				token = openAuthloginSuccess( loginInDO );
+				    				accessToken = token.getAccessToken();
+			    					refreshToken = token.getRefreshToken();
+				    			}
+			    			} catch (ApiException e) {
+			    				if (e.getResponseBody().contains("NotFound")) {
+				    				// 3. If no USP, same as OTPEnable false
+				    				token = openAuthloginSuccess( loginInDO );
+				    				accessToken = token.getAccessToken();
+			    					refreshToken = token.getRefreshToken();		
+			    				}else {
+			    					logger.info( "Response body: " + e.getResponseBody() );
+			    					e.printStackTrace();
+			    					status = Status.UNAUTHORIZED;
+			    					outDO = Constants.OTP_ERROR;
+			    				}
 			    			}
-
 			    		} else {
 			    			logger.info("  Login fail. Wrong password.");	
 			    			status = Status.BAD_REQUEST; 

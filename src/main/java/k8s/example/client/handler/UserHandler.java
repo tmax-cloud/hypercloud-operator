@@ -11,8 +11,6 @@ import java.util.Map;
 import org.slf4j.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import fi.iki.elonen.NanoHTTPD;
@@ -88,7 +86,6 @@ public class UserHandler extends GeneralHandler {
 				//New User, Do nothing
 			}
 			
-
 			// UserCRD Create
 			String password = userInDO.getPassword();
 			K8sApiCaller.createUser(userInDO);

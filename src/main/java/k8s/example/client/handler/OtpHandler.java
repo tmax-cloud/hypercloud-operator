@@ -60,7 +60,7 @@ public class OtpHandler extends GeneralHandler {
 	    				   		
 	        	if (System.getenv( "PROAUTH_EXIST" ) != null) {  
 	        		if( System.getenv( "PROAUTH_EXIST" ).equalsIgnoreCase("1")) {
-	        			
+		        		logger.info( "  [[ IntegratedAuth System! ]]" );  			
 	        			//TODO : 요건 들어오면 하자
 		    			status = Status.OK;			    			
 
@@ -75,28 +75,39 @@ public class OtpHandler extends GeneralHandler {
 		    		String encryptedPassword = Util.Crypto.encryptSHA256(loginInDO.getPassword() + loginInDO.getId() + user.getUserInfo().getPasswordSalt());
 		    		logger.info("  DB password: " + user.getUserInfo().getPassword() + " / Input password: " + encryptedPassword);
 		    		
-		    		if (user.getUserInfo().getPassword() !=null ) {
+		    		if (user.getUserInfo().getPassword() != null ) {
 		    			if(user.getUserInfo().getPassword().equals(encryptedPassword)) {
 			    			logger.info(" Password Correct! ");		    			
-			    			status = Status.OK;			    			
-			            	UserSecurityPolicyCR uspCR = K8sApiCaller.getUserSecurityPolicy( loginInDO.getId() );
-			            	
-			            	// otpEnable true
-			    			if (uspCR.getOtpEnable().equalsIgnoreCase("t")) {
-			            		// Issue otpCode & Save into K8s
-			        			String otpCode = Util.numberGen(6, 1);
-			        			logger.info(" otpCode: " + otpCode);
-			        			K8sApiCaller.patchUserSecurityPolicy(loginInDO.getId(), otpCode);
+			    			status = Status.OK;	
+			    			try {
+			    				UserSecurityPolicyCR uspCR = K8sApiCaller.getUserSecurityPolicy( loginInDO.getId() );
+				            	
+				            	// otpEnable true
+				    			if (uspCR.getOtpEnable().equalsIgnoreCase("t")) {
+				            		// Issue otpCode & Save into K8s
+				        			String otpCode = Util.numberGen(6, 1);
+				        			logger.info(" otpCode: " + otpCode);
+				        			K8sApiCaller.patchUserSecurityPolicy(loginInDO.getId(), otpCode);
 
-			        			// Send E-mail to User
-			        			String subject = "인증번호 : " + otpCode;
-			        			String content = Constants.OTP_VERIFICATION_CONTENTS.replaceAll("%%otpCode%%", otpCode);
-			        			Util.sendMail(user.getUserInfo().getEmail(), subject, content); 
-			        			otpEnable = true;
-			    			} else {
-				    			status = Status.OK;			    			
+				        			// Send E-mail to User
+				        			String subject = "인증번호 : " + otpCode;
+				        			String content = Constants.OTP_VERIFICATION_CONTENTS.replaceAll("%%otpCode%%", otpCode);
+				        			Util.sendMail(user.getUserInfo().getEmail(), subject, content); 
+				        			otpEnable = true;
+				    			} else {
+					    			status = Status.OK;			    			
+				    			}
+			    			} catch ( ApiException e ) {
+			    				if (e.getResponseBody().contains("NotFound")) {
+				    				// If no USP, same as OTPEnable false
+					    			status = Status.OK;			
+			    				}else {
+			    					logger.info( "Response body: " + e.getResponseBody() );
+			    					e.printStackTrace();
+			    					status = Status.UNAUTHORIZED;
+			    					outDO = Constants.OTP_ERROR;
+			    				}
 			    			}
-
 			    		} else {
 			    			logger.info(" Wrong password.");	
 			    			status = Status.BAD_REQUEST; 
