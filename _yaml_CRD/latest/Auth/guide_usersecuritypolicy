@@ -29,3 +29,6 @@
 			otp: 0
 			ipRange: 192.168.6.112/16
 	- 위의 예시와 같이 otpEnable을 t로 바꾼고, ipRange 파라미터를 추가한다.
+	
+	- 추가) b4.1.0.30 버전 부터 USP 정책 변경에 따라, private 환경에서 user 생성시 USP crd를 기본적으로 만들어 주지 않는다.
+	       Policy를 활성하 하고자 하는 경우, 관리자가 사용자에 해당하는 USP crd를 생성해주고 위와 같이 setting해줘야 한다.
