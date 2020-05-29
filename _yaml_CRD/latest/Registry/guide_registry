@@ -42,7 +42,12 @@
 		- 인증서는 hpcd-{REGISTRY_NAME} Secret에 관리되고 있으며 secret watcher에 의해 모든 노드에 이 인증서를 보관한다.
 		- imagePullSecret은 hpcd-registry-{REGISTRY_NAME} Secret에 관리되고 있으며 Pod 생성시 imagePullSecret 필드에 이름을 입력하여 사용한다.
 	- Registry에 Image Push하기
-		- hpcd-{REGISTRY_NAME} 이름의 Secret에서 인증서  파일(*.crt, *.cert, *.key)을 /etc/docker/certs.d/{REGISTRY_IP}:{REGISTRY_PORT} 디렉토리에 추가
+		- 인증서 등록을 위해 아래의  1), 2) 둘 중 하나의 과정 수행 (Note: Windows에서 인증서 내용을 Windows 파일(.txt 등)로 저장하여 옮길 경우 줄 바꿈에 대한 dummy 문자가 추가될 수 있으므로 파일내용을 바로 복사 붙여넣기 하는 것은 권장함)
+			1) CA 등록하기
+				1-1) hpcd-{REGISTRY_NAME} 이름의 Secret에서 인증서  파일(*.crt)을 /etc/docker/certs.d/{REGISTRY_IP}:{REGISTRY_PORT} 디렉토리에 추가
+				1-2) hpcd-{REGISTRY_NAME} 이름의 Secret에서 인증서  파일(*.crt)을 /usr/local/share/ca-certificates 디렉토리에 추가
+				1-3) update-ca-certificates 명령어로 CA 업데이트 
+			2) hpcd-{REGISTRY_NAME} 이름의 Secret에서 인증서  파일(*.crt, *.cert, *.key)을 /etc/docker/certs.d/{REGISTRY_IP}:{REGISTRY_PORT} 디렉토리에 추가
 		- docker login {REGISTRY_IP}:{REGISTRY_PORT}
 			- {REGISTRY_IP}:{REGISTRY_PORT} 값은 생성한 Registry의 annotation 필드로 registry-login-url 확인
 			- loginId, loginPassword 입력
