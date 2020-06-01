@@ -277,7 +277,7 @@ public class InstanceOperator extends Thread {
 			        				
 			        				String[] splitStr = objStr.split("\"metadata\":\\{");
 			        				StringBuilder sb = new StringBuilder();
-			        				sb.append("\"ownerReferences\": [{\"apiVersion\": \"v1\",\"blockOwnerDeletion\": true,\"controller\": true,\"kind\": \"TemplateInstance\",");
+			        				sb.append("\"ownerReferences\": [{\"apiVersion\": \"v1\",\"blockOwnerDeletion\": true,\"controller\": false,\"kind\": \"TemplateInstance\",");
 			        				sb.append("\"name\": \"");
 			        				sb.append(instanceObj.get("metadata").get("name").asText());
 			        				sb.append("\",\"uid\": \"");
