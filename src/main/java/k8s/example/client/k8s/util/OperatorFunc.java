@@ -104,6 +104,21 @@ public class OperatorFunc {
 		pluralMapper.put("TriggerTemplate", "triggertemplates");
 		pluralMapper.put("EventListener", "eventlisteners");
 		pluralMapper.put("HelmRelease", "helmreleases");
+		
+		pluralMapper.put("KubeadmConfig", "kubeadmconfigs");
+		pluralMapper.put("KubeadmConfigTemplate", "kubeadmconfigtemplates");
+		pluralMapper.put("Cluster", "clusters");
+		pluralMapper.put("MachineDeployment", "machinedeployments");
+		pluralMapper.put("MachineHealthCheck", "machinehealthchecks");
+		pluralMapper.put("Machine", "machines");
+		pluralMapper.put("MachineSet", "machinesets");
+		pluralMapper.put("Provider", "providers");
+		pluralMapper.put("KubeadmControlPlane", "kubeadmcontrolplanes");
+		pluralMapper.put("MachinePool", "machinepools");
+		pluralMapper.put("AWSCluster", "awsclusters");
+		pluralMapper.put("AWSMachine", "awsmachines");
+		pluralMapper.put("AWSMachineTemplate", "awsmachinetemplates");
+
 //		pluralMapper.put("", "");
 //		pluralMapper.put("", "");
 //		pluralMapper.put("", "");
