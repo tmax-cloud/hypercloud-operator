@@ -1,8 +1,8 @@
 node {
-	def gitBaseAddress = "192.168.1.150:10080"
-	def gitBuildAddress = "${gitBaseAddress}/hypercloud/hypercloud-operator.git"
+	def gitBaseAddress = "github.com"
+	def gitBuildAddress = "${gitBaseAddress}/tmax-cloud/hypercloud-operator.git"
 	
-	def hcBuildDir = "/var/lib/jenkins/workspace/hypercloud4-operator"
+	def hcBuildDir = "/var/lib/jenkins/workspace/hypercloud-operator"
 	def imageBuildHome = "/root/HyperCloud-image-build/hypercloud4-operator"
 
 	def version = "${params.majorVersion}.${params.minorVersion}.${params.tinyVersion}.${params.hotfixVersion}"
@@ -11,6 +11,7 @@ node {
 	def binaryHome = "${hcBuildDir}/build"
 	def scriptHome = "${hcBuildDir}/scripts"
 		
+	def credentialsId = "hypercloud_github"
 	def userName = "seonho_choi"
 	def userEmail = "seonho_choi@tmax.co.kr"
 
@@ -19,8 +20,8 @@ node {
 		new File("${hcBuildDir}").mkdir()
 		dir ("${hcBuildDir}") {
 			git branch: "${params.buildBranch}",
-			credentialsId: '${userName}',
-			url: "http://${gitBuildAddress}"
+			credentialsId: '${credentialsId}',
+			url: "https://${gitBuildAddress}"
 		}
 		gradleDoBuild("${hcBuildDir}")
     }
@@ -42,8 +43,8 @@ node {
 	}
 	
 	stage('build & push image'){
-		sh "sudo docker build --tag 192.168.6.110:5000/hypercloud4-operator:${imageTag} ${imageBuildHome}/"
-		sh "sudo docker push 192.168.6.110:5000/hypercloud4-operator:${imageTag}"
+		sh "sudo docker build --tag tmaxcloudck/hypercloud-operator:${imageTag} ${imageBuildHome}/"
+		sh "sudo docker push tmaxcloudck/hypercloud-operator:${imageTag}"
 	}
 	
 	stage('send swagger yaml to ftp'){
@@ -60,10 +61,6 @@ node {
 			sh "git config --global user.name ${userName}"
 			sh "git config --global user.email ${userEmail}"
 			sh "git config --global credential.helper store"
-
-			//sh "git fetch --all"
-			//sh "git reset --hard origin/${params.buildBranch}"
-			//sh "git pull origin ${params.buildBranch}"
 
 			sh "git add -A"
 
