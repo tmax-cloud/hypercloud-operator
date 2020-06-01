@@ -3,34 +3,6 @@ All notable changes to this project will be documented in this file.
 
 <!-------------------- v4.1.0.30 start -------------------->
 
-## HyperCloudServer_4.1.0.30 (Mon Jun  1 07:14:51 KST 2020)
-
-### Added
-
-### Changed
-  - [mod] cluster.x-k8s resources 추가 by GitHub
-  - [mod] guide_usersecuritypolicy 추가 by 윤진수 by taegeon_woo
-  - [mod] admin-tmax.co.kr default  USP 생성 yaml 제거 by taegeon_woo
-  - [mod] guide_usersecuritypolicy 30버전부터 바뀐 USP 정책에 대한 가이드 추가 by taegeon_woo
-  - [mod] private user 생성시, USP crd default로 생성하는 로직 제거, usp가 없을때, otpEnable false로 간주하는 로직 추가 by taegeon_woo
-  - [mod] proauth 정책 변경에 따른 userID duplicate 로직 변경 by taegeon_woo
-  - [mod] Service Instance 생성 시 Plan 에 있는 parameter 가 Template Instance 의 parameter 로 전달되게 기능 수정 by seonho_choi
-  - [mod] MeteringJob.java 로그 정리 by taegeon_woo
-  - [mod] UserHandler.java ID 중복체크 API 로직 변경 (List --> Detail) by taegeon_woo
-
-### Fixed
-  - [ims][223511] plan 생성 시 ID 의 경우 고유한 UUID 를 넣어서 중복이 없도록 수정 by seonho_choi
-  - [ims][226370] registry 삭제시 log 정리 by sukhee_yun
-
-### CRD yaml
-  - [crd] guide_registry 수정 (Image Push 방법 추가) by sukhee_yun
-
-### Etc
-
-<!--------------------- v4.1.0.30 end --------------------->
-
-<!-------------------- v4.1.0.30 start -------------------->
-
 ## HyperCloudServer_4.1.0.30 (Fri May 29 04:58:29 KST 2020)
 
 ### Added
