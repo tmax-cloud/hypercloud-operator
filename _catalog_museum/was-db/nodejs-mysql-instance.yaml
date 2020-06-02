@@ -3,6 +3,9 @@ kind: TemplateInstance
 metadata:
   name: nodejs-mysql-template-instance
   namespace: default
+  annotations:
+    template-version: '1.0.0'
+    tested-operator-version: '4.1.0.23'
 spec:
   template:
     metadata:
@@ -29,7 +32,7 @@ spec:
     - name: MYSQL_DATABASE
       value: root1
     - name: GIT_URL
-      value: https://github.com/cqbqdd11519/nodejs-mysql-crud
+      value: https://github.com/sunghyunkim3/nodejs-mysql-crud
     - name: GIT_REV
       value: master
     - name: IMAGE_URL

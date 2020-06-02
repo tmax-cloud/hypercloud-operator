@@ -2,51 +2,79 @@ apiVersion: tekton.dev/v1alpha1
 kind: ClusterTask
 metadata:
   name: s2i
+  annotations:
+    template-version: '1.0.0'
+    tested-operator-version: '4.1.0.23'
 spec:
   description: S2I Task
-  inputs:
-    params:
-    - description: The location of the s2i builder image.
-      name: BUILDER_IMAGE
-    - default: .
-      description: The location of the path to run s2i from.
-      name: PATH_CONTEXT
-    - name: REGISTRY_ID
-      description: Docker registry ID
-      default: ''
-    - name: REGISTRY_PW
-      description: Docker registry PW
-      default: ''
-    - default: 'false'
-      description: Verify the TLS on the registry endpoint (for push/pull to a non-TLS
-        registry)
-      name: TLSVERIFY
-    - name: LOGLEVEL
-      description: Log level when running the S2I binary
-      default: '0'
-    - name: PACKAGE_SERVER_URL
-      description: URL (including protocol, ip, port, and path) of private package server (e.g., devpi, pypi, verdaccio, ...)
-      default: ''
-    resources:
+  params:
+  - description: The location of the s2i builder image.
+    name: BUILDER_IMAGE
+  - default: .
+    description: The location of the path to run s2i from.
+    name: PATH_CONTEXT
+  - name: REGISTRY_SECRET_NAME
+    description: Docker registry secret (kubernetes.io/dockerconfigjson type)
+    default: ''
+  - default: 'false'
+    description: Verify the TLS on the registry endpoint (for push/pull to a non-TLS registry)
+    name: TLSVERIFY
+  - name: LOGLEVEL
+    description: Log level when running the S2I binary
+    default: '0'
+  - name: PACKAGE_SERVER_URL
+    description: URL (including protocol, ip, port, and path) of private package server (e.g., devpi, pypi, verdaccio, ...)
+    default: ''
+  resources:
+    inputs:
     - name: source
       type: git
-  outputs:
-    resources:
+    outputs:
     - name: image
       type: image
   results:
   - name: image-url
     description: Tag-updated image url
+  - name: registry-cred
+    description: Tag-updated image url
   steps:
-  - command:
-    - /edit-image-url.sh
-    args:
-    - /workspace/source
-    - $(outputs.resources.image.url)
-    - $(results.image-url.path)
-    image: 192.168.6.110:5000/update-image-url:latest
-    name: update-image
-  - script: |
+  - name: update-image-url
+    image: 192.168.6.110:5000/cicd-util:1.0.0
+    script: |
+      #!/bin/bash
+      GIT_DIR="/workspace/source"
+      ORIGINAL_URL="$(outputs.resources.image.url)"
+      TARGET_FILE="$(results.image-url.path)"
+
+      [ $(echo $ORIGINAL_URL | awk -F '/' '{printf $NF}' | awk -F ':' '{printf "%d", split($0,a)}') -eq 1 ] && TAG=":"$(git --git-dir=$GIT_DIR/.git rev-parse --short HEAD)
+      echo "$ORIGINAL_URL$TAG" | tee $TARGET_FILE
+  - name: parse-registry-cred
+    image: 192.168.6.110:5000/cicd-util:1.0.0
+    script: |
+      #!/bin/bash
+      FILENAME="$(results.registry-cred.path)"
+      if [ "$(params.REGISTRY_SECRET_NAME)" != "" ]; then
+          IMAGE_URL=$(cat $(results.image-url.path)) 
+          URL_ARR=(${IMAGE_URL//\// })
+          REGISTRY=${URL_ARR[0]}
+          NAMESPACE=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
+
+          ENCODED_CFG=$(kubectl -n $NAMESPACE get secrets $(params.REGISTRY_SECRET_NAME) -o jsonpath='{.data.\.dockerconfigjson}')
+          if [ $(( $? + 0 )) -eq 0 ]; then
+              CRED=$(echo $ENCODED_CFG | base64 -d | jq -r '.auths."'$REGISTRY'".auth' --raw-output -c)
+              if [ "$CRED" == "null" ]; then
+                CRED=""
+              fi
+              echo $CRED | tee $FILENAME
+          else
+              touch $FILENAME
+          fi
+      else
+          touch $FILENAME
+      fi
+  - name: generate
+    image: quay.io/openshift-pipeline/s2i:nightly
+    script: |
       #!/bin/sh
       set -ex
 
@@ -62,6 +90,7 @@ spec:
           *nodejs*) echo "NPM_CONFIG_REGISTRY=$(inputs.params.PACKAGE_SERVER_URL)" >> $FILENAME;;
           *tomcat*) echo "MVN_CENTRAL_URL=$(inputs.params.PACKAGE_SERVER_URL)" >> $FILENAME;;
           *wildfly*) echo "MVN_CENTRAL_URL=$(inputs.params.PACKAGE_SERVER_URL)" >> $FILENAME;;
+          *jeus*) echo "MVN_CENTRAL_URL=$(inputs.params.PACKAGE_SERVER_URL)" >> $FILENAME;;
         esac
       fi
 
@@ -70,13 +99,13 @@ spec:
       -E $FILENAME \
       build $(inputs.params.PATH_CONTEXT) $(inputs.params.BUILDER_IMAGE) \
       --as-dockerfile /gen-source/Dockerfile.gen
-    image: quay.io/openshift-pipeline/s2i:nightly
-    name: generate
     volumeMounts:
     - mountPath: /gen-source
       name: gen-source
     workingdir: /workspace/source
-  - script: |
+  - name: build
+    image: quay.io/buildah/stable
+    script: |
       buildah \
       bud \
       --format \
@@ -89,8 +118,6 @@ spec:
       -t \
       $(cat $(results.image-url.path)) \
       .
-    image: quay.io/buildah/stable
-    name: build
     securityContext:
       privileged: true
     volumeMounts:
@@ -99,23 +126,24 @@ spec:
     - mountPath: /gen-source
       name: gen-source
     workingdir: /gen-source
-  - script: |
-      [ "$REGISTRY_ID" != "" ] && CRED="--creds=$REGISTRY_ID:$REGISTRY_PW"
+  - name: push
+    image: quay.io/buildah/stable
+    script: |
+      #!/bin/bash
+
+      IMAGE_URL=$(cat $(results.image-url.path)) 
+      REG_CRED=$(cat $(results.registry-cred.path) | base64 -d)
+      if [ "$REG_CRED" != "" ]; then
+          CRED="--creds=$REG_CRED"
+      fi
 
       buildah \
       push \
       --tls-verify=$(inputs.params.TLSVERIFY) \
       --storage-driver=vfs \
       $CRED \
-      $(cat $(results.image-url.path)) \
-      docker://$(cat $(results.image-url.path))
-    image: quay.io/buildah/stable
-    name: push
-    env:
-    - name: REGISTRY_ID
-      value: $(inputs.params.REGISTRY_ID)
-    - name: REGISTRY_PW
-      value: $(inputs.params.REGISTRY_PW)
+      $IMAGE_URL \
+      docker://$IMAGE_URL
     securityContext:
       privileged: true
     volumeMounts:

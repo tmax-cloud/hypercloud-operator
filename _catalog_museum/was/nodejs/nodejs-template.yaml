@@ -3,6 +3,11 @@ kind: Template
 metadata:
   name: nodejs-cicd-template
   namespace: default
+  annotations:
+    template-version: '1.0.0'
+    tested-operator-version: '4.1.0.23'
+  labels:
+    cicd-template-was: nodejs
 imageUrl: https://upload.wikimedia.org/wikipedia/commons/d/d9/Node.js_logo.svg
 provider: tmax
 recommend: false
@@ -36,19 +41,9 @@ parameters:
   displayName: ImageURL
   description: Output Image URL
   required: true
-- name: REGISTRY_SECRET
+- name: REGISTRY_SECRET_NAME
   displayName: RegistrySecret
   description: Secret for accessing image registry
-  required: false
-  value: ''
-- name: REGISTRY_ID
-  displayName: RegistryId
-  description: ID for accessing image registry
-  required: false
-  value: ''
-- name: REGISTRY_PW
-  displayName: RegistryPw
-  description: PW for accessing image registry
   required: false
   value: ''
 - name: SERVICE_ACCOUNT_NAME
@@ -69,6 +64,11 @@ parameters:
   description: URL (including protocol, ip, port, and path) of private package server
     (e.g., devpi, pypi, verdaccio, ...)
   required: false
+- name: DEPLOY_ENV_JSON
+  displayName: DeployEnvJson
+  description: Deployment environment variable in JSON object form
+  required: false
+  value: '{}'
 objects:
 - apiVersion: v1
   kind: Service
@@ -89,6 +89,8 @@ objects:
   metadata:
     name: ${APP_NAME}-deploy-cfg
     namespace: ${NAMESPACE}
+    labels:
+      app: ${APP_NAME}
   data:
     deploy-spec.yaml: |
       spec:
@@ -103,7 +105,7 @@ objects:
               tier: was
           spec:
             imagePullSecrets:
-            - name: ${REGISTRY_SECRET}
+            - name: ${REGISTRY_SECRET_NAME}
             containers:
             - ports:
               - containerPort: ${WAS_PORT}
@@ -112,6 +114,8 @@ objects:
   metadata:
     name: ${APP_NAME}-input-git
     namespace: ${NAMESPACE}
+    labels:
+      app: ${APP_NAME}
   spec:
     type: git
     params:
@@ -124,6 +128,8 @@ objects:
   metadata:
     name: ${APP_NAME}-output-image
     namespace: ${NAMESPACE}
+    labels:
+      app: ${APP_NAME}
   spec:
     type: image
     params:
@@ -134,6 +140,8 @@ objects:
   metadata:
     name: ${APP_NAME}-pipeline
     namespace: ${NAMESPACE}
+    labels:
+      app: ${APP_NAME}
   spec:
     resources:
     - name: source-repo
@@ -154,6 +162,8 @@ objects:
       default: "8080"
     - name: deploy-cfg-name
       description: Configmap name for description
+    - name: deploy-env-json
+      description: Deployment environment variable in JSON object form
     tasks:
     - name: build-source
       taskRef:
@@ -164,10 +174,8 @@ objects:
         value: 192.168.6.110:5000/s2i-nodejs:12
       - name: PACKAGE_SERVER_URL
         value: ${PACKAGE_SERVER_URL}
-      - name: REGISTRY_ID
-        value: ${REGISTRY_ID}
-      - name: REGISTRY_PW
-        value: ${REGISTRY_PW}
+      - name: REGISTRY_SECRET_NAME
+        value: ${REGISTRY_SECRET_NAME}
       resources:
         inputs:
         - name: source
@@ -209,11 +217,15 @@ objects:
         value: $(tasks.build-source.results.image-url)
       - name: deploy-cfg-name
         value: $(params.deploy-cfg-name)
+      - name: deploy-env-json
+        value: $(params.deploy-env-json)
 - apiVersion: tekton.dev/v1alpha1
   kind: PipelineRun
   metadata:
     generateName: ${APP_NAME}-pipeline-run-
     namespace: ${NAMESPACE}
+    labels:
+      app: ${APP_NAME}
   spec:
     serviceAccountName: ${SERVICE_ACCOUNT_NAME}
     pipelineRef:
@@ -230,3 +242,5 @@ objects:
       value: ${APP_NAME}
     - name: deploy-cfg-name
       value: ${APP_NAME}-deploy-cfg
+    - name: deploy-env-json
+      value: ${DEPLOY_ENV_JSON}
