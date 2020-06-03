@@ -55,8 +55,79 @@ spec:
                 properties:
                   limits.cpu:
                     x-kubernetes-int-or-string: true
+                    pattern: "^([+]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
                   limits.memory:
                     x-kubernetes-int-or-string: true
+                    pattern: "^([+]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
+                  limits.storage:
+                    x-kubernetes-int-or-string: true
+                    pattern: "^([+]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
+                  requests.cpu:
+                    x-kubernetes-int-or-string: true
+                    pattern: "^([+]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$" 
+                  requests.memory:
+                    x-kubernetes-int-or-string: true
+                    pattern: "^([+]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
+                  requests.storage:
+                    x-kubernetes-int-or-string: true
+                    pattern: "^([+]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
+                  configmaps:
+                    x-kubernetes-int-or-string: true
+                    pattern: "^([+]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
+                  persistentvolumeclaims:
+                    x-kubernetes-int-or-string: true
+                    pattern: "^([+]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
+                  pods:
+                    x-kubernetes-int-or-string: true
+                    pattern: "^([+]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
+                  replicationcontrollers:
+                    x-kubernetes-int-or-string: true
+                    pattern: "^([+]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
+                  secrets:
+                    x-kubernetes-int-or-string: true
+                    pattern: "^([+]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
+                  services:
+                    x-kubernetes-int-or-string: true
+                    pattern: "^([+]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
+                  services.loadbalancers:
+                    x-kubernetes-int-or-string: true
+                    pattern: "^([+]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
+                  services.nodeports:
+                    x-kubernetes-int-or-string: true
+                    pattern: "^([+]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
+                  count/persistentvolumeclaims:
+                    x-kubernetes-int-or-string: true
+                    pattern: "^([+]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
+                  count/services:
+                    x-kubernetes-int-or-string: true
+                    pattern: "^([+]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
+                  count/secrets:
+                    x-kubernetes-int-or-string: true
+                    pattern: "^([+]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
+                  count/configmaps:
+                    x-kubernetes-int-or-string: true
+                    pattern: "^([+]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
+                  count/replicationcontrollers:
+                    x-kubernetes-int-or-string: true
+                    pattern: "^([+]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
+                  count/deployments.apps:
+                    x-kubernetes-int-or-string: true
+                    pattern: "^([+]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
+                  count/replicasets.apps:
+                    x-kubernetes-int-or-string: true
+                    pattern: "^([+]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
+                  count/statefulsets.apps:
+                    x-kubernetes-int-or-string: true
+                    pattern: "^([+]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
+                  count/jobs.batch:
+                    x-kubernetes-int-or-string: true
+                    pattern: "^([+]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
+                  count/cronjobs.batch:
+                    x-kubernetes-int-or-string: true
+                    pattern: "^([+]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
+                  count/deployments.extensions:
+                    x-kubernetes-int-or-string: true
+                    pattern: "^([+]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
           status:
             type: object
             properties:
