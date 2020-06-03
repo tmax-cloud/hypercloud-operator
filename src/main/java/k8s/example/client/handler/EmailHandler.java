@@ -157,7 +157,7 @@ public class EmailHandler extends GeneralHandler {
 //        		logger.info( "  currentTimeUTC.minusMinutes(Constants.VERIFICATAION_DURATION_MINUTES): " + currentTimeUTC.minusMinutes(Constants.VERIFICATAION_DURATION_MINUTES) );
 //        		logger.info( "  secretReturn.getMetadata().getCreationTimestamp(): " + secretReturn.getMetadata().getCreationTimestamp() );
         		
-    			 if( currentTimeUTC.minusMinutes(Constants.VERIFICATAION_DURATION_MINUTES).isBefore( secretReturn.getMetadata().getCreationTimestamp()) ) {
+    			 if( currentTimeUTC.minusMinutes(Constants.MAIL_VERIFICATAION_DURATION_MINUTES).isBefore( secretReturn.getMetadata().getCreationTimestamp()) ) {
     				  if ( returnMap.get("verifycode").equalsIgnoreCase(userInDO.getVerifyCode()) ){
 	    					status = Status.OK;
 	 		        		outDO = "User Email Verify Success";
