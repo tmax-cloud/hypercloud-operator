@@ -185,7 +185,7 @@ public class RegistryWatcher extends Thread {
 											for( RegistryCondition condition : registry.getStatus().getConditions() ) {
 												if( condition.getReason() != null ) {
 													changePhase = RegistryStatus.StatusPhase.ERROR.getStatus();
-													changeMessage = "Registry's " + condition.getType() + " type condtion is not satisfied";
+													changeMessage = "Registry's " + condition.getType() + " type condtion is not satisfied.";
 													changeReason = "Error";
 												}
 											}
