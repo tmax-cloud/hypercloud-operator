@@ -3,6 +3,11 @@ kind: TemplateInstance
 metadata:
   name: nodejs-cicd-template-instance
   namespace: default
+  annotations:
+    template-version: '1.0.0'
+    tested-operator-version: '4.1.0.23'
+  labels:
+    cicd-template-was: nodejs
 spec:
   template:
     metadata:
@@ -15,16 +20,12 @@ spec:
     - name: SERVICE_ACCOUNT_NAME
       value: tutorial-service
     - name: GIT_URL
-      value: https://github.com/nodeshift-starters/nodejs-rest-http
+      value: https://github.com/sunghyunkim3/nodejs-rest-http
     - name: GIT_REV
       value: master
     - name: IMAGE_URL
-      value: 192.168.6.110:5000/nodejs-sample:latest
-    - name: REGISTRY_SECRET
-      value: ''
-    - name: REGISTRY_ID
-      value: ''
-    - name: REGISTRY_PW
+      value: 192.168.6.110:5000/nodejs-sample
+    - name: REGISTRY_SECRET_NAME
       value: ''
     - name: WAS_PORT
       value: 8080
@@ -32,3 +33,5 @@ spec:
       value: LoadBalancer
     - name: PACKAGE_SERVER_URL
       value: ''
+    - name: DEPLOY_ENV_JSON
+      value: "{'EX':'EXVAL', 'EX2': 'EXVAL2'}"

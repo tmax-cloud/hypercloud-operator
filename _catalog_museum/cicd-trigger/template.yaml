@@ -3,6 +3,9 @@ kind: Template
 metadata:
   name: cicd-trigger-template
   namespace: default
+  annotations:
+    template-version: '1.0.0'
+    tested-operator-version: '4.1.0.23'
 imageUrl: 'https://raw.githubusercontent.com/tektoncd/triggers/master/tekton-triggers.png'
 provider: tmax
 recommend: false
@@ -48,7 +51,7 @@ objects:
         generateName: ${APP_NAME}-run-
         namespace: ${NAMESPACE}
       spec:
-        serviceAccountName: ${SERVICE_ACCOUNT_NAME} 
+        serviceAccountName: ${SERVICE_ACCOUNT_NAME}
         pipelineRef:
           name: ${APP_NAME}-pipeline
         params:
@@ -91,4 +94,3 @@ objects:
           - name: ${APP_NAME}-gitlab-binding
         template:
           name: ${APP_NAME}-template
-
