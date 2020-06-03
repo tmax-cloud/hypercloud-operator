@@ -175,7 +175,7 @@ public class LoginHandler extends GeneralHandler {
 				    				DateTime otpRegisterTime = formatter.parseDateTime(uspCR.getOtpRegisterTime().substring(0,19));
 				        			logger.info(" otpRegisterTime: " + otpRegisterTime);
 
-				       			 	if( currentTime.minusMinutes(Constants.VERIFICATAION_DURATION_MINUTES).isBefore( otpRegisterTime ) ) {
+				       			 	if( currentTime.minusMinutes(Constants.OTP_VERIFICATAION_DURATION_MINUTES).isBefore( otpRegisterTime ) ) {
 					       			 	if (uspCR.getOtp() == loginInDO.getOtp()) {
 					    					token = openAuthloginSuccess( loginInDO );
 					    					accessToken = token.getAccessToken();
