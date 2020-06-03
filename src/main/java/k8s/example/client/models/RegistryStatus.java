@@ -70,7 +70,7 @@ public class RegistryStatus {
 	public static enum Status {
 		TRUE("True"),
 		FALSE("False"),
-		UNKNOWN("Unknown"),
+		UNUSED_FIELD("UnusedField"),
 		;
 		
 		private String status;

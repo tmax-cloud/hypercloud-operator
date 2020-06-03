@@ -91,7 +91,9 @@ spec:
                         type: integer
                         format: int64
                         minimum: 0
-                        maximum: 9223372036854775807
+                        #maximum: 9223372036854775807
+                        #maximum: 9223372036854775295
+                        maximum: 9223372036854774784
                       value:
                         type: string
             service:
@@ -112,7 +114,7 @@ spec:
                     port:
                       type: integer
                       description: "external port. Generally use 443 port"
-                      minimum: 0
+                      minimum: 1
                       maximum: 65535
                 loadBalancer:
                   type: object
