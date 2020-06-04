@@ -2728,7 +2728,11 @@ public class K8sApiCaller {
 			}
 			break;
 		case PVC:
-			
+//			try {
+//				api.deleteNamespacedPersistentVolumeClaim(Constants.K8S_PREFIX + registryId, namespace, null, null, null, null, null, new V1DeleteOptions());
+//			}catch(ApiException e) {
+//				logger.info(e.getResponseBody());
+//			}
 			break;
 		default:
 			logger.info("Unknown RegistryCondition");
@@ -3338,7 +3342,6 @@ public class K8sApiCaller {
 		
 		if (secret.getType().equals(Constants.K8S_SECRET_TYPE_DOCKER_CONFIG_JSON)) {
 			// DOCKEER CONFIG JSON TYPE SECRET
-			
 			switch (eventType) {
 			case Constants.EVENT_TYPE_ADDED:
 				condition.put("type", RegistryCondition.Condition.SECRET_DOCKER_CONFIG_JSON.getType());
@@ -3376,7 +3379,6 @@ public class K8sApiCaller {
 			
 		} else if (secret.getType().equals(Constants.K8S_SECRET_TYPE_TLS)) {
 			// TLS TYPE SECRET
-			
 			switch (eventType) {
 			case Constants.EVENT_TYPE_ADDED:
 				condition.put("type", RegistryCondition.Condition.SECRET_TLS.getType());
@@ -3413,7 +3415,6 @@ public class K8sApiCaller {
 			
 		} else {
 			// OPAQUE TYPE SECRET
-			
 			switch (eventType) {
 			case Constants.EVENT_TYPE_ADDED:
 				condition.put("type", RegistryCondition.Condition.SECRET_OPAQUE.getType());
@@ -3489,7 +3490,7 @@ public class K8sApiCaller {
 				logger.info("This registry's event is not for current registry. So do not update registry status");
 				return;
 			}
-		}catch(ApiException e) {
+		} catch(ApiException e) {
 			if(e.getCode() == 404) {
 				logger.info(pvc.getMetadata().getName() + "/" + namespace + " pvc is deleted");
 			}
@@ -3502,6 +3503,34 @@ public class K8sApiCaller {
 
 		switch (eventType) {
 		case Constants.EVENT_TYPE_ADDED:
+			try {
+				Thread.sleep(3000);	// 처음 생성시 Pending 상태이므로 Bound될 때까지 3초간 기다림
+			} catch (InterruptedException e) {
+				logger.info("InterruptedException: " + e.getMessage());
+			}
+			
+			V1PersistentVolumeClaim response = api.readNamespacedPersistentVolumeClaim(pvc.getMetadata().getName(), namespace, null, null, null);
+
+			if( response.getStatus().getPhase().equals("Bound") ) {
+				condition.put("type", RegistryCondition.Condition.PVC.getType());
+				condition.put("status", RegistryStatus.Status.TRUE.getStatus());
+
+				patchStatus.put("op", "replace");
+				patchStatus.put("path", RegistryCondition.Condition.PVC.getPath());
+				patchStatus.put("value", condition);
+				patchStatusArray.add(patchStatus);	
+			} else {
+				condition.put("type", RegistryCondition.Condition.PVC.getType());
+				condition.put("status", RegistryStatus.Status.FALSE.getStatus());
+				condition.put("reason", pvc.getStatus().getPhase());
+
+				patchStatus.put("op", "replace");
+				patchStatus.put("path", RegistryCondition.Condition.PVC.getPath());
+				patchStatus.put("value", condition);
+				patchStatusArray.add(patchStatus);
+			}
+			
+			break;
 		case Constants.EVENT_TYPE_MODIFIED:
 			if( pvc.getStatus().getPhase().equals("Bound") ) {
 				condition.put("type", RegistryCondition.Condition.PVC.getType());
@@ -3510,33 +3539,16 @@ public class K8sApiCaller {
 				patchStatus.put("op", "replace");
 				patchStatus.put("path", RegistryCondition.Condition.PVC.getPath());
 				patchStatus.put("value", condition);
+				patchStatusArray.add(patchStatus);	
+			} else {
+				condition.put("type", RegistryCondition.Condition.PVC.getType());
+				condition.put("status", RegistryStatus.Status.FALSE.getStatus());
+				condition.put("reason", pvc.getStatus().getPhase());
+
+				patchStatus.put("op", "replace");
+				patchStatus.put("path", RegistryCondition.Condition.PVC.getPath());
+				patchStatus.put("value", condition);
 				patchStatusArray.add(patchStatus);
-			}else {
-				try {
-					Thread.sleep(3000);	// 처음 생성시 Pending 상태이므로 Bound될 때까지 3초간 기다림
-				} catch (InterruptedException e) {
-					logger.info("InterruptedException: " + e.getMessage());
-				}
-				V1PersistentVolumeClaim response = api.readNamespacedPersistentVolumeClaim(pvc.getMetadata().getName(), namespace, null, null, null);
-				
-				if( response.getStatus().getPhase().equals("Bound") ) {
-					condition.put("type", RegistryCondition.Condition.PVC.getType());
-					condition.put("status", RegistryStatus.Status.TRUE.getStatus());
-
-					patchStatus.put("op", "replace");
-					patchStatus.put("path", RegistryCondition.Condition.PVC.getPath());
-					patchStatus.put("value", condition);
-					patchStatusArray.add(patchStatus);	
-				}else {
-					condition.put("type", RegistryCondition.Condition.PVC.getType());
-					condition.put("status", RegistryStatus.Status.FALSE.getStatus());
-					condition.put("reason", pvc.getStatus().getPhase());
-
-					patchStatus.put("op", "replace");
-					patchStatus.put("path", RegistryCondition.Condition.PVC.getPath());
-					patchStatus.put("value", condition);
-					patchStatusArray.add(patchStatus);
-				}
 			}
 
 			break;
@@ -3567,6 +3579,7 @@ public class K8sApiCaller {
 			try {
 				registry = getRegistry(registryName, namespace);
 				createRegistryPvc(registry);
+				deleteRegistrySubresource(registry, RegistryCondition.Condition.REPLICA_SET);
 			} catch (Exception e) {
 				logger.info(e.getMessage());
 				throw e;
@@ -3613,7 +3626,7 @@ public class K8sApiCaller {
 				logger.info("This registry's event is not for current registry. So do not update registry status");
 				return;
 			}
-		}catch(ApiException e) {
+		} catch(ApiException e) {
 			if(e.getCode() == 404) {
 				logger.info(ingress.getMetadata().getName() + "/" + namespace + " ingress is deleted");
 			}
