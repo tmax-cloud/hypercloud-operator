@@ -70,24 +70,11 @@ public class RegistryWatcher extends Thread {
 					try {
 						Registry registry = null;
 						try {
-							logger.info("response.object.toString(): " + response.object.toString());
+							logger.info("response.object.toString(): " + response.object.toString() + "\n");
 							registry = mapper.treeToValue(mapper.valueToTree(response.object), Registry.class);
-							logger.info("registry: " + registry.toString());
+							logger.info("registry: " + registry.getStatus().toString() + "\n");
 						} catch(Exception e) {
 							logger.info("[mapper error]: " + e.getMessage());
-//							String changePhase = RegistryStatus.StatusPhase.ERROR.getStatus();
-//							String changeMessage = "Read regsitry failed";
-//							String changeReason = "RegistrySpecInvaild";
-//							
-//							JsonNode errRegistry = mapper.valueToTree(response.object);
-//							String registryName = errRegistry.get("metadata").get("name").asText();
-//							String namespace = errRegistry.get("metadata").get("namespace").asText();
-//
-//							logger.info("[Registry Watcher] Event Type : " + response.type.toString()); //ADDED, MODIFIED, DELETED
-//							logger.info("[Registry Watcher] Registry Name : " + registryName);
-//							logger.info("[Registry Watcher] Registry Namespace : " + namespace);
-//				
-//							K8sApiCaller.patchRegistryStatus(registryName, namespace, changePhase, changeMessage, changeReason);
 						}
 						
 						if( registry != null
@@ -134,7 +121,8 @@ public class RegistryWatcher extends Thread {
 											&& statusMap.get(RegistryCondition.Condition.CONTAINER)
 											&& statusMap.get(RegistryCondition.Condition.SERVICE)
 											&& statusMap.get(RegistryCondition.Condition.SECRET_OPAQUE)
-											&& statusMap.get(RegistryCondition.Condition.SECRET_DOCKER_CONFIG_JSON) ) {
+											&& statusMap.get(RegistryCondition.Condition.SECRET_DOCKER_CONFIG_JSON)
+											&& statusMap.get(RegistryCondition.Condition.PVC)) {
 										
 										if(serviceType.equals(RegistryService.SVC_TYPE_INGRESS)) {
 											if( !statusMap.get(RegistryCondition.Condition.SECRET_TLS)
@@ -156,7 +144,8 @@ public class RegistryWatcher extends Thread {
 												&& !statusMap.get(RegistryCondition.Condition.SECRET_OPAQUE)
 												&& !statusMap.get(RegistryCondition.Condition.SECRET_DOCKER_CONFIG_JSON)
 												&& !statusMap.get(RegistryCondition.Condition.SECRET_TLS)
-												&& !statusMap.get(RegistryCondition.Condition.INGRESS) ) {
+												&& !statusMap.get(RegistryCondition.Condition.INGRESS)
+												&& !statusMap.get(RegistryCondition.Condition.PVC)) {
 
 											K8sApiCaller.createRegistry(registry);
 											break;
@@ -165,7 +154,8 @@ public class RegistryWatcher extends Thread {
 												&& statusMap.get(RegistryCondition.Condition.POD)
 												&& statusMap.get(RegistryCondition.Condition.SERVICE)
 												&& statusMap.get(RegistryCondition.Condition.SECRET_OPAQUE)
-												&& statusMap.get(RegistryCondition.Condition.SECRET_DOCKER_CONFIG_JSON)) {
+												&& statusMap.get(RegistryCondition.Condition.SECRET_DOCKER_CONFIG_JSON)
+												&& statusMap.get(RegistryCondition.Condition.PVC)) {
 
 											if(serviceType.equals(RegistryService.SVC_TYPE_INGRESS)) {
 												if( !statusMap.get(RegistryCondition.Condition.SECRET_TLS)
@@ -178,41 +168,77 @@ public class RegistryWatcher extends Thread {
 											changeMessage = "Registry is not ready.";
 											changeReason = "NotReady";
 										}
-
+										else {
+											for( RegistryCondition condition : registry.getStatus().getConditions() ) {
+												if( condition.getReason() != null ) {
+													changePhase = RegistryStatus.StatusPhase.ERROR.getStatus();
+													changeMessage = "Registry's " + condition.getType() + " type condtion is not satisfied.";
+													changeReason = "Error";
+												}
+											}
+										}
 									}
 									// Registry Is NotReady or Error.
 									else {
-										if(!statusMap.get(RegistryCondition.Condition.SERVICE)) {
-											changePhase = RegistryStatus.StatusPhase.ERROR.getStatus();
-											changeMessage = "Registry service is not exist.";
-											changeReason = "ServiceNotFound";
-										}
-										else if(!statusMap.get(RegistryCondition.Condition.SECRET_OPAQUE)) {
-											changePhase = RegistryStatus.StatusPhase.ERROR.getStatus();
-											changeMessage = "Registry opaque type secret is not exist.";
-											changeReason = "SecretNotFound";
-										}
-										else if(!statusMap.get(RegistryCondition.Condition.SECRET_DOCKER_CONFIG_JSON)) {
-											changePhase = RegistryStatus.StatusPhase.ERROR.getStatus();
-											changeMessage = "Registry docker config json type secret is not exist.";
-											changeReason = "SecretNotFound";
-										}
-										else if(!statusMap.get(RegistryCondition.Condition.CONTAINER)) {
-											changePhase = RegistryStatus.StatusPhase.NOT_READY.getStatus();
-											changeMessage = "Registry is not ready.";
-											changeReason = "NotReady";
-										}
-										else if(serviceType.equals(RegistryService.SVC_TYPE_INGRESS)) {
-											if(!statusMap.get(RegistryCondition.Condition.SECRET_TLS)) {
+										boolean changeRegistryStatus = false;
+										for( RegistryCondition condition : registry.getStatus().getConditions() ) {
+											if( condition.getReason() != null ) {
 												changePhase = RegistryStatus.StatusPhase.ERROR.getStatus();
-												changeMessage = "Registry tls type secret is not exist.";
-												changeReason = "SecretNotFound";
-											} else if(!statusMap.get(RegistryCondition.Condition.INGRESS)) {
-												changePhase = RegistryStatus.StatusPhase.ERROR.getStatus();
-												changeMessage = "Registry ingress is not exist.";
-												changeReason = "IngressNotFound";
+												changeMessage = "Registry's " + condition.getType() + " type condtion is not satisfied.";
+												changeReason = "Error";
+												changeRegistryStatus = true;
+												break;
 											}
 										}
+										if( !changeRegistryStatus ) {
+											if(!statusMap.get(RegistryCondition.Condition.PVC)) {
+												changePhase = RegistryStatus.StatusPhase.ERROR.getStatus();
+												changeMessage = "Registry pvc is not exist.";
+												changeReason = "PvcNotFound";
+											}
+											else if(!statusMap.get(RegistryCondition.Condition.SERVICE)) {
+												changePhase = RegistryStatus.StatusPhase.ERROR.getStatus();
+												changeMessage = "Registry service is not exist.";
+												changeReason = "ServiceNotFound";
+											}
+											else if(!statusMap.get(RegistryCondition.Condition.SECRET_OPAQUE)) {
+												changePhase = RegistryStatus.StatusPhase.ERROR.getStatus();
+												changeMessage = "Registry opaque type secret is not exist.";
+												changeReason = "SecretNotFound";
+											}
+											else if(!statusMap.get(RegistryCondition.Condition.SECRET_DOCKER_CONFIG_JSON)) {
+												changePhase = RegistryStatus.StatusPhase.ERROR.getStatus();
+												changeMessage = "Registry docker config json type secret is not exist.";
+												changeReason = "SecretNotFound";
+											}
+											else if(!statusMap.get(RegistryCondition.Condition.REPLICA_SET)) {
+												changePhase = RegistryStatus.StatusPhase.ERROR.getStatus();
+												changeMessage = "Registry ReplicaSet is not created";
+												changeReason = "ReplicaSetNotFound";
+											}
+											else if(!statusMap.get(RegistryCondition.Condition.POD)) {
+												changePhase = RegistryStatus.StatusPhase.ERROR.getStatus();
+												changeMessage = "Registry Pod is not Running.";
+												changeReason = "PodNotRunning";
+											}
+											else if(!statusMap.get(RegistryCondition.Condition.CONTAINER)) {
+												changePhase = RegistryStatus.StatusPhase.NOT_READY.getStatus();
+												changeMessage = "Registry is not ready.";
+												changeReason = "NotReady";
+											}
+											else if(serviceType.equals(RegistryService.SVC_TYPE_INGRESS)) {
+												if(!statusMap.get(RegistryCondition.Condition.SECRET_TLS)) {
+													changePhase = RegistryStatus.StatusPhase.ERROR.getStatus();
+													changeMessage = "Registry tls type secret is not exist.";
+													changeReason = "SecretNotFound";
+												} else if(!statusMap.get(RegistryCondition.Condition.INGRESS)) {
+													changePhase = RegistryStatus.StatusPhase.ERROR.getStatus();
+													changeMessage = "Registry ingress is not exist.";
+													changeReason = "IngressNotFound";
+												}
+											}
+										}
+										
 									}
 									
 									K8sApiCaller.patchRegistryStatus(registry, changePhase, changeMessage, changeReason);
@@ -231,7 +257,7 @@ public class RegistryWatcher extends Thread {
 								JsonNode diff = Util.jsonDiff(beforeJson, Util.toJson(registry).toString());
 
 								if(diff.size() > 0 ) {
-									logger.info("[Updated Registry Spec]\ndiff: " + diff.toString());
+									logger.info("[Updated Registry Spec]\ndiff: " + diff.toString() + "\n");
 									K8sApiCaller.updateRegistryAnnotationLastCR(registry);
 									K8sApiCaller.updateRegistrySubresources(registry, diff);
 								}
@@ -323,8 +349,11 @@ public class RegistryWatcher extends Thread {
 		statusMap.put(RegistryCondition.Condition.INGRESS, 
 				ingressCondtion.getStatus().equals(RegistryStatus.Status.TRUE.getStatus()));
 		
+		RegistryCondition pvcCondtion
+		= registry.getStatus().getConditions().get(RegistryCondition.Condition.INDEX_PVC); 
+		statusMap.put(RegistryCondition.Condition.PVC, 
+				pvcCondtion.getStatus().equals(RegistryStatus.Status.TRUE.getStatus()));
+		
 		return statusMap;
 	}
-	
-	
 }
