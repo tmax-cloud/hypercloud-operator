@@ -85,6 +85,8 @@ public class RegistryStatus {
 		if(conditions != null ) 
 			for( RegistryCondition condition : conditions)
 				sb.append("    conditions: ").append(toIndentedString(condition)).append("\n");
+		sb.append("    message: ").append(toIndentedString(message)).append("\n");
+		sb.append("    reason: ").append(toIndentedString(reason)).append("\n");
 		sb.append("    phase: ").append(toIndentedString(phase)).append("\n");
 		sb.append("}");
 		return sb.toString();

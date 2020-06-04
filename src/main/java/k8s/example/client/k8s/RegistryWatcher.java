@@ -72,22 +72,9 @@ public class RegistryWatcher extends Thread {
 						try {
 							logger.info("response.object.toString(): " + response.object.toString() + "\n");
 							registry = mapper.treeToValue(mapper.valueToTree(response.object), Registry.class);
-							logger.info("registry: " + registry.getMetadata().toString() + "\n");
+							logger.info("registry: " + registry.getStatus().toString() + "\n");
 						} catch(Exception e) {
 							logger.info("[mapper error]: " + e.getMessage());
-//							String changePhase = RegistryStatus.StatusPhase.ERROR.getStatus();
-//							String changeMessage = "Read regsitry failed";
-//							String changeReason = "RegistrySpecInvaild";
-//							
-//							JsonNode errRegistry = mapper.valueToTree(response.object);
-//							String registryName = errRegistry.get("metadata").get("name").asText();
-//							String namespace = errRegistry.get("metadata").get("namespace").asText();
-//
-//							logger.info("[Registry Watcher] Event Type : " + response.type.toString()); //ADDED, MODIFIED, DELETED
-//							logger.info("[Registry Watcher] Registry Name : " + registryName);
-//							logger.info("[Registry Watcher] Registry Namespace : " + namespace);
-//				
-//							K8sApiCaller.patchRegistryStatus(registryName, namespace, changePhase, changeMessage, changeReason);
 						}
 						
 						if( registry != null
@@ -224,17 +211,6 @@ public class RegistryWatcher extends Thread {
 												changeMessage = "Registry docker config json type secret is not exist.";
 												changeReason = "SecretNotFound";
 											}
-											else if(serviceType.equals(RegistryService.SVC_TYPE_INGRESS)) {
-												if(!statusMap.get(RegistryCondition.Condition.SECRET_TLS)) {
-													changePhase = RegistryStatus.StatusPhase.ERROR.getStatus();
-													changeMessage = "Registry tls type secret is not exist.";
-													changeReason = "SecretNotFound";
-												} else if(!statusMap.get(RegistryCondition.Condition.INGRESS)) {
-													changePhase = RegistryStatus.StatusPhase.ERROR.getStatus();
-													changeMessage = "Registry ingress is not exist.";
-													changeReason = "IngressNotFound";
-												}
-											}
 											else if(!statusMap.get(RegistryCondition.Condition.REPLICA_SET)) {
 												changePhase = RegistryStatus.StatusPhase.ERROR.getStatus();
 												changeMessage = "Registry ReplicaSet is not created";
@@ -249,6 +225,17 @@ public class RegistryWatcher extends Thread {
 												changePhase = RegistryStatus.StatusPhase.NOT_READY.getStatus();
 												changeMessage = "Registry is not ready.";
 												changeReason = "NotReady";
+											}
+											else if(serviceType.equals(RegistryService.SVC_TYPE_INGRESS)) {
+												if(!statusMap.get(RegistryCondition.Condition.SECRET_TLS)) {
+													changePhase = RegistryStatus.StatusPhase.ERROR.getStatus();
+													changeMessage = "Registry tls type secret is not exist.";
+													changeReason = "SecretNotFound";
+												} else if(!statusMap.get(RegistryCondition.Condition.INGRESS)) {
+													changePhase = RegistryStatus.StatusPhase.ERROR.getStatus();
+													changeMessage = "Registry ingress is not exist.";
+													changeReason = "IngressNotFound";
+												}
 											}
 										}
 										
@@ -270,7 +257,7 @@ public class RegistryWatcher extends Thread {
 								JsonNode diff = Util.jsonDiff(beforeJson, Util.toJson(registry).toString());
 
 								if(diff.size() > 0 ) {
-									logger.info("[Updated Registry Spec]\ndiff: " + diff.toString());
+									logger.info("[Updated Registry Spec]\ndiff: " + diff.toString() + "\n");
 									K8sApiCaller.updateRegistryAnnotationLastCR(registry);
 									K8sApiCaller.updateRegistrySubresources(registry, diff);
 								}
@@ -369,6 +356,4 @@ public class RegistryWatcher extends Thread {
 		
 		return statusMap;
 	}
-	
-	
 }

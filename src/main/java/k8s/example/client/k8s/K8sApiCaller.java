@@ -1114,14 +1114,13 @@ public class K8sApiCaller {
 			createRegistryPvc(registry);
 			createRegistryCertSecret(registry);
 			createRegistryDcjSecret(registry);
+			createRegistryConfigMap(registry);
+			createRegistryReplicaSet(registry);
 			
 			if(serviceType.equals(RegistryService.SVC_TYPE_INGRESS)) {
 				createRegistryTlsSecret(registry);
 				createRegistryIngress(registry);
 			}
-
-			createRegistryConfigMap(registry);
-			createRegistryReplicaSet(registry);
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw e;
@@ -1305,6 +1304,7 @@ public class K8sApiCaller {
 			JsonArray jArrayPatchPvc = new JsonArray();
 			Map<String, String> labelsMap = null;
 			
+			// labels field is not exist
 			if( (labelsMap = existPvc.getMetadata().getLabels()) == null ) {
 				JsonArray labels = new JsonArray();
 				JsonObject label1 = new JsonObject();
@@ -1322,73 +1322,33 @@ public class K8sApiCaller {
 				
 				jArrayPatchPvc.add(Util.makePatchJsonObject("add", "/metadata", labels));
 			}
-			else {
-				if( !labelsMap.containsKey("registryUid") ) {
-					JsonObject label = new JsonObject();
-					label.addProperty("registryUid", registry.getMetadata().getUid());
-					
-					jArrayPatchPvc.add(Util.makePatchJsonObject("add", "/metadata/labels", label));
-				}
-				else {
-					int i = 0;
-					for( String key : labelsMap.keySet()) {
-						if( key.equals("registryUid") ) {
-							JsonObject label = new JsonObject();
-							label.addProperty("registryUid", registry.getMetadata().getUid());
-							jArrayPatchPvc.add(Util.makePatchJsonObject("replace", "/metadata/labels/" + i, label));
-						}
-						++i;
-					}
+			else {	// labels field is exist
+				JsonObject label = new JsonObject();
+				
+				labelsMap.remove("registryUid");
+				labelsMap.remove("app");
+				labelsMap.remove("apps");
+				
+				for(String key : labelsMap.keySet()) {
+					label.addProperty(key, labelsMap.get(key));
 				}
 				
-				if( !labelsMap.containsKey("app") ) {
-					JsonObject label = new JsonObject();
-					label.addProperty("app", "registry");
-					
-					jArrayPatchPvc.add(Util.makePatchJsonObject("add", "/metadata/labels", label));
-				}
-				else {
-					int i = 0;
-					for( String key : labelsMap.keySet()) {
-						if( key.equals("app") ) {
-							JsonObject label = new JsonObject();
-							label.addProperty("app", registry.getMetadata().getUid());
-							
-							jArrayPatchPvc.add(Util.makePatchJsonObject("replace", "/metadata/labels/" + i, label));
-						}
-						++i;
-					}
-				}
+				label.addProperty("registryUid", registry.getMetadata().getUid());
+				label.addProperty("app", "registry");
+				label.addProperty("apps", registry.getMetadata().getName());
 				
-				if( !labelsMap.containsKey("apps") ) {
-					JsonObject label = new JsonObject();
-					label.addProperty("apps", registry.getMetadata().getName());
-					
-					jArrayPatchPvc.add(Util.makePatchJsonObject("add", "/metadata/labels", label));
-				}
-				else {
-					int i = 0;
-					for( String key : labelsMap.keySet()) {
-						if( key.equals("apps") ) {
-							JsonObject label = new JsonObject();
-							label.addProperty("apps", registry.getMetadata().getName());
-							jArrayPatchPvc.add(Util.makePatchJsonObject("replace", "/metadata/labels/" + i, label));
-						}
-						++i;
-					}
-				}
+				jArrayPatchPvc.add(Util.makePatchJsonObject("add", "/metadata/labels", label));
 			}
 			
 			try {
+				logger.info("patchNamespacedPersistentVolumeClaim: " + existPvc.getMetadata().getName() + "/" + namespace);
 				V1PersistentVolumeClaim  result = api.patchNamespacedPersistentVolumeClaim(existPvc.getMetadata().getName(), namespace, new V1Patch(jArrayPatchPvc.toString()), null, null, null, null);
-
 				logger.info("patchNamespacedPersistentVolumeClaim result: " + result.getMetadata().toString() + "\n");
-			
 			} catch (ApiException e) {
 				logger.info(e.getResponseBody());
 			}
 			
-		}else {
+		} else {
 			// ----- Create PVC
 			CreatePvc createPvc = registryPVC.getCreate();
 			V1PersistentVolumeClaim pvc = new V1PersistentVolumeClaim();
@@ -1402,10 +1362,6 @@ public class K8sApiCaller {
 			String storageClassName = createPvc.getStorageClassName();
 
 			pvcMeta.setName(Constants.K8S_PREFIX + registryId);
-
-			//			Map<String, String> pvcLabels = new HashMap<String, String>();
-			//			pvcLabels.addProperty("app", Constants.K8S_PREFIX.substring(0, Constants.K8S_PREFIX.length() - 1));
-			//			pvcMeta.setLabels(pvcLabels);
 
 			logger.info("<Pvc Label List>");
 			Map<String, String> pvcLabels = new HashMap<String, String>();
@@ -2452,7 +2408,7 @@ public class K8sApiCaller {
 				try {
 					createRegistryReplicaSet(registry);
 				} catch (Exception e) {
-					e.printStackTrace();
+					logger.info(e.getMessage());
 				}
 			}
 			if (path.startsWith("/spec/service")) {
@@ -2464,8 +2420,16 @@ public class K8sApiCaller {
 				try {
 					createRegistryReplicaSet(registry);
 				} catch (Exception e) {
-					e.printStackTrace();
+					logger.info(e.getMessage());
 				}
+			}
+			if (path.startsWith("/spec/persistentVolumeClaim/exist")) {
+				try {
+					createRegistryPvc(registry);
+				} catch (Exception e) {
+					logger.info(e.getMessage());
+				}
+				recreateSubresources.add(RegistryCondition.Condition.REPLICA_SET);
 			}
 			if (path.equals("/spec/image")) {
 				recreateSubresources.add(RegistryCondition.Condition.POD);
@@ -2539,9 +2503,7 @@ public class K8sApiCaller {
 					
 					try {
 						V1PersistentVolumeClaim result = api.patchNamespacedPersistentVolumeClaim(Constants.K8S_PREFIX + registryId, namespace, new V1Patch(jArrayPatchPvc.toString()), null, null, null, null);
-
 						logger.info("patchNamespacedPersistentVolumeClaim result: " + result.getMetadata().toString() + "\n");
-					
 					} catch (ApiException e) {
 						logger.info(e.getResponseBody());
 					}
@@ -2550,7 +2512,7 @@ public class K8sApiCaller {
 					try {
 						V1PersistentVolumeClaim pvc = api.readNamespacedPersistentVolumeClaim(Constants.K8S_PREFIX + registryId, namespace, null, null, null);
 						pvc.getMetadata().setOwnerReferences(null);
-						 
+						
 						V1PersistentVolumeClaim result = api.replaceNamespacedPersistentVolumeClaim(Constants.K8S_PREFIX + registryId, namespace, pvc, null, null, null);
 						logger.info("replaceNamespacedCustomObject result: " + result.getMetadata().toString() + "\n");
 					} catch (ApiException e) {
@@ -2710,26 +2672,12 @@ public class K8sApiCaller {
 
 	public static void patchRegistryStatus(Registry registry, String phase, String message, String reason) throws ApiException{
 		String namespace = registry.getMetadata().getNamespace();
-		JsonObject phaseObj = new JsonObject();
-		JsonObject messageObj = new JsonObject();
-		JsonObject reasonObj = new JsonObject();
 		JsonArray patchStatusArray = new JsonArray();
 
 		if (phase != null && message != null && reason != null) {
-			phaseObj.addProperty("op", "replace");
-			phaseObj.addProperty("path", "/status/phase");
-			phaseObj.addProperty("value", phase);
-			patchStatusArray.add(phaseObj);
-
-			messageObj.addProperty("op", "replace");
-			messageObj.addProperty("path", "/status/message");
-			messageObj.addProperty("value", message);
-			patchStatusArray.add(messageObj);
-
-			reasonObj.addProperty("op", "replace");
-			reasonObj.addProperty("path", "/status/reason");
-			reasonObj.addProperty("value", reason);
-			patchStatusArray.add(reasonObj);
+			patchStatusArray.add(Util.makePatchJsonObject("replace", "/status/phase", phase));
+			patchStatusArray.add(Util.makePatchJsonObject("replace", "/status/message", message));
+			patchStatusArray.add(Util.makePatchJsonObject("replace", "/status/reason", reason));
 
 			try {
 				Object result = customObjectApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP,
@@ -2744,26 +2692,12 @@ public class K8sApiCaller {
 	}
 	
 	public static void patchRegistryStatus(String registryName, String namespace, String phase, String message, String reason) throws ApiException{
-		JsonObject phaseObj = new JsonObject();
-		JsonObject messageObj = new JsonObject();
-		JsonObject reasonObj = new JsonObject();
 		JsonArray patchStatusArray = new JsonArray();
 
 		if (phase != null && message != null && reason != null) {
-			phaseObj.addProperty("op", "replace");
-			phaseObj.addProperty("path", "/status/phase");
-			phaseObj.addProperty("value", phase);
-			patchStatusArray.add(phaseObj);
-
-			messageObj.addProperty("op", "replace");
-			messageObj.addProperty("path", "/status/message");
-			messageObj.addProperty("value", message);
-			patchStatusArray.add(messageObj);
-
-			reasonObj.addProperty("op", "replace");
-			reasonObj.addProperty("path", "/status/reason");
-			reasonObj.addProperty("value", reason);
-			patchStatusArray.add(reasonObj);
+			patchStatusArray.add(Util.makePatchJsonObject("replace", "/status/phase", phase));
+			patchStatusArray.add(Util.makePatchJsonObject("replace", "/status/message", message));
+			patchStatusArray.add(Util.makePatchJsonObject("replace", "/status/reason", reason));
 
 			try {
 				Object result = customObjectApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP,
@@ -2779,7 +2713,6 @@ public class K8sApiCaller {
 	
 	public static void patchRegistryStatus(Registry registry, RegistryCondition.Condition cdt, String status, String message, String reason) throws ApiException{
 		String namespace = registry.getMetadata().getNamespace();
-		JsonObject patchStatus = new JsonObject();
 		JsonObject condition = new JsonObject();
 		JsonArray patchStatusArray = new JsonArray();
 
@@ -2790,10 +2723,7 @@ public class K8sApiCaller {
 			if( message != null )		condition.addProperty("message", message);
 			if( reason != null )		condition.addProperty("reason", reason);
 			
-			patchStatus.addProperty("op", "replace");
-			patchStatus.addProperty("path", cdt.getPath());
-			patchStatus.add("value", condition);
-			patchStatusArray.add(patchStatus);
+			patchStatusArray.add(Util.makePatchJsonObject("replace", cdt.getPath(), condition));
 			
 			try {
 				Object result = customObjectApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP,
@@ -3344,6 +3274,7 @@ public class K8sApiCaller {
 		registryName = pvc.getMetadata().getLabels().get("apps");
 		logger.info("registry name: " + registryName);
 		String registryUid = pvc.getMetadata().getLabels().get("registryUid");
+		logger.info("registry uid: " + registryUid);
 
 		if ( registryUid == null) {
 			logger.info(pvc.getMetadata().getName() + "/" + namespace + " pvc's registryUid label is null");
@@ -3363,68 +3294,44 @@ public class K8sApiCaller {
 		}
 
 		JsonArray patchStatusArray = new JsonArray();
-		JsonObject patchStatus = new JsonObject();
 		JsonObject condition = new JsonObject();
 
 		switch (eventType) {
 		case Constants.EVENT_TYPE_ADDED:
-			try {
-				Thread.sleep(3000);	// 처음 생성시 Pending 상태이므로 Bound될 때까지 3초간 기다림
-			} catch (InterruptedException e) {
-				logger.info("InterruptedException: " + e.getMessage());
-			}
-			
-			V1PersistentVolumeClaim response = api.readNamespacedPersistentVolumeClaim(pvc.getMetadata().getName(), namespace, null, null, null);
-
-			if( response.getStatus().getPhase().equals("Bound") ) {
-				condition.addProperty("type", RegistryCondition.Condition.PVC.getType());
-				condition.addProperty("status", RegistryStatus.Status.TRUE.getStatus());
-
-				patchStatus.addProperty("op", "replace");
-				patchStatus.addProperty("path", RegistryCondition.Condition.PVC.getPath());
-				patchStatus.add("value", condition);
-				patchStatusArray.add(patchStatus);	
-			} else {
-				condition.addProperty("type", RegistryCondition.Condition.PVC.getType());
-				condition.addProperty("status", RegistryStatus.Status.FALSE.getStatus());
-				condition.addProperty("reason", pvc.getStatus().getPhase());
-
-				patchStatus.addProperty("op", "replace");
-				patchStatus.addProperty("path", RegistryCondition.Condition.PVC.getPath());
-				patchStatus.add("value", condition);
-				patchStatusArray.add(patchStatus);
-			}
-			
-			break;
 		case Constants.EVENT_TYPE_MODIFIED:
 			if( pvc.getStatus().getPhase().equals("Bound") ) {
 				condition.addProperty("type", RegistryCondition.Condition.PVC.getType());
 				condition.addProperty("status", RegistryStatus.Status.TRUE.getStatus());
 
-				patchStatus.addProperty("op", "replace");
-				patchStatus.addProperty("path", RegistryCondition.Condition.PVC.getPath());
-				patchStatus.add("value", condition);
-				patchStatusArray.add(patchStatus);	
 			} else {
-				condition.addProperty("type", RegistryCondition.Condition.PVC.getType());
-				condition.addProperty("status", RegistryStatus.Status.FALSE.getStatus());
-				condition.addProperty("reason", pvc.getStatus().getPhase());
+				try {
+					Thread.sleep(3000);	// 처음 생성시 Pending 상태이므로 Bound될 때까지 3초간 기다림
+				} catch (InterruptedException e) {
+					logger.info("InterruptedException: " + e.getMessage());
+				}
 
-				patchStatus.addProperty("op", "replace");
-				patchStatus.addProperty("path", RegistryCondition.Condition.PVC.getPath());
-				patchStatus.add("value", condition);
-				patchStatusArray.add(patchStatus);
+				V1PersistentVolumeClaim response = api.readNamespacedPersistentVolumeClaim(pvc.getMetadata().getName(), namespace, null, null, null);
+
+				if( response.getStatus().getPhase().equals("Bound") ) {
+					condition.addProperty("type", RegistryCondition.Condition.PVC.getType());
+					condition.addProperty("status", RegistryStatus.Status.TRUE.getStatus());
+
+				} else {
+					condition.addProperty("type", RegistryCondition.Condition.PVC.getType());
+					condition.addProperty("status", RegistryStatus.Status.FALSE.getStatus());
+					condition.addProperty("reason", pvc.getStatus().getPhase());
+
+				}
 			}
+			
+			patchStatusArray.add(Util.makePatchJsonObject("replace", RegistryCondition.Condition.PVC.getPath(), condition));	
 
 			break;
 		case Constants.EVENT_TYPE_DELETED:
 			condition.addProperty("type", RegistryCondition.Condition.PVC.getType());
 			condition.addProperty("status", RegistryStatus.Status.FALSE.getStatus());
 
-			patchStatus.addProperty("op", "replace");
-			patchStatus.addProperty("path", RegistryCondition.Condition.PVC.getPath());
-			patchStatus.add("value", condition);
-			patchStatusArray.add(patchStatus);
+			patchStatusArray.add(Util.makePatchJsonObject("replace", RegistryCondition.Condition.PVC.getPath(), condition));
 
 			try {
 				Map<String, String> pvcMap = pvc.getMetadata().getLabels();
