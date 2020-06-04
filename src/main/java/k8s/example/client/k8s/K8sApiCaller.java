@@ -2227,7 +2227,7 @@ public class K8sApiCaller {
 			authHeader.setValue("Basic " + loginAuth);
 			headers.add(authHeader);
 
-			httpGet.setPath("v2/_catalog");
+			httpGet.setPath("/v2/_catalog");
 			httpGet.setPort(new IntOrString(registrySVCTargetPort));
 			httpGet.setScheme("HTTPS");
 			httpGet.setHttpHeaders(headers);
@@ -2249,7 +2249,7 @@ public class K8sApiCaller {
 			authHeader2.setValue("Basic " + loginAuth);
 			headers2.add(authHeader2);
 
-			httpGet2.setPath("v2/_catalog");
+			httpGet2.setPath("/v2/_catalog");
 			httpGet2.setPort(new IntOrString(registrySVCTargetPort));
 			httpGet2.setScheme("HTTPS");
 			httpGet2.setHttpHeaders(headers2);
