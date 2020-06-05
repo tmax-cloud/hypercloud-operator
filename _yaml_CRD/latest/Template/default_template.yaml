@@ -10,20 +10,20 @@ objects:
 - apiVersion: apps/v1
   kind: Deployment
   metadata:
-    name: example
+    name: ${NAME}
     labels:
-      app: example
+      app: ${NAME}
   spec:
     selector:
       matchLabels:
-        app: example
+        app: ${NAME}
     template:
       metadata:
         labels:
-          app: example
+          app: ${NAME}
       spec:
         containers:
-        - name: example
+        - name: ${NAME}
           image: example/image:version
           ports:
           - name: example
@@ -43,3 +43,8 @@ plans:
         create:
           parameters:
             EXAMPLE_PARAM: value
+parameters:
+- name: NAME
+  description: Application name
+  valueType: string
+  value: example
