@@ -3,7 +3,9 @@ package k8s.example.client.k8s;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -82,6 +84,19 @@ public class NamespaceClaimController extends Thread {
 							
 							switch( eventType ) {
 								case Constants.EVENT_TYPE_ADDED : 
+									// Set Owner Label from Annotation 'Creator'
+									if ( claim.getMetadata().getAnnotations() != null && claim.getMetadata().getAnnotations().get("creator") !=null) {
+										logger.info("[NamespaceClaim Controller] Set Owner Label from Annotation 'Creator'" );
+										// Set Owner Label from Annotation 'Creator'
+										if ( claim.getMetadata().getLabels() != null ) {
+											claim.getMetadata().getLabels().put("owner", claim.getMetadata().getAnnotations().get("creator"));
+										} else {
+											Map < String, String > labels = new HashMap<>();
+											labels.put("owner", claim.getMetadata().getAnnotations().get("creator"));
+											claim.getMetadata().setLabels(labels);
+										}
+									}
+
 									if ( K8sApiCaller.namespaceAlreadyExist( resourceName ) ) {
 										replaceNscStatus( claimName, Constants.CLAIM_STATUS_REJECT, "Duplicated NameSpaceName" );
 									} else {
