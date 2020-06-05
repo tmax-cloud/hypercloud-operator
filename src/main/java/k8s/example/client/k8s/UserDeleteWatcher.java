@@ -9,6 +9,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 
 import io.kubernetes.client.openapi.ApiClient;
+import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CustomObjectsApi;
 import io.kubernetes.client.util.Watch;
 import k8s.example.client.Constants;
@@ -100,7 +101,17 @@ public class UserDeleteWatcher extends Thread {
 										throw new Exception(ErrorCode.USER_DELETE_FAILED);
 									}
 								}
-				        	}						
+				        	}	
+							
+		    	    		logger.info( " Delete User Security Policy If Exists " );
+		    	    		try {
+		    	    			K8sApiCaller.deleteUserSecurityPolicy( response.object.getMetadata().getName() );
+			    	    		logger.info( " Delete User Security Policy Success " );
+
+		    	    		} catch (ApiException e) {
+		    	    			e.printStackTrace();
+			    	    		logger.info( " There was No USP for use [ " + response.object.getMetadata().getName() + " ]" );
+		    	    		}
 							break;
 						}
 					} catch (Exception e) {

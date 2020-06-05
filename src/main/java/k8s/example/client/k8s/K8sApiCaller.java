@@ -32,7 +32,6 @@ import javax.net.ssl.SSLSocketFactory;
 
 import org.apache.commons.codec.binary.Base64;
 import org.joda.time.DateTime;
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 import org.json.simple.parser.JSONParser;
@@ -67,10 +66,12 @@ import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.Configuration;
 import io.kubernetes.client.openapi.ProgressResponseBody;
 import io.kubernetes.client.openapi.apis.AppsV1Api;
+import io.kubernetes.client.openapi.apis.AuthorizationV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.apis.CustomObjectsApi;
 import io.kubernetes.client.openapi.apis.ExtensionsV1beta1Api;
 import io.kubernetes.client.openapi.apis.RbacAuthorizationV1Api;
+import io.kubernetes.client.openapi.auth.ApiKeyAuth;
 import io.kubernetes.client.openapi.models.ExtensionsV1beta1HTTPIngressPath;
 import io.kubernetes.client.openapi.models.ExtensionsV1beta1HTTPIngressRuleValue;
 import io.kubernetes.client.openapi.models.ExtensionsV1beta1Ingress;
@@ -116,6 +117,7 @@ import io.kubernetes.client.openapi.models.V1ReplicaSet;
 import io.kubernetes.client.openapi.models.V1ReplicaSetBuilder;
 import io.kubernetes.client.openapi.models.V1ReplicaSetList;
 import io.kubernetes.client.openapi.models.V1ReplicaSetSpec;
+import io.kubernetes.client.openapi.models.V1ResourceAttributes;
 import io.kubernetes.client.openapi.models.V1ResourceQuota;
 import io.kubernetes.client.openapi.models.V1ResourceQuotaSpec;
 import io.kubernetes.client.openapi.models.V1ResourceRequirements;
@@ -127,6 +129,8 @@ import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.openapi.models.V1SecretKeySelector;
 import io.kubernetes.client.openapi.models.V1SecretList;
 import io.kubernetes.client.openapi.models.V1SecretVolumeSource;
+import io.kubernetes.client.openapi.models.V1SelfSubjectAccessReview;
+import io.kubernetes.client.openapi.models.V1SelfSubjectAccessReviewSpec;
 import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.V1ServiceList;
 import io.kubernetes.client.openapi.models.V1ServicePort;
@@ -196,6 +200,7 @@ public class K8sApiCaller {
 	private static CoreV1Api api;
 	private static AppsV1Api appApi;
 	private static RbacAuthorizationV1Api rbacApi;
+	private static AuthorizationV1Api authApi;
 	private static CustomObjectsApi customObjectApi;
 	private static CustomResourceApi templateApi;
 	private static ExtensionsV1beta1Api extentionApi;
@@ -217,6 +222,7 @@ public class K8sApiCaller {
 		api = new CoreV1Api();
 		appApi = new AppsV1Api();
 		rbacApi = new RbacAuthorizationV1Api();
+		authApi = new AuthorizationV1Api();
 		customObjectApi = new CustomObjectsApi();
 		templateApi = new CustomResourceApi();
 		extentionApi = new ExtensionsV1beta1Api();
@@ -823,6 +829,34 @@ public class K8sApiCaller {
 
 		return userList;
 	}
+	
+	public static List<NamespaceClaim> listNamespaceClaim() throws Exception {
+		List<NamespaceClaim> nscList = null;
+		try {
+			Object response = customObjectApi.listClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP,
+					Constants.CUSTOM_OBJECT_VERSION, Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, null, null, null, null, null,
+					null, null, Boolean.FALSE);
+
+			JsonObject respJson = (JsonObject) new JsonParser().parse((new Gson()).toJson(response));
+
+			mapper.registerModule(new JodaModule());
+			if (respJson.get("items") != null)
+				nscList = mapper.readValue((new Gson()).toJson(respJson.get("items")),
+						new TypeReference<ArrayList<NamespaceClaim>>() {
+						});
+
+		} catch (ApiException e) {
+			logger.info("Response body: " + e.getResponseBody());
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			logger.info("Exception message: " + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		}
+
+		return nscList;
+	}
 
 	public static TokenCR getToken(String tokenName) throws Exception {
 		TokenCR token = new TokenCR();
@@ -912,6 +946,23 @@ public class K8sApiCaller {
 
 			customObjectApi.deleteClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION,
 					Constants.CUSTOM_OBJECT_PLURAL_USER, userName, 0, null, null, body);
+		} catch (ApiException e) {
+			logger.info("Response body: " + e.getResponseBody());
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			logger.info("Exception message: " + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		}
+	}
+	
+	public static void deleteUserSecurityPolicy (String uspName) throws Exception {
+		try {
+			V1DeleteOptions body = new V1DeleteOptions();
+
+			customObjectApi.deleteClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION,
+					Constants.CUSTOM_OBJECT_PLURAL_USER_SECURITY_POLICY, uspName, 0, null, null, body);
 		} catch (ApiException e) {
 			logger.info("Response body: " + e.getResponseBody());
 			e.printStackTrace();
@@ -5790,6 +5841,91 @@ public class K8sApiCaller {
 			}
 		}
 		return nsList;
+	}
+	
+	@SuppressWarnings("null")
+	public static List < NamespaceClaim > getAccessibleNSC(String token, String userId) throws Exception {
+		List < NamespaceClaim > nscList = null;
+		
+		try {
+			logger.info(" user Id :" + userId);
+			logger.info(" user Token :" + token);
+				
+			// 1. Verify if user has NSC List role			
+			ApiClient nscUser = Config.fromCluster();
+			
+		    // Configure API key authorization: BearerToken
+		    ApiKeyAuth BearerToken = (ApiKeyAuth) nscUser.getAuthentication("BearerToken");
+		    logger.info("BearerToken : " + BearerToken);
+
+		    BearerToken.setApiKey(token);
+
+		    AuthorizationV1Api authApi = new AuthorizationV1Api(nscUser);
+		    V1SelfSubjectAccessReview body = new V1SelfSubjectAccessReview(); // V1SelfSubjectAccessReview | 
+		    V1SelfSubjectAccessReviewSpec spec = new V1SelfSubjectAccessReviewSpec();
+		    V1ResourceAttributes ra = new V1ResourceAttributes();
+		    ra.setResource("namespaceclaims");
+		    ra.setVerb("list");
+		    spec.setResourceAttributes(ra);
+		    body.setSpec(spec);
+		    
+		    V1SelfSubjectAccessReview result = null;
+		    try {
+		      result = authApi.createSelfSubjectAccessReview(body, null, null, null);      
+			} catch (ApiException e) {
+				logger.info(e.getResponseBody());
+				throw e;
+			}
+		    
+		    // 2. User has NSC List Permission
+		    if (result.getStatus().getAllowed()) {
+				logger.info("2. User has NSC List Permission");
+		    	nscList = listNamespaceClaim();
+		    	
+		    } else {
+		    	// 3. User has No NSC List Permission --> Check if there is owner NSC with label	
+				logger.info("3. User has No NSC List Permission --> Check if there is owner NSC with label");
+		    	body = new V1SelfSubjectAccessReview(); // V1SelfSubjectAccessReview | 
+			    spec = new V1SelfSubjectAccessReviewSpec();
+			    ra = new V1ResourceAttributes();
+			    ra.setResource("namespaceclaims");
+			    ra.setVerb("get");
+			    spec.setResourceAttributes(ra);
+			    body.setSpec(spec);
+			    
+			    try {
+			    	result = authApi.createSelfSubjectAccessReview(body, null, null, null);      
+				} catch (ApiException e) {
+					logger.info(e.getResponseBody());
+					throw e;
+				}
+			    if (result.getStatus().getAllowed()) {
+			    	//3-1. User has NSC Get Permission
+					logger.info("3-1. User has NSC Get Permission");
+			    	List < NamespaceClaim > possibleNscList = listNamespaceClaim();
+			    	for( NamespaceClaim possibleNsc :  possibleNscList) { 
+						if ( possibleNsc.getMetadata().getLabels() != null && possibleNsc.getMetadata().getLabels().get("owner")!= null) {
+
+							if ( possibleNsc.getMetadata().getLabels().get("owner").toString().equalsIgnoreCase(userId) ){
+								nscList = new ArrayList<>();
+				    			nscList.add(possibleNsc);
+				    		}
+						}	
+			    	}
+			    }   	
+		    }
+		}catch( Exception e) {
+			e.printStackTrace();
+			logger.info(e.getMessage());
+			throw e;
+		}
+
+		if (nscList != null) {
+			for (NamespaceClaim nsc : nscList) {
+				logger.info(" [ Accessible NameSpaceClaim ] : " + nsc.getMetadata().getName());
+			}
+		}
+		return nscList;
 	}
 
 	public static boolean verifyAdmin(String userId) throws ApiException {

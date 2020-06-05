@@ -1,9 +1,6 @@
 package k8s.example.client.handler;
 
-import java.io.FileInputStream;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.charset.Charset;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -25,8 +22,6 @@ import fi.iki.elonen.NanoHTTPD.Response.Status;
 import fi.iki.elonen.router.RouterNanoHTTPD.GeneralHandler;
 import fi.iki.elonen.router.RouterNanoHTTPD.UriResource;
 import io.kubernetes.client.openapi.ApiException;
-import io.kubernetes.client.openapi.models.V1Namespace;
-import io.kubernetes.client.openapi.models.V1NamespaceList;
 import k8s.example.client.Constants;
 import k8s.example.client.DataObject.TokenCR;
 import k8s.example.client.ErrorCode;
@@ -35,17 +30,18 @@ import k8s.example.client.Util;
 import k8s.example.client.k8s.K8sApiCaller;
 import k8s.example.client.k8s.OAuthApiCaller;
 import k8s.example.client.metering.util.SimpleUtil;
+import k8s.example.client.models.NamespaceClaim;
 
-public class NameSpaceHandler extends GeneralHandler {
+public class NameSpaceClaimHandler extends GeneralHandler {
     private Logger logger = Main.logger;
 	@Override
     public Response get(
       UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
-		logger.info("***** GET /nameSpace");
+		logger.info("***** GET /nameSpaceClaim");
 		
 		IStatus status = null;
 		String accessToken = null;
-		V1NamespaceList nsList = null;
+		List < NamespaceClaim > nscList = null;
 		String outDO = null; 
 		String issuer = null;
 		String userId = null;
@@ -69,20 +65,20 @@ public class NameSpaceHandler extends GeneralHandler {
     	    		if( webHookOutDO.get("status").getAsJsonObject().get("authenticated").toString().equalsIgnoreCase("true") ) {
     	    			userId = webHookOutDO.get("status").getAsJsonObject().get("user").getAsJsonObject().get("username").toString().replaceAll("\"", "");
     	    			logger.info( "  Token Validated " );
-        				nsList = K8sApiCaller.getAccessibleNS(userId);
+    	    			nscList = K8sApiCaller.getAccessibleNSC(accessToken, userId);
         				status = Status.OK;
 
         				// Limit 
-        				if( nsList!= null) {
+        				if( nscList!= null) {
         					if( limit != null ) {
-            					nsList.setItems( nsList.getItems().stream().limit(Integer.parseInt(limit)).collect(Collectors.toList()));		
+        						nscList =  nscList.stream().limit(Integer.parseInt(limit)).collect(Collectors.toList());		
             				}
         				}				
     	    		} else {
     	    			logger.info( "  Authentication fail" );
     	    			logger.info( "  Token is not valid" );
         				status = Status.UNAUTHORIZED;
-        				outDO = "Get NameSpace List failed. Token is not valid.";
+        				outDO = "Get NameSpaceClaim List failed. Token is not valid.";
     	    		}
         		}
     		}
@@ -101,30 +97,30 @@ public class NameSpaceHandler extends GeneralHandler {
     			
     			if(verifyAccessToken(accessToken, userId, tokenId, issuer)) {		
     				logger.info( "  Token Validated " );
-    				nsList = K8sApiCaller.getAccessibleNS(userId);
+    				nscList = K8sApiCaller.getAccessibleNSC(accessToken, userId);
     				status = Status.OK;
 
-    				// Limit
-    				if( nsList!= null) {
+    				// Limit 
+    				if( nscList!= null) {
     					if( limit != null ) {
-        					nsList.setItems( nsList.getItems().stream().limit(Integer.parseInt(limit)).collect(Collectors.toList()));		
+    						nscList =  nscList.stream().limit(Integer.parseInt(limit)).collect(Collectors.toList());		
         				}
-    				} 
+    				}	
     			} else {
     				logger.info( "  Token is not valid" );
     				status = Status.UNAUTHORIZED;
-    				outDO = "Get NameSpace List failed. Token is not valid.";
+    				outDO = "Get NameSpaceClaim List failed. Token is not valid.";
     			}
     		}
 
 			// Make outDO					
-    		if( nsList!=null ) {
+    		if( nscList!=null ) {
     			Gson gson = new GsonBuilder().setPrettyPrinting().create();
-    			outDO = gson.toJson( nsList ).toString();
+    			outDO = gson.toJson( nscList ).toString();
     		} else {
     			status = Status.FORBIDDEN;
     			JsonObject result = new JsonObject();
-    			outDO = "Cannot Access Any NameSpace";
+    			outDO = "Cannot Access Any NameSpaceClaim";
     			result.addProperty("message", outDO);
     			Gson gson = new Gson();		
     		    outDO = gson.toJson(result);		
@@ -132,79 +128,19 @@ public class NameSpaceHandler extends GeneralHandler {
 			
 		} catch (ApiException e) {
 			logger.info( "Exception message: " + e.getMessage() );
-			outDO = "Get NameSpace List failed.";
+			outDO = "Get NameSpaceClaim List failed.";
 			status = Status.BAD_REQUEST;
 			e.printStackTrace();
 
 		} catch (Exception e) {
 			logger.info( "Exception message: " + e.getMessage() );
 			e.printStackTrace();
-			outDO = "Get NameSpace List failed.";
+			outDO = "Get NameSpaceClaim List failed.";
 			status = Status.BAD_REQUEST;
 		}
 		
 		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status, "application/json", outDO));
     }
-	
-	public Response put(UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
-		logger.info("***** PUT /NameSpace");
-		logger.info(" Trial Namespace Period Extend Service Start");
-
-		IStatus status = null;
-		String outDO = null;
-		
-		String nsName = SimpleUtil.getQueryParameter( session.getParameters(), Constants.QUERY_PARAMETER_NAMESPACE );
-		String period = SimpleUtil.getQueryParameter( session.getParameters(), Constants.QUERY_PARAMETER_PERIOD );
-
-		try {			
-			// Read NameSpace
-    		V1Namespace namespace = K8sApiCaller.getNameSpace(nsName);
-    		
-    		// Update Period Label
-    		Map<String, String> labels = namespace.getMetadata().getLabels();
-    		if ( labels.keySet().contains("period")) {
-    			labels.replace("period", period);
-    		}else {
-    			labels.put("period", period);
-    		}
-    		
-    		// Delete Exist Trial Timer with previous Period
-    		Util.deleteTrialNSTimer ( nsName );
-    		
-    		// Set New Trial Timer 
-    		Util.setTrialNSTimer(namespace);
-    		
-    		// patchNameSpace with new label
-    		K8sApiCaller.replaceNamespace(namespace);
-    		
-			// Make outDO
-			outDO = "Trial NameSpace Period Extend Success";
-			status = Status.OK;    			
-        			
-
-		} catch (ApiException e) {
-			logger.info("Exception message: " + e.getResponseBody());
-			e.printStackTrace();
-
-			status = Status.UNAUTHORIZED;
-			outDO = Constants.TRIAL_PERIOD_EXTEND_FAILED;
-
-		} catch (Exception e) {
-			logger.info("Exception message: " + e.getMessage());
-
-			e.printStackTrace();
-			status = Status.UNAUTHORIZED;
-			outDO = Constants.TRIAL_PERIOD_EXTEND_FAILED;
-
-		} catch (Throwable e) {
-			logger.info("Exception message: " + e.getMessage());
-			e.printStackTrace();
-			status = Status.UNAUTHORIZED;
-			outDO = Constants.TRIAL_PERIOD_EXTEND_FAILED;
-		}
-		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO));
-
-	}
 	
 	@Override
     public Response other(
@@ -231,32 +167,4 @@ public class NameSpaceHandler extends GeneralHandler {
 		
 		return result;
 	}
-	
-	private String readFile(String path, Integer length) {
-		Charset charset = Charset.defaultCharset();
-		String bodyStr = "";
-		int byteCount;
-		try {
-			ByteBuffer buf = ByteBuffer.allocate(Integer.valueOf(length));
-			FileInputStream fis = new FileInputStream(path);
-			FileChannel dest = fis.getChannel();
-
-			while (true) {
-				byteCount = dest.read(buf);
-				if (byteCount == -1) {
-					break;
-				} else {
-					buf.flip();
-					bodyStr += charset.decode(buf).toString();
-					buf.clear();
-				}
-			}
-			dest.close();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		return bodyStr;
-	}
-
 }
