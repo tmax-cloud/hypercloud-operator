@@ -1,6 +1,26 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.0.32 start -------------------->
+
+## HyperCloudServer_4.1.0.32 (Fri Jun  5 09:44:17 KST 2020)
+
+### Added
+
+### Changed
+  - [mod] nsc get 서비스 swagger 수정 by dnxorjs1
+  - [mod] creator annotation nsc owner 라벨로 옮기기 구현 by dnxorjs1
+  - [mod] UserDeleteWatcher.java usp 존재할 시에 지워주는 로직 추가 [mod] NameSpaceClaimHandler.java. 추가  : NSC Get 서비스 추가 by dnxorjs1
+  - [mod] registry:b004 image를 쓰지 않고 dockerhub에 있는 registry image를 사용할수 있도록 수정(예: registry:2.7.1) by sukhee_yun
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.0.32 end --------------------->
+
 <!-------------------- v4.1.0.31 start -------------------->
 
 ## HyperCloudServer_4.1.0.31 (Fri Jun  5 04:49:27 KST 2020)
