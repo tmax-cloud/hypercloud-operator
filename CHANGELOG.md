@@ -1,6 +1,33 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.0.31 start -------------------->
+
+## HyperCloudServer_4.1.0.31 (Fri Jun  5 04:49:27 KST 2020)
+
+### Added
+
+### Changed
+  - [mod] swagger.yaml 수정 (CatalogServiceClaim Status Update API 추가) by seonho_choi
+  - [mod] proauth-system resource quota 수정 by dnxorjs1
+  - [mod] Registry subresource가 삭제되었을때 복구할 수 있도록 수정 by sukhee_yun
+  - [mod][227191] resourceQuota Spec Validation 추가 by dnxorjs1
+  - [mod][227307] otp 인증시간 10분으로 변경 by dnxorjs1
+  - [mod] hypercloud_install_guide proauth-db 최초기동 확인법 추가 by dnxorjs1
+  - [mod] cluster.x-k8s resources 추가 by GitHub
+
+### Fixed
+  - [ims][223613] Catalog Service Claim 기능 추가 by seonho_choi
+  - [ims][226888] Registry Status 관리 로직 수정 (container가 Ready가 아닌 상태인 경우에만 NotReady) by sukhee_yun
+
+### CRD yaml
+  - [crd] CatalogServiceClaim CRD 추가 (ims-223613) by seonho_choi
+  - [crd] Registry tolerationSeconds integer 유효 범위로 수정(0 ~ 2147483647) by sukhee_yun
+
+### Etc
+
+<!--------------------- v4.1.0.31 end --------------------->
+
 <!-------------------- v4.1.0.30 start -------------------->
 
 ## HyperCloudServer_4.1.0.30 (Fri May 29 04:58:29 KST 2020)
