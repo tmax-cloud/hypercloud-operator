@@ -22,6 +22,22 @@ components:
         default: "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJUbWF4LVByb0F1dGgtV2ViSG9vayIsImlkIjoid3ltaW4tdG1heC5jby5rciIsImV4cCI6MTU4MzEyMTQ5M30.hjvrlaLDFuSjchJKarGKbuWOuafhsuCQgBDo-pqsZvg"
       required: true
       description: "Master Token"
+    patchContentType:
+      in: "header"
+      name: "Content-Type"
+      schema:
+        type: "string"
+        default: "application/json-patch+json"
+      required: true
+      description: "status patch type"
+    mergeContentType:
+      in: "header"
+      name: "Content-Type"
+      schema:
+        type: "string"
+        default: "application/merge-patch+json"
+      required: true
+      description: "status patch type"
     offsetParam:
       in: "query"
       name: "offset"
@@ -556,6 +572,45 @@ paths:
       summary: "RoleBindingClaim Status Patch Service"
       parameters:
       - $ref: "#/components/parameters/tokenParam"
+      - in: "path"
+        name: "namespace"
+        description: "Target Namespace Name"
+        schema: 
+          type: "string"
+        required: true
+      - in: "path"
+        name: "claim"
+        description: "Target Claim Name"
+        schema: 
+          type: "string"
+        required: true
+      requestBody:
+        description: "StatusDO"
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                dto:
+                  $ref: "#/components/schemas/StatusDO"    
+              example:
+                {
+                  "status": {
+                    "status" : "Success"
+                  }
+                }
+      responses:
+        200:
+          description: Service OK
+  /apis/tmax.io/v1/namespaces/{namespace}/catalogserviceclaims/{claim}/status:
+    patch:
+      tags:
+      - "Claim Status Patch"
+      summary: "CatalogServiceClaim Status Patch Service"
+      parameters:
+      - $ref: "#/components/parameters/tokenParam"
+      - $ref: "#/components/parameters/patchContentType"
+      - $ref: "#/components/parameters/mergeContentType"
       - in: "path"
         name: "namespace"
         description: "Target Namespace Name"
