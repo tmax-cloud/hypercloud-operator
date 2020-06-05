@@ -793,6 +793,58 @@ paths:
     }
   ]
 }            
+
+  /nameSpaceClaim:
+    get:
+      tags:
+      - "NamespaceClaim"
+      summary: "NameSpaceClaim List Get Service by User"
+      parameters:
+      - $ref: "#/components/parameters/tokenParam"
+      - $ref: "#/components/parameters/limitParam"
+      responses:
+        200:
+          description: Service OK
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  [
+                     {
+                      "apiVersion": "tmax.io/v1",
+                      "kind": "NamespaceClaim",
+                      "resourceName": "test-woo",
+                      "metadata": {
+                        "creationTimestamp": {
+                          "iMillis": 1591344762000,
+                          "iChronology": {
+                            "iBase": {
+                              "iMinDaysInFirstWeek": 4
+                            }
+                          }
+                        },
+                        "generation": 3,
+                        "labels": {
+                          "owner": "dnxorjs"
+                        },
+                        "name": "test-woo0605",
+                        "resourceVersion": "94758877",
+                        "selfLink": "/apis/tmax.io/v1/namespaceclaims/test-woo0605",
+                        "uid": "03998839-65ac-443b-9ec5-a33c098abf7d"
+                      },
+                      "spec": {
+                        "hard": {
+                          "limits.cpu": "1",
+                          "limits.memory": "1"
+                        }
+                      },
+                      "status": {
+                        "reason": "wait for admin permission",
+                        "status": "Awaiting"
+                      },
+                      "operatorStartTime": "1591345381478"
+                    }           ]
     put:
       tags:
       - "Trial"
