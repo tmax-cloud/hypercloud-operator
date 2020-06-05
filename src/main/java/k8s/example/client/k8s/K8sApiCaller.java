@@ -38,6 +38,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.slf4j.Logger;
 
 import com.fasterxml.jackson.core.JsonFactory;
@@ -387,6 +388,9 @@ public class K8sApiCaller {
 		logger.info("ResourceQuota Claim Latest resource version: " + rqcLatestResourceVersion);
 		long rbcLatestResourceVersion = getLatestResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_ROLEBINDINGCLAIM, true);
 		logger.info("RoleBinding Claim Latest resource version: " + rbcLatestResourceVersion);
+		
+		long cscLatestResourceVersion = getLatestResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_CATALOGSERVICECLAIM, true);
+		logger.info("Catalog Service Claim Latest resource version: " + cscLatestResourceVersion);
 
 		// Init Registry Image
 		initializeImageList();
@@ -483,6 +487,12 @@ public class K8sApiCaller {
 		RoleBindingClaimController rbcOperator = new RoleBindingClaimController(k8sClient, customObjectApi,
 				rbcLatestResourceVersion);
 		rbcOperator.start();
+		
+		// Start CatalogServiceClaim Controller
+		logger.info("Start CatalogServiceClaim Controller");
+		CatalogServiceClaimController cscOperator = new CatalogServiceClaimController(k8sClient, customObjectApi,
+				cscLatestResourceVersion);
+		cscOperator.start();
 
 		while (true) {
 			try {
@@ -651,6 +661,16 @@ public class K8sApiCaller {
 					rbcOperator.interrupt();
 					rbcOperator = new RoleBindingClaimController(k8sClient, customObjectApi, rbcLatestResourceVersion);
 					rbcOperator.start();
+				}
+				
+				if (!cscOperator.isAlive()) {
+					cscLatestResourceVersion = CatalogServiceClaimController.getLatestResourceVersion();
+					logger.info(
+							("CatalogService Claim Controller is not Alive. Restart Controller! (Latest Resource Version: "
+									+ cscLatestResourceVersion + ")"));
+					cscOperator.interrupt();
+					cscOperator = new CatalogServiceClaimController(k8sClient, customObjectApi, cscLatestResourceVersion);
+					cscOperator.start();
 				}
 			} catch (Exception e) {
 				StringWriter sw = new StringWriter();
@@ -4577,7 +4597,43 @@ public class K8sApiCaller {
 			return true;
 		}
 	}
+	
+	public static boolean templateAlreadyExist(String name, String namespace) throws Throwable {
+		logger.info("[K8S ApiCaller] Get Template Start");
 
+		Object template;
+		try {
+			template = customObjectApi.getNamespacedCustomObject("tmax.io", "v1", namespace, Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE, name);
+		} catch (ApiException e) {
+			logger.info("[K8S ApiCaller][Exception] Template-" + name + " is not Exist");
+			return false;
+		}
+
+		if (template == null) {
+			logger.info("[K8S ApiCaller][Exception] Template-" + name + " is not Exist");
+			return false;
+		} else {
+			logger.info(objectToJsonNode(template).toString());
+			return true;
+		}
+	}
+	
+	public static void createTemplate(JsonNode claim, String namespace) throws ApiException, ParseException {
+		logger.info("[K8S ApiCaller] Create Template Start");
+		logger.info("[K8S ApiCaller] Create Template Info : " + claim.get("spec").toString() );
+		
+		JSONParser parser = new JSONParser();
+		JSONObject bodyObj = (JSONObject) parser.parse(claim.get("spec").toString());
+		
+		try {
+			templateApi.createNamespacedCustomObject("tmax.io", "v1", namespace, "Template", bodyObj, null);
+		} catch (ApiException e) {
+			logger.info(e.getResponseBody());
+			e.printStackTrace();
+			throw e;
+		}
+	}
+	
 	public static void createRoleBinding(RoleBindingClaim claim) throws ApiException {
 		logger.info("[K8S ApiCaller] Create RoleBinding Start");
 

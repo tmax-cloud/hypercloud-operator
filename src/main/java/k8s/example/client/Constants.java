@@ -27,7 +27,8 @@ public class Constants {
 	public static final String CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM = "namespaceclaims";
 	public static final String CUSTOM_OBJECT_PLURAL_RESOURCEQUOTACLAIM = "resourcequotaclaims";
 	public static final String CUSTOM_OBJECT_PLURAL_ROLEBINDINGCLAIM = "rolebindingclaims";
-	
+	public static final String CUSTOM_OBJECT_PLURAL_CATALOGSERVICECLAIM = "catalogserviceclaims";
+
 	public static final String SERVICE_INSTANCE_API_GROUP = "servicecatalog.k8s.io";
 	public static final String SERVICE_INSTANCE_API_VERSION = "v1beta1";
 	public static final String SERVICE_INSTANCE_PLURAL = "serviceinstances";
