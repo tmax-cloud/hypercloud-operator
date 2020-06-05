@@ -609,7 +609,6 @@ paths:
       summary: "CatalogServiceClaim Status Patch Service"
       parameters:
       - $ref: "#/components/parameters/tokenParam"
-      - $ref: "#/components/parameters/patchContentType"
       - $ref: "#/components/parameters/mergeContentType"
       - in: "path"
         name: "namespace"
