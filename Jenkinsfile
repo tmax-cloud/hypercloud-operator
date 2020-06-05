@@ -33,12 +33,12 @@ node {
 		sh "sudo cp ${binaryHome}/start.sh ${imageBuildHome}/start.sh"
     }
     
-	/*stage('make crd directory') {
-		sh "sudo sh ${scriptHome}/hypercloud-make-crd-yaml.sh ${version}"
+	stage('make crd directory') {
+		//sh "sudo sh ${scriptHome}/hypercloud-make-crd-yaml.sh ${version}"
 		sh "sudo cp -r ${hcBuildDir}/_yaml_CRD/${version} ${imageBuildHome}/hypercloud4-operator/_yaml_CRD"
 	}
     
-	stage('make change log'){
+	/*stage('make change log'){
 		sh "sudo sh ${scriptHome}/hypercloud-make-changelog.sh ${version} ${preVersion}"
 	}*/
 	
