@@ -59,7 +59,7 @@ public class RegistryCondition {
 	 * 7: Ingress
 	 */
 	public static enum Condition {
-		REPLICA_SET("ReplicaSetReady", "/status/conditions/" + Condition.INDEX_REPLICA_SET),
+		REPLICA_SET("ReplicaSetExist", "/status/conditions/" + Condition.INDEX_REPLICA_SET),
 		POD("PodRunning", "/status/conditions/" + Condition.INDEX_POD),
 		CONTAINER("ContainerReady", "/status/conditions/" + Condition.INDEX_CONTAINER),
 		SERVICE("ServiceExist", "/status/conditions/" + Condition.INDEX_SERVICE),
@@ -67,6 +67,7 @@ public class RegistryCondition {
 		SECRET_DOCKER_CONFIG_JSON("SecretDockerConfigJsonExist", "/status/conditions/" + Condition.INDEX_SECRET_DOCKER_CONFIG_JSON),
 		SECRET_TLS("SecretTlsExist", "/status/conditions/" + Condition.INDEX_SECRET_TLS),
 		INGRESS("IngressExist", "/status/conditions/" + Condition.INDEX_INGRESS),
+		PVC("PvcExist", "/status/conditions/" + Condition.INDEX_PVC),
 		;
 
 		public static final int INDEX_REPLICA_SET = 0;
@@ -77,6 +78,7 @@ public class RegistryCondition {
 		public static final int INDEX_SECRET_DOCKER_CONFIG_JSON = 5;
 		public static final int INDEX_SECRET_TLS = 6;
 		public static final int INDEX_INGRESS = 7;
+		public static final int INDEX_PVC = 8;
 		private String type;
 		private String path;
 

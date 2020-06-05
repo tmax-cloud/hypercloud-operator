@@ -184,6 +184,34 @@ public class Util {
 		return resp;
     }
     
+    /* Example
+	 * {"op":"remove","path":"/apiVersion"}
+	 * {"op":"replace","path":"/kind","value":"Registry3"}
+	 * {"op":"add","path":"/kind2","value":"Registry"}
+	 */
+    public static JsonObject makePatchJsonObject(String op, String path, Object value) {
+    	JsonObject res = new JsonObject();
+    	
+    	if(value instanceof JsonElement){
+    		res.add("value", (JsonElement) value);
+    	} else if(value instanceof String) {
+    		res.addProperty("value", (String) value);
+    	} else if(value instanceof Boolean) {
+    		res.addProperty("value", (Boolean) value);
+    	} else if(value instanceof Number) {
+    		res.addProperty("value", (Number) value);
+    	} else if(value instanceof Character) {
+    		res.addProperty("value", (Character) value);
+    	} else {
+    		return res;
+    	}
+    	
+    	res.addProperty("op", op);
+    	res.addProperty("path", path);
+    	
+    	return res;
+    }
+    
     public static JsonNode jsonDiff(String beforeJson, String afterJson) throws Exception{
     	try {
     		ObjectMapper jackson = new ObjectMapper(); 

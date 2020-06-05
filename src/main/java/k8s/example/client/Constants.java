@@ -134,7 +134,8 @@ public class Constants {
 	public static final String PASSWORD_CHANGE_FAILED = "Password Change Failed";
 	public static final String EMPTY_PASSWORD = "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e";
 	public static final String SECRET_VERIFICATAION_CODE = "verification-code-for-user";
-	public static final int VERIFICATAION_DURATION_MINUTES = 30;
+	public static final int MAIL_VERIFICATAION_DURATION_MINUTES = 30;
+	public static final int OTP_VERIFICATAION_DURATION_MINUTES = 10;
 	public static final String OPERATOR_TOKEN_EXPIRE_TIME = "operator-token-expire-time";
 	public static final String SECRET_MAIL_PASSWORD = "secret-mail-password";
 	

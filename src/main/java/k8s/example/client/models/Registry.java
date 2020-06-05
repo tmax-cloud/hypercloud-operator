@@ -57,16 +57,16 @@ public class Registry {
 		this.status = status;
 	}
 
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		sb.append("class Registry {\n");
-		sb.append("    apiVersion: ").append(toIndentedString(apiVersion)).append("\n");
-		if(metadata != null ) 	sb.append("    metadata: ").append(toIndentedString(metadata.toString())).append("\n");
-		if(spec != null ) 		sb.append("    spec: ").append(toIndentedString(spec.toString())).append("\n");
-		if(status != null ) 	sb.append("    status: ").append(toIndentedString(status.toString())).append("\n");
-		sb.append("}");
-		return sb.toString();
-	}
+//	public String toString() {
+//		StringBuilder sb = new StringBuilder();
+//		sb.append("class Registry {\n");
+//		sb.append("    apiVersion: ").append(toIndentedString(apiVersion)).append("\n");
+//		if(metadata != null ) 	sb.append("    metadata: ").append(toIndentedString(metadata.toString())).append("\n");
+//		if(spec != null ) 		sb.append("    spec: ").append(toIndentedString(spec.toString())).append("\n");
+//		if(status != null ) 	sb.append("    status: ").append(toIndentedString(status.toString())).append("\n");
+//		sb.append("}");
+//		return sb.toString();
+//	}
 
 	/**
 	 * Convert the given object to string with each line indented by 4 spaces
