@@ -2097,7 +2097,7 @@ public class K8sApiCaller {
 			List<String> command = new ArrayList<>();
 			command.add("/bin/sh");
 			command.add("-c");
-			command.add("/auth.sh $ID $PASSWD");
+			command.add("mkdir /auth; htpasswd -Bbn $ID $PASSWD > /auth/htpasswd");
 
 			exec.setCommand(command);
 			postStart.setExec(exec);
