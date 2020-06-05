@@ -34,13 +34,13 @@ node {
     }
     
 	stage('make crd directory') {
-		//sh "sudo sh ${scriptHome}/hypercloud-make-crd-yaml.sh ${version}"
+		sh "sudo sh ${scriptHome}/hypercloud-make-crd-yaml.sh ${version}"
 		sh "sudo cp -r ${hcBuildDir}/_yaml_CRD/${version} ${imageBuildHome}/hypercloud4-operator/_yaml_CRD"
 	}
     
-	/*stage('make change log'){
+	stage('make change log'){
 		sh "sudo sh ${scriptHome}/hypercloud-make-changelog.sh ${version} ${preVersion}"
-	}*/
+	}
 	
 	stage('build & push image'){
 		sh "sudo docker build --tag tmaxcloudck/hypercloud-operator:${imageTag} ${imageBuildHome}/"
@@ -54,7 +54,7 @@ node {
 	}
 	
 	
-	/*stage('git commit & push'){
+	stage('git commit & push'){
 		dir ("${hcBuildDir}") {
 			sh "git checkout ${params.buildBranch}"
 
@@ -74,7 +74,7 @@ node {
 			sh "git reset --hard origin/${params.buildBranch}"
 			sh "git pull origin ${params.buildBranch}"
 		}	
-	}*/
+	}
 	stage('clean repo'){
 		sh "sudo rm -rf ${hcBuildDir}/*"
 	}
