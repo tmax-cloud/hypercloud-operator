@@ -105,8 +105,10 @@ public class NamespaceClaimController extends Thread {
 										// If Trial Type 
 										if ( claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") !=null 
 												&& claim.getMetadata().getLabels().get("owner") !=null) {
-											// give owner all verbs of NSC of 
-											patchUserRole ( claim.getMetadata().getLabels().get("owner"), claim.getMetadata().getName() );
+											// give owner all verbs of NSC ( Except admin-tmax.co.kr)
+											if (  !claim.getMetadata().getLabels().get("owner").equalsIgnoreCase( Constants.MASTER_USER_ID )) {
+												patchUserRole ( claim.getMetadata().getLabels().get("owner"), claim.getMetadata().getName() );
+											}
 										}
 									}
 									break;
