@@ -5485,7 +5485,7 @@ public class K8sApiCaller {
 //		rule.addResourcesItem("resourcequotaclaims");
 		rule.addResourcesItem("namespaceclaims");
 		rule.addVerbsItem("create");
-		rule.addVerbsItem("list");		
+		rule.addVerbsItem("get");		
 		rules.add(rule);
 
 		clusterRole.setRules(rules);

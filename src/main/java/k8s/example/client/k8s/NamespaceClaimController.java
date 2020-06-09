@@ -67,7 +67,7 @@ public class NamespaceClaimController extends Thread {
 					} catch (Exception e) {
 						logger.info(e.getMessage());
 					}
-										
+					
 					// Logic here
 					String claimName = "unknown";
 					String resourceName = "unknown";
@@ -112,7 +112,7 @@ public class NamespaceClaimController extends Thread {
 									break;
 								case Constants.EVENT_TYPE_MODIFIED : 
 									String status = getClaimStatus( claimName );		
-									if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && K8sApiCaller.namespaceAlreadyExist( resourceName ) ) {						
+									if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && K8sApiCaller.namespaceAlreadyExist( resourceName ) ) {	
 										K8sApiCaller.updateNamespace( claim );
 										replaceNscStatus( claimName, Constants.CLAIM_STATUS_SUCCESS, "namespace update success." );
 									} else if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && !K8sApiCaller.namespaceAlreadyExist( resourceName ) ) {

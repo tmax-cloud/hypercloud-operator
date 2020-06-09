@@ -109,6 +109,7 @@ public class Constants {
 	// Namespace Claim Status
 	public static final String CLAIM_STATUS_AWAITING = "Awaiting";
 	public static final String CLAIM_STATUS_SUCCESS = "Success";
+	public static final String CLAIM_STATUS_PENDING = "Pending";
 	public static final String CLAIM_STATUS_REJECT = "Reject";
 	public static final String CLAIM_STATUS_ERROR = "Error";
 	
