@@ -31,8 +31,10 @@ spec:
             type: integer
             description: OTP Number 
           ipRange:
-            type: string
-            description: ip range for otp enable user   
+            type: array
+            items:
+              type: string
+            description: ip range for otp enable user      
           otpRegisterTime:
             type: string   
             description: New otp issue Time
