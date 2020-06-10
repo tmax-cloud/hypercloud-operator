@@ -131,6 +131,26 @@ public class RegistryWatcher extends Thread {
 											}
 										}
 										
+										// if lastPhase is not Running, synchronize image list from registry
+										if(!phase.equals(RegistryStatus.StatusPhase.RUNNING.getStatus())) {
+											boolean isSynced = false;
+											int tryCount = 0;
+											while(!isSynced) {
+												if( ++tryCount >= 10) {
+													break;
+												}
+												try {
+													K8sApiCaller.syncImageList(registry);
+													isSynced = true;
+												} catch (ApiException e) {
+													logger.info(e.getResponseBody());
+												} catch (Exception e) {
+													logger.info(e.getMessage());
+												}
+												Thread.sleep(1000);
+											}
+										}
+										
 										changePhase = RegistryStatus.StatusPhase.RUNNING.getStatus();
 										changeMessage = "Registry is running. All registry resources are operating normally.";
 										changeReason = "Running";

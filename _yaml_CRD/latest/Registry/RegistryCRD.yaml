@@ -170,7 +170,7 @@ spec:
                 type: object
                 required: [type]
                 properties:
-                  lastTrasnsitionTime:
+                  lastTransitionTime:
                     type: string
                     format: date-time
                   message:
