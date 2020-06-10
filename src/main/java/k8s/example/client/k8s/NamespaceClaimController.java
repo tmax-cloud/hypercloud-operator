@@ -67,7 +67,7 @@ public class NamespaceClaimController extends Thread {
 					} catch (Exception e) {
 						logger.info(e.getMessage());
 					}
-										
+					
 					// Logic here
 					String claimName = "unknown";
 					String resourceName = "unknown";
@@ -105,14 +105,16 @@ public class NamespaceClaimController extends Thread {
 										// If Trial Type 
 										if ( claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") !=null 
 												&& claim.getMetadata().getLabels().get("owner") !=null) {
-											// give owner all verbs of NSC of 
-											patchUserRole ( claim.getMetadata().getLabels().get("owner"), claim.getMetadata().getName() );
+											// give owner all verbs of NSC ( Except admin-tmax.co.kr)
+											if (  !claim.getMetadata().getLabels().get("owner").equalsIgnoreCase( Constants.MASTER_USER_ID )) {
+												patchUserRole ( claim.getMetadata().getLabels().get("owner"), claim.getMetadata().getName() );
+											}
 										}
 									}
 									break;
 								case Constants.EVENT_TYPE_MODIFIED : 
 									String status = getClaimStatus( claimName );		
-									if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && K8sApiCaller.namespaceAlreadyExist( resourceName ) ) {						
+									if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && K8sApiCaller.namespaceAlreadyExist( resourceName ) ) {	
 										K8sApiCaller.updateNamespace( claim );
 										replaceNscStatus( claimName, Constants.CLAIM_STATUS_SUCCESS, "namespace update success." );
 									} else if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && !K8sApiCaller.namespaceAlreadyExist( resourceName ) ) {

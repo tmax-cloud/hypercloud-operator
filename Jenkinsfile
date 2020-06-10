@@ -52,8 +52,7 @@ node {
 			sh "sudo sshpass -p 'ck-ftp' scp -o StrictHostKeyChecking=no ${hcBuildDir}/_swagger/operator-extensiono-api.yaml ck-ftp@192.168.1.150:/home/ck-ftp/api/4.1/hypercloud-operator-ext"
 		}	
 	}
-	
-	
+		
 	stage('git commit & push'){
 		dir ("${hcBuildDir}") {
 			sh "git checkout ${params.buildBranch}"

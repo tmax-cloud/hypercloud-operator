@@ -98,7 +98,7 @@ public class OtpHandler extends GeneralHandler {
 					    			status = Status.OK;			    			
 				    			}
 			    			} catch ( ApiException e ) {
-			    				if (e.getResponseBody().contains("NotFound")) {
+			    				if (e.getResponseBody().contains("NotFound") || e.getResponseBody().contains("404")) {
 				    				// If no USP, same as OTPEnable false
 					    			status = Status.OK;			
 			    				}else {

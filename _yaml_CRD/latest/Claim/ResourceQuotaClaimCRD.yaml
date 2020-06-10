@@ -125,6 +125,21 @@ spec:
                     pattern: "^([+]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
                   count/deployments.extensions:
                     x-kubernetes-int-or-string: true
+                    pattern: "^([+]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"  
+                  requests.nvidia.com/gpu:
+                    x-kubernetes-int-or-string: true
+                    pattern: "^([+]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"     
+                  ssd-ceph-fs.storageclass.storage.k8s.io/requests.storage:    
+                    x-kubernetes-int-or-string: true
+                    pattern: "^([+]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"                             
+                  hdd-ceph-fs.storageclass.storage.k8s.io/requests.storage:
+                    x-kubernetes-int-or-string: true
+                    pattern: "^([+]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
+                  ssd-ceph-block.storageclass.storage.k8s.io/requests.storage:
+                    x-kubernetes-int-or-string: true
+                    pattern: "^([+]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
+                  hdd-ceph-block.storageclass.storage.k8s.io/requests.storage:
+                    x-kubernetes-int-or-string: true
                     pattern: "^([+]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"    
           status:
             type: object

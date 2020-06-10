@@ -200,7 +200,7 @@ public class LoginHandler extends GeneralHandler {
 			    					refreshToken = token.getRefreshToken();
 				    			}
 			    			} catch (ApiException e) {
-			    				if (e.getResponseBody().contains("NotFound")) {
+			    				if (e.getResponseBody().contains("NotFound") || e.getResponseBody().contains("404")) {
 				    				// 3. If no USP, same as OTPEnable false
 				    				token = openAuthloginSuccess( loginInDO );
 				    				accessToken = token.getAccessToken();

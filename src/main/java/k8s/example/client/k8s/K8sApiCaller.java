@@ -5518,7 +5518,7 @@ public class K8sApiCaller {
 //		rule.addResourcesItem("resourcequotaclaims");
 		rule.addResourcesItem("namespaceclaims");
 		rule.addVerbsItem("create");
-		rule.addVerbsItem("list");		
+		rule.addVerbsItem("get");		
 		rules.add(rule);
 
 		clusterRole.setRules(rules);
@@ -6249,7 +6249,7 @@ public class K8sApiCaller {
 			logger.info("nameSpace [ " + nsName + " ] Get Service Start");
 
 			nameSpace = api.readNamespace(nsName, "true", false, false);
-		
+
 		} catch (ApiException e) {
 			logger.info("Response body: " + e.getResponseBody());
 			e.printStackTrace();

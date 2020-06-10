@@ -109,6 +109,7 @@ public class Constants {
 	// Namespace Claim Status
 	public static final String CLAIM_STATUS_AWAITING = "Awaiting";
 	public static final String CLAIM_STATUS_SUCCESS = "Success";
+	public static final String CLAIM_STATUS_PENDING = "Pending";
 	public static final String CLAIM_STATUS_REJECT = "Reject";
 	public static final String CLAIM_STATUS_ERROR = "Error";
 	
@@ -330,8 +331,8 @@ public class Constants {
 			"                <br>\r\n" + 
 			"                리소스 정보 <br>\r\n" + 
 			"                -CPU : 1 Core <br>\r\n" + 
-			"                -Memory : 4 GIB <br>\r\n" + 
-			"                -Storage : 4 GIB <br>\r\n" + 
+			"                -Memory : 1 GIB <br>\r\n" + 
+			"                -HDD Storage : 4 GIB <br>\r\n" + 
 			"                <br>\r\n" + 
 			"<!--                <span style=\"font-weight: 600;\">승인사유</span> <br>-->\r\n" + 
 			"                <br>\r\n" + 
