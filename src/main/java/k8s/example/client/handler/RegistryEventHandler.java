@@ -46,7 +46,6 @@ public class RegistryEventHandler extends GeneralHandler {
 			
 			logger.info("  Registry Event Count: " + regEvent.getEvents().size());
 			for( RegistryEvent event : regEvent.getEvents()) {
-				
 				if (event.getAction().equals("push")) {
 					logger.info("    Registry Action: " + event.getAction());
 					logger.info("    Registry Target Repository: " + event.getTarget().getRepository());

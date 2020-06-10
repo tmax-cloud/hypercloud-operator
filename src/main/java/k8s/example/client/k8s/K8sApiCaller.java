@@ -1109,8 +1109,10 @@ public class K8sApiCaller {
 		JsonObject condition9 = new JsonObject();
 		JsonArray patchStatusArray = new JsonArray();
 
+//		DateTime curTime = new DateTime();
 		condition1.addProperty("type", RegistryCondition.Condition.REPLICA_SET.getType());
 		condition1.addProperty("status", RegistryStatus.Status.FALSE.getStatus());
+//		condition1.addProperty("lastTransitionTime", curTime.toString());
 		conditions.add(condition1);
 
 		condition2.addProperty("type", RegistryCondition.Condition.POD.getType());
@@ -2749,7 +2751,7 @@ public class K8sApiCaller {
 			patchStatusArray.add(Util.makePatchJsonObject("replace", "/status/phase", phase));
 			patchStatusArray.add(Util.makePatchJsonObject("replace", "/status/message", message));
 			patchStatusArray.add(Util.makePatchJsonObject("replace", "/status/reason", reason));
-
+			
 			try {
 				Object result = customObjectApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP,
 						Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY,
@@ -2839,11 +2841,12 @@ public class K8sApiCaller {
 		JsonObject patchStatus = new JsonObject();
 		JsonObject condition = new JsonObject();
 		JsonArray patchStatusArray = new JsonArray();
-
+//		DateTime curTime = new DateTime();
 		switch (eventType) {
 		case Constants.EVENT_TYPE_ADDED:
 			condition.addProperty("type", RegistryCondition.Condition.REPLICA_SET.getType());
 			condition.addProperty("status", RegistryStatus.Status.TRUE.getStatus());
+//			condition.addProperty("lastTransitionTime", curTime.toString());
 
 			patchStatus.addProperty("op", "replace");
 			patchStatus.addProperty("path", RegistryCondition.Condition.REPLICA_SET.getPath());
@@ -2857,6 +2860,7 @@ public class K8sApiCaller {
 		case Constants.EVENT_TYPE_DELETED:
 			condition.addProperty("type", RegistryCondition.Condition.REPLICA_SET.getType());
 			condition.addProperty("status", RegistryStatus.Status.FALSE.getStatus());
+//			condition.addProperty("lastTransitionTime", curTime.toString());
 
 			patchStatus.addProperty("op", "replace");
 			patchStatus.addProperty("path", RegistryCondition.Condition.REPLICA_SET.getPath());
@@ -3403,24 +3407,12 @@ public class K8sApiCaller {
 			condition.addProperty("status", RegistryStatus.Status.FALSE.getStatus());
 
 			patchStatusArray.add(Util.makePatchJsonObject("replace", RegistryCondition.Condition.PVC.getPath(), condition));
-
-			try {
-				Map<String, String> pvcMap = pvc.getMetadata().getLabels();
-				pvcMap.remove("app"); 
-				pvcMap.remove("apps"); 
-				pvcMap.remove("registryUid");
-				pvc.getMetadata().setLabels(pvcMap);
-				
-				V1PersistentVolumeClaim  result = api.replaceNamespacedPersistentVolumeClaim(pvc.getMetadata().getName(), namespace, pvc, null, null, null);
-				logger.info("replaceNamespacedCustomObject result: " + result.getMetadata().toString() + "\n");
-			}catch (ApiException e) {
-				logger.info(e.getResponseBody());
-				throw e;
-			}
 			
 			Registry registry;
 			try {
 				registry = getRegistry(registryName, namespace);
+				
+				deleteImage(registry);
 				createRegistryPvc(registry);
 				deleteRegistrySubresource(registry, RegistryCondition.Condition.REPLICA_SET);
 			} catch (Exception e) {
@@ -4115,6 +4107,44 @@ public class K8sApiCaller {
 			logger.info(e.getResponseBody());
 		}
 	}
+	
+	public static void deleteImage(Registry registry) throws ApiException {
+		logger.info("[K8S ApiCaller] deleteImage(Registry, String, List<String>) Start");
+		String namespace = registry.getMetadata().getNamespace();
+		String imageRegistry = registry.getMetadata().getName();
+
+		logger.info("imageRegistry: " + imageRegistry);
+
+		try {
+			Object response = customObjectApi.listNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
+					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_IMAGE, null, null, null, 
+					"registry=" + imageRegistry, null, null, null, Boolean.FALSE);
+			JsonObject respJson = (JsonObject) new JsonParser().parse((new Gson()).toJson(response));
+
+			// Register Joda deserialization module because of creationTimestamp of k8s
+			// object
+			mapper.registerModule(new JodaModule());
+			List<Image> imageList = mapper.readValue((new Gson()).toJson(respJson.get("items")),
+					new TypeReference<ArrayList<Image>>() {
+			});
+
+			for(Image image : imageList) {
+				String imageCRName = image.getMetadata().getName();
+				try {
+					Object result = customObjectApi.deleteNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
+							Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_IMAGE, imageCRName,
+							0, null, null, null);
+					logger.info(imageCRName + " image is deleted!!");
+				} catch (ApiException e) {
+					logger.info("customObjectApi.deleteNamespacedCustomObject API error: " + e.getResponseBody());
+				}
+			}
+		} catch (ApiException e) {
+			logger.info(e.getResponseBody());
+		} catch (IOException e) {
+			logger.info(e.getMessage());
+		}
+	}
 
 	public static void createImage(Registry registry, String imageName, List<String> tagsList) throws ApiException {
 		logger.info("[K8S ApiCaller] createImage(Registry, String, List<String>) Start");
@@ -4196,7 +4226,10 @@ public class K8sApiCaller {
 			logger.info("IMAGE UID: " + image.getMetadata().getUid());
 			imageExist = true;
 		} catch (ApiException e) {
-			logger.info(e.getResponseBody());
+			if(e.getCode() != 404)
+				logger.info(e.getResponseBody());
+			else 
+				logger.info(imageName + " image is not exist.");
 			imageExist = false;
 		} catch (IOException e) {
 			logger.info(e.getMessage());

@@ -93,7 +93,7 @@ public class RegistryCondition {
 	
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append("class V1PodCondition {\n");
+		sb.append("class RegistryCondition {\n");
 		sb.append("    lastProbeTime: ").append(toIndentedString(lastProbeTime)).append("\n");
 		sb.append("    lastTransitionTime: ").append(toIndentedString(lastTransitionTime)).append("\n");
 		sb.append("    message: ").append(toIndentedString(message)).append("\n");

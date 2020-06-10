@@ -39,6 +39,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
   - [ims][223613] Catalog Service Claim 기능 추가 by seonho_choi
   - [ims][226888] Registry Status 관리 로직 수정 (container가 Ready가 아닌 상태인 경우에만 NotReady) by sukhee_yun
+  - [ims][223234] operator 기동시 registry와 image 목록 동기화 안되는 버그 수정 by sukhee_yun
 
 ### CRD yaml
   - [crd] CatalogServiceClaim CRD 추가 (ims-223613) by seonho_choi
