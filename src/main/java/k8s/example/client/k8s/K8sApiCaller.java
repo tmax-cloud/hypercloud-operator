@@ -388,6 +388,9 @@ public class K8sApiCaller {
 		long rbcLatestResourceVersion = getLatestResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_ROLEBINDINGCLAIM, true);
 		logger.info("RoleBinding Claim Latest resource version: " + rbcLatestResourceVersion);
 
+		long ccLatestResourceVersion = getLatestCapiClusterResourceVersion(Constants.CAPI_OBJECT_PLURAL_CAPICLUSTER, false);
+		logger.info("CapiCluster Latest resource version: " + ccLatestResourceVersion);
+		
 		// Init Registry Image
 		initializeImageList();
 
@@ -472,6 +475,12 @@ public class K8sApiCaller {
 				nscLatestResourceVersion);
 		nscOperator.start();
 
+		// Start CapiCluster Controller
+		logger.info("Start CapiCluster Controller");
+		CapiClusterController ccOperator = new CapiClusterController(k8sClient, customObjectApi, api,
+				ccLatestResourceVersion);
+		ccOperator.start();
+		
 		// Start ResourceQuotaClaim Controller
 		logger.info("Start ResourceQuotaClaim Controller");
 		ResourceQuotaClaimController rqcOperator = new ResourceQuotaClaimController(k8sClient, customObjectApi,
@@ -630,6 +639,16 @@ public class K8sApiCaller {
 					nscOperator.interrupt();
 					nscOperator = new NamespaceClaimController(k8sClient, customObjectApi, nscLatestResourceVersion);
 					nscOperator.start();
+				}
+				
+				if (!ccOperator.isAlive()) {
+					ccLatestResourceVersion = CapiClusterController.getLatestResourceVersion();
+					logger.info(
+							("CapiCluster Controller is not Alive. Restart Controller! (Latest Resource Version: "
+									+ ccLatestResourceVersion + ")"));
+					ccOperator.interrupt();
+					ccOperator = new CapiClusterController(k8sClient, customObjectApi, api, ccLatestResourceVersion);
+					ccOperator.start();
 				}
 
 				if (!rqcOperator.isAlive()) {
@@ -4311,6 +4330,39 @@ public class K8sApiCaller {
 		return resultNode;
 	}
 
+	/**
+	 * START method for CapiCluster Controller by mincheol_jeon DO-NOT-DELETE
+	 */
+	private static long getLatestCapiClusterResourceVersion(String customResourceName, boolean isNamespaced) throws Exception {
+		long latestResourceVersion = 0;
+		try {
+
+			Object result = customObjectApi.listClusterCustomObject(Constants.CAPI_OBJECT_GROUP,
+					Constants.CAPI_OBJECT_VERSION, customResourceName, null, null, null, null, null, null, null,
+					Boolean.FALSE);
+
+			String JsonInString = gson.toJson(result);
+			JsonFactory factory = mapper.getFactory();
+			com.fasterxml.jackson.core.JsonParser parser = factory.createParser(JsonInString);
+			JsonNode customObjectList = mapper.readTree(parser);
+
+			if (customObjectList.get("items").isArray()) {
+				for (JsonNode instance : customObjectList.get("items")) {
+					long resourceVersion = instance.get("metadata").get("resourceVersion").asLong();
+				}
+			}
+		} catch (ApiException e) {
+			logger.info("Response body: " + e.getResponseBody());
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			logger.info("Exception: " + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		}
+		return latestResourceVersion;
+	}
+	
 	/**
 	 * START method for Namespace Claim Controller by seonho_choi DO-NOT-DELETE
 	 */
