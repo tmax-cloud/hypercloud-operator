@@ -51,7 +51,6 @@ public class NameSpaceHandler extends GeneralHandler {
 		String userId = null;
 		// if limit exists
 		String limit = SimpleUtil.getQueryParameter( session.getParameters(), Constants.QUERY_PARAMETER_LIMIT );
-		
 		try {
 			// Read AccessToken from Header
 			if(!session.getHeaders().get("authorization").isEmpty()) {

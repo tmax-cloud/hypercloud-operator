@@ -5845,7 +5845,7 @@ public class K8sApiCaller {
 	
 	@SuppressWarnings("null")
 	public static List < NamespaceClaim > getAccessibleNSC(String token, String userId) throws Exception {
-		List < NamespaceClaim > nscList = null;
+		List < NamespaceClaim > nscItems = null;
 		
 		try {
 			logger.info(" user Id :" + userId);
@@ -5880,7 +5880,7 @@ public class K8sApiCaller {
 		    // 2. User has NSC List Permission
 		    if (result.getStatus().getAllowed()) {
 				logger.info("2. User has NSC List Permission");
-		    	nscList = listNamespaceClaim();
+				nscItems = listNamespaceClaim();
 		    	
 		    } else {
 		    	// 3. User has No NSC List Permission --> Check if there is owner NSC with label	
@@ -5907,8 +5907,8 @@ public class K8sApiCaller {
 						if ( possibleNsc.getMetadata().getLabels() != null && possibleNsc.getMetadata().getLabels().get("owner")!= null) {
 
 							if ( possibleNsc.getMetadata().getLabels().get("owner").toString().equalsIgnoreCase(userId) ){
-								nscList = new ArrayList<>();
-				    			nscList.add(possibleNsc);
+								nscItems = new ArrayList<>();
+								nscItems.add(possibleNsc);
 				    		}
 						}	
 			    	}
@@ -5920,12 +5920,12 @@ public class K8sApiCaller {
 			throw e;
 		}
 
-		if (nscList != null) {
-			for (NamespaceClaim nsc : nscList) {
+		if (nscItems != null) {
+			for (NamespaceClaim nsc : nscItems) {
 				logger.info(" [ Accessible NameSpaceClaim ] : " + nsc.getMetadata().getName());
 			}
 		}
-		return nscList;
+		return nscItems;
 	}
 
 	public static boolean verifyAdmin(String userId) throws ApiException {

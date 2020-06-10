@@ -31,6 +31,7 @@ import k8s.example.client.k8s.K8sApiCaller;
 import k8s.example.client.k8s.OAuthApiCaller;
 import k8s.example.client.metering.util.SimpleUtil;
 import k8s.example.client.models.NamespaceClaim;
+import k8s.example.client.models.NamespaceClaimList;
 
 public class NameSpaceClaimHandler extends GeneralHandler {
     private Logger logger = Main.logger;
@@ -41,7 +42,8 @@ public class NameSpaceClaimHandler extends GeneralHandler {
 		
 		IStatus status = null;
 		String accessToken = null;
-		List < NamespaceClaim > nscList = null;
+		List < NamespaceClaim > nscItems = null;
+		NamespaceClaimList nscList = null;
 		String outDO = null; 
 		String issuer = null;
 		String userId = null;
@@ -65,13 +67,13 @@ public class NameSpaceClaimHandler extends GeneralHandler {
     	    		if( webHookOutDO.get("status").getAsJsonObject().get("authenticated").toString().equalsIgnoreCase("true") ) {
     	    			userId = webHookOutDO.get("status").getAsJsonObject().get("user").getAsJsonObject().get("username").toString().replaceAll("\"", "");
     	    			logger.info( "  Token Validated " );
-    	    			nscList = K8sApiCaller.getAccessibleNSC(accessToken, userId);
+    	    			nscItems = K8sApiCaller.getAccessibleNSC(accessToken, userId);
         				status = Status.OK;
-
+        				
         				// Limit 
-        				if( nscList!= null) {
+        				if( nscItems!= null) {
         					if( limit != null ) {
-        						nscList =  nscList.stream().limit(Integer.parseInt(limit)).collect(Collectors.toList());		
+        						nscItems =  nscItems.stream().limit(Integer.parseInt(limit)).collect(Collectors.toList());		
             				}
         				}				
     	    		} else {
@@ -97,13 +99,13 @@ public class NameSpaceClaimHandler extends GeneralHandler {
     			
     			if(verifyAccessToken(accessToken, userId, tokenId, issuer)) {		
     				logger.info( "  Token Validated " );
-    				nscList = K8sApiCaller.getAccessibleNSC(accessToken, userId);
+    				nscItems = K8sApiCaller.getAccessibleNSC(accessToken, userId);
     				status = Status.OK;
 
     				// Limit 
-    				if( nscList!= null) {
+    				if( nscItems!= null) {
     					if( limit != null ) {
-    						nscList =  nscList.stream().limit(Integer.parseInt(limit)).collect(Collectors.toList());		
+    						nscItems =  nscItems.stream().limit(Integer.parseInt(limit)).collect(Collectors.toList());		
         				}
     				}	
     			} else {
@@ -114,7 +116,9 @@ public class NameSpaceClaimHandler extends GeneralHandler {
     		}
 
 			// Make outDO					
-    		if( nscList!=null ) {
+    		if( nscItems!=null ) {
+    			nscList = new NamespaceClaimList();
+    			nscList.setItems(nscItems);
     			Gson gson = new GsonBuilder().setPrettyPrinting().create();
     			outDO = gson.toJson( nscList ).toString();
     		} else {
