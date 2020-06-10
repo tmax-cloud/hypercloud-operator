@@ -159,15 +159,20 @@ public class NameSpaceHandler extends GeneralHandler {
 		try {			
 			// Read NameSpace
     		V1Namespace namespace = K8sApiCaller.getNameSpace(nsName);
-    		
+
     		// Update Period Label
-    		Map<String, String> labels = namespace.getMetadata().getLabels();
-    		if ( labels.keySet().contains("period")) {
-    			labels.replace("period", period);
-    		}else {
-    			labels.put("period", period);
+    		if ( namespace.getMetadata().getLabels() != null && namespace.getMetadata().getLabels().get("trial") != null) {
+    			Map<String, String> labels = namespace.getMetadata().getLabels();
+        		if ( labels.keySet().contains("period")) {
+        			labels.replace("period", period);
+        		}else {
+        			labels.put("period", period);
+        		}
+    		} else {
+    			status = Status.UNAUTHORIZED;
+				throw new Exception(ErrorCode.NOT_TRIAL_NAMESPACE);
     		}
-    		
+	
     		// Delete Exist Trial Timer with previous Period
     		Util.deleteTrialNSTimer ( nsName );
     		
@@ -191,11 +196,12 @@ public class NameSpaceHandler extends GeneralHandler {
 
 		} catch (Exception e) {
 			logger.info("Exception message: " + e.getMessage());
-
+			
 			e.printStackTrace();
 			status = Status.UNAUTHORIZED;
 			outDO = Constants.TRIAL_PERIOD_EXTEND_FAILED;
-
+			if ( e.getMessage().equalsIgnoreCase( ErrorCode.NOT_TRIAL_NAMESPACE )) outDO = ErrorCode.NOT_TRIAL_NAMESPACE;
+			
 		} catch (Throwable e) {
 			logger.info("Exception message: " + e.getMessage());
 			e.printStackTrace();

@@ -10,6 +10,8 @@ public class ErrorCode {
 	public static final String CLIENT_SECRET_MISMATCH = "Client Secret is mismatched";
 	public static final String ORIGIN_URI_MISMATCH = "Origin URI is mismatched";
 	public static final String TOKEN_EMPTY = "Token is Empty";
+	public static final String NOT_TRIAL_NAMESPACE = "This Namespace is not trial version";
+
 	
 	
 	// USER

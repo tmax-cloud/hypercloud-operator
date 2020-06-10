@@ -6216,7 +6216,7 @@ public class K8sApiCaller {
 			logger.info("nameSpace [ " + nsName + " ] Get Service Start");
 
 			nameSpace = api.readNamespace(nsName, "true", false, false);
-		
+
 		} catch (ApiException e) {
 			logger.info("Response body: " + e.getResponseBody());
 			e.printStackTrace();
