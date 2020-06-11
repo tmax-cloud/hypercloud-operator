@@ -28,5 +28,8 @@ public class ErrorCode {
 	public static final String USER_DELETE_FAILED = "User Delete Failed";
 	public static final String INVALID_TOKEN_EXPIRED_TIME = "Invalid Token Expired Time";
 
-	
+	//Namespace
+	public static final String NAMESPACE_NAME_EMPTY = "NameSpace Name is Empty";
+	public static final String NAMESPACE_NAME_DUPLICATED = "NameSpace Name is Duplicated";
+
 }

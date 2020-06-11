@@ -1,5 +1,10 @@
 package k8s.example.client.handler;
 
+import java.io.FileInputStream;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.charset.Charset;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -10,6 +15,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
@@ -22,8 +28,11 @@ import fi.iki.elonen.NanoHTTPD.Response.Status;
 import fi.iki.elonen.router.RouterNanoHTTPD.GeneralHandler;
 import fi.iki.elonen.router.RouterNanoHTTPD.UriResource;
 import io.kubernetes.client.openapi.ApiException;
+import io.kubernetes.client.openapi.models.V1Namespace;
 import k8s.example.client.Constants;
 import k8s.example.client.DataObject.TokenCR;
+import k8s.example.client.DataObject.User;
+import k8s.example.client.DataObject.UserCR;
 import k8s.example.client.ErrorCode;
 import k8s.example.client.Main;
 import k8s.example.client.Util;
@@ -147,6 +156,107 @@ public class NameSpaceClaimHandler extends GeneralHandler {
 		
 		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status, "application/json", outDO));
     }
+	
+	public Response put(UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
+		logger.info("***** PUT /nameSpaceClaim");
+
+		IStatus status = null;
+		String outDO = null;
+		UserCR userCR = null;
+		User userInDO = null;
+
+		Map<String, String> body = new HashMap<String, String>();
+		try {
+			session.parseBody(body);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		// if updateMode exists
+		String mode = SimpleUtil.getQueryParameter(session.getParameters(), Constants.QUERY_PARAMETER_MODE);
+		String nsName = SimpleUtil.getQueryParameter(session.getParameters(), Constants.QUERY_PARAMETER_NAMESPACE);
+
+		try {
+			String bodyStr = readFile(body.get("content"), Integer.valueOf(session.getHeaders().get("content-length")));
+			logger.info("Body: " + bodyStr);
+			userInDO = new ObjectMapper().readValue(bodyStr, User.class);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		switch (mode) {
+		case "namespace":
+			logger.info("  Namespace Name Duplication Verify Service Start");
+			logger.info("  Namespace: " + nsName);
+			try {
+				// Validate
+				if (nsName == null)
+					throw new Exception(ErrorCode.NAMESPACE_NAME_EMPTY);
+
+				// Check ID, Email Duplication
+				try {
+					V1Namespace namespace = K8sApiCaller.getNameSpace(nsName);
+					throw new Exception(ErrorCode.NAMESPACE_NAME_DUPLICATED);
+
+				} catch( ApiException e) {
+					if(e.getResponseBody().contains("NotFound")) {
+						status = Status.OK;
+						outDO = Constants.NAMESPACE_NAME_DUPLICATION_VERIFY_SUCCESS;
+					}
+				}
+
+			} catch (ApiException e) {
+				logger.info("Exception message: " + e.getResponseBody());
+				logger.info("Exception message: " + e.getMessage());
+				status = Status.BAD_REQUEST;
+				outDO = Constants.NAMESPACE_NAME_DUPLICATION_VERIFY_FAILED;
+
+			} catch (Exception e) {
+				logger.info("Exception message: " + e.getMessage());
+				e.printStackTrace();
+				status = Status.BAD_REQUEST;
+				outDO = Constants.NAMESPACE_NAME_DUPLICATION_VERIFY_FAILED;
+				
+				if(e.getMessage().contains(ErrorCode.NAMESPACE_NAME_DUPLICATED)) {
+					status = Status.FORBIDDEN;
+					outDO = ErrorCode.NAMESPACE_NAME_DUPLICATED;
+				}
+			}
+			break;
+
+		}
+
+		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO));
+
+	}
+
+	private String readFile(String path, Integer length) {
+		Charset charset = Charset.defaultCharset();
+		String bodyStr = "";
+		int byteCount;
+		try {
+			ByteBuffer buf = ByteBuffer.allocate(Integer.valueOf(length));
+			FileInputStream fis = new FileInputStream(path);
+			FileChannel dest = fis.getChannel();
+
+			while (true) {
+				byteCount = dest.read(buf);
+				if (byteCount == -1) {
+					break;
+				} else {
+					buf.flip();
+					bodyStr += charset.decode(buf).toString();
+					buf.clear();
+				}
+			}
+			dest.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return bodyStr;
+	}
 	
 	@Override
     public Response other(
