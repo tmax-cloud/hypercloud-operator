@@ -31,7 +31,13 @@
 	   SQL> SQL>
 		1 row inserted.
 	   SQL> SQL> Disconnected.
-	   등으로 끝나는 default table을 만들어주는 로그가 있으면 완료가 된것  	
+	   등으로 끝나는 default table을 만들어주는 로그가 있으면 완료가 된것
+
+4-2. Host OS가 CentOS 일때
+  * 1) proauth-db.yaml 의 주석 부분을 해제해주고 적용시킨다
+  	2) kubelet 설정에서도 적용해주어야 함
+		/var/lib/kubelet/kubeadm-flags.env 에 --allowed-unsafe-sysctls=kernel.sem 추가
+		kubelet 재기동 (systemctl daemon-reload && systemctl restart kubelet)     	
 
 5. http://192.168.1.150:10080/hypercloud/hypercloud-operator/blob/master/_yaml_Install/5.proauth-server.yaml 실행 ( node Selector 설정 : proauth db pod와 같은 node로 설정 )
 

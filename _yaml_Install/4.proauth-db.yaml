@@ -62,6 +62,11 @@ spec:
       - name: proauth-data
         persistentVolumeClaim:
           claimName: proauth-db-data
+#      spec:       # If Host OS is CentOS, Apply this 
+#        securityContext:
+#          sysctls:
+#          - name: kernel.sem
+#            value: "10000 32000 500 10000"          
 
 ---
 
@@ -79,3 +84,24 @@ spec:
   selector:
     proauth: db
   type: NodePort
+  
+---
+
+# If Host OS is CentOS, Apply This
+#apiVersion: policy/v1beta1
+#kind: PodSecurityPolicy
+#metadata:
+#  name: proauth-db-security-policy
+#  namespace: proauth-system
+#spec:
+#  allowedUnsafeSysctls:
+#  - kernel.sem
+#  runAsUser:
+#    rule: 'RunAsAny'
+#  seLinux:
+#    rule: 'RunAsAny'
+#  supplementalGroups:
+#    rule: 'RunAsAny'
+#  fsGroup:
+#    rule: 'RunAsAny'
+  
