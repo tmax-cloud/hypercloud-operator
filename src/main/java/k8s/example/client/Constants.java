@@ -27,6 +27,17 @@ public class Constants {
 	public static final String CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM = "namespaceclaims";
 	public static final String CUSTOM_OBJECT_PLURAL_RESOURCEQUOTACLAIM = "resourcequotaclaims";
 	public static final String CUSTOM_OBJECT_PLURAL_ROLEBINDINGCLAIM = "rolebindingclaims";
+
+	//capi
+	public static final String CAPI_OBJECT_GROUP = "cluster.x-k8s.io";
+	public static final String CAPI_OBJECT_VERSION =  "v1alpha3";	
+	public static final String CAPI_OBJECT_PLURAL_CAPICLUSTER = "clusters";
+
+	//federation
+	public static final String FED_OBJECT_GROUP = "core.kubefed.io";
+	public static final String FED_OBJECT_VERSION =  "v1beta1";	
+	public static final String FED_OBJECT_FEDCLUSTER_PLURAL = "kubefedclusters";
+	
 	
 	public static final String SERVICE_INSTANCE_API_GROUP = "servicecatalog.k8s.io";
 	public static final String SERVICE_INSTANCE_API_VERSION = "v1beta1";
