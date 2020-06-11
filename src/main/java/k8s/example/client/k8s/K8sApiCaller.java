@@ -5510,6 +5510,13 @@ public class K8sApiCaller {
 		rule.addResourceNamesItem(userInDO.getId());
 		rule.addVerbsItem("*");
 		rules.add(rule);
+		
+		// NameSpace Rule
+		rule = new V1PolicyRule();
+		rule.addApiGroupsItem(Constants.CORE_API_GROUP);
+		rule.addResourcesItem("namespaces");
+		rule.addVerbsItem("get");
+		rules.add(rule);
 	
 		// Claims Rule
 		rule = new V1PolicyRule();
@@ -5904,7 +5911,8 @@ public class K8sApiCaller {
 		    
 		    V1SelfSubjectAccessReview result = null;
 		    try {
-		      result = authApi.createSelfSubjectAccessReview(body, null, null, null);      
+		      result = authApi.createSelfSubjectAccessReview(body, null, null, null);    
+		      logger.info( "result :" + result );
 			} catch (ApiException e) {
 				logger.info(e.getResponseBody());
 				throw e;

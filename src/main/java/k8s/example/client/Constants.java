@@ -35,6 +35,7 @@ public class Constants {
 	public static final String SERVICE_INSTANCE_KIND = "ServiceInstance";
 
 	public static final String RBAC_API_GROUP = "rbac.authorization.k8s.io";
+	public static final String CORE_API_GROUP = "''";
 
 	// HTTPS REQUEST URL
 	public static final String HTTPS_SCHEME_PREFIX = "https://";
