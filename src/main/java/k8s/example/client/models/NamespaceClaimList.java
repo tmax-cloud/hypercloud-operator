@@ -2,12 +2,12 @@ package k8s.example.client.models;
 
 import java.util.List;
 
-import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import io.kubernetes.client.openapi.models.V1ListMeta;
 
 public class NamespaceClaimList {
 	private String apiVersion = "tmax.io/v1";
 	private String kind = "NamespaceClaimList";
-	private V1ObjectMeta metadata = null;
+	private V1ListMeta metadata = null;
 	private List < NamespaceClaim > items = null;
 	private String operatorStartTime = null;
 	
@@ -29,10 +29,10 @@ public class NamespaceClaimList {
 	public void setKind(String kind) {
 		this.kind = kind;
 	}
-	public V1ObjectMeta getMetadata() {
+	public V1ListMeta getMetadata() {
 		return metadata;
 	}
-	public void setMetadata(V1ObjectMeta metadata) {
+	public void setMetadata(V1ListMeta metadata) {
 		this.metadata = metadata;
 	}
 	public List < NamespaceClaim > getItems() {

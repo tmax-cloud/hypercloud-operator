@@ -67,13 +67,15 @@ public class NameSpaceClaimHandler extends GeneralHandler {
     	    		if( webHookOutDO.get("status").getAsJsonObject().get("authenticated").toString().equalsIgnoreCase("true") ) {
     	    			userId = webHookOutDO.get("status").getAsJsonObject().get("user").getAsJsonObject().get("username").toString().replaceAll("\"", "");
     	    			logger.info( "  Token Validated " );
-    	    			nscItems = K8sApiCaller.getAccessibleNSC(accessToken, userId);
+    	    			nscList = K8sApiCaller.getAccessibleNSC(accessToken, userId);
         				status = Status.OK;
         				
         				// Limit 
-        				if( nscItems!= null) {
+        				if( nscList!= null && nscList.getItems() != null) {
         					if( limit != null ) {
+        						nscItems = nscList.getItems();
         						nscItems =  nscItems.stream().limit(Integer.parseInt(limit)).collect(Collectors.toList());		
+        						nscList.setItems(nscItems);
             				}
         				}				
     	    		} else {
@@ -99,13 +101,15 @@ public class NameSpaceClaimHandler extends GeneralHandler {
     			
     			if(verifyAccessToken(accessToken, userId, tokenId, issuer)) {		
     				logger.info( "  Token Validated " );
-    				nscItems = K8sApiCaller.getAccessibleNSC(accessToken, userId);
+    				nscList = K8sApiCaller.getAccessibleNSC(accessToken, userId);
     				status = Status.OK;
 
     				// Limit 
-    				if( nscItems!= null) {
+    				if( nscList!= null && nscList.getItems() != null) {
     					if( limit != null ) {
+    						nscItems = nscList.getItems();
     						nscItems =  nscItems.stream().limit(Integer.parseInt(limit)).collect(Collectors.toList());		
+    						nscList.setItems(nscItems);
         				}
     				}	
     			} else {
@@ -116,9 +120,7 @@ public class NameSpaceClaimHandler extends GeneralHandler {
     		}
 
 			// Make outDO					
-    		if( nscItems!=null ) {
-    			nscList = new NamespaceClaimList();
-    			nscList.setItems(nscItems);
+    		if( nscList!=null && nscList.getItems() != null ) {
     			Gson gson = new GsonBuilder().setPrettyPrinting().create();
     			outDO = gson.toJson( nscList ).toString();
     		} else {
