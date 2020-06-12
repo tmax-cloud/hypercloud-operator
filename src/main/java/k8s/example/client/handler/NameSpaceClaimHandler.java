@@ -59,6 +59,9 @@ public class NameSpaceClaimHandler extends GeneralHandler {
 		// if limit exists
 		String limit = SimpleUtil.getQueryParameter( session.getParameters(), Constants.QUERY_PARAMETER_LIMIT );
 		
+		//if label selector exists
+		String labelSelector = SimpleUtil.getQueryParameter( session.getParameters(), Constants.QUERY_PARAMETER_LABEL_SELECTOR );
+		
 		try {
 			// Read AccessToken from Header
 			if(!session.getHeaders().get("authorization").isEmpty()) {
@@ -76,7 +79,7 @@ public class NameSpaceClaimHandler extends GeneralHandler {
     	    		if( webHookOutDO.get("status").getAsJsonObject().get("authenticated").toString().equalsIgnoreCase("true") ) {
     	    			userId = webHookOutDO.get("status").getAsJsonObject().get("user").getAsJsonObject().get("username").toString().replaceAll("\"", "");
     	    			logger.info( "  Token Validated " );
-    	    			nscList = K8sApiCaller.getAccessibleNSC(accessToken, userId);
+    	    			nscList = K8sApiCaller.getAccessibleNSC(accessToken, userId, labelSelector);
         				status = Status.OK;
         				
         				// Limit 
@@ -110,7 +113,7 @@ public class NameSpaceClaimHandler extends GeneralHandler {
     			
     			if(verifyAccessToken(accessToken, userId, tokenId, issuer)) {		
     				logger.info( "  Token Validated " );
-    				nscList = K8sApiCaller.getAccessibleNSC(accessToken, userId);
+    				nscList = K8sApiCaller.getAccessibleNSC(accessToken, userId, labelSelector);
     				status = Status.OK;
 
     				// Limit 

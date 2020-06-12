@@ -162,6 +162,7 @@ public class Constants {
 	public static final String QUERY_PARAMETER_SORT = "sort";
 	
 	// Namespace 
+	public static final String QUERY_PARAMETER_LABEL_SELECTOR = "labelSelector";
 	public static final String QUERY_PARAMETER_PERIOD = "period";
 	public static final String TRIAL_PERIOD_EXTEND_FAILED = "Trial NameSpace Period Extend Success";
 

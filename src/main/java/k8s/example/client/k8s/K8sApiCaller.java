@@ -831,11 +831,11 @@ public class K8sApiCaller {
 		return userList;
 	}
 	
-	public static NamespaceClaimList listNamespaceClaim() throws Exception {
+	public static NamespaceClaimList listNamespaceClaim( String labelSelector ) throws Exception {
 		NamespaceClaimList nscList = null;
 		try {
 			Object response = customObjectApi.listClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP,
-					Constants.CUSTOM_OBJECT_VERSION, Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, null, null, null, null, null,
+					Constants.CUSTOM_OBJECT_VERSION, Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, null, null, null, labelSelector, null,
 					null, null, Boolean.FALSE);
 
 			JsonObject respJson = (JsonObject) new JsonParser().parse((new Gson()).toJson(response));
@@ -5675,7 +5675,7 @@ public class K8sApiCaller {
 	}
 
 	@SuppressWarnings("null")
-	public static V1NamespaceList getAccessibleNS(String userId) throws Exception {
+	public static V1NamespaceList getAccessibleNS(String userId, String labelSelector) throws Exception {
 		V1NamespaceList nsList = null;
 		List<String> nsNameList = null;
 		List<String> userGroupList = null;
@@ -5770,9 +5770,9 @@ public class K8sApiCaller {
 			logger.info("clusterRoleflag : " + clusterRoleFlag);
 			// Get All NameSpace
 			if (clusterRoleFlag) {
-				nsList = api.listNamespace("true", false, null, null, null, 100, null, 60, false);
+				nsList = api.listNamespace("true", false, null, null, labelSelector, 100, null, 60, false);
 			} else {
-				V1NamespaceList nsListK8S = api.listNamespace("true", false, null, null, null, 100, null, 60, false);
+				V1NamespaceList nsListK8S = api.listNamespace("true", false, null, null, labelSelector, 100, null, 60, false);
 				// 4. List of RoleBinding
 				if (nsListK8S.getItems() != null) {
 					for (V1Namespace ns : nsListK8S.getItems()) {
@@ -5886,7 +5886,7 @@ public class K8sApiCaller {
 	}
 	
 	@SuppressWarnings("null")
-	public static NamespaceClaimList getAccessibleNSC(String token, String userId) throws Exception {
+	public static NamespaceClaimList getAccessibleNSC(String token, String userId, String labelSelector) throws Exception {
 		NamespaceClaimList nscList = null;
 		
 		try {
@@ -5923,7 +5923,7 @@ public class K8sApiCaller {
 		    // 2. User has NSC List Permission
 		    if (result.getStatus().getAllowed()) {
 				logger.info("2. User has NSC List Permission");
-				nscList = listNamespaceClaim();
+				nscList = listNamespaceClaim( labelSelector );
 		    	
 		    } else {
 		    	// 3. User has No NSC List Permission --> Check if there is owner NSC with label	
@@ -5949,7 +5949,7 @@ public class K8sApiCaller {
 			    	//3-1. User has NSC Get Permission
 					logger.info("3-1. User has NSC Get Permission");
 					NamespaceClaimList possibleNscList = null;		
-					possibleNscList = listNamespaceClaim();
+					possibleNscList = listNamespaceClaim( labelSelector );
 					if (possibleNscList != null && possibleNscList.getItems()!=null) {
 				    	for( NamespaceClaim possibleNsc :  possibleNscList.getItems()) { 
 							if ( possibleNsc.getMetadata().getLabels() != null && possibleNsc.getMetadata().getLabels().get("owner")!= null) {
