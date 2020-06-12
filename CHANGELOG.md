@@ -1,6 +1,35 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.0.33 start -------------------->
+
+## HyperCloudServer_4.1.0.33 (Fri Jun 12 10:41:01 KST 2020)
+
+### Added
+
+### Changed
+  - [mod] nsName 중복 검사 서비스 구현 by dnxorjs1
+  - [mod] Host OS 가 CentOS일때, Proauth-db 설치 법 가이드 및 Yaml 파일 추가 by dnxorjs1
+  - [mod] nscList get 버그 수정, NamespaceClaimList metadat V1ObjectMeta --> V1ListMeta로 수정 by dnxorjs1
+  - [mod] _install-guide USP yaml 적용 변경 by dnxorjs1
+  - [mod] nscListGet 형식 k8s에 맞추어서 변경, NamespaceClaimList.java 추가 by dnxorjs1
+  - [mod] trial namespace spec 메일 내용 수정 by dnxorjs1
+  - [mod] trial 기간 연장 api trial version이 아닐때 연장 못하게 하는 로직 추가 by dnxorjs1
+  - [mod] USP CRD 자체가 없을때 로직 구현 [mod] trial 생성시 admin 일때 role 수정 사항 고려 by dnxorjs1
+  - [mod] nscCRD, rqcCRD validation 필드 추가 by dnxorjs1
+  - [mod] user 기본권한 변경 nsc list --> get by dnxorjs1
+
+### Fixed
+  - [ims][223234] PVC 삭제시 Image 목록 동기화 및 Running으로 복구 되었을 때에도 새롭게 Image 동기화할 수 있도록 수정 by sukhee_yun
+  - [ims][227875] USP crd ipRange 배열로 추가할 수 있도록 변경 by dnxorjs1
+
+### CRD yaml
+  - [crd] default_registry.yaml image 필드값 수정 by sukhee_yun
+
+### Etc
+
+<!--------------------- v4.1.0.33 end --------------------->
+
 <!-------------------- v4.1.0.32 start -------------------->
 
 ## HyperCloudServer_4.1.0.32 (Fri Jun  5 09:44:17 KST 2020)
