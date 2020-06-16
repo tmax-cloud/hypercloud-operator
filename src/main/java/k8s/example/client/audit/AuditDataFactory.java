@@ -77,11 +77,13 @@ public class AuditDataFactory {
 		String limit = SimpleUtil.getQueryParameter(query, Constants.QUERY_PARAMETER_LIMIT);
 		String startTime = SimpleUtil.getQueryParameter(query, Constants.QUERY_PARAMETER_STARTTIME);
 		String endTime = SimpleUtil.getQueryParameter(query, Constants.QUERY_PARAMETER_ENDTIME);
+		String namespace = SimpleUtil.getQueryParameter(query, Constants.QUERY_PARAMETER_NAMESPACE);
 		List<String> sort = SimpleUtil.getQueryParameterArray(query, Constants.QUERY_PARAMETER_SORT);
 		query.remove(Constants.QUERY_PARAMETER_OFFSET);
 		query.remove(Constants.QUERY_PARAMETER_LIMIT);
 		query.remove(Constants.QUERY_PARAMETER_STARTTIME);
 		query.remove(Constants.QUERY_PARAMETER_ENDTIME);
+		query.remove(Constants.QUERY_PARAMETER_NAMESPACE);
 		query.remove(Constants.QUERY_PARAMETER_SORT);
 
 		
@@ -89,7 +91,11 @@ public class AuditDataFactory {
 		query.forEach((key, value) -> sb.append("and ").append(key).append(" like '%").append(value.get(0)).append("%' "));
 		
 		if(StringUtil.isNotEmpty(startTime) && StringUtil.isNotEmpty(endTime)) {
-			sb.append("and stagetimestamp between '").append(new Timestamp(Long.parseLong(startTime))).append("' and '").append(Long.parseLong(endTime)).append("' ");
+			sb.append("and stagetimestamp between '").append(new Timestamp(Long.parseLong(startTime))).append("' and '").append(new Timestamp(Long.parseLong(endTime))).append("' ");
+		}
+		
+		if(StringUtil.isNotEmpty(namespace)) {
+			sb.append("and namespace = '").append(namespace).append("' ");
 		}
 		
 		if(sort != null && sort.size() > 0){
