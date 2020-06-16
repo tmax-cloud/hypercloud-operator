@@ -8,7 +8,6 @@ public class RegistryStatus {
 	private String phase = null;
 	private String message = null;
 	private String reason = null;
-	private String lastPhase = null;
 
 	public List<RegistryCondition> getConditions() {
 		return conditions;
@@ -55,16 +54,9 @@ public class RegistryStatus {
 		this.reason = reason;
 	}
 
-	public String getLastPhase() {
-		return lastPhase;
-	}
-
-	public void setLastPhase(String lastPhase) {
-		this.lastPhase = lastPhase;
-	}
-
 	public static enum StatusPhase {
 		CREATING("Creating"),
+		UPDATING("Updating"),
 		RUNNING("Running"),
 		NOT_READY("NotReady"),
 		ERROR("Error"),
