@@ -168,6 +168,7 @@ import k8s.example.client.models.ImageSpec;
 import k8s.example.client.models.InputParametersSchema;
 import k8s.example.client.models.Metadata;
 import k8s.example.client.models.NamespaceClaim;
+import k8s.example.client.models.NamespaceClaimList;
 import k8s.example.client.models.PlanMetadata;
 import k8s.example.client.models.ProvisionInDO;
 import k8s.example.client.models.Registry;
@@ -830,19 +831,20 @@ public class K8sApiCaller {
 		return userList;
 	}
 	
-	public static List<NamespaceClaim> listNamespaceClaim() throws Exception {
-		List<NamespaceClaim> nscList = null;
+	public static NamespaceClaimList listNamespaceClaim( String labelSelector ) throws Exception {
+		NamespaceClaimList nscList = null;
 		try {
 			Object response = customObjectApi.listClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP,
-					Constants.CUSTOM_OBJECT_VERSION, Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, null, null, null, null, null,
+					Constants.CUSTOM_OBJECT_VERSION, Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, null, null, null, labelSelector, null,
 					null, null, Boolean.FALSE);
 
 			JsonObject respJson = (JsonObject) new JsonParser().parse((new Gson()).toJson(response));
+//			logger.info("NamespaceClaim List respJson: " + respJson);
 
 			mapper.registerModule(new JodaModule());
-			if (respJson.get("items") != null)
-				nscList = mapper.readValue((new Gson()).toJson(respJson.get("items")),
-						new TypeReference<ArrayList<NamespaceClaim>>() {
+			if (respJson != null)
+				nscList = mapper.readValue((new Gson()).toJson(respJson),
+						new TypeReference< NamespaceClaimList >() {
 						});
 
 		} catch (ApiException e) {
@@ -5522,6 +5524,13 @@ public class K8sApiCaller {
 		rule.addResourceNamesItem(userInDO.getId());
 		rule.addVerbsItem("*");
 		rules.add(rule);
+		
+		// NameSpace Rule
+		rule = new V1PolicyRule();
+		rule.addApiGroupsItem(Constants.CORE_API_GROUP);
+		rule.addResourcesItem("namespaces");
+		rule.addVerbsItem("get");
+		rules.add(rule);
 	
 		// Claims Rule
 		rule = new V1PolicyRule();
@@ -5678,7 +5687,7 @@ public class K8sApiCaller {
 	}
 
 	@SuppressWarnings("null")
-	public static V1NamespaceList getAccessibleNS(String userId) throws Exception {
+	public static V1NamespaceList getAccessibleNS(String userId, String labelSelector) throws Exception {
 		V1NamespaceList nsList = null;
 		List<String> nsNameList = null;
 		List<String> userGroupList = null;
@@ -5773,9 +5782,9 @@ public class K8sApiCaller {
 			logger.info("clusterRoleflag : " + clusterRoleFlag);
 			// Get All NameSpace
 			if (clusterRoleFlag) {
-				nsList = api.listNamespace("true", false, null, null, null, 100, null, 60, false);
+				nsList = api.listNamespace("true", false, null, null, labelSelector, 100, null, 60, false);
 			} else {
-				V1NamespaceList nsListK8S = api.listNamespace("true", false, null, null, null, 100, null, 60, false);
+				V1NamespaceList nsListK8S = api.listNamespace("true", false, null, null, labelSelector, 100, null, 60, false);
 				// 4. List of RoleBinding
 				if (nsListK8S.getItems() != null) {
 					for (V1Namespace ns : nsListK8S.getItems()) {
@@ -5889,8 +5898,8 @@ public class K8sApiCaller {
 	}
 	
 	@SuppressWarnings("null")
-	public static List < NamespaceClaim > getAccessibleNSC(String token, String userId) throws Exception {
-		List < NamespaceClaim > nscList = null;
+	public static NamespaceClaimList getAccessibleNSC(String token, String userId, String labelSelector) throws Exception {
+		NamespaceClaimList nscList = null;
 		
 		try {
 			logger.info(" user Id :" + userId);
@@ -5909,14 +5918,15 @@ public class K8sApiCaller {
 		    V1SelfSubjectAccessReview body = new V1SelfSubjectAccessReview(); // V1SelfSubjectAccessReview | 
 		    V1SelfSubjectAccessReviewSpec spec = new V1SelfSubjectAccessReviewSpec();
 		    V1ResourceAttributes ra = new V1ResourceAttributes();
-		    ra.setResource("namespaceclaims");
+		    ra.setResource("namespaceclaim");
+		    ra.setGroup("tmax.io");
 		    ra.setVerb("list");
 		    spec.setResourceAttributes(ra);
 		    body.setSpec(spec);
-		    
+
 		    V1SelfSubjectAccessReview result = null;
 		    try {
-		      result = authApi.createSelfSubjectAccessReview(body, null, null, null);      
+		      result = authApi.createSelfSubjectAccessReview(body, null, null, null);    
 			} catch (ApiException e) {
 				logger.info(e.getResponseBody());
 				throw e;
@@ -5925,15 +5935,18 @@ public class K8sApiCaller {
 		    // 2. User has NSC List Permission
 		    if (result.getStatus().getAllowed()) {
 				logger.info("2. User has NSC List Permission");
-		    	nscList = listNamespaceClaim();
+				nscList = listNamespaceClaim( labelSelector );
 		    	
 		    } else {
 		    	// 3. User has No NSC List Permission --> Check if there is owner NSC with label	
 				logger.info("3. User has No NSC List Permission --> Check if there is owner NSC with label");
-		    	body = new V1SelfSubjectAccessReview(); // V1SelfSubjectAccessReview | 
+				List < NamespaceClaim > nscItems = null;
+
+				body = new V1SelfSubjectAccessReview(); // V1SelfSubjectAccessReview | 
 			    spec = new V1SelfSubjectAccessReviewSpec();
 			    ra = new V1ResourceAttributes();
-			    ra.setResource("namespaceclaims");
+			    ra.setResource("namespaceclaim");
+			    ra.setGroup("tmax.io");
 			    ra.setVerb("get");
 			    spec.setResourceAttributes(ra);
 			    body.setSpec(spec);
@@ -5947,18 +5960,23 @@ public class K8sApiCaller {
 			    if (result.getStatus().getAllowed()) {
 			    	//3-1. User has NSC Get Permission
 					logger.info("3-1. User has NSC Get Permission");
-			    	List < NamespaceClaim > possibleNscList = listNamespaceClaim();
-			    	for( NamespaceClaim possibleNsc :  possibleNscList) { 
-						if ( possibleNsc.getMetadata().getLabels() != null && possibleNsc.getMetadata().getLabels().get("owner")!= null) {
-
-							if ( possibleNsc.getMetadata().getLabels().get("owner").toString().equalsIgnoreCase(userId) ){
-								nscList = new ArrayList<>();
-				    			nscList.add(possibleNsc);
-				    		}
-						}	
-			    	}
+					NamespaceClaimList possibleNscList = null;		
+					possibleNscList = listNamespaceClaim( labelSelector );
+					if (possibleNscList != null && possibleNscList.getItems()!=null) {
+				    	for( NamespaceClaim possibleNsc :  possibleNscList.getItems()) { 
+							if ( possibleNsc.getMetadata().getLabels() != null && possibleNsc.getMetadata().getLabels().get("owner")!= null) {
+								if ( possibleNsc.getMetadata().getLabels().get("owner").toString().equalsIgnoreCase(userId) ){
+									nscItems = new ArrayList<>();
+									nscItems.add(possibleNsc);
+					    		}
+							}	
+				    	}
+				    	possibleNscList.setItems(nscItems);
+				    	nscList = possibleNscList;
+					}
 			    }   	
 		    }
+		    
 		}catch( Exception e) {
 			e.printStackTrace();
 			logger.info(e.getMessage());
@@ -5966,7 +5984,7 @@ public class K8sApiCaller {
 		}
 
 		if (nscList != null) {
-			for (NamespaceClaim nsc : nscList) {
+			for (NamespaceClaim nsc : nscList.getItems()) {
 				logger.info(" [ Accessible NameSpaceClaim ] : " + nsc.getMetadata().getName());
 			}
 		}

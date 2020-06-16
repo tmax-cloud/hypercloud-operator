@@ -35,6 +35,7 @@ public class Constants {
 	public static final String SERVICE_INSTANCE_KIND = "ServiceInstance";
 
 	public static final String RBAC_API_GROUP = "rbac.authorization.k8s.io";
+	public static final String CORE_API_GROUP = "''";
 
 	// HTTPS REQUEST URL
 	public static final String HTTPS_SCHEME_PREFIX = "https://";
@@ -161,6 +162,7 @@ public class Constants {
 	public static final String QUERY_PARAMETER_SORT = "sort";
 	
 	// Namespace 
+	public static final String QUERY_PARAMETER_LABEL_SELECTOR = "labelSelector";
 	public static final String QUERY_PARAMETER_PERIOD = "period";
 	public static final String TRIAL_PERIOD_EXTEND_FAILED = "Trial NameSpace Period Extend Success";
 
@@ -187,6 +189,8 @@ public class Constants {
 	public static final String USER_UPDATE_FAILED = "User Update Failed";
 	public static final String USER_EMAIL_DUPLICATION_VERIFY_SUCCESS = "User Email Duplication verify Success";
 	public static final String USER_EMAIL_DUPLICATION_VERIFY_FAILED = "User EMAIL Duplication verify Failed";
+	public static final String NAMESPACE_NAME_DUPLICATION_VERIFY_FAILED = "User ID Duplication verify Failed";
+	public static final String NAMESPACE_NAME_DUPLICATION_VERIFY_SUCCESS = "User ID Duplication verify Success";
 	public static final String USER_ID_DUPLICATION_VERIFY_SUCCESS = "User ID Duplication verify Success";
 	public static final String USER_ID_DUPLICATION_VERIFY_FAILED = "User ID Duplication verify Failed";
 	public static final String USER_PASSWORD_FIND_SUCCESS = "User Password Change & Send Email Success";
