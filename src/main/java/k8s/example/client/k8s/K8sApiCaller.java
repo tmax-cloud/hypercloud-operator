@@ -3419,7 +3419,7 @@ public class K8sApiCaller {
 					condition.addProperty("status", RegistryStatus.Status.FALSE.getStatus());
 					condition.addProperty("reason", pvc.getStatus().getPhase());
 				} else {
-					logger.info("Registry is Creating... have to wait until it's Bound.");
+					logger.info("Registry is Creating... wait until pvc is Bound.");
 					return;
 				}
 			}

@@ -173,7 +173,7 @@ public class RegistryWatcher extends Thread {
 										if(statusIsNotReady(realSatusMap, serviceType)) {
 											changePhase = RegistryStatus.StatusPhase.NOT_READY.getStatus();
 											changeMessage = "Registry is not ready.";
-											changeReason = "NotReady";
+											changeReason = "NotReady"; 
 										}
 										else {
 											for( RegistryCondition condition : registry.getStatus().getConditions() ) {
