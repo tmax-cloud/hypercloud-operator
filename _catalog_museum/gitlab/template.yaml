@@ -11,6 +11,29 @@ tags:
 - gitlab
 - git
 - scm
+parameters:
+- name: APP_NAME
+  displayName: AppName
+  description: A GitLab Deployment Name
+  required: true
+- name: NAMESPACE
+  displayName: Namespace
+  description: Application namespace
+  required: true
+- name: STORAGE
+  displayName: Storage
+  description: Storage size
+  required: true
+- name: SERVICE_TYPE
+  displayName: ServiceType
+  description: Service Type (ClsuterIP/NodePort/LoadBalancer)
+  required: true
+- name: SSH_PORT
+  displayName: SshPort
+  description: SSH port for git clone/pull/push
+  required: true
+  value: 2221
+  valueType: number
 objects:
 - apiVersion: v1
   kind: Service
@@ -27,7 +50,8 @@ objects:
     - name: https
       port: 443
     - name: ssh
-      port: 22
+      port: ${SSH_PORT}
+      targetPort: 22
     selector:
       app: ${APP_NAME}
 - apiVersion: v1
@@ -79,27 +103,29 @@ objects:
           - name: ${APP_NAME}-pv
             mountPath: /var/opt/gitlab
             subPath: data
+          readinessProbe:
+            exec:
+              command:
+              - /bin/bash
+              - -c
+              - |
+                /opt/gitlab/bin/gitlab-healthcheck --fail --max-time 10
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                - "/bin/bash"
+                - "-c"
+                - |
+                  FILE=/etc/gitlab/gitlab.rb
+                  while [ ! -f "$FILE" ]; do
+                      sleep 1
+                  done
+                  sed -E -i "s/[# ]*(gitlab_rails\['gitlab_shell_ssh_port'\][ ]*=[ ]*).*/\1 ${SSH_PORT}/" $FILE
         volumes:
         - name: ${APP_NAME}-pv
           persistentVolumeClaim:
             claimName: ${APP_NAME}-pvc
-parameters:
-- name: APP_NAME
-  displayName: AppName
-  description: A GitLab Deployment Name
-  required: true
-- name: NAMESPACE
-  displayName: Namespace
-  description: Application namespace
-  required: true
-- name: STORAGE
-  displayName: Storage
-  description: Storage size
-  required: true
-- name: SERVICE_TYPE
-  displayName: ServiceType
-  description: Service Type (ClsuterIP/NodePort/LoadBalancer)
-  required: true
 plans:
 - name: gitlab-plan1
   description: "GitLab Plan"
@@ -119,4 +145,3 @@ plans:
           APP_NAME: gitlab-deploy
           NAMESPACE: default
           STORAGE: 10Gi
-
