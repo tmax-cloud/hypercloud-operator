@@ -3365,26 +3365,27 @@ public class K8sApiCaller {
 			
 			if( !serviceType.equals(RegistryService.SVC_TYPE_INGRESS)) {
 				logger.info("tls-secret: Registry service type is not ingress.");
-				return;
-			}
-			
-			switch (eventType) {
-			case Constants.EVENT_TYPE_ADDED:
 				condition.addProperty("type", RegistryCondition.Condition.SECRET_TLS.getType());
-				condition.addProperty("status", RegistryStatus.Status.TRUE.getStatus());
-				condition.addProperty("lastTransitionTime", curTime.toString());
-
-				break;
-			case Constants.EVENT_TYPE_MODIFIED:
-
-				return;
-			case Constants.EVENT_TYPE_DELETED:
-				condition.addProperty("type", RegistryCondition.Condition.SECRET_TLS.getType());
-				condition.addProperty("status", RegistryStatus.Status.FALSE.getStatus());
-				condition.addProperty("lastTransitionTime", curTime.toString());
-				restoreRegistry = true;
-				
-				break;
+				condition.addProperty("status", RegistryStatus.Status.UNUSED_FIELD.getStatus());
+			} else {
+				switch (eventType) {
+				case Constants.EVENT_TYPE_ADDED:
+					condition.addProperty("type", RegistryCondition.Condition.SECRET_TLS.getType());
+					condition.addProperty("status", RegistryStatus.Status.TRUE.getStatus());
+					condition.addProperty("lastTransitionTime", curTime.toString());
+					
+					break;
+				case Constants.EVENT_TYPE_MODIFIED:
+					
+					return;
+				case Constants.EVENT_TYPE_DELETED:
+					condition.addProperty("type", RegistryCondition.Condition.SECRET_TLS.getType());
+					condition.addProperty("status", RegistryStatus.Status.FALSE.getStatus());
+					condition.addProperty("lastTransitionTime", curTime.toString());
+					restoreRegistry = true;
+					
+					break;
+				}
 			}
 
 			patchStatusArray.add(Util.makePatchJsonObject("replace", 
@@ -3596,6 +3597,10 @@ public class K8sApiCaller {
 			}
 			throw e;
 		}
+
+		JsonArray patchStatusArray = new JsonArray();
+		DateTime curTime = new DateTime();
+		JsonObject condition = new JsonObject();
 		
 		// Check if Service Type is Ingress
 		Registry registry = getRegistry(registryName, namespace);
@@ -3606,30 +3611,27 @@ public class K8sApiCaller {
 
 		if( !serviceType.equals(RegistryService.SVC_TYPE_INGRESS)) {
 			logger.info("ingress: Registry service type is not ingress.");
-			return;
-		}
-
-		JsonArray patchStatusArray = new JsonArray();
-		DateTime curTime = new DateTime();
-		JsonObject condition = new JsonObject();
-
-		switch (eventType) {
-		case Constants.EVENT_TYPE_ADDED:
 			condition.addProperty("type", RegistryCondition.Condition.INGRESS.getType());
-			condition.addProperty("status", RegistryStatus.Status.TRUE.getStatus());
-			condition.addProperty("lastTransitionTime", curTime.toString());
+			condition.addProperty("status", RegistryStatus.Status.UNUSED_FIELD.getStatus());
+		} else {
+			switch (eventType) {
+			case Constants.EVENT_TYPE_ADDED:
+				condition.addProperty("type", RegistryCondition.Condition.INGRESS.getType());
+				condition.addProperty("status", RegistryStatus.Status.TRUE.getStatus());
+				condition.addProperty("lastTransitionTime", curTime.toString());
 
-			break;
-		case Constants.EVENT_TYPE_MODIFIED:
+				break;
+			case Constants.EVENT_TYPE_MODIFIED:
 
-			return;
-		case Constants.EVENT_TYPE_DELETED:
-			condition.addProperty("type", RegistryCondition.Condition.INGRESS.getType());
-			condition.addProperty("status", RegistryStatus.Status.FALSE.getStatus());
-			condition.addProperty("lastTransitionTime", curTime.toString());
-			restoreRegistry = true;
-			
-			break;
+				return;
+			case Constants.EVENT_TYPE_DELETED:
+				condition.addProperty("type", RegistryCondition.Condition.INGRESS.getType());
+				condition.addProperty("status", RegistryStatus.Status.FALSE.getStatus());
+				condition.addProperty("lastTransitionTime", curTime.toString());
+				restoreRegistry = true;
+				
+				break;
+			}
 		}
 		
 		patchStatusArray.add(Util.makePatchJsonObject("replace",
