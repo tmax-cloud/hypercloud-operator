@@ -11,6 +11,7 @@ public class RegistryStatus {
 	private String message = null;
 	private String reason = null;
 	private DateTime phaseChangedAt = null;
+	private String capacity = null;
 
 	public List<RegistryCondition> getConditions() {
 		return conditions;
@@ -65,6 +66,13 @@ public class RegistryStatus {
 		this.phaseChangedAt = phaseChangedAt;
 	}
 
+	public String getCapacity() {
+		return capacity;
+	}
+
+	public void setCapacity(String capacity) {
+		this.capacity = capacity;
+	}
 
 	public static enum StatusPhase {
 		CREATING("Creating"),
@@ -101,6 +109,8 @@ public class RegistryStatus {
 		sb.append("    message: ").append(toIndentedString(message)).append("\n");
 		sb.append("    reason: ").append(toIndentedString(reason)).append("\n");
 		sb.append("    phase: ").append(toIndentedString(phase)).append("\n");
+		sb.append("    phaseChangedAt: ").append(toIndentedString(phaseChangedAt)).append("\n");
+		sb.append("    capacity: ").append(toIndentedString(capacity)).append("\n");
 		sb.append("}");
 		return sb.toString();
 	}

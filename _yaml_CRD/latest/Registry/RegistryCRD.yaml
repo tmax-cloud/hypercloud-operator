@@ -189,6 +189,8 @@ spec:
               type: string
             reason:
               type: string
+            capacity:
+              type: string
   subresources:
     status: {}
   additionalPrinterColumns:
@@ -199,7 +201,7 @@ spec:
   - name: Capacity
     type: string
     description: Registry PVC Size
-    JSONPath: .spec.persistentVolumeClaim.create.storageSize
+    JSONPath: .status.capacity
   - name: Status
     type: string
     description: Registry Status
