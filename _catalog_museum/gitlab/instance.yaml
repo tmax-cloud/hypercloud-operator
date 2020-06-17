@@ -16,3 +16,5 @@ spec:
       value: 30Gi
     - name: SERVICE_TYPE
       value: LoadBalancer
+    - name: SSH_PORT
+      value: 2221
