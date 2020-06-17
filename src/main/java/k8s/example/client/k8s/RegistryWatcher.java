@@ -145,16 +145,6 @@ public class RegistryWatcher extends Thread {
 											changeMessage = "Registry is not ready.";
 											changeReason = "NotReady";
 										}
-										else {
-											for( RegistryCondition condition : registry.getStatus().getConditions() ) {
-												if( condition.getReason() != null ) {
-													changePhase = RegistryStatus.StatusPhase.ERROR.getStatus();
-													changeMessage = "Registry's condtion is not satisfied.";
-													changeReason = "Error";
-													break;
-												}
-											}
-										}
 									}
 									// Registry Is Updating.
 									else if(phase.equals(RegistryStatus.StatusPhase.UPDATING.getStatus()) ) {
@@ -194,23 +184,14 @@ public class RegistryWatcher extends Thread {
 											}
 										}
 										
-//										Registry realRegistry = K8sApiCaller.getRegistry(registry.getMetadata().getName(), registry.getMetadata().getNamespace());
-//										Map <RegistryCondition.Condition, Boolean> realSatusMap = getStatusMap(realRegistry);
-										
 										if(conditionsNotReady(statusMap, serviceType)) {
 											changePhase = RegistryStatus.StatusPhase.NOT_READY.getStatus();
 											changeMessage = "Registry is not ready.";
 											changeReason = "NotReady"; 
-										}
-										else {
-											for( RegistryCondition condition : registry.getStatus().getConditions() ) {
-												if( condition.getReason() != null ) {
-													changePhase = RegistryStatus.StatusPhase.ERROR.getStatus();
-													changeMessage = "Registry's condtion is not satisfied.";
-													changeReason = "Error";
-													break;
-												}
-											}
+											
+											// delete updating-fields annotation
+											K8sApiCaller.updateRegistryAnnotationLastCR(registry, null);
+											logger.info("Delete updating-fields annotation.");
 										}
 									}
 									// Registry Is Running.
