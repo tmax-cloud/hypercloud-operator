@@ -181,6 +181,8 @@ spec:
                     type: string
                   type:
                     type: string
+            phaseChangedAt:
+              type: string
             phase:
               type: string
             message:

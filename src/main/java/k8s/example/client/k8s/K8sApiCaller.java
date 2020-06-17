@@ -1111,7 +1111,7 @@ public class K8sApiCaller {
 		JsonObject condition9 = new JsonObject();
 		JsonArray patchStatusArray = new JsonArray();
 
-//		DateTime curTime = new DateTime();
+		DateTime curTime = new DateTime();
 		condition1.addProperty("type", RegistryCondition.Condition.REPLICA_SET.getType());
 		condition1.addProperty("status", RegistryStatus.Status.FALSE.getStatus());
 //		condition1.addProperty("lastTransitionTime", curTime.toString());
@@ -1163,6 +1163,7 @@ public class K8sApiCaller {
 		status.addProperty("phase", RegistryStatus.StatusPhase.CREATING.getStatus());
 		status.addProperty("message", "Registry is creating. All resources in registry has not yet been created.");
 		status.addProperty("reason", "RegistryNotCreated");
+		status.addProperty("phaseChangedAt", curTime.toString());
 
 		patchStatusArray.add( Util.makePatchJsonObject("add", "/status", status) );
 
@@ -1315,7 +1316,7 @@ public class K8sApiCaller {
 				clusterIP = service.getSpec().getClusterIP();
 				logger.info("[ClusterIP]:" + clusterIP);
 
-				if (service.getSpec().getType().equals(RegistryService.SVC_TYPE_LOAD_BALANCER)  
+				if (service.getSpec().getType().equals(RegistryService.SVC_TYPE_LOAD_BALANCER)
 						&& service.getStatus().getLoadBalancer().getIngress() != null
 						&& service.getStatus().getLoadBalancer().getIngress().size() == 1) {
 					if (service.getStatus().getLoadBalancer().getIngress().get(0).getHostname() == null) {
@@ -2455,6 +2456,52 @@ public class K8sApiCaller {
 		}
 	}
 	
+	public static Set<RegistryCondition.Condition> getRecreatedSubres(JsonNode diff) {
+		Set<RegistryCondition.Condition> recreateSubresources = new HashSet<>();
+		
+		for (final JsonNode obj : diff) {
+			String path = "";
+			String op = "";
+
+			logger.info("update object: " + obj.toString());
+			if (obj.get("path") != null) {
+				path = obj.get("path").toString().split("\"")[1];
+			}
+			if (obj.get("op") != null) {
+				op = obj.get("op").toString().split("\"")[1];
+			}
+			
+			if (path.startsWith("/spec/replicaSet")) {
+				recreateSubresources.add(RegistryCondition.Condition.REPLICA_SET);
+			}
+			if (path.startsWith("/spec/service")) {
+				recreateSubresources.add(RegistryCondition.Condition.SERVICE);
+				recreateSubresources.add(RegistryCondition.Condition.REPLICA_SET);
+				recreateSubresources.add(RegistryCondition.Condition.SECRET_OPAQUE);
+				recreateSubresources.add(RegistryCondition.Condition.SECRET_DOCKER_CONFIG_JSON);
+				if(path.equals("/spec/service/ingress") 
+						&& op.equals("add")) {
+					recreateSubresources.add(RegistryCondition.Condition.SECRET_TLS);
+					recreateSubresources.add(RegistryCondition.Condition.INGRESS);
+				}
+			}
+			if (path.startsWith("/spec/persistentVolumeClaim/exist")) {
+				recreateSubresources.add(RegistryCondition.Condition.REPLICA_SET);
+			}
+			if (path.equals("/spec/image")) {
+				recreateSubresources.add(RegistryCondition.Condition.REPLICA_SET);
+			}
+			if (path.equals("/spec/loginId")) {
+				recreateSubresources.add(RegistryCondition.Condition.POD);
+			}
+			if (path.equals("/spec/loginPassword")) {
+				recreateSubresources.add(RegistryCondition.Condition.POD);
+			}
+		}
+		
+		return recreateSubresources;
+	}
+	
 	public static void updateRegistrySubresources(Registry registry, JsonNode diff) throws ApiException {
 		logger.info("[K8S ApiCaller] updateRegistrySubresources(Registry, JsonNode) Start");
 		String namespace = registry.getMetadata().getNamespace();
@@ -2467,10 +2514,14 @@ public class K8sApiCaller {
 
 		for (final JsonNode obj : diff) {
 			String path = "";
+			String op = "";
 
 			logger.info("update object: " + obj.toString());
 			if (obj.get("path") != null) {
 				path = obj.get("path").toString().split("\"")[1];
+			}
+			if (obj.get("op") != null) {
+				op = obj.get("op").toString().split("\"")[1];
 			}
 			
 			if (path.startsWith("/spec/replicaSet")) {
@@ -2481,6 +2532,18 @@ public class K8sApiCaller {
 				recreateSubresources.add(RegistryCondition.Condition.REPLICA_SET);
 				recreateSubresources.add(RegistryCondition.Condition.SECRET_OPAQUE);
 				recreateSubresources.add(RegistryCondition.Condition.SECRET_DOCKER_CONFIG_JSON);
+				if(path.equals("/spec/service/ingress") 
+						&& op.equals("add")) {
+					try {
+						createRegistryTlsSecret(registry);
+						createRegistryIngress(registry);
+					} catch (Exception e) {
+						logger.info(e.getMessage());
+					}
+				} else {
+					deleteRegistrySubresource(registry, RegistryCondition.Condition.SECRET_TLS);
+					deleteRegistrySubresource(registry, RegistryCondition.Condition.INGRESS);
+				}
 			}
 			if (path.startsWith("/spec/persistentVolumeClaim/exist")) {
 				try {
@@ -2656,7 +2719,7 @@ public class K8sApiCaller {
 
 	}
 
-	public static void updateRegistryAnnotationLastCR(Registry registry) throws ApiException {
+	public static void updateRegistryAnnotationLastCR(Registry registry, JsonNode diff) throws ApiException {
 		logger.info("[K8S ApiCaller] updateRegistryAnnotationLastCR(Registry) Start");
 		String namespace = registry.getMetadata().getNamespace();
 		String registryId = registry.getMetadata().getName();
@@ -2668,6 +2731,9 @@ public class K8sApiCaller {
 		JsonObject json = (JsonObject) Util.toJson(registry);
 
 		annotations.put(Constants.LAST_CUSTOM_RESOURCE, json.toString());
+		if(diff != null) {
+			annotations.put(Constants.UPDATING_FIELDS, diff.toString());
+		}
 		registry.getMetadata().setAnnotations(annotations);
 
 		try {
@@ -2787,14 +2853,19 @@ public class K8sApiCaller {
 		}
 	}
 
-	public static void patchRegistryStatus(Registry registry, String phase, String message, String reason) throws ApiException{
+	public static void patchRegistryStatus(Registry registry, String phase, String message, String reason, DateTime phaseChangedAt) throws ApiException{
 		String namespace = registry.getMetadata().getNamespace();
 		JsonArray patchStatusArray = new JsonArray();
 
-		if (phase != null && message != null && reason != null) {
+		if (phase != null && message != null && reason != null && phaseChangedAt != null) {
 			patchStatusArray.add(Util.makePatchJsonObject("replace", "/status/phase", phase));
 			patchStatusArray.add(Util.makePatchJsonObject("replace", "/status/message", message));
 			patchStatusArray.add(Util.makePatchJsonObject("replace", "/status/reason", reason));
+			if(registry.getStatus().getPhaseChangedAt() != null) {
+				patchStatusArray.add(Util.makePatchJsonObject("replace", "/status/phaseChangedAt", phaseChangedAt.toString()));
+			} else {
+				patchStatusArray.add(Util.makePatchJsonObject("add", "/status/phaseChangedAt", phaseChangedAt.toString()));
+			}
 			
 			try {
 				customObjectApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP,
@@ -2808,13 +2879,14 @@ public class K8sApiCaller {
 		}
 	}
 	
-	public static void patchRegistryStatus(String registryName, String namespace, String phase, String message, String reason) throws ApiException{
+	public static void patchRegistryStatus(String registryName, String namespace, String phase, String message, String reason, DateTime phaseChangedAt) throws ApiException{
 		JsonArray patchStatusArray = new JsonArray();
 
-		if (phase != null && message != null && reason != null) {
+		if (phase != null && message != null && reason != null && phaseChangedAt != null) {
 			patchStatusArray.add(Util.makePatchJsonObject("replace", "/status/phase", phase));
 			patchStatusArray.add(Util.makePatchJsonObject("replace", "/status/message", message));
 			patchStatusArray.add(Util.makePatchJsonObject("replace", "/status/reason", reason));
+			patchStatusArray.add(Util.makePatchJsonObject("replace", "/status/phaseChangedAt", phaseChangedAt));
 
 			try {
 				customObjectApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP,
@@ -2885,12 +2957,12 @@ public class K8sApiCaller {
 		}
 		JsonObject condition = new JsonObject();
 		JsonArray patchStatusArray = new JsonArray();
-//		DateTime curTime = new DateTime();
+		DateTime curTime = new DateTime();
 		switch (eventType) {
 		case Constants.EVENT_TYPE_ADDED:
 			condition.addProperty("type", RegistryCondition.Condition.REPLICA_SET.getType());
 			condition.addProperty("status", RegistryStatus.Status.TRUE.getStatus());
-//			condition.addProperty("lastTransitionTime", curTime.toString());
+			condition.addProperty("lastTransitionTime", curTime.toString());
 
 			patchStatusArray.add(Util.makePatchJsonObject("replace", 
 					RegistryCondition.Condition.REPLICA_SET.getPath(), condition));
@@ -2902,7 +2974,7 @@ public class K8sApiCaller {
 		case Constants.EVENT_TYPE_DELETED:
 			condition.addProperty("type", RegistryCondition.Condition.REPLICA_SET.getType());
 			condition.addProperty("status", RegistryStatus.Status.FALSE.getStatus());
-//			condition.addProperty("lastTransitionTime", curTime.toString());
+			condition.addProperty("lastTransitionTime", curTime.toString());
 
 			patchStatusArray.add(Util.makePatchJsonObject("replace", 
 					RegistryCondition.Condition.REPLICA_SET.getPath(), condition));
@@ -3041,12 +3113,15 @@ public class K8sApiCaller {
 				}
 
 				JsonArray patchStatusArray = new JsonArray();
+				DateTime curTime = new DateTime();
 				JsonObject condition = new JsonObject();
 				JsonObject condition2 = new JsonObject();
 
 				if (registry.getStatus().getPhase() != null) {
 					condition.addProperty("type", RegistryCondition.Condition.POD.getType());
+					condition.addProperty("lastTransitionTime", curTime.toString());
 					condition2.addProperty("type", RegistryCondition.Condition.CONTAINER.getType());
+					condition2.addProperty("lastTransitionTime", curTime.toString());
 					
 					if (reason.equals("NotReady")) {
 						condition.addProperty("status", RegistryStatus.Status.TRUE.getStatus());
@@ -3152,12 +3227,14 @@ public class K8sApiCaller {
 		}
 
 		JsonArray patchStatusArray = new JsonArray();
+		DateTime curTime = new DateTime();
 		JsonObject condition = new JsonObject();
 
 		switch (eventType) {
 		case Constants.EVENT_TYPE_ADDED:
 			condition.addProperty("type", RegistryCondition.Condition.SERVICE.getType());
 			condition.addProperty("status", RegistryStatus.Status.TRUE.getStatus());
+			condition.addProperty("lastTransitionTime", curTime.toString());
 
 			break;
 		case Constants.EVENT_TYPE_MODIFIED:
@@ -3166,6 +3243,7 @@ public class K8sApiCaller {
 		case Constants.EVENT_TYPE_DELETED:
 			condition.addProperty("type", RegistryCondition.Condition.SERVICE.getType());
 			condition.addProperty("status", RegistryStatus.Status.FALSE.getStatus());
+			condition.addProperty("lastTransitionTime", curTime.toString());
 			restoreRegistry = true;
 			
 			break;
@@ -3247,6 +3325,7 @@ public class K8sApiCaller {
 		}
 
 		JsonArray patchStatusArray = new JsonArray();
+		DateTime curTime = new DateTime();
 		JsonObject condition = new JsonObject();
 		
 		if (secret.getType().equals(Constants.K8S_SECRET_TYPE_DOCKER_CONFIG_JSON)) {
@@ -3255,6 +3334,7 @@ public class K8sApiCaller {
 			case Constants.EVENT_TYPE_ADDED:
 				condition.addProperty("type", RegistryCondition.Condition.SECRET_DOCKER_CONFIG_JSON.getType());
 				condition.addProperty("status", RegistryStatus.Status.TRUE.getStatus());
+				condition.addProperty("lastTransitionTime", curTime.toString());
 
 				break;
 			case Constants.EVENT_TYPE_MODIFIED:
@@ -3263,6 +3343,7 @@ public class K8sApiCaller {
 			case Constants.EVENT_TYPE_DELETED:
 				condition.addProperty("type", RegistryCondition.Condition.SECRET_DOCKER_CONFIG_JSON.getType());
 				condition.addProperty("status", RegistryStatus.Status.FALSE.getStatus());
+				condition.addProperty("lastTransitionTime", curTime.toString());
 				
 				restoreRegistry = true;
 				
@@ -3274,10 +3355,24 @@ public class K8sApiCaller {
 			
 		} else if (secret.getType().equals(Constants.K8S_SECRET_TYPE_TLS)) {
 			// TLS TYPE SECRET
+			
+			// Check if Service Type is Ingress
+			Registry registry = getRegistry(registryName, namespace);
+			
+			String serviceType 
+			= registry.getSpec().getService().getIngress() != null ? 
+					RegistryService.SVC_TYPE_INGRESS : RegistryService.SVC_TYPE_LOAD_BALANCER;
+			
+			if( !serviceType.equals(RegistryService.SVC_TYPE_INGRESS)) {
+				logger.info("tls-secret: Registry service type is not ingress.");
+				return;
+			}
+			
 			switch (eventType) {
 			case Constants.EVENT_TYPE_ADDED:
 				condition.addProperty("type", RegistryCondition.Condition.SECRET_TLS.getType());
 				condition.addProperty("status", RegistryStatus.Status.TRUE.getStatus());
+				condition.addProperty("lastTransitionTime", curTime.toString());
 
 				break;
 			case Constants.EVENT_TYPE_MODIFIED:
@@ -3286,6 +3381,7 @@ public class K8sApiCaller {
 			case Constants.EVENT_TYPE_DELETED:
 				condition.addProperty("type", RegistryCondition.Condition.SECRET_TLS.getType());
 				condition.addProperty("status", RegistryStatus.Status.FALSE.getStatus());
+				condition.addProperty("lastTransitionTime", curTime.toString());
 				restoreRegistry = true;
 				
 				break;
@@ -3300,6 +3396,7 @@ public class K8sApiCaller {
 			case Constants.EVENT_TYPE_ADDED:
 				condition.addProperty("type", RegistryCondition.Condition.SECRET_OPAQUE.getType());
 				condition.addProperty("status", RegistryStatus.Status.TRUE.getStatus());
+				condition.addProperty("lastTransitionTime", curTime.toString());
 
 				break;
 			case Constants.EVENT_TYPE_MODIFIED:
@@ -3308,6 +3405,7 @@ public class K8sApiCaller {
 			case Constants.EVENT_TYPE_DELETED:
 				condition.addProperty("type", RegistryCondition.Condition.SECRET_OPAQUE.getType());
 				condition.addProperty("status", RegistryStatus.Status.FALSE.getStatus());
+				condition.addProperty("lastTransitionTime", curTime.toString());
 				restoreRegistry = true;
 				
 				break;
@@ -3394,6 +3492,7 @@ public class K8sApiCaller {
 		}
 
 		JsonArray patchStatusArray = new JsonArray();
+		DateTime curTime = new DateTime();
 		JsonObject condition = new JsonObject();
 
 		switch (eventType) {
@@ -3402,6 +3501,7 @@ public class K8sApiCaller {
 			if( pvc.getStatus().getPhase().equals("Bound") ) {
 				condition.addProperty("type", RegistryCondition.Condition.PVC.getType());
 				condition.addProperty("status", RegistryStatus.Status.TRUE.getStatus());
+				condition.addProperty("lastTransitionTime", curTime.toString());
 
 			} else {
 				Registry existRegistry = null;
@@ -3418,6 +3518,7 @@ public class K8sApiCaller {
 					condition.addProperty("type", RegistryCondition.Condition.PVC.getType());
 					condition.addProperty("status", RegistryStatus.Status.FALSE.getStatus());
 					condition.addProperty("reason", pvc.getStatus().getPhase());
+					condition.addProperty("lastTransitionTime", curTime.toString());
 				} else {
 					logger.info("Registry is Creating... wait until pvc is Bound.");
 					return;
@@ -3430,6 +3531,7 @@ public class K8sApiCaller {
 		case Constants.EVENT_TYPE_DELETED:
 			condition.addProperty("type", RegistryCondition.Condition.PVC.getType());
 			condition.addProperty("status", RegistryStatus.Status.FALSE.getStatus());
+			condition.addProperty("lastTransitionTime", curTime.toString());
 
 			patchStatusArray.add(Util.makePatchJsonObject("replace", RegistryCondition.Condition.PVC.getPath(), condition));
 			
@@ -3453,10 +3555,8 @@ public class K8sApiCaller {
 		}
 		
 		if(restoreRegistry) {
-			Registry registry;
-			
 			try {
-				registry = getRegistry(registryName, namespace);
+				Registry registry = getRegistry(registryName, namespace);
 				
 				deleteImage(registry);
 				createRegistryPvc(registry);
@@ -3496,14 +3596,28 @@ public class K8sApiCaller {
 			}
 			throw e;
 		}
+		
+		// Check if Service Type is Ingress
+		Registry registry = getRegistry(registryName, namespace);
+
+		String serviceType 
+		= registry.getSpec().getService().getIngress() != null ? 
+				RegistryService.SVC_TYPE_INGRESS : RegistryService.SVC_TYPE_LOAD_BALANCER;
+
+		if( !serviceType.equals(RegistryService.SVC_TYPE_INGRESS)) {
+			logger.info("ingress: Registry service type is not ingress.");
+			return;
+		}
 
 		JsonArray patchStatusArray = new JsonArray();
+		DateTime curTime = new DateTime();
 		JsonObject condition = new JsonObject();
 
 		switch (eventType) {
 		case Constants.EVENT_TYPE_ADDED:
 			condition.addProperty("type", RegistryCondition.Condition.INGRESS.getType());
 			condition.addProperty("status", RegistryStatus.Status.TRUE.getStatus());
+			condition.addProperty("lastTransitionTime", curTime.toString());
 
 			break;
 		case Constants.EVENT_TYPE_MODIFIED:
@@ -3512,6 +3626,7 @@ public class K8sApiCaller {
 		case Constants.EVENT_TYPE_DELETED:
 			condition.addProperty("type", RegistryCondition.Condition.INGRESS.getType());
 			condition.addProperty("status", RegistryStatus.Status.FALSE.getStatus());
+			condition.addProperty("lastTransitionTime", curTime.toString());
 			restoreRegistry = true;
 			
 			break;
@@ -3535,10 +3650,7 @@ public class K8sApiCaller {
 		}
 		
 		if(restoreRegistry) {
-			Registry registry;
-			
 			try {
-				registry = getRegistry(registryName, namespace);
 				createRegistryIngress(registry);
 			} catch (Exception e) {
 				logger.info(e.getMessage());

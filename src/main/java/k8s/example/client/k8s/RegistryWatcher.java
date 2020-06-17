@@ -2,16 +2,17 @@ package k8s.example.client.k8s;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
 import io.kubernetes.client.openapi.ApiClient;
@@ -98,14 +99,14 @@ public class RegistryWatcher extends Thread {
 								break;
 							case Constants.EVENT_TYPE_MODIFIED:
 								if (registry.getMetadata().getAnnotations() == null) {
-									K8sApiCaller.updateRegistryAnnotationLastCR(registry);
+									K8sApiCaller.updateRegistryAnnotationLastCR(registry, null);
 									break;
 								}
 								
 								String beforeJson = registry.getMetadata().getAnnotations().get(Constants.LAST_CUSTOM_RESOURCE);
 //								logger.info("beforeJson = " + beforeJson);
 								if( beforeJson == null) {
-									K8sApiCaller.updateRegistryAnnotationLastCR(registry);
+									K8sApiCaller.updateRegistryAnnotationLastCR(registry, null);
 									break;
 								}
 								
@@ -139,7 +140,7 @@ public class RegistryWatcher extends Thread {
 											K8sApiCaller.createRegistry(registry);
 										} 
 										// Registry Is NotReady
-										else if(statusIsNotReady(statusMap, serviceType)) {
+										else if(conditionsNotReady(statusMap, serviceType)) {
 											changePhase = RegistryStatus.StatusPhase.NOT_READY.getStatus();
 											changeMessage = "Registry is not ready.";
 											changeReason = "NotReady";
@@ -162,15 +163,41 @@ public class RegistryWatcher extends Thread {
 										
 										if(diff.size() > 0) {
 											logger.info("[Updated Registry Spec]\ndiff: " + diff.toString() + "\n");
-											K8sApiCaller.updateRegistryAnnotationLastCR(registry);
+											K8sApiCaller.updateRegistryAnnotationLastCR(registry, diff);
 											K8sApiCaller.updateRegistrySubresources(registry, diff);
 											break;
 										} 
 
-										Registry realRegistry = K8sApiCaller.getRegistry(registry.getMetadata().getName(), registry.getMetadata().getNamespace());
-										Map <RegistryCondition.Condition, Boolean> realSatusMap = getStatusMap(realRegistry);
+										// Get Updating Fields
+										Map<String, String> annotations = registry.getMetadata().getAnnotations();
+										String updatingFields = null;
+										ObjectMapper mapper = new ObjectMapper();
 										
-										if(statusIsNotReady(realSatusMap, serviceType)) {
+										if( (updatingFields = annotations.get(Constants.UPDATING_FIELDS)) == null ) {
+											logger.info("Updating field is empty.");
+											return;
+										}
+										
+										JsonNode updatingJson = mapper.readTree(updatingFields);
+										Set<RegistryCondition.Condition> recreateSubresources = K8sApiCaller.getRecreatedSubres(updatingJson);
+										DateTime phaseChangedAt = registry.getStatus().getPhaseChangedAt();
+										
+										logger.info("phaseChangedAt: " + phaseChangedAt);
+										
+										for(RegistryCondition.Condition con : recreateSubresources) {
+											DateTime conTime = registry.getStatus().getConditions().get(con.ordinal()).getLastTransitionTime();
+											
+											logger.info(con.getType() + " type lastTransitionTime: " + conTime);
+											if(phaseChangedAt.toDate().after(conTime.toDate())) {
+												logger.info("Registry is not updated yet.");
+												return;
+											}
+										}
+										
+//										Registry realRegistry = K8sApiCaller.getRegistry(registry.getMetadata().getName(), registry.getMetadata().getNamespace());
+//										Map <RegistryCondition.Condition, Boolean> realSatusMap = getStatusMap(realRegistry);
+										
+										if(conditionsNotReady(statusMap, serviceType)) {
 											changePhase = RegistryStatus.StatusPhase.NOT_READY.getStatus();
 											changeMessage = "Registry is not ready.";
 											changeReason = "NotReady"; 
@@ -187,7 +214,7 @@ public class RegistryWatcher extends Thread {
 										}
 									}
 									// Registry Is Running.
-									else if(statusIsRunning(statusMap, serviceType)) {
+									else if(conditionsRunning(statusMap, serviceType)) {
 											// if last Phase is not Running, synchronize image list from registry.
 											if(!phase.equals(RegistryStatus.StatusPhase.RUNNING.getStatus())) {
 												boolean isSynced = false;
@@ -230,18 +257,20 @@ public class RegistryWatcher extends Thread {
 										}
 									// Registry Is NotReady or Error.
 									else {
-										if(statusIsNotReady(statusMap, serviceType)) {
+										if(!phase.equals(RegistryStatus.StatusPhase.NOT_READY.getStatus()) 
+												&& conditionsNotReady(statusMap, serviceType)) {
 											changePhase = RegistryStatus.StatusPhase.NOT_READY.getStatus();
 											changeMessage = "Registry is not ready.";
 											changeReason = "NotReady";
-										} else if(statusIsError(statusMap, serviceType)) {
+										} else if(!phase.equals(RegistryStatus.StatusPhase.ERROR.getStatus()) 
+												&&conditionsError(statusMap, serviceType)) {
 											changePhase = RegistryStatus.StatusPhase.ERROR.getStatus();
 											changeMessage = "Registry's condtion is not satisfied.";
 											changeReason = "Error";
 										}
 									}
 									
-									K8sApiCaller.patchRegistryStatus(registry, changePhase, changeMessage, changeReason);
+									K8sApiCaller.patchRegistryStatus(registry, changePhase, changeMessage, changeReason, new DateTime());
 								}
 
 								break;
@@ -301,7 +330,7 @@ public class RegistryWatcher extends Thread {
 		return statusMap;
 	}
 	
-	public static boolean statusIsNotReady(Map<RegistryCondition.Condition, Boolean> statusMap, String serviceType) {
+	public static boolean conditionsNotReady(Map<RegistryCondition.Condition, Boolean> statusMap, String serviceType) {
 		if(statusMap.get(RegistryCondition.Condition.REPLICA_SET)
 				&& statusMap.get(RegistryCondition.Condition.POD)
 				&& statusMap.get(RegistryCondition.Condition.SERVICE)
@@ -323,7 +352,7 @@ public class RegistryWatcher extends Thread {
 		return false;
 	}
 	
-	public static boolean statusIsError(Map<RegistryCondition.Condition, Boolean> statusMap, String serviceType) {
+	public static boolean conditionsError(Map<RegistryCondition.Condition, Boolean> statusMap, String serviceType) {
 		if(!statusMap.get(RegistryCondition.Condition.REPLICA_SET)
 				|| !statusMap.get(RegistryCondition.Condition.POD)
 				|| !statusMap.get(RegistryCondition.Condition.SERVICE)
@@ -342,7 +371,7 @@ public class RegistryWatcher extends Thread {
 		return false;
 	}
 	
-	public static boolean statusIsRunning(Map<RegistryCondition.Condition, Boolean> statusMap, String serviceType) {
+	public static boolean conditionsRunning(Map<RegistryCondition.Condition, Boolean> statusMap, String serviceType) {
 		if( statusMap.get(RegistryCondition.Condition.REPLICA_SET)
 				&& statusMap.get(RegistryCondition.Condition.POD)
 				&& statusMap.get(RegistryCondition.Condition.CONTAINER)

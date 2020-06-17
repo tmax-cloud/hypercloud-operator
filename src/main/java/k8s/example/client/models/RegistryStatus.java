@@ -3,11 +3,14 @@ package k8s.example.client.models;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.joda.time.DateTime;
+
 public class RegistryStatus {
 	private List<RegistryCondition> conditions = null;
 	private String phase = null;
 	private String message = null;
 	private String reason = null;
+	private DateTime phaseChangedAt = null;
 
 	public List<RegistryCondition> getConditions() {
 		return conditions;
@@ -53,6 +56,15 @@ public class RegistryStatus {
 	public void setReason(String reason) {
 		this.reason = reason;
 	}
+
+	public DateTime getPhaseChangedAt() {
+		return phaseChangedAt;
+	}
+
+	public void setPhaseChangedAt(DateTime phaseChangedAt) {
+		this.phaseChangedAt = phaseChangedAt;
+	}
+
 
 	public static enum StatusPhase {
 		CREATING("Creating"),

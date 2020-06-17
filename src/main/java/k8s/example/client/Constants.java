@@ -116,6 +116,7 @@ public class Constants {
 	
 	// Custom Resource Annoatation To Know Modified Fields
 	public static final String LAST_CUSTOM_RESOURCE = CUSTOM_OBJECT_GROUP + "/last-custom-resource";
+	public static final String UPDATING_FIELDS = CUSTOM_OBJECT_GROUP + "/updating-fields";
 	
 	// LoginPage of HyperCloud4
 	public static final String LOGIN_PAGE_URI = "http://192.168.8.36/oauth/login.html";
