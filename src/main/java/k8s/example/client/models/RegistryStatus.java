@@ -3,12 +3,15 @@ package k8s.example.client.models;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.joda.time.DateTime;
+
 public class RegistryStatus {
 	private List<RegistryCondition> conditions = null;
 	private String phase = null;
 	private String message = null;
 	private String reason = null;
-	private String lastPhase = null;
+	private DateTime phaseChangedAt = null;
+	private String capacity = null;
 
 	public List<RegistryCondition> getConditions() {
 		return conditions;
@@ -55,16 +58,25 @@ public class RegistryStatus {
 		this.reason = reason;
 	}
 
-	public String getLastPhase() {
-		return lastPhase;
+	public DateTime getPhaseChangedAt() {
+		return phaseChangedAt;
 	}
 
-	public void setLastPhase(String lastPhase) {
-		this.lastPhase = lastPhase;
+	public void setPhaseChangedAt(DateTime phaseChangedAt) {
+		this.phaseChangedAt = phaseChangedAt;
+	}
+
+	public String getCapacity() {
+		return capacity;
+	}
+
+	public void setCapacity(String capacity) {
+		this.capacity = capacity;
 	}
 
 	public static enum StatusPhase {
 		CREATING("Creating"),
+		UPDATING("Updating"),
 		RUNNING("Running"),
 		NOT_READY("NotReady"),
 		ERROR("Error"),
@@ -97,6 +109,8 @@ public class RegistryStatus {
 		sb.append("    message: ").append(toIndentedString(message)).append("\n");
 		sb.append("    reason: ").append(toIndentedString(reason)).append("\n");
 		sb.append("    phase: ").append(toIndentedString(phase)).append("\n");
+		sb.append("    phaseChangedAt: ").append(toIndentedString(phaseChangedAt)).append("\n");
+		sb.append("    capacity: ").append(toIndentedString(capacity)).append("\n");
 		sb.append("}");
 		return sb.toString();
 	}

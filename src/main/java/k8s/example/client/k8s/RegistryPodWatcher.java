@@ -57,7 +57,7 @@ public class RegistryPodWatcher extends Thread {
 //						+ pod.toString()
 						);
 
-						K8sApiCaller.updateRegistryStatus(pod);
+						K8sApiCaller.updateRegistryStatus(pod, eventType);
 						
 					}
 				} catch (ApiException e) {
