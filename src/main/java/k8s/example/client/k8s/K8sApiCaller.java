@@ -417,9 +417,20 @@ public class K8sApiCaller {
 		long cscLatestResourceVersion = getLatestResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_CATALOGSERVICECLAIM, true);
 		logger.info("Catalog Service Claim Latest resource version: " + cscLatestResourceVersion);
 
-		// Init Registry Image
-		initializeImageList();
-
+		try {
+			// Validate registry. if registry spec is not qualified, patch the registry spec.
+			patchRegistrySpec();
+		} catch(IOException e) {
+			logger.info("patchRegistrySpec Exception: " + e.getMessage());
+		}
+		
+		try {
+			// Init Registry Image
+			initializeImageList();
+		} catch(Exception e) {
+			logger.info("initializeImageList Exception: " + e.getMessage());
+		}
+		
 		// Start user watch
 		logger.info("Start user watcher");
 		UserWatcher userWatcher = new UserWatcher(k8sClient, customObjectApi,
@@ -1092,12 +1103,10 @@ public class K8sApiCaller {
 	public static void initRegistry(String registryId, Registry registry) throws ApiException {
 		logger.info("[K8S ApiCaller] initRegistry(String, Registry) Start");
 
+		String registryName = registry.getMetadata().getName();
 		String namespace = registry.getMetadata().getNamespace();
-
-		String serviceType 
-		= registry.getSpec().getService().getIngress() != null ? 
+		String serviceType = registry.getSpec().getService().getIngress() != null ? 
 				RegistryService.SVC_TYPE_INGRESS : RegistryService.SVC_TYPE_LOAD_BALANCER;
-		
 		JsonObject status = new JsonObject();
 		JsonArray conditions = new JsonArray();
 		JsonObject condition1 = new JsonObject();
@@ -1110,11 +1119,10 @@ public class K8sApiCaller {
 		JsonObject condition8 = new JsonObject();
 		JsonObject condition9 = new JsonObject();
 		JsonArray patchStatusArray = new JsonArray();
-
 		DateTime curTime = new DateTime();
+		
 		condition1.addProperty("type", RegistryCondition.Condition.REPLICA_SET.getType());
 		condition1.addProperty("status", RegistryStatus.Status.FALSE.getStatus());
-//		condition1.addProperty("lastTransitionTime", curTime.toString());
 		conditions.add(condition1);
 
 		condition2.addProperty("type", RegistryCondition.Condition.POD.getType());
@@ -1140,8 +1148,7 @@ public class K8sApiCaller {
 		condition7.addProperty("type", RegistryCondition.Condition.SECRET_TLS.getType());
 		if(serviceType.equals(RegistryService.SVC_TYPE_INGRESS)) {
 			condition7.addProperty("status", RegistryStatus.Status.FALSE.getStatus());
-		}
-		else {
+		} else {
 			condition7.addProperty("status", RegistryStatus.Status.UNUSED_FIELD.getStatus());
 		}
 		conditions.add(condition7);
@@ -1149,8 +1156,7 @@ public class K8sApiCaller {
 		condition8.addProperty("type", RegistryCondition.Condition.INGRESS.getType());
 		if(serviceType.equals(RegistryService.SVC_TYPE_INGRESS)) {
 			condition8.addProperty("status", RegistryStatus.Status.FALSE.getStatus());
-		}
-		else {
+		} else {
 			condition8.addProperty("status", RegistryStatus.Status.UNUSED_FIELD.getStatus());
 		}
 		conditions.add(condition8);
@@ -1159,10 +1165,14 @@ public class K8sApiCaller {
 		condition9.addProperty("status", RegistryStatus.Status.FALSE.getStatus());
 		conditions.add(condition9);
 
+		String phase = RegistryStatus.StatusPhase.CREATING.getStatus();
+		String message = "Registry is creating. All resources in registry has not yet been created.";
+		String reason = "RegistryNotCreated";
+		
 		status.add("conditions", conditions);
-		status.addProperty("phase", RegistryStatus.StatusPhase.CREATING.getStatus());
-		status.addProperty("message", "Registry is creating. All resources in registry has not yet been created.");
-		status.addProperty("reason", "RegistryNotCreated");
+		status.addProperty("phase", phase);
+		status.addProperty("message", message);
+		status.addProperty("reason", reason);
 		status.addProperty("phaseChangedAt", curTime.toString());
 
 		patchStatusArray.add( Util.makePatchJsonObject("add", "/status", status) );
@@ -1171,7 +1181,11 @@ public class K8sApiCaller {
 			customObjectApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP,
 					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY,
 					registry.getMetadata().getName(), patchStatusArray);
-			logger.info("patchNamespacedCustomObjectStatus result: phase(" + status.get("phase").toString() + ")\n");
+			
+			logger.info("CRD Status is patched: " + registryName + "/" + namespace);
+			logger.info("\tphase(" + phase + ")");
+			logger.info("\tmessage(" + message + ")");
+			logger.info("\treason(" + reason + ")\n");
 		} catch (ApiException e) {
 			logger.info(e.getResponseBody());
 			throw e;
@@ -1182,8 +1196,7 @@ public class K8sApiCaller {
 		logger.info("[K8S ApiCaller] createRegistry(Registry) Start");
 
 		try {
-			String serviceType 
-				= registry.getSpec().getService().getIngress() != null 
+			String serviceType = registry.getSpec().getService().getIngress() != null 
 				? RegistryService.SVC_TYPE_INGRESS : RegistryService.SVC_TYPE_LOAD_BALANCER;
 
 			createRegistryService(registry);
@@ -1354,7 +1367,7 @@ public class K8sApiCaller {
 	public static void createRegistryPvc(Registry registry) throws Exception {
 		logger.info("[K8S ApiCaller] createRegistryPvc(Registry) Start");
 		try {
-			String registryId = registry.getMetadata().getName();
+			String registryName = registry.getMetadata().getName();
 			String namespace = registry.getMetadata().getNamespace();
 			RegistryPVC registryPVC = registry.getSpec().getPersistentVolumeClaim();
 			boolean existPvcName = (registryPVC.getExist() != null);
@@ -1414,9 +1427,9 @@ public class K8sApiCaller {
 				}
 
 				try {
-					logger.info("patchNamespacedPersistentVolumeClaim: " + existPvc.getMetadata().getName() + "/" + namespace);
 					V1PersistentVolumeClaim  result = api.patchNamespacedPersistentVolumeClaim(existPvc.getMetadata().getName(), namespace, new V1Patch(jArrayPatchPvc.toString()), null, null, null, null);
-					logger.info("patchNamespacedPersistentVolumeClaim result: " + result.getMetadata().toString() + "\n");
+					logger.info("PVC is patched: " + existPvc.getMetadata().getName() + "/" + namespace);
+					logger.info("\tmetadata:" + result.getMetadata().toString());
 				} catch (ApiException e) {
 					logger.info(e.getResponseBody());
 				}
@@ -1434,7 +1447,7 @@ public class K8sApiCaller {
 				//			String storageClassName = StringUtil.isEmpty(registryPVC.getStorageClassName()) ? RegistryPVC.STORAGE_CLASS_DEFAULT : registryPVC.getStorageClassName();
 				String storageClassName = createPvc.getStorageClassName();
 
-				pvcMeta.setName(Constants.K8S_PREFIX + registryId);
+				pvcMeta.setName(Constants.K8S_PREFIX + registryName);
 
 				logger.info("<Pvc Label List>");
 				Map<String, String> pvcLabels = new HashMap<String, String>();
@@ -1506,8 +1519,6 @@ public class K8sApiCaller {
 			e.printStackTrace();
 			throw e;
 		}
-		
-		
 	}
 
 	public static void createRegistryCertSecret(Registry registry) throws Exception {
@@ -1584,8 +1595,7 @@ public class K8sApiCaller {
 					}
 					logger.info("[LoadBalancerIP]:" + lbIP);
 					break;
-				}
-				else if (service.getSpec().getType().equals(RegistryService.SVC_TYPE_CLUSTER_IP)) {
+				} else if (service.getSpec().getType().equals(RegistryService.SVC_TYPE_CLUSTER_IP)) {
 					logger.info("Service type is ClusterIp");
 					break;
 				}
@@ -1614,8 +1624,7 @@ public class K8sApiCaller {
 			sb.append("\" -config <(cat /etc/ssl/openssl.cnf <(printf \"[v3_ca]\\nsubjectAltName=IP:" + clusterIP);
 			if(serviceType.equals(RegistryService.SVC_TYPE_LOAD_BALANCER)) {
 				sb.append(",IP:" + lbIP);
-			}
-			else {
+			} else {
 				sb.append(",DNS:" + registryDomain);
 			}
 			sb.append("\")) -out ");
@@ -1684,11 +1693,9 @@ public class K8sApiCaller {
 
 			if( registryDomain != null) {
 				secrets.put("REGISTRY_URL", registryDomain + ":" + registrySVCPort);
-			}
-			else if(lbIP != null) {
+			} else if(lbIP != null) {
 				secrets.put("REGISTRY_URL", lbIP + ":" + registrySVCPort);
-			}
-			else {
+			} else {
 				secrets.put("REGISTRY_URL", clusterIP + ":" + registrySVCPort);
 			}
 
@@ -1744,8 +1751,7 @@ public class K8sApiCaller {
 					registrySVCPort = registryService.getIngress().getPort();
 					logger.info("[Ingress]registrySVCPort: " + registrySVCPort);
 				}
-			}
-			else if( serviceType.equals(RegistryService.SVC_TYPE_LOAD_BALANCER) 
+			} else if( serviceType.equals(RegistryService.SVC_TYPE_LOAD_BALANCER) 
 					&& registryService.getLoadBalancer().getPort() != 0) {
 				registrySVCPort = registryService.getLoadBalancer().getPort();
 				logger.info("[LB]registrySVCPort: " + registrySVCPort);
@@ -1977,7 +1983,7 @@ public class K8sApiCaller {
 
 			try {
 				extentionApi.createNamespacedIngress(namespace, ingress, null, null, null);
-			}catch(ApiException e) {
+			} catch(ApiException e) {
 				logger.info(e.getResponseBody());
 				
 				try {
@@ -2249,7 +2255,6 @@ public class K8sApiCaller {
 			container.addVolumeMountsItem(certMount);
 
 			// Registry Volume mount
-//			String mode = null;
 			String pvcMountPath = registryPVC.getMountPath() == null ? "/var/lib/registry" : registryPVC.getMountPath();
 			boolean existPvcName = (registryPVC.getExist() != null);
 			String volumeMode = null;
@@ -2259,10 +2264,7 @@ public class K8sApiCaller {
 				try {
 					existPvc = api.readNamespacedPersistentVolumeClaim(registryPVC.getExist().getPvcName(), namespace, null, null, null);
 					volumeMode = existPvc.getSpec().getVolumeMode();
-				}catch (ApiException e) {
-//					if(e.getCode() == 404) {
-//						existPvcName = false;
-//					}
+				} catch (ApiException e) {
 					try {
 						patchRegistryStatus(registry, RegistryCondition.Condition.PVC, 
 								RegistryStatus.Status.FALSE.getStatus(), "Creating a registry is failed. " + registryPVC.getExist().getPvcName() + " PVC is not found", "PVCNotFound");
@@ -2284,8 +2286,7 @@ public class K8sApiCaller {
 				volumeDevicesItem.setName("registry");
 				volumeDevicesItem.setDevicePath(pvcMountPath);
 				container.addVolumeDevicesItem(volumeDevicesItem);
-			}
-			else {
+			} else {
 				V1VolumeMount registryMount = new V1VolumeMount();
 
 				registryMount.setName("registry");
@@ -2573,7 +2574,6 @@ public class K8sApiCaller {
 					updateSubResources.add("ReplicaSet");
 				if (!updateSubResources.contains("Secret"))
 					updateSubResources.add("Secret");
-
 			}
 			if (path.equals("/spec/loginPassword")) {
 				recreateSubresources.add(RegistryCondition.Condition.POD);
@@ -2613,8 +2613,7 @@ public class K8sApiCaller {
 					} catch (ApiException e) {
 						logger.info(e.getResponseBody());
 					}
-				}
-				else {
+				} else {
 					try {
 						V1PersistentVolumeClaim pvc = api.readNamespacedPersistentVolumeClaim(Constants.K8S_PREFIX + registryId, namespace, null, null, null);
 						pvc.getMetadata().setOwnerReferences(null);
@@ -2681,9 +2680,7 @@ public class K8sApiCaller {
 		if(recreateSubresources.contains(RegistryCondition.Condition.POD)) {
 			deleteRegistrySubresource(registry, RegistryCondition.Condition.POD);
 		}
-		
 	}
-	
 
 	public static void updateRegistryReplicaSet(Registry registry, JsonElement patchJson) throws ApiException {
 		logger.info("[K8S ApiCaller] updateRegistryReplicaSet(Registry, JsonElement) Start");
@@ -2721,7 +2718,6 @@ public class K8sApiCaller {
 			logger.info(e.getResponseBody());
 			throw e;
 		}
-
 	}
 
 	public static void updateRegistryAnnotationLastCR(Registry registry, JsonNode diff) throws ApiException {
@@ -2740,6 +2736,7 @@ public class K8sApiCaller {
 		} else {
 			annotations.remove(Constants.UPDATING_FIELDS);
 		}
+		
 		registry.getMetadata().setAnnotations(annotations);
 
 		try {
@@ -2837,7 +2834,7 @@ public class K8sApiCaller {
 	public static void deleteRegistryAnnotationUrl(Registry registry) throws ApiException {
 		logger.info("[K8S ApiCaller] deleteRegistryAnnotationUrl(Registry) Start");
 		String namespace = registry.getMetadata().getNamespace();
-		String registryId = registry.getMetadata().getName();
+		String registryName = registry.getMetadata().getName();
 
 		// ------ Patch Registry
 		Map<String, String> annotations = registry.getMetadata().getAnnotations() == null ? new HashMap<>()
@@ -2848,7 +2845,7 @@ public class K8sApiCaller {
 
 		try {
 			Object result = customObjectApi.replaceNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
-					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registryId,
+					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registryName,
 					registry);
 
 			logger.info("replaceNamespacedCustomObject result: " + result.toString() + "\n");
@@ -2857,8 +2854,81 @@ public class K8sApiCaller {
 			throw e;
 		}
 	}
+	
+	public static void patchRegistrySpec() throws IOException {
+		try {
+			logger.info("patchRegistrySpec");
+			Object response = customObjectApi.listClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP,
+					Constants.CUSTOM_OBJECT_VERSION, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, null, null, null, null,
+					null, null, null, Boolean.FALSE);
 
+			JsonObject respJson = (JsonObject) new JsonParser().parse((new Gson()).toJson(response));
+
+			mapper.registerModule(new JodaModule());
+			List<Object> registryList = mapper.readValue((new Gson()).toJson(respJson.get("items")),
+					new TypeReference<ArrayList<Object>>() {
+					});
+
+			if (registryList != null) {
+				for (Object registryObj : registryList) {
+					try {
+						JsonArray patchArray = new JsonArray();
+						Registry registry = mapper.treeToValue(mapper.valueToTree(registryObj), Registry.class);
+						String registryName = registry.getMetadata().getName();
+						String namespace = registry.getMetadata().getNamespace();
+						Integer ingressPort = null;
+						Integer lbPort = null;
+						
+						if(registry.getSpec().getService().getIngress() != null) {
+							if(registry.getSpec().getService().getIngress().getPort() < 1
+									|| registry.getSpec().getService().getIngress().getPort() > 65535)
+								ingressPort = registry.getSpec().getService().getIngress().getPort();
+								patchArray.add(Util.makePatchJsonObject("replace", "/spec/service/ingress/port", 443));
+						}
+
+						if(registry.getSpec().getService().getLoadBalancer() != null) {
+							if(registry.getSpec().getService().getLoadBalancer().getPort() < 1
+									|| registry.getSpec().getService().getLoadBalancer().getPort() > 65535)
+								lbPort = registry.getSpec().getService().getLoadBalancer().getPort();
+								patchArray.add(Util.makePatchJsonObject("replace", "/spec/service/loadBalancer/port", 443));
+						}
+						
+						if(ingressPort == null && lbPort == null) 
+							continue;
+						
+						logger.info(registry.getMetadata().getName() + "/" + registry.getMetadata().getNamespace()
+								+ " registry spec is patched.");
+
+						try {
+							customObjectApi.patchNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
+									Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registryName,
+									patchArray);
+							logger.info("registry spec is patched: " + registryName + "/" + namespace);
+							if( ingressPort != null )
+								logger.info("\tspec.service.ingress:" + ingressPort + " -> 443");
+							if( lbPort != null )
+								logger.info("\tspec.service.loadBalancer:" + lbPort + " -> 443");
+						} catch (ApiException e) {
+							logger.info(e.getResponseBody());
+//							throw e;
+						}
+//					} catch (ApiException e) {
+//						logger.info(e.getResponseBody());
+					} catch (Exception e) {
+						logger.info(e.getMessage());
+					}
+				}
+			}
+		} catch (ApiException e) {
+			logger.info("Response body: " + e.getResponseBody());
+		} catch (JsonParseException | JsonMappingException e) {
+			logger.info(e.getMessage());
+//			throw e;
+		}
+	}
+	
 	public static void patchRegistryStatus(Registry registry, String phase, String message, String reason, DateTime phaseChangedAt) throws ApiException{
+		String registryName = registry.getMetadata().getName();
 		String namespace = registry.getMetadata().getNamespace();
 		JsonArray patchStatusArray = new JsonArray();
 
@@ -2875,8 +2945,11 @@ public class K8sApiCaller {
 			try {
 				customObjectApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP,
 						Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY,
-						registry.getMetadata().getName(), patchStatusArray);
-				logger.info("patchNamespacedCustomObjectStatus result: phase(" + phase + ")\n");
+						registryName, patchStatusArray);
+				logger.info("CRD Status is patched: " + registryName + "/" + namespace);
+				logger.info("\tphase(" + phase + ")");
+				logger.info("\tmessage(" + message + ")");
+				logger.info("\treason(" + reason + ")\n");
 			} catch (ApiException e) {
 				logger.info(e.getResponseBody());
 				throw e;
@@ -2897,7 +2970,10 @@ public class K8sApiCaller {
 				customObjectApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP,
 						Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY,
 						registryName, patchStatusArray);
-				logger.info("patchNamespacedCustomObjectStatus result: phase(" + phase + ")\n");
+				logger.info("CRD Status is patched: " + registryName + "/" + namespace);
+				logger.info("\tphase(" + phase + ")");
+				logger.info("\tmessage(" + message + ")");
+				logger.info("\treason(" + reason + ")\n");
 			} catch (ApiException e) {
 				logger.info(e.getResponseBody());
 				throw e;
@@ -2906,6 +2982,7 @@ public class K8sApiCaller {
 	}
 	
 	public static void patchRegistryStatus(Registry registry, RegistryCondition.Condition cdt, String status, String message, String reason) throws ApiException{
+		String registryName = registry.getMetadata().getName();
 		String namespace = registry.getMetadata().getNamespace();
 		JsonObject condition = new JsonObject();
 		JsonArray patchStatusArray = new JsonArray();
@@ -2922,8 +2999,8 @@ public class K8sApiCaller {
 			try {
 				customObjectApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP,
 						Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY,
-						registry.getMetadata().getName(), patchStatusArray);
-				logger.info("patchNamespacedCustomObjectStatus result: " + condition.get("type").getAsString() + "(" + condition.get("status").getAsString() + ")\n");
+						registryName, patchStatusArray);
+				logger.info("CRD Status is Patched: " + registryName + "/" + namespace + " : " + condition.get("type").getAsString() + "(" + condition.get("status").getAsString() + ")\n");
 			} catch (ApiException e) {
 				logger.info(e.getResponseBody());
 				throw e;
@@ -2954,12 +3031,13 @@ public class K8sApiCaller {
 				logger.info("This registry's event is not for current registry. So do not update registry status");
 				return;
 			}
-		}catch(ApiException e) {
+		} catch(ApiException e) {
 			if(e.getCode() == 404) {
 				logger.info(rs.getMetadata().getName() + "/" + namespace + " replica set is deleted");
 			}
 			throw e;
 		}
+		
 		JsonObject condition = new JsonObject();
 		JsonArray patchStatusArray = new JsonArray();
 		DateTime curTime = new DateTime();
@@ -2997,8 +3075,7 @@ public class K8sApiCaller {
 		} catch (ApiException e) {
 			if(e.getCode() == 404) {
 				logger.info("[RegistryReplicaSet]" + registryName + "/" + namespace + " registry was deleted!!");
-			}
-			else {
+			} else {
 				logger.info("[RegistryReplicaSet]" + e.getResponseBody());
 			}
 		}
@@ -3093,6 +3170,7 @@ public class K8sApiCaller {
 					reason = pod.getStatus().getContainerStatuses().get(0).getState().getTerminated().getReason();
 				} else
 					reason = "Unknown";
+				
 				if (reason == null)		reason = "";
 				logger.info("registry pod state's reason: " + reason);
 
@@ -3125,8 +3203,7 @@ public class K8sApiCaller {
 						condition2.addProperty("status", RegistryStatus.Status.FALSE.getStatus());
 					}
 				}
-			}
-			else {
+			} else {
 				logger.info("pod container status is not set.");
 				return;
 			}
@@ -3157,8 +3234,6 @@ public class K8sApiCaller {
 			}
 			throw e;
 		}
-		
-		
 	}
 
 	public static void updateRegistryStatus(V1Service svc, String eventType) throws Exception {
@@ -3193,20 +3268,19 @@ public class K8sApiCaller {
 		DateTime curTime = new DateTime();
 		JsonObject condition = new JsonObject();
 
+		condition.addProperty("type", RegistryCondition.Condition.SERVICE.getType());
+		condition.addProperty("lastTransitionTime", curTime.toString());
+		
 		switch (eventType) {
 		case Constants.EVENT_TYPE_ADDED:
-			condition.addProperty("type", RegistryCondition.Condition.SERVICE.getType());
 			condition.addProperty("status", RegistryStatus.Status.TRUE.getStatus());
-			condition.addProperty("lastTransitionTime", curTime.toString());
 
 			break;
 		case Constants.EVENT_TYPE_MODIFIED:
 
 			return;
 		case Constants.EVENT_TYPE_DELETED:
-			condition.addProperty("type", RegistryCondition.Condition.SERVICE.getType());
 			condition.addProperty("status", RegistryStatus.Status.FALSE.getStatus());
-			condition.addProperty("lastTransitionTime", curTime.toString());
 			restoreRegistry = true;
 			
 			break;
@@ -3230,10 +3304,8 @@ public class K8sApiCaller {
 		}
 		
 		if(restoreRegistry) {
-			Registry registry;
-			
 			try {
-				registry = getRegistry(registryName, namespace);
+				Registry registry = getRegistry(registryName, namespace);
 				createRegistryService(registry);
 				if(registry.getSpec().getService().getIngress() != null) {
 					deleteRegistrySubresource(registry, RegistryCondition.Condition.SECRET_TLS);
@@ -3266,8 +3338,7 @@ public class K8sApiCaller {
 
 		logger.info("registry secret type: " + secret.getType());
 		logger.info("registry prefix: " + registryPrefix);
-		registryName = secret.getMetadata().getName();
-		registryName = registryName.substring(registryPrefix.length());
+		registryName = secret.getMetadata().getName().substring(registryPrefix.length());
 		logger.info("registry name: " + registryName);
 
 		if (secret.getMetadata().getOwnerReferences() == null) {

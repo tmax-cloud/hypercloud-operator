@@ -71,10 +71,6 @@ public class RegistryWatcher extends Thread {
 						Registry registry = null;
 						try {
 							registry = mapper.treeToValue(mapper.valueToTree(response.object), Registry.class);
-							logger.info("\t[" + registry.getMetadata().getResourceVersion() + "] " 
-									+ registry.getMetadata().getName() + "/" 
-									+ registry.getMetadata().getNamespace() 
-									+ " Registry Data\n" + response.object.toString() + "\n");
 						} catch(Exception e) {
 							logger.info("[mapper error]: " + e.getMessage());
 						}
@@ -84,6 +80,11 @@ public class RegistryWatcher extends Thread {
 							latestResourceVersion = registry.getMetadata().getResourceVersion();
 							String eventType = response.type.toString();
 							logger.info("====================== Registry " + eventType + " ====================== \n");
+
+							logger.info("\t[" + registry.getMetadata().getResourceVersion() + "] " 
+									+ registry.getMetadata().getName() + "/" 
+									+ registry.getMetadata().getNamespace() 
+									+ " Registry Data\n" + response.object.toString() + "\n");
 							
 							String serviceType 
 							= registry.getSpec().getService().getIngress() != null ? 
@@ -122,7 +123,7 @@ public class RegistryWatcher extends Thread {
 											+ registry.getMetadata().getNamespace() 
 											+ " Registry Status");
 									for(RegistryCondition.Condition con : statusMap.keySet()) {
-										logger.info("\t\t" + con.getType() + "(" + statusMap.get(con) +",  " + changeReason +",  " + changeMessage + ")");
+										logger.info("\t\t" + con.getType() + "(" + statusMap.get(con) + ")");
 									}
 									
 									// Registry Is Creating.
