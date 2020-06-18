@@ -80,6 +80,7 @@ spec:
         hostPath:
           path: /root/hypercloud4-operator/hypercloud4-operator
 
+
 ---
 
 apiVersion: v1
