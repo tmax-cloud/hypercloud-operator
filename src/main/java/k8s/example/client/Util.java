@@ -335,10 +335,13 @@ public class Util {
     
     public static void deleteTrialNSTimer( String nsName ) throws Exception  {
     	Timer timer = TimerMap.getTimer(nsName);
-    	timer.cancel();
-    	TimerMap.removeTimer(nsName);	
-		logger.info("   Delete Trial NameSpace Timer Success ");
-
+    	if ( timer != null ) {
+    		timer.cancel();
+        	TimerMap.removeTimer(nsName);	
+    		logger.info("   Delete Trial NameSpace Timer Success ");
+    	} else {
+    		logger.info("   There was no Timer for Trial Namespace [ " + nsName + " ], Set New Timer Anyway");
+    	}
     }
 
 	public static String printExceptionError(Exception e) {
