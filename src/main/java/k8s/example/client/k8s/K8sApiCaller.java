@@ -2899,7 +2899,7 @@ public class K8sApiCaller {
 						logger.info(registry.getMetadata().getName() + "/" + registry.getMetadata().getNamespace()
 								+ " registry spec is patched.");
 
-						try {
+						try { 
 							customObjectApi.patchNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
 									Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registryName,
 									patchArray);
