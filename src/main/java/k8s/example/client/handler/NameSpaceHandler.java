@@ -175,14 +175,15 @@ public class NameSpaceHandler extends GeneralHandler {
     		V1Namespace namespace = K8sApiCaller.getNameSpace(nsName);
 
     		// Update Period Label
-    		if ( namespace.getMetadata().getLabels() != null && namespace.getMetadata().getLabels().get("trial") != null) {
+    		if ( namespace.getMetadata().getLabels() != null && namespace.getMetadata().getLabels().get("trial") != null
+    				&& namespace.getMetadata().getLabels().get("owner") != null) {
     			Map<String, String> labels = namespace.getMetadata().getLabels();
         		if ( labels.keySet().contains("period")) {
         			labels.replace("period", period);
         		}else {
         			labels.put("period", period);
         		}
-    		} else {
+    		} else {			
     			status = Status.UNAUTHORIZED;
 				throw new Exception(ErrorCode.NOT_TRIAL_NAMESPACE);
     		}
