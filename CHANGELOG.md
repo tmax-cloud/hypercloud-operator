@@ -1,6 +1,35 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.0.34 start -------------------->
+
+## HyperCloudServer_4.1.0.34 (Fri Jun 19 15:22:32 KST 2020)
+
+### Added
+  - [feat] Audit GET 서비스에서 namespace 필터링 기능 추가 by sangwon_cho
+
+### Changed
+  - [mod] trial namespace에 mailSendTime, Deletion Time label로 추가 by dnxorjs1
+  - [mod] SetTimer 로그 보충 by dnxorjs1
+  - [mod] UserSecurityPolicy DataObject 수정 by dnxorjs1
+  - [mod] Trial 기간 연장 API 방어로직 추가 by dnxorjs1
+  - [mod] namespace Get, namespaceclaim Get 서비스 label Selector로 검색 가능하게 로직 추가 by dnxorjs1
+
+### Fixed
+  - [ims][226364] Registry port 범위 수정(1~65535) by sukhee_yun
+  - [ims][226888] Registry Creating중 pvc 상태가 pending이더라도 Error로 변경하지 않고 Creating 상태로 남도록 수정 by sukhee_yun
+  - [ims][221436] Registry Edit 기능 추가 by sukhee_yun
+
+### CRD yaml
+  - [crd] Registry port validation 범위 수정 by sukhee_yun
+  - [crd] Registry status에 capacity 추가 by sukhee_yun
+  - [crd] Registry status 수정(phaseChangedAt 추가) by sukhee_yun
+  - [crd] registry guide 수정(Resource 상태, 필수 요구 사항) by sukhee_yun
+
+### Etc
+
+<!--------------------- v4.1.0.34 end --------------------->
+
 <!-------------------- v4.1.0.33 start -------------------->
 
 ## HyperCloudServer_4.1.0.33 (Fri Jun 12 10:41:01 KST 2020)
