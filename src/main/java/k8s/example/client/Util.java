@@ -33,7 +33,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import fi.iki.elonen.NanoHTTPD.Response;
-import fi.iki.elonen.NanoHTTPD.Response.Status;
 import io.kubernetes.client.openapi.models.V1Namespace;
 import k8s.example.client.DataObject.UserCR;
 import k8s.example.client.k8s.K8sApiCaller;
