@@ -433,7 +433,7 @@ public class DataObject {
     	private V1ObjectMeta metadata;
     	private String otpEnable;
     	private int otp;
-    	private String ipRange;
+    	private String[] ipRange;
     	private String otpRegisterTime;
     	
     	public String getApiVersion() { return apiVersion; }
@@ -441,7 +441,7 @@ public class DataObject {
     	public V1ObjectMeta getMetadata() { return metadata; }
     	public String getOtpEnable() { return otpEnable; }
     	public int getOtp() { return otp; }
-    	public String getIpRange() { return ipRange; }
+    	public String[] getIpRange() { return ipRange; }
     	public String getOtpRegisterTime() { return otpRegisterTime; }
     	
     	public void setApiVersion(String apiVersion) { this.apiVersion = apiVersion; }
@@ -449,21 +449,21 @@ public class DataObject {
     	public void setMetadata(V1ObjectMeta metadata) { this.metadata = metadata; }
     	public void setOtpEnable(String otpEnable) { this.otpEnable = otpEnable; }    	
     	public void setOtpE(int otp) { this.otp = otp; }    	
-    	public void setIpRange(String ipRange) { this.ipRange = ipRange; }    	
+    	public void setIpRange(String[] ipRange) { this.ipRange = ipRange; }    	
     	public void setOtpRegisterTime(String otpRegisterTime) { this.otpRegisterTime = otpRegisterTime; }    	
     }
     
     public static class UserSecurityPolicy {
     	private String otpEnable;
     	private int otp;
-    	private String ipRange;
+    	private String[] ipRange;
 
     	public String getOtpEnable() { return otpEnable; }
     	public int getOtp() { return otp; }
-    	public String getIpRange() { return ipRange; }
+    	public String[] getIpRange() { return ipRange; }
 
     	public void setOtpEnable(String otpEnable) { this.otpEnable = otpEnable; }    	
     	public void setOtpE(int otp) { this.otp = otp; }    	
-    	public void setIpRange(String ipRange) { this.ipRange = ipRange; }    	
+    	public void setIpRange(String[] ipRange) { this.ipRange = ipRange; }    	
     }
 }
