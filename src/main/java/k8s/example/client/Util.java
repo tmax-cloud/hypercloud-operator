@@ -245,7 +245,7 @@ public class Util {
     }
     
     public static void setTrialNSTimer(V1Namespace nsResult) throws Exception  {
-		logger.info("   TrialNSTimer Set Service Start ");
+		logger.info("   TrialNSTimer for Trial NS[ " + nsResult.getMetadata().getName() + " ] Set Service Start ");
 
 		DateTime createTime = nsResult.getMetadata().getCreationTimestamp();
 		logger.info(" CreateTime : " + createTime);
@@ -295,6 +295,7 @@ public class Util {
 		}, mailTime.toDate());
 		
 		logger.info("   Set Trial NameSpace Sending Mail Timer Success ");
+		logger.info("   MailSendTime for Trial NS[ " + nsResult.getMetadata().getName() + " ] : " + mailTime);
 
 		timer.schedule(new TimerTask() {
 			public void run() {
@@ -325,6 +326,7 @@ public class Util {
 		}, deleteTime.toDate());
 		
 		logger.info("   Set Trial NameSpace Delete Timer Success ");
+		logger.info("   Deletion Time for Trial NS[ " + nsResult.getMetadata().getName() + " ] : " + deleteTime);
 
 		// Insert to TimerMap
 		TimerMap.addTimer(nsResult.getMetadata().getName(), timer );
