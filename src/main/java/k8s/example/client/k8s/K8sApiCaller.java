@@ -5686,6 +5686,16 @@ public class K8sApiCaller {
 		rule.addVerbsItem("create");
 		rule.addVerbsItem("get");		
 		rules.add(rule);
+		
+		rule = new V1PolicyRule();
+		rule.addApiGroupsItem(Constants.CUSTOM_OBJECT_GROUP);
+		rule.addResourcesItem("rolebindingclaims");
+		rule.addResourcesItem("resourcequotaclaims");
+		rule.addResourcesItem("catalogserviceclaims");
+		rule.addVerbsItem("create");
+		rule.addVerbsItem("get");		
+		rule.addVerbsItem("list");		
+		rules.add(rule);
 
 		clusterRole.setRules(rules);
 
