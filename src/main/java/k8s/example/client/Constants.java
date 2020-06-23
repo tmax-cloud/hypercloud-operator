@@ -161,6 +161,7 @@ public class Constants {
 	public static final String QUERY_PARAMETER_STARTTIME = "startTime";
 	public static final String QUERY_PARAMETER_ENDTIME = "endTime";
 	public static final String QUERY_PARAMETER_SORT = "sort";
+	public static final String QUERY_PARAMETER_RESOURCE = "resource";
 	
 	// Namespace 
 	public static final String QUERY_PARAMETER_LABEL_SELECTOR = "labelSelector";
