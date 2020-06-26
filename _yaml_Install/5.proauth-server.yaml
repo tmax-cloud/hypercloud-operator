@@ -43,8 +43,13 @@ spec:
           requests:
             cpu: "1"
             memory: "1Gi"
-      nodeSelector:
-        kubernetes.io/hostname: master-1   # Node Name  ( must Match with the node the proauth db pod generate )
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - topologyKey: kubernetes.io/hostname
+            labelSelector:
+              matchLabels:
+                proauth: db
       serviceAccountName: proauth-admin
 
 
