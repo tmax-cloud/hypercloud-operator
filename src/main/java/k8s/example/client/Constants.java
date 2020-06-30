@@ -29,6 +29,8 @@ public class Constants {
 	public static final String CUSTOM_OBJECT_PLURAL_ROLEBINDINGCLAIM = "rolebindingclaims";
 	public static final String CUSTOM_OBJECT_PLURAL_CATALOGSERVICECLAIM = "catalogserviceclaims";
 
+	public static final String PLURAL_SECRET = "secrets";
+
 	public static final String SERVICE_INSTANCE_API_GROUP = "servicecatalog.k8s.io";
 	public static final String SERVICE_INSTANCE_API_VERSION = "v1beta1";
 	public static final String SERVICE_INSTANCE_PLURAL = "serviceinstances";
@@ -36,6 +38,16 @@ public class Constants {
 
 	public static final String RBAC_API_GROUP = "rbac.authorization.k8s.io";
 	public static final String CORE_API_GROUP = "''";
+
+	//federation
+	public static final String FED_OBJECT_GROUP = "core.kubefed.io";
+	public static final String FED_OBJECT_VERSION =  "v1beta1";
+	public static final String FED_OBJECT_FEDCLUSTER_PLURAL = "kubefedclusters";
+
+	//capi
+	public static final String CAPI_OBJECT_GROUP = "cluster.x-k8s.io";
+	public static final String CAPI_OBJECT_VERSION =  "v1alpha3";
+	public static final String CAPI_OBJECT_PLURAL_CAPICLUSTER = "clusters";
 
 	// HTTPS REQUEST URL
 	public static final String HTTPS_SCHEME_PREFIX = "https://";
