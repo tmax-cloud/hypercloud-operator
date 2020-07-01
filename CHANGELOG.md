@@ -1,6 +1,26 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.0.36 start -------------------->
+
+## HyperCloudServer_4.1.0.36 (Wed Jul  1 13:59:52 KST 2020)
+
+### Added
+
+### Changed
+  - [mod] nsc listGet 서비스 버그 수정 by dnxorjs1
+  - [mod] install 가이드 변경 by dnxorjs1
+  - [mod] swagger.yaml 수정 (Audit GET API 추가) by gyeongyeol-choi
+
+### Fixed
+
+### CRD yaml
+  - [crd] default_registry.yaml 수정: image 버전 수정(2.7.1 -> 2.6.2) by sukhee_yun
+
+### Etc
+
+<!--------------------- v4.1.0.36 end --------------------->
+
 <!-------------------- v4.1.0.35 start -------------------->
 
 ## HyperCloudServer_4.1.0.35 (Fri Jun 26 14:06:08 KST 2020)
