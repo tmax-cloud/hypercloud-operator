@@ -6100,7 +6100,7 @@ public class K8sApiCaller {
 				body = new V1SelfSubjectAccessReview(); // V1SelfSubjectAccessReview | 
 			    spec = new V1SelfSubjectAccessReviewSpec();
 			    ra = new V1ResourceAttributes();
-			    ra.setResource("namespaceclaim");
+			    ra.setResource("namespaceclaims");
 			    ra.setGroup("tmax.io");
 			    ra.setVerb("get");
 			    spec.setResourceAttributes(ra);
@@ -6129,7 +6129,10 @@ public class K8sApiCaller {
 				    	possibleNscList.setItems(nscItems);
 				    	nscList = possibleNscList;
 					}
-			    }   	
+			    } else {
+					logger.info("3-2. User has NO NSC Get Permission, User Cannot Access any NSC");
+
+			    }
 		    }
 		    
 		}catch( Exception e) {
