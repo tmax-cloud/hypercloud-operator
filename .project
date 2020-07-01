@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>k8s-example-client</name>
+	<name>hypercloud-operator</name>
 	<comment>Project k8s-example-client created by Buildship.</comment>
 	<projects>
 	</projects>

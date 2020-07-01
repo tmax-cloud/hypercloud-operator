@@ -3,6 +3,9 @@ kind: Template
 metadata:
   name: mongodb-template
   namespace: default
+  annotations:
+    template-version: 1.0.0
+    tested-operator-version: 4.1.0.23
 shortDescription: MongoDB Deployment
 longDescription: MongoDB Deployment
 imageUrl: https://upload.wikimedia.org/wikipedia/en/4/45/MongoDB-Logo.svg
@@ -46,10 +49,10 @@ objects:
     namespace: ${NAMESPACE}
   type: Opaque
   stringData:
-    user: ${MONGODB_USER}
-    password: ${MONGODB_PASSWORD}
-    database: ${MONGODB_DATABASE}
-    adminpassword: ${MONGODB_ADMIN_PASSWORD}
+    MONGODB_USER: ${MONGODB_USER}
+    MONGODB_PASSWORD: ${MONGODB_PASSWORD}
+    MONGODB_DATABASE: ${MONGODB_DATABASE}
+    MONGODB_ADMIN_PASSWORD: ${MONGODB_ADMIN_PASSWORD}
 - apiVersion: apps/v1
   kind: Deployment
   metadata:
@@ -78,22 +81,22 @@ objects:
             valueFrom:
               secretKeyRef:
                 name: ${APP_NAME}-secret
-                key: user
+                key: MONGODB_USER
           - name: MONGODB_PASSWORD
             valueFrom:
               secretKeyRef:
                 name: ${APP_NAME}-secret
-                key: password
+                key: MONGODB_PASSWORD
           - name: MONGODB_DATABASE
             valueFrom:
               secretKeyRef:
                 name: ${APP_NAME}-secret
-                key: database
+                key: MONGODB_DATABASE
           - name: MONGODB_ADMIN_PASSWORD
             valueFrom:
               secretKeyRef:
                 name: ${APP_NAME}-secret
-                key: adminpassword
+                key: MONGODB_ADMIN_PASSWORD
           ports:
           - containerPort: 27017
             name: mongodb

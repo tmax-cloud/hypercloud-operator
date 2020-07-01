@@ -1,0 +1,222 @@
+apiVersion: tmax.io/v1
+kind: Template
+metadata:
+  name: tibero-template
+  namespace: default
+  annotations:
+    template-version: 1.0.0
+    tested-operator-version: 4.1.0.23
+shortDescription: Tibero Deployment
+longDescription: Tibero Deployment
+imageUrl: https://kr.tmaxsoft.com/upload/imgs/tagfree/Tmax_Tibero.jpg
+provider: tmax
+tags:
+- db
+- tibero
+objects:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: ${APP_NAME}-service
+    namespace: ${NAMESPACE}
+    labels:
+      app: ${APP_NAME}
+  spec:
+    type: ${SERVICE_TYPE}
+    ports:
+    - port: 8629
+    selector:
+      app: ${APP_NAME}
+      tier: tibero
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: ${APP_NAME}-pvc
+    namespace: ${NAMESPACE}
+    labels:
+      app: ${APP_NAME}
+  spec:
+    storageClassName: csi-cephfs-sc
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: ${DB_STORAGE}
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    name: ${APP_NAME}-secret
+    namespace: ${NAMESPACE}
+  type: Opaque
+  stringData:
+    MASTER_USER: ${MASTER_USER}
+    MASTER_PASSWORD: ${MASTER_PASSWORD}
+    TCS_INSTALL: ${TCS_INSTALL}
+    TCS_SID: ${TCS_SID}
+    TB_SID: ${TB_SID}
+    TCS_PORT: ${TCS_PORT}
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: ${APP_NAME}-tibero
+    namespace: ${NAMESPACE}
+    labels:
+      app: ${APP_NAME}
+  spec:
+    selector:
+      matchLabels:
+        app: ${APP_NAME}
+        tier: tibero
+    strategy:
+      type: Recreate
+    template:
+      metadata:
+        labels:
+          app: ${APP_NAME}
+          tier: tibero
+      spec:
+        containers:
+        - image: 192.168.6.110:5000/cloud_tcs_tibero_standalone:200309
+          name: tibero
+          env:
+          - name: MASTER_USER
+            valueFrom:
+              secretKeyRef:
+                name: ${APP_NAME}-secret
+                key: MASTER_USER
+          - name: MASTER_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: ${APP_NAME}-secret
+                key: MASTER_PASSWORD
+          - name: TCS_INSTALL
+            valueFrom:
+              secretKeyRef:
+                name: ${APP_NAME}-secret
+                key: TCS_INSTALL
+          - name: TCS_SID
+            valueFrom:
+              secretKeyRef:
+                name: ${APP_NAME}-secret
+                key: TCS_SID
+          - name: TB_SID
+            valueFrom:
+              secretKeyRef:
+                name: ${APP_NAME}-secret
+                key: TB_SID
+          - name: TCS_PORT
+            valueFrom:
+              secretKeyRef:
+                name: ${APP_NAME}-secret
+                key: TCS_PORT
+          ports:
+          - containerPort: 8629
+            name: tibero
+          volumeMounts:
+          - name: tibero-persistent-storage
+            mountPath: /tibero/mnt/tibero
+          readinessProbe:
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            exec:
+              command:
+              - /bin/bash
+              - -c
+              - '[ "$(echo ''SELECT COUNT(*) FROM all_tables;'' > /tmp/test.sql &&
+                echo ''EXIT;'' >> /tmp/test.sql && tbsql $MASTER_USER/$MASTER_PASSWORD
+                @/tmp/test.sql | grep -E ''[0-9]* row[s]? selected'')" == "" ] &&
+                exit 1 || exit 0'
+        volumes:
+        - name: tibero-persistent-storage
+          persistentVolumeClaim:
+            claimName: ${APP_NAME}-pvc
+parameters:
+- name: APP_NAME
+  displayName: AppName
+  description: Application name
+  required: true
+- name: NAMESPACE
+  displayName: Namespace
+  required: true
+  description: Application namespace
+- name: DB_STORAGE
+  displayName: DBStorage
+  description: Storage size for DB
+  required: true
+- name: SERVICE_TYPE
+  displayName: ServiceType
+  description: Service Type (ClsuterIP/NodePort/LoadBalancer)
+  required: true
+- name: MASTER_USER
+  displayName: MasterUser
+  description: MasterUser
+  required: true
+- name: MASTER_PASSWORD
+  displayName: MasterPassword
+  description: MasterPassword
+  required: true
+- name: TCS_INSTALL
+  displayName: TcsInstall
+  description: TcsInstall
+  required: true
+- name: TCS_SID
+  displayName: TcsSid
+  description: TcsSid
+  required: true
+- name: TB_SID
+  displayName: TbSid
+  description: TbSid
+  required: true
+- name: TCS_PORT
+  displayName: TcsPort
+  description: TcsPort
+  required: true
+plans:
+- name: tibero-plan1
+  description: tibero
+  metadata:
+    bullets:
+    - 'Storage Capacity: 5Gi'
+    costs:
+      amount: 100
+      unit: $
+  free: false
+  bindable: true
+  plan_updateable: false
+  schemas:
+    service_instance:
+      create:
+        parameters:
+          NAMESPACE: default
+          DB_STORAGE: 5Gi
+          APP_NAME: tibero-deploy
+          MASTER_USER: tibero
+          MASTER_PASSWORD: tibero
+          TCS_INSTALL: 1
+          TCS_SID: tibero
+          TB_SID: tibero
+          TCS_PORT: 8629
+- name: tibero-plan2
+  description: tibero
+  metadata:
+    bullets:
+    - 'Storage Capacity: 30Gi'
+    costs:
+      amount: 500
+      unit: $
+  free: false
+  bindable: true
+  plan_updateable: false
+  schemas:
+    service_instance:
+      create:
+        parameters:
+          NAMESPACE: default
+          DB_STORAGE: 30Gi
+          APP_NAME: tibero-deploy
+          MASTER_USER: tibero
+          MASTER_PASSWORD: tibero
+          TCS_INSTALL: 1
+          TCS_SID: tibero
+          TB_SID: tibero
+          TCS_PORT: 8629

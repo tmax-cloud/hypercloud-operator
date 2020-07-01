@@ -3,6 +3,9 @@ kind: Template
 metadata:
   name: redis-template
   namespace: default
+  annotations:
+    template-version: 1.0.0
+    tested-operator-version: 4.1.0.23
 shortDescription: Redis Deployment
 longDescription: Redis Deployment
 imageUrl: https://upload.wikimedia.org/wikipedia/en/6/6b/Redis_Logo.svg
@@ -46,8 +49,8 @@ objects:
     namespace: ${NAMESPACE}
   type: Opaque
   stringData:
-    dbservicename: ${DATABASE_SERVICE_NAME}
-    password: ${REDIS_PASSWORD}
+    DATABASE_SERVICE_NAME: ${DATABASE_SERVICE_NAME}
+    REDIS_PASSWORD: ${REDIS_PASSWORD}
 - apiVersion: apps/v1
   kind: Deployment
   metadata:
@@ -76,12 +79,12 @@ objects:
             valueFrom:
               secretKeyRef:
                 name: ${APP_NAME}-secret
-                key: dbservicename
+                key: DATABASE_SERVICE_NAME
           - name: REDIS_PASSWORD
             valueFrom:
               secretKeyRef:
                 name: ${APP_NAME}-secret
-                key: password
+                key: REDIS_PASSWORD
           ports:
           - containerPort: 6379
             name: redis

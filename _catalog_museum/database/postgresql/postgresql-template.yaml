@@ -3,6 +3,9 @@ kind: Template
 metadata:
   name: postgresql-template
   namespace: default
+  annotations:
+    template-version: 1.0.0
+    tested-operator-version: 4.1.0.23
 shortDescription: PostgreSQL Deployment
 longDescription: PostgreSQL Deployment
 imageUrl: https://upload.wikimedia.org/wikipedia/commons/2/29/Postgresql_elephant.svg
@@ -46,9 +49,9 @@ objects:
     namespace: ${NAMESPACE}
   type: Opaque
   stringData:
-    user: ${POSTGRESQL_USER}
-    password: ${POSTGRESQL_PASSWORD}
-    database: ${POSTGRESQL_DATABASE}
+    POSTGRESQL_USER: ${POSTGRESQL_USER}
+    POSTGRESQL_PASSWORD: ${POSTGRESQL_PASSWORD}
+    POSTGRESQL_DATABASE: ${POSTGRESQL_DATABASE}
 - apiVersion: apps/v1
   kind: Deployment
   metadata:
@@ -77,17 +80,17 @@ objects:
             valueFrom:
               secretKeyRef:
                 name: ${APP_NAME}-secret
-                key: user
+                key: POSTGRESQL_USER
           - name: POSTGRESQL_PASSWORD
             valueFrom:
               secretKeyRef:
                 name: ${APP_NAME}-secret
-                key: password
+                key: POSTGRESQL_PASSWORD
           - name: POSTGRESQL_DATABASE
             valueFrom:
               secretKeyRef:
                 name: ${APP_NAME}-secret
-                key: database
+                key: POSTGRESQL_DATABASE
           ports:
           - containerPort: 5432
             name: postgresql

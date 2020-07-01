@@ -1,6 +1,25 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.0.35 start -------------------->
+
+## HyperCloudServer_4.1.0.35 (Fri Jun 26 14:06:08 KST 2020)
+
+### Added
+
+### Changed
+  - [mod][5.proauth-server.yaml] nodeSelector to podAffinity by mincheol_jeon
+  - [mod] Audit API - ResourceType 파라미터 추가 by gyeongyeol-choi
+  - [mod] public 새로운 유저에게 claim 류 list, get, create 권한 부여 by dnxorjs1
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.0.35 end --------------------->
+
 <!-------------------- v4.1.0.34 start -------------------->
 
 ## HyperCloudServer_4.1.0.34 (Fri Jun 19 15:22:32 KST 2020)

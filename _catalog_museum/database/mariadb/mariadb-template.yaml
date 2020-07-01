@@ -3,6 +3,9 @@ kind: Template
 metadata:
   name: mariadb-template
   namespace: default
+  annotations:
+    template-version: 1.0.0
+    tested-operator-version: 4.1.0.23
 shortDescription: MariaDB Deployment
 longDescription: MariaDB Deployment
 imageUrl: https://upload.wikimedia.org/wikipedia/commons/c/c9/MariaDB_Logo.png
@@ -46,9 +49,9 @@ objects:
     namespace: ${NAMESPACE}
   type: Opaque
   stringData:
-    user: ${MYSQL_USER}
-    password: ${MYSQL_PASSWORD}
-    database: ${MYSQL_DATABASE}
+    MYSQL_USER: ${MYSQL_USER}
+    MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    MYSQL_DATABASE: ${MYSQL_DATABASE}
 - apiVersion: apps/v1
   kind: Deployment
   metadata:
@@ -77,17 +80,17 @@ objects:
             valueFrom:
               secretKeyRef:
                 name: ${APP_NAME}-secret
-                key: user
+                key: MYSQL_USER
           - name: MYSQL_PASSWORD
             valueFrom:
               secretKeyRef:
                 name: ${APP_NAME}-secret
-                key: password
+                key: MYSQL_PASSWORD
           - name: MYSQL_DATABASE
             valueFrom:
               secretKeyRef:
                 name: ${APP_NAME}-secret
-                key: database
+                key: MYSQL_DATABASE
           ports:
           - containerPort: 3306
             name: mariadb
