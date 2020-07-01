@@ -1,7 +1,7 @@
 apiVersion: tmax.io/v1
 kind: TemplateInstance
 metadata:
-  name: postgresql-template-instance
+  name: tibero-template-instance
   namespace: default
   annotations:
     template-version: 1.0.0
@@ -9,10 +9,10 @@ metadata:
 spec:
   template:
     metadata:
-      name: postgresql-template
+      name: tibero-template
     parameters:
     - name: APP_NAME
-      value: postgresql-sample-app
+      value: tibero-sample-app
     - name: NAMESPACE
       description: A Namespace Name
       value: default
@@ -20,9 +20,15 @@ spec:
       value: "10Gi"
     - name: SERVICE_TYPE
       value: ClusterIP
-    - name: POSTGRESQL_USER
-      value: root
-    - name: POSTGRESQL_PASSWORD
-      value: tmax@23
-    - name: POSTGRESQL_DATABASE
-      value: root
+    - name: MASTER_USER
+      value: tibero
+    - name: MASTER_PASSWORD
+      value: tibero
+    - name: TCS_INSTALL
+      value: 1
+    - name: TCS_SID
+      value: tibero
+    - name: TB_SID
+      value: tibero
+    - name: TCS_PORT
+      value: 8629
