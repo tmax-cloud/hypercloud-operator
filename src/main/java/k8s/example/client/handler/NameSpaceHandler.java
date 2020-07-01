@@ -193,10 +193,7 @@ public class NameSpaceHandler extends GeneralHandler {
     		
     		// Set New Trial Timer 
     		Util.setTrialNSTimer(namespace);
-    		
-    		// patchNameSpace with new label
-    		K8sApiCaller.replaceNamespace(namespace);
-    		
+    		    		
 			// Make outDO
 			outDO = "Trial NameSpace Period Extend Success";
 			status = Status.OK;    			
