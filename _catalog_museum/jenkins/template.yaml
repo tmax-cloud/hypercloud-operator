@@ -3,6 +3,9 @@ kind: Template
 metadata:
   name: jenkins-template
   namespace: default
+  annotations:
+    template-version: 1.0.0
+    tested-operator-version: 4.1.0.23
 shortDescription: "Jenkins Deployment"
 longDescription: "Jenkins Deployment"
 imageUrl: "https://upload.wikimedia.org/wikipedia/commons/e/e3/Jenkins_logo_with_title.svg"
