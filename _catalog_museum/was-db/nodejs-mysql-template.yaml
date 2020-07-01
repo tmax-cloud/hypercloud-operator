@@ -4,8 +4,8 @@ metadata:
   name: nodejs-mysql-template
   namespace: default
   annotations:
-    template-version: '1.0.0'
-    tested-operator-version: '4.1.0.23'
+    template-version: 1.0.1
+    tested-operator-version: 4.1.0.23
 imageUrl: https://i.imgur.com/ImDhuQF.png
 provider: tmax
 recommend: false
@@ -249,17 +249,17 @@ objects:
                 valueFrom:
                   secretKeyRef:
                     name: ${APP_NAME}-secret
-                    key: user
+                    key: MYSQL_USER
               - name: DB_PW
                 valueFrom:
                   secretKeyRef:
                     name: ${APP_NAME}-secret
-                    key: password
+                    key: MYSQL_PASSWORD
               - name: DB_NAME
                 valueFrom:
                   secretKeyRef:
                     name: ${APP_NAME}-secret
-                    key: database
+                    key: MYSQL_DATABASE
               ports:
               - containerPort: ${WAS_PORT}
 - apiVersion: tekton.dev/v1alpha1
