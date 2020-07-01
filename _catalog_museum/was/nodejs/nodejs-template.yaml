@@ -4,8 +4,8 @@ metadata:
   name: nodejs-cicd-template
   namespace: default
   annotations:
-    template-version: '1.0.0'
-    tested-operator-version: '4.1.0.23'
+    template-version: 1.0.1
+    tested-operator-version: 4.1.0.23
   labels:
     cicd-template-was: nodejs
 imageUrl: https://upload.wikimedia.org/wikipedia/commons/d/d9/Node.js_logo.svg
@@ -152,14 +152,6 @@ objects:
     - name: app-name
       type: string
       description: Application name
-    - name: replica
-      type: string
-      description: Number of replica
-      default: "1"
-    - name: port
-      type: string
-      description: Application port
-      default: "8080"
     - name: deploy-cfg-name
       description: Configmap name for description
     - name: deploy-env-json
@@ -209,10 +201,6 @@ objects:
       params:
       - name: app-name
         value: $(params.app-name)
-      - name: replica
-        value: $(params.replica)
-      - name: port
-        value: $(params.port)
       - name: image-url
         value: $(tasks.build-source.results.image-url)
       - name: deploy-cfg-name

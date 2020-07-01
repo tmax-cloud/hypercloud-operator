@@ -3,8 +3,8 @@ kind: ClusterTask
 metadata:
   name: analyze-image-vulnerabilities
   annotations:
-    template-version: '1.0.0'
-    tested-operator-version: '4.1.0.23'
+    template-version: 1.0.1
+    tested-operator-version: 4.1.0.23
 spec:
   params:
   - name: image-url

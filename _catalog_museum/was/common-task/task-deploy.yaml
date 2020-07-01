@@ -3,16 +3,12 @@ kind: ClusterTask
 metadata:
   name: generate-and-deploy-using-kubectl
   annotations:
-    template-version: '1.0.0'
-    tested-operator-version: '4.1.0.23'
+    template-version: 1.0.1
+    tested-operator-version: 4.1.0.23
 spec:
   params:
   - name: app-name
     description: Deployment name
-  - name: port
-    description: Port for was deployment
-  - name: replica
-    description: Number of replica
   - name: image-url
     description: Updated image url:tag
     default: $(inputs.resources.image.url)
@@ -28,15 +24,13 @@ spec:
       type: image
   steps:
   - name: create-yaml
-    image: 192.168.6.110:5000/cicd-util:1.0.0
+    image: 192.168.6.110:5000/cicd-util:1.0.1
     imagePullPolicy: Always
     command:
     - "make-deployment"
     args:
     - $(inputs.params.app-name)
-    - $(inputs.params.replica)
     - $(inputs.params.image-url)
-    - $(inputs.params.port)
     volumeMounts:
     - mountPath: /generate
       name: generate
@@ -46,7 +40,7 @@ spec:
     - name: DEPLOY_ENV_JSON
       value: $(inputs.params.deploy-env-json)
   - name: run-kubectl
-    image: 192.168.6.110:5000/cicd-util:1.0.0
+    image: 192.168.6.110:5000/cicd-util:1.0.1
     command:
     - "kubectl"
     args:
