@@ -163,7 +163,7 @@ objects:
         kind: ClusterTask
       params:
       - name: BUILDER_IMAGE
-        value: 192.168.6.110:5000/s2i-nodejs:12
+        value: tmaxcloudck/s2i-nodejs:12
       - name: PACKAGE_SERVER_URL
         value: ${PACKAGE_SERVER_URL}
       - name: REGISTRY_SECRET_NAME

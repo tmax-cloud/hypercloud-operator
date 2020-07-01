@@ -24,7 +24,7 @@ spec:
     - name: GIT_REV
       value: master
     - name: IMAGE_URL
-      value: 192.168.6.110:5000/tomcat-sample
+      value: tmaxcloudck/tomcat-sample
     - name: REGISTRY_SECRET_NAME
       value: ''
     - name: WAS_PORT
