@@ -2,6 +2,10 @@ apiVersion: tmax.io/v1
 kind: TemplateInstance
 metadata:
   name: mysql-ha-template-instance
+  namespace: default
+  annotations:
+    template-version: 1.0.1
+    tested-operator-version: 4.1.0.23
 spec:
   template:
     metadata:

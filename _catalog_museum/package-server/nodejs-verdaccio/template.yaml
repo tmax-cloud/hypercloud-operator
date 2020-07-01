@@ -3,6 +3,9 @@ kind: Template
 metadata:
   name: verdaccio-package-server
   namespace: default
+  annotations:
+    template-version: 1.0.1
+    tested-operator-version: 4.1.0.23
 imageUrl: https://verdaccio.org/img/logo/banner/png/verdaccio-banner@2x.png
 provider: tmax
 recommend: false

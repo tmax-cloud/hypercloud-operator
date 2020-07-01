@@ -3,6 +3,9 @@ kind: TemplateInstance
 metadata:
   name: archiva-package-server-instance
   namespace: default
+  annotations:
+    template-version: 1.0.1
+    tested-operator-version: 4.1.0.23
 spec:
   template:
     metadata:

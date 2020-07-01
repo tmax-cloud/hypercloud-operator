@@ -3,6 +3,9 @@ kind: Template
 metadata:
   name: mysql-ha-template
   namespace: default
+  annotations:
+    template-version: 1.0.1
+    tested-operator-version: 4.1.0.23
 shortDescription: "MySQL HA Deployment"
 longDescription: "MySQL High Availability Deployment"
 imageUrl: "https://upload.wikimedia.org/wikipedia/en/6/62/MySQL.svg"
@@ -238,7 +241,6 @@ parameters:
   description: Replication count
   required: true
   valueType: number
-  value: 2
 plans:
 - name: mysql-ha-plan1
   description: "MySQL HA Plan (1 replica)"
