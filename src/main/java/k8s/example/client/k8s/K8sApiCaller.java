@@ -6073,7 +6073,7 @@ public class K8sApiCaller {
 		    V1SelfSubjectAccessReview body = new V1SelfSubjectAccessReview(); // V1SelfSubjectAccessReview | 
 		    V1SelfSubjectAccessReviewSpec spec = new V1SelfSubjectAccessReviewSpec();
 		    V1ResourceAttributes ra = new V1ResourceAttributes();
-		    ra.setResource("namespaceclaim");
+		    ra.setResource("namespaceclaims");
 		    ra.setGroup("tmax.io");
 		    ra.setVerb("list");
 		    spec.setResourceAttributes(ra);
