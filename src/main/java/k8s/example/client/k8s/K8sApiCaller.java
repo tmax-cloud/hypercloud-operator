@@ -6118,10 +6118,11 @@ public class K8sApiCaller {
 					NamespaceClaimList possibleNscList = null;		
 					possibleNscList = listNamespaceClaim( labelSelector );
 					if (possibleNscList != null && possibleNscList.getItems()!=null) {
-				    	for( NamespaceClaim possibleNsc :  possibleNscList.getItems()) { 
+				    	for( NamespaceClaim possibleNsc :  possibleNscList.getItems()) {
+//							logger.info("possibleNsc : " + possibleNsc.getMetadata().getName());
 							if ( possibleNsc.getMetadata().getLabels() != null && possibleNsc.getMetadata().getLabels().get("owner")!= null) {
 								if ( possibleNsc.getMetadata().getLabels().get("owner").toString().equalsIgnoreCase(userId) ){
-									nscItems = new ArrayList<>();
+									if (nscItems == null) nscItems = new ArrayList<>();
 									nscItems.add(possibleNsc);
 					    		}
 							}	
