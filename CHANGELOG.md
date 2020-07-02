@@ -1,6 +1,27 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.0.37 start -------------------->
+
+## HyperCloudServer_4.1.0.37 (Thu Jul  2 18:24:45 KST 2020)
+
+### Added
+
+### Changed
+  - [mod] audit로 부터 owner 라벨 추가해주는 로직 수정 by dnxorjs1
+  - [mod] Aduit - status 파라미터를 전달받지 못했을 때 status를 정의하는 로직 추가 by gyeongyeol-choi
+  - [mod] Audit - GET API limit 기본값 제거 (UI 요건) by gyeongyeol-choi
+  - [mod] nsc List Get 버그 수정 by dnxorjs1
+  - [mod] trial 기간 연장 api 중복 update로 인한 에러코드 수정 by dnxorjs1
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.0.37 end --------------------->
+
 <!-------------------- v4.1.0.36 start -------------------->
 
 ## HyperCloudServer_4.1.0.36 (Wed Jul  1 13:59:52 KST 2020)
