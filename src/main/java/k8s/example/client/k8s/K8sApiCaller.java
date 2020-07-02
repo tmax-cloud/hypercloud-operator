@@ -5438,6 +5438,19 @@ public class K8sApiCaller {
 			throw e;
 		}
 	}
+	
+	public static void replaceNamespaceClaim(NamespaceClaim namespaceClaim) throws Throwable {
+		logger.info("[K8S ApiCaller] Update Namespace Claim [ " + namespaceClaim.getMetadata().getName() + " ] Start");
+
+		try {
+			customObjectApi.replaceClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION,
+					Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, namespaceClaim.getMetadata().getName(), namespaceClaim);
+			logger.info(" Update Namespace [ " + namespaceClaim.getMetadata().getName() + " ] Success");
+		} catch (ApiException e) {
+			logger.info(e.getResponseBody());
+			throw e;
+		}
+	}
 
 	public static void createResourceQuota(NamespaceClaim claim) throws Throwable {
 		logger.info("[K8S ApiCaller] Create Resource Quota Start");
@@ -6097,7 +6110,7 @@ public class K8sApiCaller {
 				logger.info("3. User has No NSC List Permission --> Check if there is owner NSC with label");
 				List < NamespaceClaim > nscItems = null;
 
-				body = new V1SelfSubjectAccessReview(); // V1SelfSubjectAccessReview | 
+				body = new V1SelfSubjectAccessReview(); // V1SelfSubjectAccessReview 
 			    spec = new V1SelfSubjectAccessReviewSpec();
 			    ra = new V1ResourceAttributes();
 			    ra.setResource("namespaceclaims");
@@ -6132,7 +6145,6 @@ public class K8sApiCaller {
 					}
 			    } else {
 					logger.info("3-2. User has NO NSC Get Permission, User Cannot Access any NSC");
-
 			    }
 		    }
 		    

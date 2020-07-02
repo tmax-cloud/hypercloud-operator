@@ -92,9 +92,10 @@ public class NamespaceClaimController extends Thread {
 											claim.getMetadata().getLabels().put("owner", claim.getMetadata().getAnnotations().get("creator"));
 										} else {
 											Map < String, String > labels = new HashMap<>();
-											labels.put("owner", claim.getMetadata().getAnnotations().get("creator"));
+											labels.put("owner", claim.getMetadata().getAnnotations().get("creator").toString());
 											claim.getMetadata().setLabels(labels);
 										}
+										K8sApiCaller.replaceNamespaceClaim(claim);
 									}
 
 									if ( K8sApiCaller.namespaceAlreadyExist( resourceName ) ) {
