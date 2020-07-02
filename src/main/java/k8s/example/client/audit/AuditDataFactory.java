@@ -122,9 +122,8 @@ public class AuditDataFactory {
 		
 		if(StringUtil.isNotEmpty(limit)) {
 			sb.append("limit ").append(limit).append(" ");
-		} else {
-			sb.append("limit 100 ");
 		}
+		
 		if(StringUtil.isNotEmpty(offset)) {
 			sb.append("offset ").append(offset);
 		} else {
