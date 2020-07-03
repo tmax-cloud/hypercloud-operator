@@ -417,6 +417,12 @@ public class K8sApiCaller {
 		long cscLatestResourceVersion = getLatestResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_CATALOGSERVICECLAIM, true);
 		logger.info("Catalog Service Claim Latest resource version: " + cscLatestResourceVersion);
 
+		long jfLatestResourceVersion = 0;
+		logger.info("Secret Latest resource version: " + jfLatestResourceVersion);
+
+		long ccLatestResourceVersion = 0;
+		logger.info("CapiCluster Latest resource version: " + ccLatestResourceVersion);
+
 		try {
 			// Validate registry. if registry spec is not qualified, patch the registry spec.
 			patchRegistrySpec();
@@ -535,6 +541,18 @@ public class K8sApiCaller {
 		CatalogServiceClaimController cscOperator = new CatalogServiceClaimController(k8sClient, customObjectApi,
 				cscLatestResourceVersion);
 		cscOperator.start();
+
+		// start JoinFed Controller
+		logger.info("Start JoinFed Controller");
+		JoinFedController jfOperator = new JoinFedController(k8sClient, customObjectApi, api,
+				jfLatestResourceVersion);
+		jfOperator.start();
+
+		// start CapiCluster Controller
+		logger.info("Start CapiCluster Controller");
+		CapiClusterController ccOperator = new CapiClusterController(k8sClient, customObjectApi, api,
+				ccLatestResourceVersion);
+		ccOperator.start();
 
 		while (true) {
 			try {
@@ -725,6 +743,26 @@ public class K8sApiCaller {
 					cscOperator.interrupt();
 					cscOperator = new CatalogServiceClaimController(k8sClient, customObjectApi, cscLatestResourceVersion);
 					cscOperator.start();
+				}
+
+				if (!jfOperator.isAlive()) {
+					jfLatestResourceVersion = JoinFedController.getLatestResourceVersion();
+					logger.info(
+							("JoinFed Controller is not Alive. Restart Controller! (Latest Resource Version: "
+									+ jfLatestResourceVersion + ")"));
+					jfOperator.interrupt();
+					jfOperator = new JoinFedController(k8sClient, customObjectApi, api, jfLatestResourceVersion);
+					jfOperator.start();
+				}
+
+				if (!ccOperator.isAlive()) {
+					ccLatestResourceVersion = CapiClusterController.getLatestResourceVersion();
+					logger.info(
+							("CapiCluster Controller is not Alive. Restart Controller! (Latest Resource Version: "
+									+ ccLatestResourceVersion + ")"));
+					ccOperator.interrupt();
+					ccOperator = new CapiClusterController(k8sClient, customObjectApi, api, ccLatestResourceVersion);
+					ccOperator.start();
 				}
 			} catch (Exception e) {
 				StringWriter sw = new StringWriter();

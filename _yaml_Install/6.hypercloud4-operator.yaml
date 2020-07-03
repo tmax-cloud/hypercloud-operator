@@ -63,7 +63,11 @@ spec:
         - name: PROAUTH_EXIST    
           value: "1"   #If, OpenAuth set "0"
         - name: PROAUTH_HTTP_PORT
-          value: "8080"  
+          value: "8080"
+        - name: HOSTCLUSTERNAME # host cluster name (when you types "kubectl config get-contexts")
+          value: "hostcluster"
+        - name: FED_NS # name of namespace which contains federation-system pods
+          value: "kube-federation-system"
         ports:
         - containerPort: 28677
         resources:
