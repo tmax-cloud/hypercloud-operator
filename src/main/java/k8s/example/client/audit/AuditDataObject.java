@@ -93,6 +93,7 @@ public class AuditDataObject {
 		private String kind;
 		private String apiVersion;
 		private List<Event> items;
+		private long totalNum;
 		
 		public String getKind() {
 			return kind;
@@ -105,6 +106,12 @@ public class AuditDataObject {
 		}
 		public void setApiVersion(String apiVersion) {
 			this.apiVersion = apiVersion;
+		}
+		public long getTotalNum() {
+			return totalNum;
+		}
+		public void setTotalNum(long totalNum) {
+			this.totalNum = totalNum;
 		}
 		public List<Event> getItems() {
 			return items;
