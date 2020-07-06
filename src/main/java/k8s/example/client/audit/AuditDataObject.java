@@ -76,8 +76,6 @@ public class AuditDataObject {
 			return code;
 		}
 		public String getStatus() {
-			if (status == null)
-				status = (code/100 == 2 ? "Success" : "Failure");
 			return status;
 		}
 		public String getReason() {
