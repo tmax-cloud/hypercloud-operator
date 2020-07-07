@@ -14,6 +14,7 @@
 	- Registry/ImageCRD.yaml
 	- Template/TemplateCRD_v1beta1.yaml
 	- Template/TemplateInstanceCRD_v1beta1.yaml
+	- Template/CatalogServiceCalimCRD_v1beta1.yaml
 
 2. http://192.168.1.150:10080/hypercloud/hypercloud-operator/blob/master/_yaml_Install/2.mysql-settings.yaml 실행
 
