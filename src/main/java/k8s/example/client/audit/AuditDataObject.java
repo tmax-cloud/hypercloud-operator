@@ -3,9 +3,11 @@ package k8s.example.client.audit;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.joda.time.DateTime;
+import org.joda.time.chrono.ISOChronology;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
@@ -76,8 +78,6 @@ public class AuditDataObject {
 			return code;
 		}
 		public String getStatus() {
-			if (status == null)
-				status = (code/100 == 2 ? "Success" : "Failure");
 			return status;
 		}
 		public String getReason() {
@@ -93,6 +93,7 @@ public class AuditDataObject {
 		private String kind;
 		private String apiVersion;
 		private List<Event> items;
+		private long totalNum;
 		
 		public String getKind() {
 			return kind;
@@ -105,6 +106,12 @@ public class AuditDataObject {
 		}
 		public void setApiVersion(String apiVersion) {
 			this.apiVersion = apiVersion;
+		}
+		public long getTotalNum() {
+			return totalNum;
+		}
+		public void setTotalNum(long totalNum) {
+			this.totalNum = totalNum;
 		}
 		public List<Event> getItems() {
 			return items;
@@ -286,7 +293,9 @@ public class AuditDataObject {
 		public DateTimeFormatModule() {
 			super();
 			addSerializer(DateTime.class, new com.fasterxml.jackson.databind.JsonSerializer<DateTime>() {
-				public final DateTimeFormatter FORMATTER = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'");
+				public final DateTimeFormatter FORMATTER = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'")
+						.withLocale(Locale.ROOT)
+						.withChronology(ISOChronology.getInstanceUTC());
 
 				@Override
 				public void serialize(DateTime value, JsonGenerator gen, SerializerProvider serializers)
@@ -300,7 +309,9 @@ public class AuditDataObject {
 			});
 
 			addDeserializer(DateTime.class, new JsonDeserializer<DateTime>() {
-				public final DateTimeFormatter FORMATTER = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'");
+				public final DateTimeFormatter FORMATTER = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'")
+						.withLocale(Locale.ROOT)
+						.withChronology(ISOChronology.getInstanceUTC());
 
 				@Override
 				public DateTime deserialize(JsonParser p, DeserializationContext ctxt)

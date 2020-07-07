@@ -38,7 +38,8 @@ public class AuditDataFactory {
 	}
 	
 	private static final String AUDIT_INSERT_QUERY = "insert into metering.audit values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-	private static final String AUDIT_SELECT_QUERY = "select * from metering.audit where 1=1 ";
+	private static final String AUDIT_SELECT_QUERY = "select SQL_CALC_FOUND_ROWS * from metering.audit where 1=1 ";
+	private static final String AUDIT_SELECT_CNT_QUERY = "select FOUND_ROWS()";
 	
 	public static void insert(List<Event> eventList) throws Exception {
 		int i = 1;
@@ -122,6 +123,8 @@ public class AuditDataFactory {
 		
 		if(StringUtil.isNotEmpty(limit)) {
 			sb.append("limit ").append(limit).append(" ");
+		} else {
+			sb.append("limit 100 ");
 		}
 		
 		if(StringUtil.isNotEmpty(offset)) {
@@ -160,5 +163,18 @@ public class AuditDataFactory {
 		}
 		return result;
 	}
-
+	
+	public static long selectCnt () throws Exception {
+		StringBuilder sb = new StringBuilder(AUDIT_SELECT_CNT_QUERY);
+		long result;
+		
+		try(LogPreparedStatement pstmt = new LogPreparedStatement(conn, sb.toString())){
+			logger.info("Query=\"" + pstmt.getQueryString() + "\"");
+			try(ResultSet rs = pstmt.executeQuery()) {
+				rs.next();
+				result = rs.getLong("FOUND_ROWS()");
+			}
+		}
+		return result;
+	}
 }
