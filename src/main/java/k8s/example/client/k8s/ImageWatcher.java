@@ -72,6 +72,13 @@ public class ImageWatcher extends Thread {
 								break;
 							}						
 						}
+						
+						logger.info("[ImageWatcher] Save latestHandledResourceVersion of ImageWatcher [" + response.object.getMetadata().getName() + "]");
+						String resourceVersion = K8sApiCaller.getCustomResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_IMAGE, 
+								Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION,
+								response.object.getMetadata().getName(), response.object.getMetadata().getNamespace(), true);
+						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_IMAGE, resourceVersion);
+						
 //					} catch (ApiException e) {
 //						logger.info("ApiException: " + e.getMessage());
 //						logger.info(e.getResponseBody());

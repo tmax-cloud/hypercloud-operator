@@ -2,7 +2,6 @@ package k8s.example.client.k8s;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -262,6 +261,13 @@ public class RegistryWatcher extends Thread {
 								break;
 							}						
 						}
+						
+						//TODO
+						logger.info("[RegistryWatcher] Save latestHandledResourceVersion of RegistryWatcher [" + registry.getMetadata().getName() + "]");
+						String resourceVersion = K8sApiCaller.getCustomResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, 
+								Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, registry.getMetadata().getName(), registry.getMetadata().getNamespace(), true);
+						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, resourceVersion);
+						
 					} catch (ApiException e) {
 						logger.info("ApiException: " + e.getMessage());
 						logger.info(e.getResponseBody());

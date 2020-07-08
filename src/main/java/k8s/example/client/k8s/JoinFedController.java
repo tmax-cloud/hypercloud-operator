@@ -106,10 +106,15 @@ public class JoinFedController extends Thread {
 								}
 							}
 						}
+						
+						//FIXME
+//						logger.info("[JoinFed controller] Save latestHandledResourceVersion of JoinFed controller [" + response.object.getMetadata().getName() + "]");
+//						String resourceVersion = K8sApiCaller.getCustomResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_USER, response.object.getMetadata().getName(), null, false);
+//						K8sApiCaller.updateLatestHandledResourceVersion(Constants.PLURAL_JOIN_FED, resourceVersion);
+						
 					} catch (Exception e) {
 						printException(e, "JoinFed handle");
 					} catch (Throwable e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				});

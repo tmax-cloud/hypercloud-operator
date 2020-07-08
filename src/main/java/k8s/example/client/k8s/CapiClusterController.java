@@ -78,6 +78,12 @@ public class CapiClusterController extends Thread {
 								else replaceCCAnnotate(clusterName, "error");
 							}
 						}
+						
+						//TODO
+						logger.info("[CapiCluster controller] Save latestHandledResourceVersion of CapiCluster controller [" + response.object.getMetadata().getName() + "]");
+//						String resourceVersion = K8sApiCaller.getCustomResourceVersion(Constants.CAPI_OBJECT_PLURAL_CAPICLUSTER, response.object.getMetadata().getName(), null, false);
+//						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CAPI_OBJECT_PLURAL_CAPICLUSTER, resourceVersion);
+						
 					} catch (Exception e) {
 						printException(e, "CapiCluster handle");
 					} catch (Throwable e) {

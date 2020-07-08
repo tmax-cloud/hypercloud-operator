@@ -30,7 +30,7 @@ public class UserDeleteWatcher extends Thread {
 		watchUser = Watch.createWatch(client,
 				// api.listClusterCustomObjectCall("tmax.io", "v1", "users", null, null, null,
 				// "encrypted=f", null, resourceVersion, null, Boolean.TRUE, null),
-				api.listClusterCustomObjectCall("tmax.io", "v1", "users", null, null, null, null, null, null, null,
+				api.listClusterCustomObjectCall("tmax.io", "v1", "users", null, null, null, null, null, resourceVersion, null,
 						Boolean.TRUE, null),
 				new TypeToken<Watch.Response<UserCR>>() {
 				}.getType());
@@ -59,7 +59,6 @@ public class UserDeleteWatcher extends Thread {
 					// Logic here
 					try {
 						String eventType = response.type.toString(); // ADDED, MODIFIED, DELETED
-						logger.info("[UserDeleteWatcher] Event Type : " + eventType);
 
 						switch (eventType) {
 						case Constants.EVENT_TYPE_ADDED:
@@ -69,6 +68,7 @@ public class UserDeleteWatcher extends Thread {
 							// Nothing to do
 							break;
 						case Constants.EVENT_TYPE_DELETED:
+							logger.info("[UserDeleteWatcher] Event Type : " + eventType);
 							logger.info("[UserDeleteWatcher] User ( " + response.object.getMetadata().getName()	+ " ) Deleted");
 							if (System.getenv( "PROAUTH_EXIST" ) != null && System.getenv( "PROAUTH_EXIST" ).equalsIgnoreCase("1")) {
 			    	    		logger.info( "  [[ Integrated OAuth System! ]] " );
@@ -114,6 +114,13 @@ public class UserDeleteWatcher extends Thread {
 		    	    		}
 							break;
 						}
+						
+						logger.info("[UserDeleteWatcher] Save latestHandledResourceVersion of UserDeleteWatcher [" + response.object.getMetadata().getName() + "]");
+						String resourceVersion = K8sApiCaller.getCustomResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_USER, 
+								Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, response.object.getMetadata().getName(), null, false);
+						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_USER, resourceVersion);
+
+						
 					} catch (Exception e) {
 						logger.info("Exception: " + e.getMessage());
 						StringWriter sw = new StringWriter();

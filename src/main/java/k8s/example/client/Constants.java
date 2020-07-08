@@ -12,6 +12,7 @@ public class Constants {
 	public static final String DEFAULT_NAMESPACE = "default";
 	public static final String SYSTEM_ENV_CATALOG_NAMESPACE = "CATALOG_NAMESPACE";
 	public static final String REGISTRY_NAMESPACE = "hypercloud4-system";
+	public static final String PREFIX_RESOURCE_VERSION_CONFIGMAP = "resourceversion-";
 
 	public static final String CUSTOM_OBJECT_GROUP = "tmax.io";
 	public static final String CUSTOM_OBJECT_VERSION = "v1";
@@ -28,9 +29,21 @@ public class Constants {
 	public static final String CUSTOM_OBJECT_PLURAL_RESOURCEQUOTACLAIM = "resourcequotaclaims";
 	public static final String CUSTOM_OBJECT_PLURAL_ROLEBINDINGCLAIM = "rolebindingclaims";
 	public static final String CUSTOM_OBJECT_PLURAL_CATALOGSERVICECLAIM = "catalogserviceclaims";
+	
+	public static final String PLURAL_REGISTRY_REPLICASET = "registriesreplicasets";
+	public static final String PLURAL_REGISTRY_POD = "registriespods";
+	public static final String PLURAL_REGISTRY_SERVICE = "registriesservices";
+	public static final String PLURAL_REGISTRY_CERT = "registriescerts";
+	public static final String PLURAL_REGISTRY_DOCKER = "registriesdockers";
+	public static final String PLURAL_REGISTRY_TLS = "registriestls";
+	public static final String PLURAL_REGISTRY_INGRESS = "registriesingresses";
+	public static final String PLURAL_REGISTRY_PVC = "registriespvcs";
+	public static final String PLURAL_JOIN_FED = "joinfeds";
+	public static final String PLURAL_CAPI_CLUSTER = "capiclusters";
 
 	public static final String PLURAL_SECRET = "secrets";
 
+	public static final String ISTIO_API_GROUP = "config.istio.io";
 	public static final String SERVICE_INSTANCE_API_GROUP = "servicecatalog.k8s.io";
 	public static final String SERVICE_INSTANCE_API_VERSION = "v1beta1";
 	public static final String SERVICE_INSTANCE_PLURAL = "serviceinstances";

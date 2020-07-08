@@ -45,8 +45,8 @@ public class NamespaceClaimController extends Thread {
 	StateCheckInfo sci = new StateCheckInfo();
 
 	NamespaceClaimController(ApiClient client, CustomObjectsApi api, long resourceVersion) throws Exception {
-		nscController = Watch.createWatch(client,
-				api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, null, null, null, null, null, Long.toString( resourceVersion ), null, Boolean.TRUE, null),
+		nscController = Watch.createWatch(client, api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, null, null, null, null, null, Long.toString( resourceVersion ), null, Boolean.TRUE, null),
+//		nscController = Watch.createWatch(client, api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, null, null, null, null, null, null, null, Boolean.TRUE, null),
 				new TypeToken<Watch.Response<NamespaceClaim>>() {}.getType());
 		this.api = api;
 		this.client = client;
@@ -153,14 +153,19 @@ public class NamespaceClaimController extends Thread {
 											// Send Fail confirm Mail
 											sendConfirmMail ( claim, null, false );
 										}
-										
 									}
 									break;
 								case Constants.EVENT_TYPE_DELETED : 
 									// Nothing to do
 									break;
 							}
-						}					
+						}	
+						
+						logger.info("[NamespaceClaim Controller] Save latestHandledResourceVersion of NamespaceClaim Controller [" + response.object.getMetadata().getName() + "]");
+						String resourceVersion = K8sApiCaller.getCustomResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, 
+								Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, response.object.getMetadata().getName(), null, false);
+						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, resourceVersion);
+
 					} catch (Exception e) {
 						logger.info("Exception: " + e.getMessage());
 						StringWriter sw = new StringWriter();

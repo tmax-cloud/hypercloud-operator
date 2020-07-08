@@ -11,6 +11,7 @@ import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CustomObjectsApi;
 import io.kubernetes.client.util.Watch;
+import k8s.example.client.Constants;
 import k8s.example.client.DataObject.UserCR;
 import k8s.example.client.Main;
 import k8s.example.client.models.StateCheckInfo;
@@ -25,12 +26,12 @@ public class UserWatcher extends Thread {
 
 	UserWatcher(ApiClient client, CustomObjectsApi api, String resourceVersion) throws Exception {
 		watchUser = Watch.createWatch(client,
-				//api.listClusterCustomObjectCall("tmax.io", "v1", "users", null, null, null, "encrypted=f", null, resourceVersion, null, Boolean.TRUE, null),
-				api.listClusterCustomObjectCall("tmax.io", "v1", "users", null, null, null, "encrypted=f", null, null, null, Boolean.TRUE, null),
+				api.listClusterCustomObjectCall("tmax.io", "v1", "users", null, null, null, "encrypted=f", null, resourceVersion, null, Boolean.TRUE, null),
+//				api.listClusterCustomObjectCall("tmax.io", "v1", "users", null, null, null, "encrypted=f", null, null, null, Boolean.TRUE, null),
 				new TypeToken<Watch.Response<UserCR>>() {}.getType());
 		this.client = client;
 		this.api = api;
-		this.latestResourceVersion = resourceVersion;
+		latestResourceVersion = resourceVersion;
 	}
 	
 	@Override
@@ -49,9 +50,10 @@ public class UserWatcher extends Thread {
 					}
 					
 					latestResourceVersion = response.object.getMetadata().getResourceVersion();
-					
+
 					// Logic here
 					try {
+//						K8sApiCaller.patchUserResourceVersionConfig(response.object.getMetadata().getName(), latestResourceVersion);
 						logger.info("[UserWatcher] Encrypt password of User " + response.object.getMetadata().getName());
 
 						K8sApiCaller.encryptUserPassword(
@@ -65,6 +67,12 @@ public class UserWatcher extends Thread {
 //							logger.info("[UserWatcher] UserSecurityPolicy of User" + response.object.getMetadata().getName() + " Create Success");
 //						} catch (ApiException e) {
 //						}
+						
+						logger.info("[UserWatcher] Save latestHandledResourceVersion of UserWatcher [" + response.object.getMetadata().getName() + "]");
+						String resourceVersion = K8sApiCaller.getCustomResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_USER,
+								Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, response.object.getMetadata().getName(), null, false);
+						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_USER, resourceVersion);
+
 					} catch (ApiException e) {
 						logger.info("ApiException: " + e.getMessage());
 						logger.info(e.getResponseBody());
@@ -73,6 +81,9 @@ public class UserWatcher extends Thread {
 						StringWriter sw = new StringWriter();
 						e.printStackTrace(new PrintWriter(sw));
 						logger.info(sw.toString());
+					} catch (Throwable e) {
+						logger.info("Throw Exception: " + e.getMessage());
+						e.printStackTrace();
 					}
 				});
 				logger.info("=============== User 'For Each' END ===============");

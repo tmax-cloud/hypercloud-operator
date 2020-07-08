@@ -85,7 +85,8 @@ public class InstanceOperator extends Thread {
 		
 		watchInstance = Watch.createWatch(
 		        client,
-		        api.listClusterCustomObjectCall(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, null, null, null, null, null, String.valueOf(resourceVersion), null, Boolean.TRUE, null),
+		        api.listClusterCustomObjectCall(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, 
+		        		null, null, null, null, null, String.valueOf(resourceVersion), null, Boolean.TRUE, null),
 		        new TypeToken<Watch.Response<Object>>(){}.getType()
         );
 		
@@ -110,6 +111,7 @@ public class InstanceOperator extends Thread {
 						logger.info(e.getMessage());
 					}
 					
+					//Logic here
 					try {
 						JsonNode instanceObj = numberTypeConverter(objectToJsonNode(response.object));
 						logger.info("[Instance Operator] Event Type : " + response.type.toString()); //ADDED, MODIFIED, DELETED
@@ -438,6 +440,13 @@ public class InstanceOperator extends Thread {
 		        				}
 		        			}*/
 		        		}
+		        		
+		        		logger.info("[Instance Operator] Save latestHandledResourceVersion of Instance Operator [" + instanceObj.get("metadata").get("name").asText() + "]");
+						String resourceVersion = K8sApiCaller.getCustomResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, 
+								Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, instanceObj.get("metadata").get("name").asText(), 
+								instanceObj.get("metadata").get("namespace").asText(), true);
+						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, resourceVersion);
+		        		
 					} catch(Exception e) {
 						logger.info("[Instance Operator] Instance Operator Exception: " + e.getMessage());
 					}
