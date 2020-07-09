@@ -264,9 +264,7 @@ public class RegistryWatcher extends Thread {
 						
 						//TODO
 						logger.info("[RegistryWatcher] Save latestHandledResourceVersion of RegistryWatcher [" + registry.getMetadata().getName() + "]");
-						String resourceVersion = K8sApiCaller.getCustomResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, 
-								Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, registry.getMetadata().getName(), registry.getMetadata().getNamespace(), true);
-						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, resourceVersion);
+						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registry.getMetadata().getResourceVersion());
 						
 					} catch (ApiException e) {
 						logger.info("ApiException: " + e.getMessage());

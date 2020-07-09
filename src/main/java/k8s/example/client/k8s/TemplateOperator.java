@@ -122,9 +122,7 @@ public class TemplateOperator extends Thread {
 		        		}
 		        		
 		        		logger.info("[Template Operator] Save latestHandledResourceVersion of Template Operator [" + templateName + "]");
-						String resourceVersion = K8sApiCaller.getCustomResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE, 
-								Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, templateName, namespace, true);
-						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE, resourceVersion);
+						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE,  template.get("metadata").get("resourceVersion").asText());
 					} catch(Exception e) {
 						logger.info(e.getMessage());
 					}

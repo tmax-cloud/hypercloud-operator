@@ -12,6 +12,7 @@ import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.ExtensionsV1beta1Api;
 import io.kubernetes.client.openapi.models.ExtensionsV1beta1Ingress;
 import io.kubernetes.client.util.Watch;
+import k8s.example.client.Constants;
 import k8s.example.client.Main;
 
 public class RegistryIngressWatcher extends Thread {
@@ -59,6 +60,8 @@ public class RegistryIngressWatcher extends Thread {
 						K8sApiCaller.updateRegistryStatus(ingress, eventType);
 						
 					}
+					logger.info("[RegistryIngressWatcher] Save latestHandledResourceVersion of RegistryIngressWatcher [" + response.object.getMetadata().getName() + "]");
+					K8sApiCaller.updateLatestHandledResourceVersion(Constants.PLURAL_REGISTRY_INGRESS, response.object.getMetadata().getResourceVersion());
 				} catch (ApiException e) {
 //					logger.info("ApiException: " + e.getMessage());
 //					logger.info(e.getResponseBody());

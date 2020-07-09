@@ -113,9 +113,7 @@ public class CatalogServiceClaimController extends Thread {
 						}
 						//FIXME
 						logger.info("[CatalogServiceClaim Controller] Save latestHandledResourceVersion of CatalogServiceClaim [" + claim.get("metadata").get("name").asText() + "]");
-						String resourceVersion = K8sApiCaller.getCustomResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_CATALOGSERVICECLAIM, Constants.SERVICE_INSTANCE_API_GROUP,
-								Constants.SERVICE_INSTANCE_API_VERSION, claim.get("metadata").get("name").asText(), claim.get("metadata").get("namespace").asText(), true);
-						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_CATALOGSERVICECLAIM, resourceVersion);
+						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_CATALOGSERVICECLAIM, claim.get("metadata").get("resourceVersion").asText());
 						
 					} catch (Exception e) {
 						logger.info("Exception: " + e.getMessage());

@@ -442,10 +442,7 @@ public class InstanceOperator extends Thread {
 		        		}
 		        		
 		        		logger.info("[Instance Operator] Save latestHandledResourceVersion of Instance Operator [" + instanceObj.get("metadata").get("name").asText() + "]");
-						String resourceVersion = K8sApiCaller.getCustomResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, 
-								Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, instanceObj.get("metadata").get("name").asText(), 
-								instanceObj.get("metadata").get("namespace").asText(), true);
-						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, resourceVersion);
+						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, instanceObj.get("metadata").get("resourceVersion").asText());
 		        		
 					} catch(Exception e) {
 						logger.info("[Instance Operator] Instance Operator Exception: " + e.getMessage());

@@ -132,7 +132,7 @@ public class NameSpaceClaimHandler extends GeneralHandler {
     		}
 
 			// Make outDO					
-    		if( nscList!=null && nscList.getItems() != null ) {
+    		if( (nscList!=null && nscList.getItems() != null && nscList.getItems().size() > 0) || nscList.getMetadata().getContinue().equalsIgnoreCase("wrongLabel")) {
     			Gson gson = new GsonBuilder().setPrettyPrinting().create();
     			outDO = gson.toJson( nscList ).toString();
     		} else {

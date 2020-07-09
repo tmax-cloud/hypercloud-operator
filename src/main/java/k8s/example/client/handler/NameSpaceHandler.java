@@ -132,16 +132,16 @@ public class NameSpaceHandler extends GeneralHandler {
     		}
 
 			// Make outDO					
-    		if( nsList!=null ) {
+    		if( (nsList!=null && nsList.getItems() != null && nsList.getItems().size() > 0) || nsList.getMetadata().getContinue().equalsIgnoreCase("wrongLabel")) {
     			Gson gson = new GsonBuilder().setPrettyPrinting().create();
     			outDO = gson.toJson( nsList ).toString();
     		} else {
-    			status = Status.FORBIDDEN;
+    			status = Status.FORBIDDEN;	
     			JsonObject result = new JsonObject();
     			outDO = "Cannot Access Any NameSpace";
     			result.addProperty("message", outDO);
     			Gson gson = new Gson();		
-    		    outDO = gson.toJson(result);		
+    		    outDO = gson.toJson(result);			
     		}
 			
 		} catch (ApiException e) {

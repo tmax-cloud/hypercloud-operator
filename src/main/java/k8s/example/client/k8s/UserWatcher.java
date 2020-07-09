@@ -69,9 +69,7 @@ public class UserWatcher extends Thread {
 //						}
 						
 						logger.info("[UserWatcher] Save latestHandledResourceVersion of UserWatcher [" + response.object.getMetadata().getName() + "]");
-						String resourceVersion = K8sApiCaller.getCustomResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_USER,
-								Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, response.object.getMetadata().getName(), null, false);
-						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_USER, resourceVersion);
+						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_USER, response.object.getMetadata().getResourceVersion());
 
 					} catch (ApiException e) {
 						logger.info("ApiException: " + e.getMessage());

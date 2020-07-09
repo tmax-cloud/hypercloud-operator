@@ -112,13 +112,7 @@ public class NamespaceClaimController extends Thread {
 												patchUserRole ( claim.getMetadata().getLabels().get("owner"), claim.getMetadata().getName() );
 											}
 										}
-									}
-									
-									logger.info("[NamespaceClaim Controller] Save latestHandledResourceVersion of NamespaceClaim Controller [" + response.object.getMetadata().getName() + "]");
-									String resourceVersion = K8sApiCaller.getCustomResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, 
-											Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, response.object.getMetadata().getName(), null, false);
-									K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, resourceVersion);
-									
+									}						
 									break;
 								case Constants.EVENT_TYPE_MODIFIED : 
 									String status = getClaimStatus( claimName );		
@@ -160,14 +154,7 @@ public class NamespaceClaimController extends Thread {
 											// Send Fail confirm Mail
 											sendConfirmMail ( claim, null, false );
 										}
-									}
-									
-									
-									logger.info("[NamespaceClaim Controller] Save latestHandledResourceVersion of NamespaceClaim Controller [" + response.object.getMetadata().getName() + "]");
-									resourceVersion = K8sApiCaller.getCustomResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, 
-											Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, response.object.getMetadata().getName(), null, false);
-									K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, resourceVersion);
-									
+									}				
 									break;
 								case Constants.EVENT_TYPE_DELETED : 
 									// Nothing to do
@@ -175,7 +162,10 @@ public class NamespaceClaimController extends Thread {
 									break;
 							}
 						}	
-
+						
+						logger.info("[NamespaceClaim Controller] Save latestHandledResourceVersion of NamespaceClaim Controller [" + response.object.getMetadata().getName() + "]");
+						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, response.object.getMetadata().getResourceVersion());
+						
 					} catch (Exception e) {
 						logger.info("Exception: " + e.getMessage());
 						StringWriter sw = new StringWriter();

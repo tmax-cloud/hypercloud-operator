@@ -12,6 +12,7 @@ import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.util.Watch;
+import k8s.example.client.Constants;
 import k8s.example.client.Main;
 
 public class RegistryServiceWatcher extends Thread {
@@ -58,6 +59,8 @@ public class RegistryServiceWatcher extends Thread {
 						K8sApiCaller.updateRegistryStatus(service, eventType);
 						
 					}
+					logger.info("[RegistryServiceWatcher] Save latestHandledResourceVersion of RegistryServiceWatcher [" + response.object.getMetadata().getName() + "]");
+					K8sApiCaller.updateLatestHandledResourceVersion(Constants.PLURAL_REGISTRY_SERVICE, response.object.getMetadata().getResourceVersion());
 				} catch (ApiException e) {
 //					logger.info("ApiException: " + e.getMessage());
 //					logger.info(e.getResponseBody());
