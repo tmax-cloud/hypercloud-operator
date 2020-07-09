@@ -40,7 +40,7 @@
 		/var/lib/kubelet/kubeadm-flags.env 에 --allowed-unsafe-sysctls=kernel.sem 추가
 		kubelet 재기동 (systemctl daemon-reload && systemctl restart kubelet)     	
 
-5. http://192.168.1.150:10080/hypercloud/hypercloud-operator/blob/master/_yaml_Install/5.proauth-server.yaml 실행 ( node Selector 설정 : proauth db pod와 같은 node로 설정 )
+5. http://192.168.1.150:10080/hypercloud/hypercloud-operator/blob/master/_yaml_Install/5.proauth-server.yaml 실행 
 
 6. http://192.168.1.150:10080/hypercloud/hypercloud-operator/blob/master/_yaml_Install/6.hypercloud4-operator.yaml 실행
 
