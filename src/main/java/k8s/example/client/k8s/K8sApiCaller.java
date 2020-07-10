@@ -5489,28 +5489,35 @@ public class K8sApiCaller {
 		try {
 			V1ConfigMap configResult = api.readNamespacedConfigMap (Constants.PREFIX_RESOURCE_VERSION_CONFIGMAP + customResourceName, Constants.REGISTRY_NAMESPACE, null, null, null);
 			if ( configResult.getData() != null && configResult.getData().get("latestHandledResourceVersion") != null) {
-				
-				// Patch ConfigMap resourceversion-customResourceName in hypercloud4-system Namespace
-				logger.info("Patch ConfigMap resourceversion-" + customResourceName + " latestHandledResourceVersion value to " + latestHandledResourceVersion);
-				JsonArray jArrayPatchPvc = new JsonArray();
-				jArrayPatchPvc.add(Util.makePatchJsonObject("replace", "/data/latestHandledResourceVersion", latestHandledResourceVersion));				
-//				logger.info("jArrayPatchPvc.toString() :" + jArrayPatchPvc.toString());
+				logger.info("Previous ConfigMap resourceversion-[" + customResourceName + "] latestHandledResourceVersion : " + configResult.getData().get("latestHandledResourceVersion"));
+				logger.info(" Current ConfigMap resourceversion-[" + customResourceName + "] latestHandledResourceVersion : " + latestHandledResourceVersion);
 
-				try {
-					V1ConfigMap patchResult = api.patchNamespacedConfigMap(Constants.PREFIX_RESOURCE_VERSION_CONFIGMAP + customResourceName, Constants.REGISTRY_NAMESPACE,
-							new V1Patch(jArrayPatchPvc.toString()), null, null, null, null);
-					logger.info("ConfigMap is patched: " + patchResult.getData());
-				} catch (ApiException e) {
-					logger.info("Patch " + customResourceName + " ConfigMap Failed");
-					logger.info("Response body: " + e.getResponseBody());
-					logger.info("Error Message: " + e.getStackTrace());
-					throw e;
-				}			
+				// Compare Previous and new resourceVersion
+				if( Long.parseLong(configResult.getData().get("latestHandledResourceVersion")) < Long.parseLong(latestHandledResourceVersion) ) {			
+					// Patch ConfigMap resourceversion-customResourceName in hypercloud4-system Namespace
+					logger.info("Patch ConfigMap resourceversion-[" + customResourceName + "] latestHandledResourceVersion value to " + latestHandledResourceVersion);
+					JsonArray jArrayPatchPvc = new JsonArray();
+					jArrayPatchPvc.add(Util.makePatchJsonObject("replace", "/data/latestHandledResourceVersion", latestHandledResourceVersion));				
+//					logger.info("jArrayPatchPvc.toString() :" + jArrayPatchPvc.toString());
+
+					try {
+						V1ConfigMap patchResult = api.patchNamespacedConfigMap(Constants.PREFIX_RESOURCE_VERSION_CONFIGMAP + customResourceName, Constants.REGISTRY_NAMESPACE,
+								new V1Patch(jArrayPatchPvc.toString()), null, null, null, null);
+						logger.info("ConfigMap is patched: " + patchResult.getData());
+					} catch (ApiException e) {
+						logger.info("Patch " + customResourceName + " ConfigMap Failed");
+						logger.info("Response body: " + e.getResponseBody());
+						logger.info("Error Message: " + e.getStackTrace());
+						throw e;
+					}			
+				} else {
+					logger.info("Nothing to Do");
+				}
 			}
 		} catch (ApiException e) {
 			if (e.getResponseBody().contains("NotFound") || e.getResponseBody().contains("404")) {
 				// Make ConfigMap resourceversion-customResourceName in hypercloud4-system Namespace
-				logger.info("Make ConfigMap resourceversion-" + customResourceName + " in hypercloud4-system Namespace");
+				logger.info("Make ConfigMap resourceversion-[" + customResourceName + "] in hypercloud4-system Namespace");
 
 				V1ConfigMap configMap = new V1ConfigMap();
 				V1ObjectMeta metadata = new V1ObjectMeta();
@@ -6710,11 +6717,9 @@ public class K8sApiCaller {
 
 			logger.info("nameSpace [ " + nsName + " ] Deleted");
 		} catch (IllegalStateException e) {
+			logger.info("nameSpace [ " + nsName + " ] Delete Service Success");
 		} catch (ApiException e) {
 			logger.info("Response body: " + e.getResponseBody());
-			e.printStackTrace();
-		} catch (Exception e) {
-			logger.info("Exception message: " + e.getMessage());
 			e.printStackTrace();
 		}
 	}
