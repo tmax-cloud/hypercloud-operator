@@ -1,6 +1,30 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.0.38 start -------------------->
+
+## HyperCloudServer_4.1.0.38 (Fri Jul 10 14:02:53 KST 2020)
+
+### Added
+
+### Changed
+  - [mod] lastestHandledResourceVersion 저장할때, 기존꺼보다 높은 경우에만 저장하도록 로직 수정 [mod] Trial Timer 메일 보내는 시간 지났을때, 재기동시 메일이 보내지는 현상 수정 by dnxorjs1
+  - [mod] resourceVersion 가져오는 로직 수정 [mod] nsListGet, nscListGet label Selector를 잘못 입려했을 경우 에러가 아니게끔 처리 by dnxorjs1
+  - [mod] <installer guide> 5.proauth-server의 node selector 부분 삭제 by mincheol_jeon
+  - [mod] watcher resourceVersion configMap에 깨어날 때마다 저장하고 재기동시 해당 resourceVersion 바라보게 수정 by dnxorjs1
+  - [mod] Template/CatalogServiceCalimCRD_v1beta1.yaml install guide에 추가 by dnxorjs1
+  - [mod] Audit log timestamp 에 timezone 적용 by gyeongyeol-choi
+  - [mod] status 파라미터를 전달받지 못했을 때 status를 정의하는 로직 제거 by gyeongyeol-choi
+  - [mod] Audit - GET API 페이지네이션 기능 수정 (totalNum 추가) by gyeongyeol-choi
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.0.38 end --------------------->
+
 <!-------------------- v4.1.0.37 start -------------------->
 
 ## HyperCloudServer_4.1.0.37 (Thu Jul  2 18:24:45 KST 2020)
