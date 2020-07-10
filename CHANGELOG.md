@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file.
   - [mod] Audit log timestamp 에 timezone 적용 by gyeongyeol-choi
   - [mod] status 파라미터를 전달받지 못했을 때 status를 정의하는 로직 제거 by gyeongyeol-choi
   - [mod] Audit - GET API 페이지네이션 기능 수정 (totalNum 추가) by gyeongyeol-choi
+  - [feat] CapiFed - Capi Cluster의 federation join 자동화 by mincheol_jeon
 
 ### Fixed
 
