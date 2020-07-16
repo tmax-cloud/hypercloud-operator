@@ -7,6 +7,7 @@
 	- Auth/TokenCRD.yaml
 	- Auth/ClientCRD.yaml
 	- Auth/UserSecurityPolicyCRD.yaml
+	- Auth/clusterMenuPolicyCRD.yaml
 	- Claim/NamespaceClaimCRD.yaml
 	- Claim/ResourceQuotaClaimCRD.yaml
 	- Claim/RoleBindingClaimCRD.yaml
