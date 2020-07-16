@@ -24,7 +24,7 @@ spec:
     - name: GIT_REV
       value: master
     - name: IMAGE_URL
-      value: tmaxcloudck/tomcat-sample
+      value: <이미지 주소>
     - name: REGISTRY_SECRET_NAME
       value: ''
     - name: WAS_PORT
