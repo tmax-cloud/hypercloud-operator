@@ -1,6 +1,24 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.0.39 start -------------------->
+
+## HyperCloudServer_4.1.0.39 (Fri Jul 17 13:47:48 KST 2020)
+
+### Added
+
+### Changed
+  - [mod] clusterMenuPolicyCRD.yaml 추가, 설치 가이드 수정 by dnxorjs1
+  - [mod] admin 계정 정보 변경 by dnxorjs1
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.0.39 end --------------------->
+
 <!-------------------- v4.1.0.38 start -------------------->
 
 ## HyperCloudServer_4.1.0.38 (Fri Jul 10 14:02:53 KST 2020)
