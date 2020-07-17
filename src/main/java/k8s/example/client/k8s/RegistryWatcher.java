@@ -282,7 +282,7 @@ public class RegistryWatcher extends Thread {
 				
 				logger.info("=============== Registry 'For Each' END ===============");
 				watchRegistry = Watch.createWatch(client,
-						api.listClusterCustomObjectCall("tmax.io", "v1", "registries", null, null, null, null, null, latestResourceVersion, null, Boolean.TRUE, null),
+						api.listClusterCustomObjectCall("tmax.io", "v1", "registries", null, null, null, null, null, null, null, Boolean.TRUE, null),
 						new TypeToken<Watch.Response<Object>>() {}.getType());
 			}
 		} catch (Exception e) {

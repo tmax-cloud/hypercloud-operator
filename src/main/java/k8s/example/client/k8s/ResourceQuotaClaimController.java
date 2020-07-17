@@ -109,7 +109,7 @@ public class ResourceQuotaClaimController extends Thread {
 				});
 				logger.info("=============== RQC 'For Each' END ===============");
 				rqcController = Watch.createWatch(client,
-						api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_RESOURCEQUOTACLAIM, null, null, null, null, null, Long.toString( latestResourceVersion ), null, Boolean.TRUE, null),
+						api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_RESOURCEQUOTACLAIM, null, null, null, null, null, null, null, Boolean.TRUE, null),
 						new TypeToken<Watch.Response<NamespaceClaim>>() {}.getType());
 			}
 		} catch (Exception e) {

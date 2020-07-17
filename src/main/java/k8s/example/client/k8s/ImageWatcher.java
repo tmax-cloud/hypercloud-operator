@@ -97,7 +97,7 @@ public class ImageWatcher extends Thread {
 				
 				logger.info("=============== Image 'For Each' END ===============");
 				watchImage = Watch.createWatch(client,
-						api.listClusterCustomObjectCall("tmax.io", "v1", "images", null, null, null, null, null, latestResourceVersion, null, Boolean.TRUE, null),
+						api.listClusterCustomObjectCall("tmax.io", "v1", "images", null, null, null, null, null, null, null, Boolean.TRUE, null),
 						new TypeToken<Watch.Response<Image>>() {}.getType());
 			}
 		} catch (Exception e) {

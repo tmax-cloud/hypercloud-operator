@@ -110,7 +110,7 @@ public class RoleBindingClaimController extends Thread {
 				});
 				logger.info("=============== RBC 'For Each' END ===============");
 				rbcController = Watch.createWatch(client,
-						api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_ROLEBINDINGCLAIM, null, null, null, null, null, Long.toString( latestResourceVersion ), null, Boolean.TRUE, null),
+						api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_ROLEBINDINGCLAIM, null, null, null, null, null, null, null, Boolean.TRUE, null),
 						new TypeToken<Watch.Response<RoleBindingClaim>>() {}.getType());
 			}
 		} catch (Exception e) {

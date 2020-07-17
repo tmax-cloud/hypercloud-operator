@@ -451,7 +451,7 @@ public class InstanceOperator extends Thread {
 				logger.info("=============== Instance 'For Each' END ===============");
 				watchInstance = Watch.createWatch(
 				        client,
-				        tpApi.listClusterCustomObjectCall(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, null, null, null, null, null, String.valueOf(latestResourceVersion), null, Boolean.TRUE, null),
+				        tpApi.listClusterCustomObjectCall(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, null, null, null, null, null, null, null, Boolean.TRUE, null),
 				        new TypeToken<Watch.Response<Object>>(){}.getType());
 			}
 
