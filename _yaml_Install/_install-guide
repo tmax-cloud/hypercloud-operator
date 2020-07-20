@@ -21,7 +21,8 @@
 
 3. http://192.168.1.150:10080/hypercloud/hypercloud-operator/blob/master/_yaml_Install/3.mysql-create.yaml 실행
 
-4. http://192.168.1.150:10080/hypercloud/hypercloud-operator/blob/master/_yaml_Install/4.proauth-db.yaml 실행
+4. http://192.168.1.150:10080/hypercloud/hypercloud-operator/blob/master/_yaml_Install/4-1.proauth-init.yaml 실행 &
+http://192.168.1.150:10080/hypercloud/hypercloud-operator/blob/master/_yaml_Install/4-2.proauth-db.yaml 실행
 
 4-1. proauth-db는 최초로 기동시 20~30분 정도가 소요될 수 있음.
   * proauth-db 기동 확인
