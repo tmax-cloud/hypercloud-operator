@@ -1,6 +1,23 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.0.40 start -------------------->
+
+## HyperCloudServer_4.1.0.40 (Fri Jul 17 17:04:12 KST 2020)
+
+### Added
+
+### Changed
+  - [mod] resource version 관리 오류로 인한 bug fix by dnxorjs1 by sukhee_yun
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.0.40 end --------------------->
+
 <!-------------------- v4.1.0.39 start -------------------->
 
 ## HyperCloudServer_4.1.0.39 (Fri Jul 17 13:47:48 KST 2020)
