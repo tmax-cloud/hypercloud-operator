@@ -6914,7 +6914,7 @@ public class K8sApiCaller {
 		// Get Default Network Policy Yaml
 		try {
 			V1ConfigMap netPolConfig = api.readNamespacedConfigMap(Constants.DEFAULT_NETWORK_POLICY_CONFIG_MAP, Constants.TEMPLATE_NAMESPACE, null, null, null);
-			if (netPolConfig != null && netPolConfig.getData() != null && netPolConfig.getData().get(Constants.NETWORK_POLICY_YAML) != null) {
+			if (netPolConfig != null && netPolConfig.getData() != null && netPolConfig.getData().get(Constants.NETWORK_POLICY_YAML) != null ) {
 				String netPolYamlString = netPolConfig.getData().get(Constants.NETWORK_POLICY_YAML);
 				JsonObject netPolJsonObject = Util.yamlStringToJsonObject (netPolYamlString);
 		        mapper.registerModule(new JodaModule());
@@ -6937,8 +6937,7 @@ public class K8sApiCaller {
 				metadata.setNamespace(Constants.TEMPLATE_NAMESPACE);
 				configMap.setMetadata(metadata);
 				Map<String, String> data = new HashMap<>();
-				V1NetworkPolicy netPol = new V1NetworkPolicy();
-				data.put(Constants.NETWORK_POLICY_YAML, netPol.toString());
+				data.put(Constants.NETWORK_POLICY_YAML, null);
 				configMap.setData(data);
 				try {
 					api.createNamespacedConfigMap(Constants.TEMPLATE_NAMESPACE, configMap, null, null, null);
@@ -6947,10 +6946,11 @@ public class K8sApiCaller {
 					e1.printStackTrace();
 					throw e1;
 				}
+			} else {
+				logger.info(e.getResponseBody());
+				e.printStackTrace();
+				throw e;
 			}
-			logger.info(e.getResponseBody());
-			e.printStackTrace();
-			throw e;
 		} catch (Exception e ) {
 			logger.info(e.getStackTrace().toString());
 			e.printStackTrace();
