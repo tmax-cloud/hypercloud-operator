@@ -59,8 +59,8 @@ public class RegistryPvcWatcher extends Thread {
 						K8sApiCaller.updateRegistryStatus(pvc, eventType);
 						
 					}
-					logger.info("[RegistryPvcWatcher] Save latestHandledResourceVersion of RegistryPvcWatcher [" + response.object.getMetadata().getName() + "]");
-					K8sApiCaller.updateLatestHandledResourceVersion(Constants.PLURAL_REGISTRY_PVC, response.object.getMetadata().getResourceVersion());
+//					logger.info("[RegistryPvcWatcher] Save latestHandledResourceVersion of RegistryPvcWatcher [" + response.object.getMetadata().getName() + "]");
+//					K8sApiCaller.updateLatestHandledResourceVersion(Constants.PLURAL_REGISTRY_PVC, response.object.getMetadata().getResourceVersion());
 				} catch (ApiException e) {
 //					logger.info("ApiException: " + e.getMessage());
 //					logger.info(e.getResponseBody());

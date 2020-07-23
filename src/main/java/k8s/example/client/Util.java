@@ -398,7 +398,7 @@ public class Util {
         String jsonString = jsonWriter.writeValueAsString(obj);	
 		logger.info("jsonString : " + jsonString );
         
-        return new JsonParser().parse(jsonString).getAsJsonObject();		
+        return new JsonParser().parse(jsonString).getAsJsonObject();		//FIXME
 	}
     
 }

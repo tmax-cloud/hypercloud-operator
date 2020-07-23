@@ -30,7 +30,7 @@ public class ResourceQuotaClaimController extends Thread {
 
 	ResourceQuotaClaimController(ApiClient client, CustomObjectsApi api, long resourceVersion) throws Exception {
 		rqcController = Watch.createWatch(client,
-				api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_RESOURCEQUOTACLAIM, null, null, null, null, null, Long.toString( resourceVersion ), null, Boolean.TRUE, null),
+				api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_RESOURCEQUOTACLAIM, null, null, null, null, null, null, null, Boolean.TRUE, null),
 				new TypeToken<Watch.Response<NamespaceClaim>>() {}.getType());
 		this.api = api;
 		this.client = client;
@@ -88,8 +88,8 @@ public class ResourceQuotaClaimController extends Thread {
 							}
 						}
 						
-						logger.info("[ResourceQuotaClaim Controller] Save latestHandledResourceVersion of ResourceQuotaClaim Controller [" + response.object.getMetadata().getName() + "]");
-						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_RESOURCEQUOTACLAIM, response.object.getMetadata().getResourceVersion());
+//						logger.info("[ResourceQuotaClaim Controller] Save latestHandledResourceVersion of ResourceQuotaClaim Controller [" + response.object.getMetadata().getName() + "]");
+//						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_RESOURCEQUOTACLAIM, response.object.getMetadata().getResourceVersion());
 
 					} catch (Exception e) {
 						logger.info("Exception: " + e.getMessage());

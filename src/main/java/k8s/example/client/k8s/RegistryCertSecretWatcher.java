@@ -60,8 +60,8 @@ public class RegistryCertSecretWatcher extends Thread {
 						
 					}
 					
-					logger.info("[RegistryCertSecretWatcher] Save latestHandledResourceVersion of RegistryCertSecretWatcher [" + response.object.getMetadata().getName() + "]");
-					K8sApiCaller.updateLatestHandledResourceVersion(Constants.PLURAL_REGISTRY_CERT, response.object.getMetadata().getResourceVersion());
+//					logger.info("[RegistryCertSecretWatcher] Save latestHandledResourceVersion of RegistryCertSecretWatcher [" + response.object.getMetadata().getName() + "]");
+//					K8sApiCaller.updateLatestHandledResourceVersion(Constants.PLURAL_REGISTRY_CERT, response.object.getMetadata().getResourceVersion());
 
 				} catch (ApiException e) {
 //					logger.info("ApiException: " + e.getMessage());

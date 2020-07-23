@@ -77,8 +77,8 @@ public class CapiClusterController extends Thread {
 							}
 						}
 						
-						logger.info("[CapiCluster controller] Save latestHandledResourceVersion of CapiCluster controller [" + response.object.getMetadata().getName() + "]");
-						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CAPI_OBJECT_PLURAL_CAPICLUSTER, response.object.getMetadata().getResourceVersion());
+//						logger.info("[CapiCluster controller] Save latestHandledResourceVersion of CapiCluster controller [" + response.object.getMetadata().getName() + "]");
+//						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CAPI_OBJECT_PLURAL_CAPICLUSTER, response.object.getMetadata().getResourceVersion());
 						
 					} catch (Exception e) {
 						printException(e, "CapiCluster handle");

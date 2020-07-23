@@ -41,7 +41,7 @@ public class CatalogServiceClaimController extends Thread {
 
 	CatalogServiceClaimController(ApiClient client, CustomObjectsApi api, long resourceVersion) throws Exception {
 		cscController = Watch.createWatch(client,
-				api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_CATALOGSERVICECLAIM, null, null, null, null, null, Long.toString( resourceVersion ), null, Boolean.TRUE, null),
+				api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_CATALOGSERVICECLAIM, null, null, null, null, null, null, null, Boolean.TRUE, null),
 				new TypeToken<Watch.Response<Object>>() {}.getType());
 		this.api = api;
 		this.client = client;
@@ -112,8 +112,8 @@ public class CatalogServiceClaimController extends Thread {
 							}
 						}
 						//FIXME
-						logger.info("[CatalogServiceClaim Controller] Save latestHandledResourceVersion of CatalogServiceClaim [" + claim.get("metadata").get("name").asText() + "]");
-						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_CATALOGSERVICECLAIM, claim.get("metadata").get("resourceVersion").asText());
+//						logger.info("[CatalogServiceClaim Controller] Save latestHandledResourceVersion of CatalogServiceClaim [" + claim.get("metadata").get("name").asText() + "]");
+//						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_CATALOGSERVICECLAIM, claim.get("metadata").get("resourceVersion").asText());
 						
 					} catch (Exception e) {
 						logger.info("Exception: " + e.getMessage());

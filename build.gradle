@@ -45,7 +45,7 @@ dependencies {
 	compile 'org.quartz-scheduler:quartz:2.3.0'
 	compile 'mysql:mysql-connector-java:5.1.6'
 	compile 'javax.mail:mail:1.4.1'
-	implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.11.1'	
+	compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.11.1'	
 	
     // Use JUnit test framework
     testImplementation 'junit:junit:4.12'    

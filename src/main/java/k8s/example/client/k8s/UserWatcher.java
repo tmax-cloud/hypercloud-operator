@@ -26,7 +26,7 @@ public class UserWatcher extends Thread {
 
 	UserWatcher(ApiClient client, CustomObjectsApi api, String resourceVersion) throws Exception {
 		watchUser = Watch.createWatch(client,
-				api.listClusterCustomObjectCall("tmax.io", "v1", "users", null, null, null, "encrypted=f", null, resourceVersion, null, Boolean.TRUE, null),
+				api.listClusterCustomObjectCall("tmax.io", "v1", "users", null, null, null, "encrypted=f", null, null, null, Boolean.TRUE, null),
 //				api.listClusterCustomObjectCall("tmax.io", "v1", "users", null, null, null, "encrypted=f", null, null, null, Boolean.TRUE, null),
 				new TypeToken<Watch.Response<UserCR>>() {}.getType());
 		this.client = client;
@@ -68,8 +68,8 @@ public class UserWatcher extends Thread {
 //						} catch (ApiException e) {
 //						}
 						
-						logger.info("[UserWatcher] Save latestHandledResourceVersion of UserWatcher [" + response.object.getMetadata().getName() + "]");
-						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_USER, response.object.getMetadata().getResourceVersion());
+//						logger.info("[UserWatcher] Save latestHandledResourceVersion of UserWatcher [" + response.object.getMetadata().getName() + "]");
+//						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_USER, response.object.getMetadata().getResourceVersion());
 
 					} catch (ApiException e) {
 						logger.info("ApiException: " + e.getMessage());

@@ -30,7 +30,7 @@ public class UserDeleteWatcher extends Thread {
 		watchUser = Watch.createWatch(client,
 				// api.listClusterCustomObjectCall("tmax.io", "v1", "users", null, null, null,
 				// "encrypted=f", null, resourceVersion, null, Boolean.TRUE, null),
-				api.listClusterCustomObjectCall("tmax.io", "v1", "users", null, null, null, null, null, resourceVersion, null,
+				api.listClusterCustomObjectCall("tmax.io", "v1", "users", null, null, null, null, null, null, null,
 						Boolean.TRUE, null),
 				new TypeToken<Watch.Response<UserCR>>() {
 				}.getType());
@@ -53,7 +53,6 @@ public class UserDeleteWatcher extends Thread {
 					} catch (Exception e) {
 						logger.info(e.getMessage());
 					}
-
 					latestResourceVersion = response.object.getMetadata().getResourceVersion();
 
 					// Logic here
@@ -115,8 +114,8 @@ public class UserDeleteWatcher extends Thread {
 							break;
 						}
 						
-						logger.info("[UserDeleteWatcher] Save latestHandledResourceVersion of UserDeleteWatcher [" + response.object.getMetadata().getName() + "]");
-						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_USER, response.object.getMetadata().getResourceVersion());
+//						logger.info("[UserDeleteWatcher] Save latestHandledResourceVersion of UserDeleteWatcher [" + response.object.getMetadata().getName() + "]");
+//						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_USER, response.object.getMetadata().getResourceVersion());
 
 						
 					} catch (Exception e) {

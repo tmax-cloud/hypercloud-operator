@@ -62,7 +62,7 @@ public class JoinFedController extends Thread {
 
 	JoinFedController(ApiClient client, CustomObjectsApi api, CoreV1Api coreApi, long resourceVersion)
 			throws Exception {
-		jfController = Watch.createWatch(client, coreApi.listSecretForAllNamespacesCall(null, null, null, null, null, null,  Long.toString( resourceVersion ), null, Boolean.TRUE, null),
+		jfController = Watch.createWatch(client, coreApi.listSecretForAllNamespacesCall(null, null, null, null, null, null,  null, null, Boolean.TRUE, null),
 				new TypeToken<Watch.Response<V1Secret>>() {
 				}.getType());
 		this.api = api;
@@ -107,8 +107,8 @@ public class JoinFedController extends Thread {
 							}
 						}
 						
-						logger.info("[JoinFed controller] Save latestHandledResourceVersion of JoinFed controller [" + response.object.getMetadata().getName() + "]");
-						K8sApiCaller.updateLatestHandledResourceVersion(Constants.PLURAL_JOIN_FED, response.object.getMetadata().getResourceVersion());
+//						logger.info("[JoinFed controller] Save latestHandledResourceVersion of JoinFed controller [" + response.object.getMetadata().getName() + "]");
+//						K8sApiCaller.updateLatestHandledResourceVersion(Constants.PLURAL_JOIN_FED, response.object.getMetadata().getResourceVersion());
 						
 					} catch (Exception e) {
 						printException(e, "JoinFed handle");

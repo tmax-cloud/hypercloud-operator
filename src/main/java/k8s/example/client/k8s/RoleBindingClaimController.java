@@ -31,7 +31,7 @@ public class RoleBindingClaimController extends Thread {
 
 	RoleBindingClaimController(ApiClient client, CustomObjectsApi api, long resourceVersion) throws Exception {
 		rbcController = Watch.createWatch(client,
-				api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_ROLEBINDINGCLAIM, null, null, null, null, null, Long.toString( resourceVersion ), null, Boolean.TRUE, null),
+				api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_ROLEBINDINGCLAIM, null, null, null, null, null, null, null, Boolean.TRUE, null),
 				new TypeToken<Watch.Response<RoleBindingClaim>>() {}.getType());
 		this.api = api;
 		this.client = client;
@@ -89,8 +89,8 @@ public class RoleBindingClaimController extends Thread {
 									break;
 							}
 						}
-						logger.info("[RoleBindingClaim Controller] Save latestHandledResourceVersion of RoleBindingClaim Controller [" + response.object.getMetadata().getName() + "]");
-						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_ROLEBINDINGCLAIM, response.object.getMetadata().getResourceVersion());
+//						logger.info("[RoleBindingClaim Controller] Save latestHandledResourceVersion of RoleBindingClaim Controller [" + response.object.getMetadata().getName() + "]");
+//						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_ROLEBINDINGCLAIM, response.object.getMetadata().getResourceVersion());
 						
 					} catch (Exception e) {
 						logger.info("Exception: " + e.getMessage());

@@ -57,8 +57,8 @@ public class RegistryDockerSecretWatcher extends Thread {
 						logger.info("[RegistryDockerSecretWatcher] Registry Docker Secret " + eventType + "\n");
 						K8sApiCaller.updateRegistryStatus(secret, eventType);						
 					}
-					logger.info("[RegistryDockerSecretWatcher] Save latestHandledResourceVersion of RegistryDockerSecretWatcher [" + response.object.getMetadata().getName() + "]");
-					K8sApiCaller.updateLatestHandledResourceVersion(Constants.PLURAL_REGISTRY_DOCKER, response.object.getMetadata().getResourceVersion());
+//					logger.info("[RegistryDockerSecretWatcher] Save latestHandledResourceVersion of RegistryDockerSecretWatcher [" + response.object.getMetadata().getName() + "]");
+//					K8sApiCaller.updateLatestHandledResourceVersion(Constants.PLURAL_REGISTRY_DOCKER, response.object.getMetadata().getResourceVersion());
 				} catch (ApiException e) {
 //					logger.info("ApiException: " + e.getMessage());
 //					logger.info(e.getResponseBody());

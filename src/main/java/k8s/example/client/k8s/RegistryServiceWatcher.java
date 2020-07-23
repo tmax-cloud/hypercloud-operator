@@ -59,8 +59,8 @@ public class RegistryServiceWatcher extends Thread {
 						K8sApiCaller.updateRegistryStatus(service, eventType);
 						
 					}
-					logger.info("[RegistryServiceWatcher] Save latestHandledResourceVersion of RegistryServiceWatcher [" + response.object.getMetadata().getName() + "]");
-					K8sApiCaller.updateLatestHandledResourceVersion(Constants.PLURAL_REGISTRY_SERVICE, response.object.getMetadata().getResourceVersion());
+//					logger.info("[RegistryServiceWatcher] Save latestHandledResourceVersion of RegistryServiceWatcher [" + response.object.getMetadata().getName() + "]");
+//					K8sApiCaller.updateLatestHandledResourceVersion(Constants.PLURAL_REGISTRY_SERVICE, response.object.getMetadata().getResourceVersion());
 				} catch (ApiException e) {
 //					logger.info("ApiException: " + e.getMessage());
 //					logger.info(e.getResponseBody());

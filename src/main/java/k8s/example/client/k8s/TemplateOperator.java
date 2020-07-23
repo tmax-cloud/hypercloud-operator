@@ -40,7 +40,7 @@ public class TemplateOperator extends Thread {
 		watchInstance = Watch.createWatch(
 		        client,
 		        api.listClusterCustomObjectCall(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE, 
-		        		null, null, null, null, null, String.valueOf(resourceVersion), null, Boolean.TRUE, null),
+		        		null, null, null, null, null, null, null, Boolean.TRUE, null),
 		        new TypeToken<Watch.Response<Object>>(){}.getType()
         );
 		
@@ -121,8 +121,8 @@ public class TemplateOperator extends Thread {
 	    					
 		        		}
 		        		
-		        		logger.info("[Template Operator] Save latestHandledResourceVersion of Template Operator [" + templateName + "]");
-						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE,  template.get("metadata").get("resourceVersion").asText());
+//		        		logger.info("[Template Operator] Save latestHandledResourceVersion of Template Operator [" + templateName + "]");
+//						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE,  template.get("metadata").get("resourceVersion").asText());
 					} catch(Exception e) {
 						logger.info(e.getMessage());
 					}

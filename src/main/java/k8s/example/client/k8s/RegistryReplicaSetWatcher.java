@@ -59,8 +59,8 @@ public class RegistryReplicaSetWatcher extends Thread {
 						K8sApiCaller.updateRegistryStatus(rs, eventType);
 						
 					}
-					logger.info("[RegistryReplicaSetWatcher] Save latestHandledResourceVersion of RegistryReplicaSetWatcher [" + response.object.getMetadata().getName() + "]");
-					K8sApiCaller.updateLatestHandledResourceVersion(Constants.PLURAL_REGISTRY_REPLICASET, response.object.getMetadata().getResourceVersion());
+//					logger.info("[RegistryReplicaSetWatcher] Save latestHandledResourceVersion of RegistryReplicaSetWatcher [" + response.object.getMetadata().getName() + "]");
+//					K8sApiCaller.updateLatestHandledResourceVersion(Constants.PLURAL_REGISTRY_REPLICASET, response.object.getMetadata().getResourceVersion());
 				} catch (ApiException e) {
 //					logger.info("ApiException: " + e.getMessage());
 //					logger.info(e.getResponseBody());

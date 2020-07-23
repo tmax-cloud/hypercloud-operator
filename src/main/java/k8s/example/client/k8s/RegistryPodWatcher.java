@@ -61,8 +61,8 @@ public class RegistryPodWatcher extends Thread {
 						K8sApiCaller.updateRegistryStatus(pod, eventType);
 						
 					}
-					logger.info("[RegistryPodWatcher] Save latestHandledResourceVersion of RegistryPodWatcher [" + response.object.getMetadata().getName() + "]");
-					K8sApiCaller.updateLatestHandledResourceVersion(Constants.PLURAL_REGISTRY_POD, response.object.getMetadata().getResourceVersion());
+//					logger.info("[RegistryPodWatcher] Save latestHandledResourceVersion of RegistryPodWatcher [" + response.object.getMetadata().getName() + "]");
+//					K8sApiCaller.updateLatestHandledResourceVersion(Constants.PLURAL_REGISTRY_POD, response.object.getMetadata().getResourceVersion());
 				
 				} catch (ApiException e) {
 //					logger.info("ApiException: " + e.getMessage());

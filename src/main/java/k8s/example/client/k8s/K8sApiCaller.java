@@ -6916,9 +6916,7 @@ public class K8sApiCaller {
 			V1ConfigMap netPolConfig = api.readNamespacedConfigMap(Constants.DEFAULT_NETWORK_POLICY_CONFIG_MAP, Constants.TEMPLATE_NAMESPACE, null, null, null);
 			if (netPolConfig != null && netPolConfig.getData() != null && netPolConfig.getData().get(Constants.NETWORK_POLICY_YAML) != null) {
 				String netPolYamlString = netPolConfig.getData().get(Constants.NETWORK_POLICY_YAML);
-				logger.info("netPolYamlString : " + netPolYamlString );
 				JsonObject netPolJsonObject = Util.yamlStringToJsonObject (netPolYamlString);
-			    
 		        mapper.registerModule(new JodaModule());
 		        V1NetworkPolicy netPol = mapper.readValue((new Gson()).toJson(netPolJsonObject), new TypeReference<V1NetworkPolicy>() {
 				});
@@ -6931,7 +6929,7 @@ public class K8sApiCaller {
 				logger.info("default networkPolicy is not set yet" );
 			}
 		} catch (ApiException e) {
-			if (e.getResponseBody().contains("NotFound") || e.getResponseBody().contains("404")) {
+			if (e.getResponseBody().contains("Not Found") || e.getResponseBody().contains("404")) {
 				// Make ConfigMap default-networkpolicy-configmap in hypercloud4-system Namespace
 				V1ConfigMap configMap = new V1ConfigMap();
 				V1ObjectMeta metadata = new V1ObjectMeta();

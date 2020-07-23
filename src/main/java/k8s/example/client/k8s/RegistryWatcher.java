@@ -39,7 +39,7 @@ public class RegistryWatcher extends Thread {
 	
 	RegistryWatcher(ApiClient client, CustomObjectsApi api, String resourceVersion) throws Exception {
 		watchRegistry = Watch.createWatch(client,
-				api.listClusterCustomObjectCall("tmax.io", "v1", "registries", null, null, null, null, null, resourceVersion, null, Boolean.TRUE, null),
+				api.listClusterCustomObjectCall("tmax.io", "v1", "registries", null, null, null, null, null, null, null, Boolean.TRUE, null),
 				new TypeToken<Watch.Response<Object>>() {}.getType());
 
 		this.api = api;
@@ -263,8 +263,7 @@ public class RegistryWatcher extends Thread {
 						}
 						
 						//TODO
-						logger.info("[RegistryWatcher] Save latestHandledResourceVersion of RegistryWatcher [" + registry.getMetadata().getName() + "]");
-						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registry.getMetadata().getResourceVersion());
+//						logger.info("[RegistryWatcher] SsResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registry.getMetadata().getResourceVersion());
 						
 					} catch (ApiException e) {
 						logger.info("ApiException: " + e.getMessage());

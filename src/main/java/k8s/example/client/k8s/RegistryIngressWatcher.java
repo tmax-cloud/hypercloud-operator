@@ -60,8 +60,8 @@ public class RegistryIngressWatcher extends Thread {
 						K8sApiCaller.updateRegistryStatus(ingress, eventType);
 						
 					}
-					logger.info("[RegistryIngressWatcher] Save latestHandledResourceVersion of RegistryIngressWatcher [" + response.object.getMetadata().getName() + "]");
-					K8sApiCaller.updateLatestHandledResourceVersion(Constants.PLURAL_REGISTRY_INGRESS, response.object.getMetadata().getResourceVersion());
+//					logger.info("[RegistryIngressWatcher] Save latestHandledResourceVersion of RegistryIngressWatcher [" + response.object.getMetadata().getName() + "]");
+//					K8sApiCaller.updateLatestHandledResourceVersion(Constants.PLURAL_REGISTRY_INGRESS, response.object.getMetadata().getResourceVersion());
 				} catch (ApiException e) {
 //					logger.info("ApiException: " + e.getMessage());
 //					logger.info(e.getResponseBody());

@@ -45,8 +45,7 @@ public class NamespaceClaimController extends Thread {
 	StateCheckInfo sci = new StateCheckInfo();
 
 	NamespaceClaimController(ApiClient client, CustomObjectsApi api, long resourceVersion) throws Exception {
-		nscController = Watch.createWatch(client, api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, null, null, null, null, null, Long.toString( resourceVersion ), null, Boolean.TRUE, null),
-//		nscController = Watch.createWatch(client, api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, null, null, null, null, null, null, null, Boolean.TRUE, null),
+		nscController = Watch.createWatch(client, api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, null, null, null, null, null, null, null, Boolean.TRUE, null),
 				new TypeToken<Watch.Response<NamespaceClaim>>() {}.getType());
 		this.api = api;
 		this.client = client;
@@ -149,7 +148,7 @@ public class NamespaceClaimController extends Thread {
 										}
 										// Create Default NetWork Policy
 										logger.info(" Create Network Policy for new Nmaespace ["+ nsResult.getMetadata().getName() +" ] Starts");
-										K8sApiCaller.createDefaultNetPol(claim);
+//										K8sApiCaller.createDefaultNetPol(claim);
 										
 										replaceNscStatus( claimName, Constants.CLAIM_STATUS_SUCCESS, "namespace create success." );
 									} else if ( status.equals( Constants.CLAIM_STATUS_REJECT )) {
@@ -167,8 +166,8 @@ public class NamespaceClaimController extends Thread {
 							}
 						}	
 						
-						logger.info("[NamespaceClaim Controller] Save latestHandledResourceVersion of NamespaceClaim Controller [" + response.object.getMetadata().getName() + "]");
-						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, response.object.getMetadata().getResourceVersion());
+//						logger.info("[NamespaceClaim Controller] Save latestHandledResourceVersion of NamespaceClaim Controller [" + response.object.getMetadata().getName() + "]");
+//						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, response.object.getMetadata().getResourceVersion());
 						
 					} catch (Exception e) {
 						logger.info("Exception: " + e.getMessage());
@@ -240,7 +239,7 @@ public class NamespaceClaimController extends Thread {
 		rule.addVerbsItem("*");
 		rule.addResourceNamesItem(claimName);
 		clusterRole.addRulesItem(rule);
-		V1ClusterRole replaceResult = K8sApiCaller.replaceClusterRole( clusterRole );	
+//		V1ClusterRole replaceResult = K8sApiCaller.replaceClusterRole( clusterRole );	
 		logger.info("Add rules of NameSpace claim [ " + claimName + " ] to Trial Owner [ " + clusterRoleName + " ] Success");
 	}
 

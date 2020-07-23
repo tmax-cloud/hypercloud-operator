@@ -59,8 +59,8 @@ public class RegistryTlsSecretWatcher extends Thread {
 						K8sApiCaller.updateRegistryStatus(secret, eventType);
 						
 					}
-					logger.info("[RegistryTlsSecretWatcher] Save latestHandledResourceVersion of RegistryTlsSecretWatcher [" + response.object.getMetadata().getName() + "]");
-					K8sApiCaller.updateLatestHandledResourceVersion(Constants.PLURAL_REGISTRY_TLS, response.object.getMetadata().getResourceVersion());
+//					logger.info("[RegistryTlsSecretWatcher] Save latestHandledResourceVersion of RegistryTlsSecretWatcher [" + response.object.getMetadata().getName() + "]");
+//					K8sApiCaller.updateLatestHandledResourceVersion(Constants.PLURAL_REGISTRY_TLS, response.object.getMetadata().getResourceVersion());
 				} catch (ApiException e) {
 //					logger.info("ApiException: " + e.getMessage());
 //					logger.info(e.getResponseBody());
