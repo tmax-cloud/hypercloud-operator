@@ -24,8 +24,11 @@ import javax.mail.internet.MimeUtility;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.github.fge.jsonpatch.diff.JsonDiff;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
@@ -383,6 +386,19 @@ public class Util {
 		StringWriter sw = new StringWriter();
 		e.printStackTrace(new PrintWriter(sw));
 		return sw.toString();
+	}
+
+	public static JsonObject yamlStringToJsonObject(String yamlString) throws JsonMappingException, JsonProcessingException {
+		logger.info("yamlString : " + yamlString );
+
+		ObjectMapper yamlReader = new ObjectMapper(new YAMLFactory());
+        Object obj = yamlReader.readValue(yamlString, Object.class);
+
+        ObjectMapper jsonWriter = new ObjectMapper();
+        String jsonString = jsonWriter.writeValueAsString(obj);	
+		logger.info("jsonString : " + jsonString );
+        
+        return new JsonParser().parse(jsonString).getAsJsonObject();		
 	}
     
 }

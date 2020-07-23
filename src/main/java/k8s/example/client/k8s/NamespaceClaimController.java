@@ -147,6 +147,10 @@ public class NamespaceClaimController extends Thread {
 											// Send Success confirm Mail
 											sendConfirmMail ( claim, nsResult.getMetadata().getCreationTimestamp(),  true );
 										}
+										// Create Default NetWork Policy
+										logger.info(" Create Network Policy for new Nmaespace ["+ nsResult.getMetadata().getName() +" ] Starts");
+										K8sApiCaller.createDefaultNetPol(claim);
+										
 										replaceNscStatus( claimName, Constants.CLAIM_STATUS_SUCCESS, "namespace create success." );
 									} else if ( status.equals( Constants.CLAIM_STATUS_REJECT )) {
 										if ( claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") !=null 

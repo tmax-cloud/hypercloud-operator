@@ -32,14 +32,16 @@ import javax.net.ssl.SSLSocketFactory;
 
 import org.apache.commons.codec.binary.Base64;
 import org.joda.time.DateTime;
+import org.jose4j.json.internal.json_simple.JSONValue;
+import org.jose4j.json.internal.json_simple.parser.JSONParser;
+import org.jose4j.json.internal.json_simple.parser.ParseException;
 import org.json.simple.JSONObject;
-import org.json.simple.JSONValue;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 import org.slf4j.Logger;
+import org.yaml.snakeyaml.Yaml;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -48,6 +50,7 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.io.ByteStreams;
 import com.google.gson.Gson;
@@ -70,6 +73,7 @@ import io.kubernetes.client.openapi.apis.AuthorizationV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.apis.CustomObjectsApi;
 import io.kubernetes.client.openapi.apis.ExtensionsV1beta1Api;
+import io.kubernetes.client.openapi.apis.NetworkingV1Api;
 import io.kubernetes.client.openapi.apis.RbacAuthorizationV1Api;
 import io.kubernetes.client.openapi.auth.ApiKeyAuth;
 import io.kubernetes.client.openapi.models.ExtensionsV1beta1HTTPIngressPath;
@@ -100,6 +104,7 @@ import io.kubernetes.client.openapi.models.V1ListMeta;
 import io.kubernetes.client.openapi.models.V1LoadBalancerIngress;
 import io.kubernetes.client.openapi.models.V1Namespace;
 import io.kubernetes.client.openapi.models.V1NamespaceList;
+import io.kubernetes.client.openapi.models.V1NetworkPolicy;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
 import io.kubernetes.client.openapi.models.V1OwnerReference;
 import io.kubernetes.client.openapi.models.V1PersistentVolumeClaim;
@@ -197,6 +202,7 @@ public class K8sApiCaller {
 	private static AppsV1Api appApi;
 	private static RbacAuthorizationV1Api rbacApi;
 	private static AuthorizationV1Api authApi;
+	private static NetworkingV1Api netApi;
 	private static CustomObjectsApi customObjectApi;
 	private static CustomResourceApi templateApi;
 	private static ExtensionsV1beta1Api extentionApi;
@@ -222,6 +228,7 @@ public class K8sApiCaller {
 		customObjectApi = new CustomObjectsApi();
 		templateApi = new CustomResourceApi();
 		extentionApi = new ExtensionsV1beta1Api();
+		netApi = new NetworkingV1Api();
 	}
 
 	public static void startWatcher() throws Exception {
@@ -6810,7 +6817,7 @@ public class K8sApiCaller {
 			JsonObject respJson = (JsonObject) new JsonParser().parse((new Gson()).toJson(response));
 
 			mapper.registerModule(new JodaModule());
-			rbcCR = mapper.readValue((new Gson()).toJson(respJson), new TypeReference<NamespaceClaim>() {
+			rbcCR = mapper.readValue((new Gson()).toJson(respJson), new TypeReference<RoleBindingClaim>() {
 			});
 		} catch (ApiException e) {
 			logger.info("Response body: " + e.getResponseBody());
@@ -6901,6 +6908,57 @@ public class K8sApiCaller {
 		}
 		
 		
+	}
+
+	public static void createDefaultNetPol(NamespaceClaim claim) throws Exception {
+		// Get Default Network Policy Yaml
+		try {
+			V1ConfigMap netPolConfig = api.readNamespacedConfigMap(Constants.DEFAULT_NETWORK_POLICY_CONFIG_MAP, Constants.TEMPLATE_NAMESPACE, null, null, null);
+			if (netPolConfig != null && netPolConfig.getData() != null && netPolConfig.getData().get(Constants.NETWORK_POLICY_YAML) != null) {
+				String netPolYamlString = netPolConfig.getData().get(Constants.NETWORK_POLICY_YAML);
+				logger.info("netPolYamlString : " + netPolYamlString );
+				JsonObject netPolJsonObject = Util.yamlStringToJsonObject (netPolYamlString);
+			    
+		        mapper.registerModule(new JodaModule());
+		        V1NetworkPolicy netPol = mapper.readValue((new Gson()).toJson(netPolJsonObject), new TypeReference<V1NetworkPolicy>() {
+				});
+		        
+				logger.info("netPol : " + netPol );
+				
+				netPol.getMetadata().setNamespace(claim.getResourceName());
+				netApi.createNamespacedNetworkPolicy(claim.getResourceName(), netPol, null, null, null);						    
+			} else {
+				logger.info("default networkPolicy is not set yet" );
+			}
+		} catch (ApiException e) {
+			if (e.getResponseBody().contains("NotFound") || e.getResponseBody().contains("404")) {
+				// Make ConfigMap default-networkpolicy-configmap in hypercloud4-system Namespace
+				V1ConfigMap configMap = new V1ConfigMap();
+				V1ObjectMeta metadata = new V1ObjectMeta();
+				metadata.setName(Constants.DEFAULT_NETWORK_POLICY_CONFIG_MAP);
+				metadata.setNamespace(Constants.TEMPLATE_NAMESPACE);
+				configMap.setMetadata(metadata);
+				Map<String, String> data = new HashMap<>();
+				V1NetworkPolicy netPol = new V1NetworkPolicy();
+				data.put(Constants.NETWORK_POLICY_YAML, netPol.toString());
+				configMap.setData(data);
+				try {
+					api.createNamespacedConfigMap(Constants.TEMPLATE_NAMESPACE, configMap, null, null, null);
+				} catch (ApiException e1) {
+					logger.info(e1.getResponseBody());
+					e1.printStackTrace();
+					throw e1;
+				}
+			}
+			logger.info(e.getResponseBody());
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e ) {
+			logger.info(e.getStackTrace().toString());
+			e.printStackTrace();
+			throw e;
+		}
+
 	}
 
 

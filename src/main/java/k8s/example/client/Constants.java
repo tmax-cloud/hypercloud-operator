@@ -471,6 +471,7 @@ public class Constants {
 			"</footer>\r\n" + 
 			"</body>\r\n" + 
 			"</html>";
-	
+	public static final String DEFAULT_NETWORK_POLICY_CONFIG_MAP = "default-networkpolicy-configmap";
+	public static final String NETWORK_POLICY_YAML = "networkpolicies.yaml";
 	
 }
