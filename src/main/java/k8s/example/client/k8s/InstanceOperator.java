@@ -132,10 +132,30 @@ public class InstanceOperator extends Thread {
 		        			if ( instanceObj.get("metadata").get("ownerReferences") != null ) {
 		        				for(JsonNode owner : instanceObj.get("metadata").get("ownerReferences")) {
 		        					if (owner.get("kind") != null && owner.get("kind").asText().equals(Constants.SERVICE_INSTANCE_KIND)) {
-		        						templateNamespace = Constants.DEFAULT_NAMESPACE;
-		        						if ( System.getenv(Constants.SYSTEM_ENV_CATALOG_NAMESPACE) != null && !System.getenv(Constants.SYSTEM_ENV_CATALOG_NAMESPACE).isEmpty() ) {
-		        							templateNamespace = System.getenv(Constants.SYSTEM_ENV_CATALOG_NAMESPACE);
-		        						}
+										Object serviceInstance = null;
+										try {
+											serviceInstance = tpApi.getNamespacedCustomObject(
+												Constants.SERVICE_INSTANCE_API_GROUP,
+												Constants.SERVICE_INSTANCE_API_VERSION,
+												templateNamespace,
+												Constants.SERVICE_INSTANCE_PLURAL,
+												owner.get("name").asText());
+											JsonNode serviceInstanceObj = numberTypeConverter(objectToJsonNode(serviceInstance));
+											if(serviceInstanceObj.get("spec").get("clusterServiceClassName")!=null || serviceInstanceObj.get("spec").get("clusterServiceClassExternalName")!=null){
+												templateNamespace = Constants.DEFAULT_NAMESPACE;
+												if ( System.getenv(Constants.SYSTEM_ENV_CATALOG_NAMESPACE) != null && !System.getenv(Constants.SYSTEM_ENV_CATALOG_NAMESPACE).isEmpty() ) {
+													templateNamespace = System.getenv(Constants.SYSTEM_ENV_CATALOG_NAMESPACE);
+												}
+											}
+										} catch (ApiException e) {
+											logger.info("Response body: " + e.getResponseBody());
+											e.printStackTrace();
+											throw e;
+										} catch (Exception e) {
+											logger.info("Exception message: " + e.getMessage());
+											e.printStackTrace();
+											throw e;
+										}
 		        					}
 								}
 		        			}
