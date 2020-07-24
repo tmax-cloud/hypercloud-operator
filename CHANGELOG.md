@@ -1,6 +1,28 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.0.41 start -------------------->
+
+## HyperCloudServer_4.1.0.41 (Fri Jul 24 15:46:09 KST 2020)
+
+### Added
+
+### Changed
+  - [mod] 서비스인스턴스 생성시, cluster scope 검사 로직 수정 by jitae_yun
+  - [mod] json 기존 package로 변경 by jitae_yun
+  - [mod] resourceVersion 관리 안하는 것으로 재 변경 by taegeon_woo
+  - [mod] install yaml 수정 (변수 처리 및 파일 내용 분리) by sukhee_yun
+
+### Fixed
+  - [ims][230023] 서비스 바인딩 생성 실패 문제 by jitae_yun
+  - [ims][230111]  namespace claim 승인시 해당 namespace에 공통 network policy 생성 by taegeon_woo
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.0.41 end --------------------->
+
 <!-------------------- v4.1.0.40 start -------------------->
 
 ## HyperCloudServer_4.1.0.40 (Fri Jul 17 17:04:12 KST 2020)
