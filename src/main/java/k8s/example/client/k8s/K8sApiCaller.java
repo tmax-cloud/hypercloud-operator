@@ -32,10 +32,10 @@ import javax.net.ssl.SSLSocketFactory;
 
 import org.apache.commons.codec.binary.Base64;
 import org.joda.time.DateTime;
-import org.jose4j.json.internal.json_simple.JSONValue;
-import org.jose4j.json.internal.json_simple.parser.JSONParser;
-import org.jose4j.json.internal.json_simple.parser.ParseException;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.slf4j.Logger;
 import org.yaml.snakeyaml.Yaml;
 
