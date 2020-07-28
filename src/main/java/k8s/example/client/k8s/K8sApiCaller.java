@@ -32,10 +32,10 @@ import javax.net.ssl.SSLSocketFactory;
 
 import org.apache.commons.codec.binary.Base64;
 import org.joda.time.DateTime;
-import org.jose4j.json.internal.json_simple.JSONValue;
-import org.jose4j.json.internal.json_simple.parser.JSONParser;
-import org.jose4j.json.internal.json_simple.parser.ParseException;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.slf4j.Logger;
 
 import com.fasterxml.jackson.core.JsonFactory;
@@ -5323,7 +5323,7 @@ public class K8sApiCaller {
 				JSONObject metadataJson = (JSONObject) JSONValue.parse(objectJson.get("metadata").toString());
 
 				String name = metadataJson.get("name").toString();
-				String namespace = "default";
+				String namespace = inDO.getContext().getNamespace();
 				if (metadataJson.get("namespace") != null) {
 					namespace = metadataJson.get("namespace").toString();
 				}
