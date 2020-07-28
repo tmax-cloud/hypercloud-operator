@@ -424,64 +424,64 @@ public class K8sApiCaller {
 
 		
 		// Get latest handled resource version 
-		logger.info("Get latest handled resource version");
-		
-		long userLatestHandledResourceVersion = getLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_USER);
-		logger.info("Users Latest Handled resource version: " + userLatestHandledResourceVersion);
-		
-		long nscLatestHandledResourceVersion = getLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM);
-		logger.info("NamespaceClaims Latest Handled resource version: " + nscLatestHandledResourceVersion);
-		
-		long rqcLatestHandledResourceVersion = getLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_RESOURCEQUOTACLAIM);
-		logger.info("ResourceQuotaClaims Latest Handled resource version: " + rqcLatestHandledResourceVersion);
-		
-		long rbcLatestHandledResourceVersion = getLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_ROLEBINDINGCLAIM);
-		logger.info("RoleBindingClaims Latest Handled resource version: " + rbcLatestHandledResourceVersion);
-		
-		long cscLatestHandledResourceVersion = getLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_CATALOGSERVICECLAIM);
-		logger.info("CatalogServiceClaims Latest Handled resource version: " + cscLatestHandledResourceVersion);
-		
-		long registryLatestHandledResourceVersion = getLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_REGISTRY);
-		logger.info("registry Latest Handled resource version: " + registryLatestHandledResourceVersion);
-		
-		long registryReplicaSetLatestHandledResourceVersion = getLatestHandledResourceVersion(Constants.PLURAL_REGISTRY_REPLICASET);
-		logger.info("registryReplicaSet Latest Handled resource version: " + registryReplicaSetLatestHandledResourceVersion);	
-		
-		long registryPodLatestHandledResourceVersion = getLatestHandledResourceVersion(Constants.PLURAL_REGISTRY_POD);
-		logger.info("registryPod Latest Handled resource version: " + registryPodLatestHandledResourceVersion);
-		
-		long registryServiceLatestHandledResourceVersion = getLatestHandledResourceVersion(Constants.PLURAL_REGISTRY_SERVICE);
-		logger.info("registryService Latest Handled resource version: " + registryServiceLatestHandledResourceVersion);
-		
-		long registryCertLatestHandledResourceVersion = getLatestHandledResourceVersion(Constants.PLURAL_REGISTRY_CERT);
-		logger.info("registryCert Latest Handled resource version: " + registryCertLatestHandledResourceVersion);
-		
-		long registryDockerLatestHandledResourceVersion = getLatestHandledResourceVersion(Constants.PLURAL_REGISTRY_DOCKER);
-		logger.info("registryDocker Latest Handled resource version: " + registryDockerLatestHandledResourceVersion);
-		
-		long registryTlsLatestHandledResourceVersion = getLatestHandledResourceVersion(Constants.PLURAL_REGISTRY_TLS);
-		logger.info("registryTls Latest Handled resource version: " + registryTlsLatestHandledResourceVersion);
-		
-		long registryIngressLatestHandledResourceVersion = getLatestHandledResourceVersion(Constants.PLURAL_REGISTRY_INGRESS);
-		logger.info("registryIngress Latest Handled resource version: " + registryIngressLatestHandledResourceVersion);
-		
-		long registryPvcLatestHandledResourceVersion = getLatestHandledResourceVersion(Constants.PLURAL_REGISTRY_INGRESS);
-		logger.info("registryPvc Latest Handled resource version: " + registryPvcLatestHandledResourceVersion);
-		
-		long imageLatestHandledResourceVersion = getLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_IMAGE);
-		logger.info("image Latest Handled resource version: " + imageLatestHandledResourceVersion);
-		
-		long templateLatestHandledResourceVersion = getLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE);
-		logger.info("template Latest Handled resource version: " + templateLatestHandledResourceVersion);
-		
-		long instanceLatestHandledResourceVersion = getLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE);
-		logger.info("template instance Latest Handled resource version: " + instanceLatestHandledResourceVersion);
-		
-		long jfLatestHandledResourceVersion = getLatestHandledResourceVersion(Constants.PLURAL_JOIN_FED);
-		logger.info("join fed Latest Handled resource version: " + jfLatestHandledResourceVersion);
-		
-		long ccLatestHandledResourceVersion = getLatestHandledResourceVersion(Constants.CAPI_OBJECT_PLURAL_CAPICLUSTER);
-		logger.info("capi cluster Latest Handled resource version: " + ccLatestHandledResourceVersion);
+//		logger.info("Get latest handled resource version");
+//		
+//		long userLatestHandledResourceVersion = getLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_USER);
+//		logger.info("Users Latest Handled resource version: " + userLatestHandledResourceVersion);
+//		
+//		long nscLatestHandledResourceVersion = getLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM);
+//		logger.info("NamespaceClaims Latest Handled resource version: " + nscLatestHandledResourceVersion);
+//		
+//		long rqcLatestHandledResourceVersion = getLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_RESOURCEQUOTACLAIM);
+//		logger.info("ResourceQuotaClaims Latest Handled resource version: " + rqcLatestHandledResourceVersion);
+//		
+//		long rbcLatestHandledResourceVersion = getLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_ROLEBINDINGCLAIM);
+//		logger.info("RoleBindingClaims Latest Handled resource version: " + rbcLatestHandledResourceVersion);
+//		
+//		long cscLatestHandledResourceVersion = getLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_CATALOGSERVICECLAIM);
+//		logger.info("CatalogServiceClaims Latest Handled resource version: " + cscLatestHandledResourceVersion);
+//		
+//		long registryLatestHandledResourceVersion = getLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_REGISTRY);
+//		logger.info("registry Latest Handled resource version: " + registryLatestHandledResourceVersion);
+//		
+//		long registryReplicaSetLatestHandledResourceVersion = getLatestHandledResourceVersion(Constants.PLURAL_REGISTRY_REPLICASET);
+//		logger.info("registryReplicaSet Latest Handled resource version: " + registryReplicaSetLatestHandledResourceVersion);	
+//		
+//		long registryPodLatestHandledResourceVersion = getLatestHandledResourceVersion(Constants.PLURAL_REGISTRY_POD);
+//		logger.info("registryPod Latest Handled resource version: " + registryPodLatestHandledResourceVersion);
+//		
+//		long registryServiceLatestHandledResourceVersion = getLatestHandledResourceVersion(Constants.PLURAL_REGISTRY_SERVICE);
+//		logger.info("registryService Latest Handled resource version: " + registryServiceLatestHandledResourceVersion);
+//		
+//		long registryCertLatestHandledResourceVersion = getLatestHandledResourceVersion(Constants.PLURAL_REGISTRY_CERT);
+//		logger.info("registryCert Latest Handled resource version: " + registryCertLatestHandledResourceVersion);
+//		
+//		long registryDockerLatestHandledResourceVersion = getLatestHandledResourceVersion(Constants.PLURAL_REGISTRY_DOCKER);
+//		logger.info("registryDocker Latest Handled resource version: " + registryDockerLatestHandledResourceVersion);
+//		
+//		long registryTlsLatestHandledResourceVersion = getLatestHandledResourceVersion(Constants.PLURAL_REGISTRY_TLS);
+//		logger.info("registryTls Latest Handled resource version: " + registryTlsLatestHandledResourceVersion);
+//		
+//		long registryIngressLatestHandledResourceVersion = getLatestHandledResourceVersion(Constants.PLURAL_REGISTRY_INGRESS);
+//		logger.info("registryIngress Latest Handled resource version: " + registryIngressLatestHandledResourceVersion);
+//		
+//		long registryPvcLatestHandledResourceVersion = getLatestHandledResourceVersion(Constants.PLURAL_REGISTRY_INGRESS);
+//		logger.info("registryPvc Latest Handled resource version: " + registryPvcLatestHandledResourceVersion);
+//		
+//		long imageLatestHandledResourceVersion = getLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_IMAGE);
+//		logger.info("image Latest Handled resource version: " + imageLatestHandledResourceVersion);
+//		
+//		long templateLatestHandledResourceVersion = getLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE);
+//		logger.info("template Latest Handled resource version: " + templateLatestHandledResourceVersion);
+//		
+//		long instanceLatestHandledResourceVersion = getLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE);
+//		logger.info("template instance Latest Handled resource version: " + instanceLatestHandledResourceVersion);
+//		
+//		long jfLatestHandledResourceVersion = getLatestHandledResourceVersion(Constants.PLURAL_JOIN_FED);
+//		logger.info("join fed Latest Handled resource version: " + jfLatestHandledResourceVersion);
+//		
+//		long ccLatestHandledResourceVersion = getLatestHandledResourceVersion(Constants.CAPI_OBJECT_PLURAL_CAPICLUSTER);
+//		logger.info("capi cluster Latest Handled resource version: " + ccLatestHandledResourceVersion);
 		
 		try {
 			// Validate registry. if registry spec is not qualified, patch the registry spec.
@@ -499,119 +499,122 @@ public class K8sApiCaller {
 			
 		// Start user watch
 		logger.info("Start user watcher");
-		UserWatcher userWatcher = new UserWatcher(k8sClient, customObjectApi,
-				String.valueOf(userLatestHandledResourceVersion));
+//		UserWatcher userWatcher = new UserWatcher(k8sClient, customObjectApi, String.valueOf(userLatestHandledResourceVersion));
+		UserWatcher userWatcher = new UserWatcher(k8sClient, customObjectApi, null);
 		userWatcher.start();
 		
 		// Start userDelete watch
 		logger.info("Start userDelete watcher");
-		UserDeleteWatcher userDeleteWatcher = new UserDeleteWatcher(k8sClient, customObjectApi,
-				String.valueOf(userLatestHandledResourceVersion));
+//		UserDeleteWatcher userDeleteWatcher = new UserDeleteWatcher(k8sClient, customObjectApi, String.valueOf(userLatestHandledResourceVersion));
+		UserDeleteWatcher userDeleteWatcher = new UserDeleteWatcher(k8sClient, customObjectApi, null);
+
 		userDeleteWatcher.start();
 
 		// Start registry watch
 		logger.info("Start registry watcher");
-		RegistryWatcher registryWatcher = new RegistryWatcher(k8sClient, customObjectApi,
-				String.valueOf(registryLatestHandledResourceVersion));
+//		RegistryWatcher registryWatcher = new RegistryWatcher(k8sClient, customObjectApi, String.valueOf(registryLatestHandledResourceVersion));
+		RegistryWatcher registryWatcher = new RegistryWatcher(k8sClient, customObjectApi, null);
 		registryWatcher.start();
 
 		// Start registry replicaSet watch
 		logger.info("Start registry replica set watcher");
-		RegistryReplicaSetWatcher registryReplicaSetWatcher = new RegistryReplicaSetWatcher(k8sClient, appApi,
-				String.valueOf(registryReplicaSetLatestHandledResourceVersion));
+//		RegistryReplicaSetWatcher registryReplicaSetWatcher = new RegistryReplicaSetWatcher(k8sClient, appApi,String.valueOf(registryReplicaSetLatestHandledResourceVersion));
+		RegistryReplicaSetWatcher registryReplicaSetWatcher = new RegistryReplicaSetWatcher(k8sClient, appApi, null);
 		registryReplicaSetWatcher.start();
 
 		// Start registry pod watch
 		logger.info("Start registry pod watcher");
-		RegistryPodWatcher registryPodWatcher = new RegistryPodWatcher(k8sClient, api,
-				String.valueOf(registryPodLatestHandledResourceVersion));
+//		RegistryPodWatcher registryPodWatcher = new RegistryPodWatcher(k8sClient, api, String.valueOf(registryPodLatestHandledResourceVersion));
+		RegistryPodWatcher registryPodWatcher = new RegistryPodWatcher(k8sClient, api, null);
 		registryPodWatcher.start();
 
 		// Start registry service watch
 		logger.info("Start registry service watcher");
-		RegistryServiceWatcher registryServiceWatcher = new RegistryServiceWatcher(k8sClient, api,
-				String.valueOf(registryServiceLatestHandledResourceVersion));
+//		RegistryServiceWatcher registryServiceWatcher = new RegistryServiceWatcher(k8sClient, api, String.valueOf(registryServiceLatestHandledResourceVersion));
+		RegistryServiceWatcher registryServiceWatcher = new RegistryServiceWatcher(k8sClient, api, null);
 		registryServiceWatcher.start();
 
 		// Start registry cert secret watch
 		logger.info("Start registry cert secret watcher");
-		RegistryCertSecretWatcher registryCertSecretWatcher = new RegistryCertSecretWatcher(k8sClient, api,
-				String.valueOf(registryCertLatestHandledResourceVersion));
+//		RegistryCertSecretWatcher registryCertSecretWatcher = new RegistryCertSecretWatcher(k8sClient, api, String.valueOf(registryCertLatestHandledResourceVersion));
+		RegistryCertSecretWatcher registryCertSecretWatcher = new RegistryCertSecretWatcher(k8sClient, api, null);
 		registryCertSecretWatcher.start();
 
 		// Start registry docker secret watch
 		logger.info("Start registry docker secret watcher");
-		RegistryDockerSecretWatcher registryDockerSecretWatcher = new RegistryDockerSecretWatcher(k8sClient, api,
-				String.valueOf(registryDockerLatestHandledResourceVersion));
+//		RegistryDockerSecretWatcher registryDockerSecretWatcher = new RegistryDockerSecretWatcher(k8sClient, api, String.valueOf(registryDockerLatestHandledResourceVersion));
+		RegistryDockerSecretWatcher registryDockerSecretWatcher = new RegistryDockerSecretWatcher(k8sClient, api, null);
 		registryDockerSecretWatcher.start();
 
 		// Start registry tls secret watch
 		logger.info("Start registry tls secret watcher");
-		RegistryTlsSecretWatcher registryTlsSecretWatcher = new RegistryTlsSecretWatcher(k8sClient, api,
-				String.valueOf(registryTlsLatestHandledResourceVersion));
+//		RegistryTlsSecretWatcher registryTlsSecretWatcher = new RegistryTlsSecretWatcher(k8sClient, api, String.valueOf(registryTlsLatestHandledResourceVersion));
+		RegistryTlsSecretWatcher registryTlsSecretWatcher = new RegistryTlsSecretWatcher(k8sClient, api, null);
 		registryTlsSecretWatcher.start();
 
 		// Start registry ingress watch
 		logger.info("Start registry ingress watcher");
-		RegistryIngressWatcher registryIngressWatcher = new RegistryIngressWatcher(k8sClient, extentionApi,
-				String.valueOf(registryIngressLatestHandledResourceVersion));
+//		RegistryIngressWatcher registryIngressWatcher = new RegistryIngressWatcher(k8sClient, extentionApi, String.valueOf(registryIngressLatestHandledResourceVersion));
+		RegistryIngressWatcher registryIngressWatcher = new RegistryIngressWatcher(k8sClient, extentionApi, null);
 		registryIngressWatcher.start();
 		
 		// Start registry pvc watch
 		logger.info("Start registry pvc watcher");
-		RegistryPvcWatcher registryPvcWatcher = new RegistryPvcWatcher(k8sClient, api,
-				String.valueOf(registryPvcLatestHandledResourceVersion));
+//		RegistryPvcWatcher registryPvcWatcher = new RegistryPvcWatcher(k8sClient, api, String.valueOf(registryPvcLatestHandledResourceVersion));
+		RegistryPvcWatcher registryPvcWatcher = new RegistryPvcWatcher(k8sClient, api, null);
 		registryPvcWatcher.start();
 
 		// Start image watch
 		logger.info("Start image watcher");
-		ImageWatcher imageWatcher = new ImageWatcher(k8sClient, customObjectApi,
-				String.valueOf(imageLatestHandledResourceVersion));
+//		ImageWatcher imageWatcher = new ImageWatcher(k8sClient, customObjectApi, String.valueOf(imageLatestHandledResourceVersion));
+		ImageWatcher imageWatcher = new ImageWatcher(k8sClient, customObjectApi, null);
 		imageWatcher.start();
 
 		// Start Operator
 		logger.info("Start Template Operator");
-		TemplateOperator templateOperator = new TemplateOperator(k8sClient, templateApi, templateLatestHandledResourceVersion);
+//		TemplateOperator templateOperator = new TemplateOperator(k8sClient, templateApi, templateLatestHandledResourceVersion);
+		TemplateOperator templateOperator = new TemplateOperator(k8sClient, templateApi, 0);
 		templateOperator.start();
 
 		logger.info("Start Instance Operator");
-		InstanceOperator instanceOperator = new InstanceOperator(k8sClient, templateApi, instanceLatestHandledResourceVersion);
+//		InstanceOperator instanceOperator = new InstanceOperator(k8sClient, templateApi, instanceLatestHandledResourceVersion);
+		InstanceOperator instanceOperator = new InstanceOperator(k8sClient, templateApi, 0);
 		instanceOperator.start();
 
 		// Start NamespaceClaim Controller
 		logger.info("Start NamespaceClaim Controller");
-		NamespaceClaimController nscOperator = new NamespaceClaimController(k8sClient, customObjectApi,
-				nscLatestHandledResourceVersion);
+//		NamespaceClaimController nscOperator = new NamespaceClaimController(k8sClient, customObjectApi, nscLatestHandledResourceVersion);
+		NamespaceClaimController nscOperator = new NamespaceClaimController(k8sClient, customObjectApi, 0);
 		nscOperator.start();
 
 		// Start ResourceQuotaClaim Controller
 		logger.info("Start ResourceQuotaClaim Controller");
-		ResourceQuotaClaimController rqcOperator = new ResourceQuotaClaimController(k8sClient, customObjectApi,
-				rqcLatestHandledResourceVersion);
+//		ResourceQuotaClaimController rqcOperator = new ResourceQuotaClaimController(k8sClient, customObjectApi, rqcLatestHandledResourceVersion);
+		ResourceQuotaClaimController rqcOperator = new ResourceQuotaClaimController(k8sClient, customObjectApi, 0);
 		rqcOperator.start();
 
 		// Start RoleBindingClaim Controller
 		logger.info("Start RoleBindingClaim Controller");
-		RoleBindingClaimController rbcOperator = new RoleBindingClaimController(k8sClient, customObjectApi,
-				rbcLatestHandledResourceVersion);
+//		RoleBindingClaimController rbcOperator = new RoleBindingClaimController(k8sClient, customObjectApi, rbcLatestHandledResourceVersion);
+		RoleBindingClaimController rbcOperator = new RoleBindingClaimController(k8sClient, customObjectApi, 0);
 		rbcOperator.start();
 		
 		// Start CatalogServiceClaim Controller
 		logger.info("Start CatalogServiceClaim Controller");
-		CatalogServiceClaimController cscOperator = new CatalogServiceClaimController(k8sClient, customObjectApi,
-				cscLatestHandledResourceVersion);
+//		CatalogServiceClaimController cscOperator = new CatalogServiceClaimController(k8sClient, customObjectApi, cscLatestHandledResourceVersion);
+		CatalogServiceClaimController cscOperator = new CatalogServiceClaimController(k8sClient, customObjectApi, 0);
 		cscOperator.start();
 
 		// start JoinFed Controller
 		logger.info("Start JoinFed Controller");
-		JoinFedController jfOperator = new JoinFedController(k8sClient, customObjectApi, api,
-				jfLatestHandledResourceVersion);
+//		JoinFedController jfOperator = new JoinFedController(k8sClient, customObjectApi, api, jfLatestHandledResourceVersion);
+		JoinFedController jfOperator = new JoinFedController(k8sClient, customObjectApi, api, 0);
 		jfOperator.start();
 
 		// start CapiCluster Controller
 		logger.info("Start CapiCluster Controller");
-		CapiClusterController ccOperator = new CapiClusterController(k8sClient, customObjectApi, api,
-				ccLatestHandledResourceVersion);
+//		CapiClusterController ccOperator = new CapiClusterController(k8sClient, customObjectApi, api, ccLatestHandledResourceVersion);
+		CapiClusterController ccOperator = new CapiClusterController(k8sClient, customObjectApi, api, 0);
 		ccOperator.start();
 
 		while (true) {
@@ -835,34 +838,34 @@ public class K8sApiCaller {
 
 	}
 	
-	public static String getCustomResourceVersion(String customObjectName, String customObjectGroup, String customObjectVersion, String resourceName, String namespace, boolean isNamespaced) throws Exception {
-		Object result = new JsonObject();
-		String resourceVersion = null;
-		Object response = null;
-		JsonObject resultJson = null;
-		
-		try {
-			if (!isNamespaced) {
-				response = customObjectApi.getClusterCustomObject( customObjectGroup, customObjectVersion, customObjectName, resourceName);
-			} else {
-				response = customObjectApi.getNamespacedCustomObject(customObjectGroup, customObjectVersion, namespace , customObjectName, resourceName);
-			}
-			JsonObject respJson = (JsonObject) new JsonParser().parse((new Gson()).toJson(response));
-			logger.info("respJson: " + respJson);
-
-			resourceVersion = respJson.get("metadata").getAsJsonObject().get("resourceVersion").getAsString();		
-			
-		} catch (ApiException e) {
-			logger.info("Response body: " + e.getResponseBody());
-			e.printStackTrace();
-			throw e;
-		} catch (Exception e) {
-			logger.info("Exception message: " + e.getMessage());
-			e.printStackTrace();
-			throw e;
-		}
-		return resourceVersion;
-	}
+//	public static String getCustomResourceVersion(String customObjectName, String customObjectGroup, String customObjectVersion, String resourceName, String namespace, boolean isNamespaced) throws Exception {
+//		Object result = new JsonObject();
+//		String resourceVersion = null;
+//		Object response = null;
+//		JsonObject resultJson = null;
+//		
+//		try {
+//			if (!isNamespaced) {
+//				response = customObjectApi.getClusterCustomObject( customObjectGroup, customObjectVersion, customObjectName, resourceName);
+//			} else {
+//				response = customObjectApi.getNamespacedCustomObject(customObjectGroup, customObjectVersion, namespace , customObjectName, resourceName);
+//			}
+//			JsonObject respJson = (JsonObject) new JsonParser().parse((new Gson()).toJson(response));
+//			logger.info("respJson: " + respJson);
+//
+//			resourceVersion = respJson.get("metadata").getAsJsonObject().get("resourceVersion").getAsString();		
+//			
+//		} catch (ApiException e) {
+//			logger.info("Response body: " + e.getResponseBody());
+//			e.printStackTrace();
+//			throw e;
+//		} catch (Exception e) {
+//			logger.info("Exception message: " + e.getMessage());
+//			e.printStackTrace();
+//			throw e;
+//		}
+//		return resourceVersion;
+//	}
 	
 
 	public static UserCR getUser(String userName) throws Exception {
