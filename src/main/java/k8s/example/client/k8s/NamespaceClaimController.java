@@ -143,8 +143,15 @@ public class NamespaceClaimController extends Thread {
 											} else {
 												logger.info(" Timer for Trial NameSpace [ " + nsResult.getMetadata().getName() + " ] Already Exists ");
 											}
-											// Send Success confirm Mail
-											sendConfirmMail ( claim, nsResult.getMetadata().getCreationTimestamp(),  true );
+											
+											if (claim.getMetadata().getLabels().get("successMailSend") == null) {
+												// Send Success confirm Mail
+												sendConfirmMail ( claim, nsResult.getMetadata().getCreationTimestamp(),  true );
+												// Update with successMailSend Label to "t"
+												logger.info(" Update with successMailSend Label to 't' for  Nmaespace ["+ claim.getMetadata().getName() +" ] Starts");
+												claim.getMetadata().getLabels().put("successMailSend", "t");
+												K8sApiCaller.replaceNamespaceClaim(claim);
+											}
 										}
 										// Create Default NetWork Policy
 										logger.info(" Create Network Policy for new Nmaespace ["+ nsResult.getMetadata().getName() +" ] Starts");
@@ -153,9 +160,15 @@ public class NamespaceClaimController extends Thread {
 										replaceNscStatus( claimName, Constants.CLAIM_STATUS_SUCCESS, "namespace create success." );
 									} else if ( status.equals( Constants.CLAIM_STATUS_REJECT )) {
 										if ( claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") !=null 
-												&& claim.getMetadata().getLabels().get("owner") !=null ) {
-											// Send Fail confirm Mail
-											sendConfirmMail ( claim, null, false );
+												&& claim.getMetadata().getLabels().get("owner") !=null  ) {
+											if (claim.getMetadata().getLabels().get("rejectMailSend") == null) {
+												// Send Fail confirm Mail
+												sendConfirmMail ( claim, null, false );
+												// Update with rejectMailSend Label to "t"
+												logger.info(" Update with rejectMailSend Label to 't' for  Nmaespace ["+ claim.getMetadata().getName() +" ] Starts");
+												claim.getMetadata().getLabels().put("rejectMailSend", "t");
+												K8sApiCaller.replaceNamespaceClaim(claim);
+											}
 										}
 									}				
 									break;
