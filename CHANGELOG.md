@@ -1,6 +1,24 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.0.42 start -------------------->
+
+## HyperCloudServer_4.1.0.42 (Tue Jul 28 16:45:22 KST 2020)
+
+### Added
+
+### Changed
+  - [mod] 기동 로직 정리 by taegeon_woo
+  - [mod] trial namespace 메일 중복 발송 현상 방어로직 추가 by taegeon_woo
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.0.42 end --------------------->
+
 <!-------------------- v4.1.0.41 start -------------------->
 
 ## HyperCloudServer_4.1.0.41 (Fri Jul 24 15:46:09 KST 2020)
