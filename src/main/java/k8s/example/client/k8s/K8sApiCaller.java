@@ -1328,6 +1328,7 @@ public class K8sApiCaller {
 		status.addProperty("message", message);
 		status.addProperty("reason", reason);
 		status.addProperty("phaseChangedAt", curTime.toString());
+		status.addProperty("capacity", "0");
 
 		patchStatusArray.add( Util.makePatchJsonObject("add", "/status", status) );
 
@@ -2178,46 +2179,17 @@ public class K8sApiCaller {
 					throw e;
 				}
 				
-				JsonArray jArrayPatchCm = new JsonArray();
-				Map<String, String> labelsMap = null;
-
-				// labels field is not exist
-				if( (labelsMap = existCm.getMetadata().getLabels()) == null ) {
-					JsonArray labels = new JsonArray();
-					JsonObject label1 = new JsonObject();
-					JsonObject label2 = new JsonObject();
-					JsonObject label3 = new JsonObject();
-
-					label1.addProperty("registryUid", registry.getMetadata().getUid());
-					labels.add(label1);
-
-					label2.addProperty("app", "registry");
-					labels.add(label2);
-
-					label3.addProperty("apps", registry.getMetadata().getName());
-					labels.add(label3);
-
-					jArrayPatchCm.add(Util.makePatchJsonObject("add", "/metadata", labels));
-				} else {	// labels field is exist
-					JsonObject label = new JsonObject();
-
-					labelsMap.remove("registryUid");
-					labelsMap.remove("app");
-					labelsMap.remove("apps");
-
-					for(String key : labelsMap.keySet()) {
-						label.addProperty(key, labelsMap.get(key));
-					}
-
-					label.addProperty("registryUid", registry.getMetadata().getUid());
-					label.addProperty("app", "registry");
-					label.addProperty("apps", registry.getMetadata().getName());
-
-					jArrayPatchCm.add(Util.makePatchJsonObject("add", "/metadata/labels", label));
-				}
-
+				V1ObjectMeta metadata = existCm.getMetadata();
+				Map<String,String> labels = new HashMap<>();
+				labels.put("registryUid", registry.getMetadata().getUid());
+				labels.put("app", "registry");
+				labels.put("apps", registry.getMetadata().getName());
+				metadata.setLabels(labels);
+				existCm.setMetadata(metadata);
+				
 				try {
-					V1PersistentVolumeClaim  result = api.patchNamespacedPersistentVolumeClaim(existCm.getMetadata().getName(), namespace, new V1Patch(jArrayPatchCm.toString()), null, null, null, null);
+					// patch로 하면 data 내용 때문에 에러발생함
+					V1ConfigMap  result = api.replaceNamespacedConfigMap(existCm.getMetadata().getName(), namespace, existCm, null, null, null);
 					logger.info("ConfigMap is patched: " + existCm.getMetadata().getName() + "/" + namespace);
 					logger.info("\tmetadata:" + result.getMetadata().toString());
 				} catch (ApiException e) {
@@ -2751,6 +2723,10 @@ public class K8sApiCaller {
 			if (path.startsWith("/spec/replicaSet")) {
 				recreateSubresources.add(RegistryCondition.Condition.REPLICA_SET);
 			}
+			if (path.equals("/spec/customConfigYml")) {
+				recreateSubresources.add(RegistryCondition.Condition.CONFIG_MAP);
+				recreateSubresources.add(RegistryCondition.Condition.REPLICA_SET);
+			}
 			if (path.startsWith("/spec/service")) {
 				recreateSubresources.add(RegistryCondition.Condition.SERVICE);
 				recreateSubresources.add(RegistryCondition.Condition.REPLICA_SET);
@@ -2876,7 +2852,15 @@ public class K8sApiCaller {
 		}
 		
 		// delete subresource
-		// required delete order: Service >  Secret, Ingress > Replicaset(Pod)
+		// required delete order: ConfigMap, Service >  Secret, Ingress > Replicaset(Pod)
+		if(recreateSubresources.contains(RegistryCondition.Condition.CONFIG_MAP)) {
+			deleteRegistrySubresource(registry, RegistryCondition.Condition.CONFIG_MAP);
+			try {
+				createRegistryConfigMap(registry);
+			} catch (Exception e) {
+				logger.info(e.getMessage());
+			}
+		}
 		if(recreateSubresources.contains(RegistryCondition.Condition.SERVICE)) {
 			deleteRegistrySubresource(registry, RegistryCondition.Condition.SERVICE);
 		}
@@ -3926,13 +3910,13 @@ public class K8sApiCaller {
 		}
 
 		try {
-			if (!isCurrentRegistry(registryUid, registryName, namespace, "RegistryPvc")) {
+			if (!isCurrentRegistry(registryUid, registryName, namespace, "RegistryCm")) {
 				logger.info("This registry's event is not for current registry. So do not update registry status");
 				return;
 			}
 		} catch(ApiException e) {
 			if(e.getCode() == 404) {
-				logger.info(cm.getMetadata().getName() + "/" + namespace + " pvc is deleted");
+				logger.info(cm.getMetadata().getName() + "/" + namespace + " cm is deleted");
 			}
 			throw e;
 		}
@@ -3948,7 +3932,6 @@ public class K8sApiCaller {
 			condition.addProperty("status", RegistryStatus.Status.TRUE.getStatus());
 			condition.addProperty("lastTransitionTime", curTime.toString());
 			
-			
 			break;
 		case Constants.EVENT_TYPE_DELETED:
 			condition.addProperty("type", RegistryCondition.Condition.CONFIG_MAP.getType());
@@ -3959,6 +3942,9 @@ public class K8sApiCaller {
 			
 			break;
 		}
+		
+		patchStatusArray.add(Util.makePatchJsonObject("replace", 
+				RegistryCondition.Condition.CONFIG_MAP.getPath(), condition));
 
 		try {
 			customObjectApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP,
@@ -3967,10 +3953,10 @@ public class K8sApiCaller {
 			logger.info("patchNamespacedCustomObjectStatus result: " + condition.get("type").getAsString() + "(" + condition.get("status").getAsString() + ")\n");
 		} catch (ApiException e) {
 			if(e.getCode() == 404) {
-				logger.info("[RegistryService]" + registryName + "/" + namespace + " registry was deleted!!");
+				logger.info("[RegistryConfigMap]" + registryName + "/" + namespace + " registry was deleted!!");
 			}
 			else {
-				logger.info("[RegistryService]" + e.getResponseBody());
+				logger.info("[RegistryConfigMap]" + e.getResponseBody());
 			}
 		}
 		
@@ -4064,6 +4050,13 @@ public class K8sApiCaller {
 //			}catch(ApiException e) {
 //				logger.info(e.getResponseBody());
 //			}
+			break;
+		case CONFIG_MAP:
+			try {
+				api.deleteNamespacedConfigMap(Constants.K8S_PREFIX + registryId, namespace, null, null, null, null, null, new V1DeleteOptions());
+			}catch(ApiException e) {
+				logger.info(e.getResponseBody());
+			}
 			break;
 		default:
 			logger.info("Unknown RegistryCondition");
