@@ -135,7 +135,8 @@ public class RegistryWatcher extends Thread {
 												&& !statusMap.get(RegistryCondition.Condition.SECRET_DOCKER_CONFIG_JSON)
 												&& !statusMap.get(RegistryCondition.Condition.SECRET_TLS)
 												&& !statusMap.get(RegistryCondition.Condition.INGRESS)
-												&& !statusMap.get(RegistryCondition.Condition.PVC)) {
+												&& !statusMap.get(RegistryCondition.Condition.PVC) 
+												&& !statusMap.get(RegistryCondition.Condition.CONFIG_MAP)) {
 
 											K8sApiCaller.createRegistry(registry);
 										} 
@@ -324,6 +325,7 @@ public class RegistryWatcher extends Thread {
 				&& statusMap.get(RegistryCondition.Condition.SECRET_OPAQUE)
 				&& statusMap.get(RegistryCondition.Condition.SECRET_DOCKER_CONFIG_JSON)
 				&& statusMap.get(RegistryCondition.Condition.PVC)
+				&& statusMap.get(RegistryCondition.Condition.CONFIG_MAP)
 				&& (
 						(
 							serviceType.equals(RegistryService.SVC_TYPE_INGRESS) 
@@ -346,6 +348,7 @@ public class RegistryWatcher extends Thread {
 				|| !statusMap.get(RegistryCondition.Condition.SECRET_OPAQUE)
 				|| !statusMap.get(RegistryCondition.Condition.SECRET_DOCKER_CONFIG_JSON)
 				|| !statusMap.get(RegistryCondition.Condition.PVC)
+				|| !statusMap.get(RegistryCondition.Condition.CONFIG_MAP)
 				|| (
 						serviceType.equals(RegistryService.SVC_TYPE_INGRESS) 
 						&& (!statusMap.get(RegistryCondition.Condition.SECRET_TLS)
@@ -366,6 +369,7 @@ public class RegistryWatcher extends Thread {
 				&& statusMap.get(RegistryCondition.Condition.SECRET_OPAQUE)
 				&& statusMap.get(RegistryCondition.Condition.SECRET_DOCKER_CONFIG_JSON)
 				&& statusMap.get(RegistryCondition.Condition.PVC)
+				&& statusMap.get(RegistryCondition.Condition.CONFIG_MAP)
 				&& (
 						(
 							serviceType.equals(RegistryService.SVC_TYPE_INGRESS) 

@@ -49,14 +49,16 @@ public class RegistryCondition {
 
 	/* 
 	 * condition types
-	 * 0: Phase
-	 * 1: ReplicaSet
-	 * 2: Pod
+	 * 0: Replica Set
+	 * 1: Pod
+	 * 2: Container
 	 * 3: Service
 	 * 4: Secret Opaque
 	 * 5: Secret kubernetes.io/dockerconfigjson
 	 * 6: Secret kubernetes.io/tls
 	 * 7: Ingress
+	 * 8: PVC
+	 * 9: Config Map
 	 */
 	public static enum Condition {
 		REPLICA_SET("ReplicaSetExist", "/status/conditions/" + Condition.INDEX_REPLICA_SET),
@@ -68,6 +70,7 @@ public class RegistryCondition {
 		SECRET_TLS("SecretTlsExist", "/status/conditions/" + Condition.INDEX_SECRET_TLS),
 		INGRESS("IngressExist", "/status/conditions/" + Condition.INDEX_INGRESS),
 		PVC("PvcExist", "/status/conditions/" + Condition.INDEX_PVC),
+		CONFIG_MAP("ConfigMapExist", "/status/conditions/" + Condition.INDEX_CONFIG_MAP),
 		;
 
 		public static final int INDEX_REPLICA_SET = 0;
@@ -79,6 +82,7 @@ public class RegistryCondition {
 		public static final int INDEX_SECRET_TLS = 6;
 		public static final int INDEX_INGRESS = 7;
 		public static final int INDEX_PVC = 8;
+		public static final int INDEX_CONFIG_MAP = 9;
 		private String type;
 		private String path;
 

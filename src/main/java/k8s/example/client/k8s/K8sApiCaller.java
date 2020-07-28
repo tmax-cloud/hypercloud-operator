@@ -1246,6 +1246,7 @@ public class K8sApiCaller {
 		JsonObject condition7 = new JsonObject();
 		JsonObject condition8 = new JsonObject();
 		JsonObject condition9 = new JsonObject();
+		JsonObject condition10 = new JsonObject();
 		JsonArray patchStatusArray = new JsonArray();
 		DateTime curTime = new DateTime();
 		
@@ -1292,6 +1293,10 @@ public class K8sApiCaller {
 		condition9.addProperty("type", RegistryCondition.Condition.PVC.getType());
 		condition9.addProperty("status", RegistryStatus.Status.FALSE.getStatus());
 		conditions.add(condition9);
+		
+		condition10.addProperty("type", RegistryCondition.Condition.CONFIG_MAP.getType());
+		condition10.addProperty("status", RegistryStatus.Status.FALSE.getStatus());
+		conditions.add(condition10);
 
 		String phase = RegistryStatus.StatusPhase.CREATING.getStatus();
 		String message = "Registry is creating. All resources in registry has not yet been created.";
@@ -2131,25 +2136,73 @@ public class K8sApiCaller {
 	public static void createRegistryConfigMap(Registry registry) throws Exception {
 		logger.info("[K8S ApiCaller] createRegistryConfigMap(Registry) Start");
 		try {
-			boolean regConfigExist = true;
 			String configMapName = registry.getSpec().getCustomConfigYml();
 			String namespace = registry.getMetadata().getNamespace();
 
 			if (StringUtil.isNotEmpty(configMapName)) {
+				V1ConfigMap existCm = null;
 				try {
-					V1ConfigMap regConfig = api.readNamespacedConfigMap(configMapName, namespace, null, null, null);
+					existCm = api.readNamespacedConfigMap(configMapName, namespace, null, null, null);
 
-					logger.info("== customConfigYaml ==\n" + regConfig.toString());
-					regConfigExist = true;
+					logger.info("== customConfigYaml ==\n" + existCm.toString());
 				} catch (ApiException e) {
 					logger.info(e.getResponseBody());
-					regConfigExist = false;
+					try {
+						patchRegistryStatus(registry, RegistryCondition.Condition.CONFIG_MAP, 
+								RegistryStatus.Status.FALSE.getStatus(), e.getResponseBody(), "ConfigMapNotExist");
+					} catch (ApiException e2) {
+						logger.info(e2.getResponseBody());
+						throw e2;
+					}
+					throw e;
 				}
-			}
+				
+				JsonArray jArrayPatchCm = new JsonArray();
+				Map<String, String> labelsMap = null;
 
-			logger.info("regConfigExist: " + regConfigExist);
+				// labels field is not exist
+				if( (labelsMap = existCm.getMetadata().getLabels()) == null ) {
+					JsonArray labels = new JsonArray();
+					JsonObject label1 = new JsonObject();
+					JsonObject label2 = new JsonObject();
+					JsonObject label3 = new JsonObject();
 
-			if (StringUtil.isEmpty(configMapName) || !regConfigExist) {
+					label1.addProperty("registryUid", registry.getMetadata().getUid());
+					labels.add(label1);
+
+					label2.addProperty("app", "registry");
+					labels.add(label2);
+
+					label3.addProperty("apps", registry.getMetadata().getName());
+					labels.add(label3);
+
+					jArrayPatchCm.add(Util.makePatchJsonObject("add", "/metadata", labels));
+				} else {	// labels field is exist
+					JsonObject label = new JsonObject();
+
+					labelsMap.remove("registryUid");
+					labelsMap.remove("app");
+					labelsMap.remove("apps");
+
+					for(String key : labelsMap.keySet()) {
+						label.addProperty(key, labelsMap.get(key));
+					}
+
+					label.addProperty("registryUid", registry.getMetadata().getUid());
+					label.addProperty("app", "registry");
+					label.addProperty("apps", registry.getMetadata().getName());
+
+					jArrayPatchCm.add(Util.makePatchJsonObject("add", "/metadata/labels", label));
+				}
+
+				try {
+					V1PersistentVolumeClaim  result = api.patchNamespacedPersistentVolumeClaim(existCm.getMetadata().getName(), namespace, new V1Patch(jArrayPatchCm.toString()), null, null, null, null);
+					logger.info("ConfigMap is patched: " + existCm.getMetadata().getName() + "/" + namespace);
+					logger.info("\tmetadata:" + result.getMetadata().toString());
+				} catch (ApiException e) {
+					logger.info(e.getResponseBody());
+				}
+			} else { // Create New ConfigMap
 				configMapName = Constants.K8S_PREFIX + registry.getMetadata().getName();
 				try {
 					V1ConfigMap regConfig = api.readNamespacedConfigMap(Constants.REGISTRY_CONFIG_MAP_NAME,
@@ -2160,6 +2213,16 @@ public class K8sApiCaller {
 
 					metadata.setName(configMapName);
 					metadata.setNamespace(namespace);
+					
+					logger.info("<ConfigMap Label List>");
+					Map<String, String> cmLabels = new HashMap<String, String>();
+					cmLabels.put("app", "registry");
+					cmLabels.put("apps", registry.getMetadata().getName());
+					cmLabels.put("registryUid", registry.getMetadata().getUid());
+					logger.info("app: registry");
+					logger.info("apps: " + registry.getMetadata().getName());
+					logger.info("registryUid: " + registry.getMetadata().getUid());
+					metadata.setLabels(cmLabels);
 					
 					List<V1OwnerReference> ownerRefs = new ArrayList<>();
 					V1OwnerReference ownerRef = new V1OwnerReference();
@@ -2180,10 +2243,16 @@ public class K8sApiCaller {
 					logger.info("\tKey:" + result.getData().keySet() + "\n");
 					logger.info("\tOwnerReferences:" + result.getMetadata().getOwnerReferences());
 					logger.info("\tLabels:" + result.getMetadata().getLabels());
-					regConfigExist = true;
 				} catch (ApiException e) {
 					logger.info(e.getResponseBody());
-					regConfigExist = false;
+					try {
+						patchRegistryStatus(registry, RegistryCondition.Condition.CONFIG_MAP, 
+								RegistryStatus.Status.FALSE.getStatus(), e.getResponseBody(), "CreateConfigMapFailed");
+					} catch (ApiException e2) {
+						logger.info(e2.getResponseBody());
+						throw e2;
+					}
+					throw e;
 				}
 			}
 		}catch (Exception e) {
@@ -3812,6 +3881,84 @@ public class K8sApiCaller {
 		if(restoreRegistry) {
 			try {
 				createRegistryIngress(registry);
+			} catch (Exception e) {
+				logger.info(e.getMessage());
+				throw e;
+			}
+		}
+	}
+	
+	public static void updateRegistryStatus(V1ConfigMap cm, String eventType) throws Exception {
+		logger.info("[K8S ApiCaller] updateRegistryStatus(V1ConfigMap, String) Start");
+		String registryName = "";
+		String namespace = cm.getMetadata().getNamespace();
+		boolean restoreRegistry = false;
+
+		registryName = cm.getMetadata().getLabels().get("apps");
+		logger.info("registry name: " + registryName);
+		String registryUid = cm.getMetadata().getLabels().get("registryUid");
+		logger.info("registry uid: " + registryUid);
+
+		if ( registryUid == null) {
+			logger.info(cm.getMetadata().getName() + "/" + namespace + " configMap's registryUid label is null");
+			return;
+		}
+
+		try {
+			if (!isCurrentRegistry(registryUid, registryName, namespace, "RegistryPvc")) {
+				logger.info("This registry's event is not for current registry. So do not update registry status");
+				return;
+			}
+		} catch(ApiException e) {
+			if(e.getCode() == 404) {
+				logger.info(cm.getMetadata().getName() + "/" + namespace + " pvc is deleted");
+			}
+			throw e;
+		}
+
+		JsonArray patchStatusArray = new JsonArray();
+		DateTime curTime = new DateTime();
+		JsonObject condition = new JsonObject();
+
+		switch (eventType) {
+		case Constants.EVENT_TYPE_ADDED:
+		case Constants.EVENT_TYPE_MODIFIED:
+			condition.addProperty("type", RegistryCondition.Condition.CONFIG_MAP.getType());
+			condition.addProperty("status", RegistryStatus.Status.TRUE.getStatus());
+			condition.addProperty("lastTransitionTime", curTime.toString());
+			
+			
+			break;
+		case Constants.EVENT_TYPE_DELETED:
+			condition.addProperty("type", RegistryCondition.Condition.CONFIG_MAP.getType());
+			condition.addProperty("status", RegistryStatus.Status.FALSE.getStatus());
+			condition.addProperty("lastTransitionTime", curTime.toString());
+			
+			restoreRegistry = true;
+			
+			break;
+		}
+
+		try {
+			customObjectApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP,
+					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registryName,
+					patchStatusArray);
+			logger.info("patchNamespacedCustomObjectStatus result: " + condition.get("type").getAsString() + "(" + condition.get("status").getAsString() + ")\n");
+		} catch (ApiException e) {
+			if(e.getCode() == 404) {
+				logger.info("[RegistryService]" + registryName + "/" + namespace + " registry was deleted!!");
+			}
+			else {
+				logger.info("[RegistryService]" + e.getResponseBody());
+			}
+		}
+		
+		if(restoreRegistry) {
+			try {
+				Registry registry = getRegistry(registryName, namespace);
+				
+				createRegistryConfigMap(registry);
+//				deleteRegistrySubresource(registry, RegistryCondition.Condition.REPLICA_SET);
 			} catch (Exception e) {
 				logger.info(e.getMessage());
 				throw e;
