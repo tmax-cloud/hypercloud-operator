@@ -74,9 +74,7 @@ public class RegistryWatcher extends Thread {
 							logger.info("[mapper error]: " + e.getMessage());
 						}
 						
-						if( registry != null
-								&& Integer.parseInt(registry.getMetadata().getResourceVersion()) > Integer.parseInt(latestResourceVersion)) {
-							latestResourceVersion = registry.getMetadata().getResourceVersion();
+						if( registry != null) {
 							String eventType = response.type.toString();
 							logger.info("====================== Registry " + eventType + " ====================== \n");
 

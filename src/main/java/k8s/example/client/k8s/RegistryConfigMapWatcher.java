@@ -50,8 +50,7 @@ public class RegistryConfigMapWatcher extends Thread {
 				try {
 					V1ConfigMap cm = response.object;
 					
-					if( cm != null
-							&& Integer.parseInt(cm.getMetadata().getResourceVersion()) > Integer.parseInt(latestResourceVersion)) {
+					if( cm != null ) {
 						
 						latestResourceVersion = response.object.getMetadata().getResourceVersion();
 						String eventType = response.type.toString();

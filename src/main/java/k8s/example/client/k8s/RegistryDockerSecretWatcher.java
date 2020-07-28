@@ -49,8 +49,7 @@ public class RegistryDockerSecretWatcher extends Thread {
 				try {
 					V1Secret secret = response.object;
 					
-					if( secret != null
-							&& Integer.parseInt(secret.getMetadata().getResourceVersion()) > Integer.parseInt(latestResourceVersion)) {
+					if( secret != null ) {
 						
 						latestResourceVersion = response.object.getMetadata().getResourceVersion();
 						String eventType = response.type.toString();
