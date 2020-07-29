@@ -3,9 +3,7 @@ package k8s.example.client.k8s;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -45,7 +43,7 @@ public class NamespaceClaimController extends Thread {
 	StateCheckInfo sci = new StateCheckInfo();
 
 	NamespaceClaimController(ApiClient client, CustomObjectsApi api, long resourceVersion) throws Exception {
-		nscController = Watch.createWatch(client, api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, null, null, null, null, null, null, null, Boolean.TRUE, null),
+		nscController = Watch.createWatch(client, api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, null, null, null, "handled=f", null, null, null, Boolean.TRUE, null),
 				new TypeToken<Watch.Response<NamespaceClaim>>() {}.getType());
 		this.api = api;
 		this.client = client;
@@ -60,7 +58,7 @@ public class NamespaceClaimController extends Thread {
 				nscController.forEach(response -> {
 					try {
 						if (Thread.interrupted()) {
-							logger.info("Interrupted!");
+							logger.error("Interrupted!");
 							nscController.close();
 						}
 					} catch (Exception e) {
@@ -77,29 +75,15 @@ public class NamespaceClaimController extends Thread {
 							latestResourceVersion = Long.parseLong( response.object.getMetadata().getResourceVersion() );
 							String eventType = response.type.toString(); //ADDED, MODIFIED, DELETED
 							logger.info("[NamespaceClaim Controller] Event Type : " + eventType );
-							logger.info("[NamespaceClaim Controller] == NamespcaeClaim == \n" + claim.toString());
+							logger.debug("[NamespaceClaim Controller] == NamespcaeClaim == \n" + claim.toString());
 							claimName = claim.getMetadata().getName();
 							resourceName = claim.getResourceName();
 							
 							switch( eventType ) {
 								case Constants.EVENT_TYPE_ADDED : 
-									// Set Owner Label from Annotation 'Creator'
-									if ( claim.getMetadata().getAnnotations() != null && claim.getMetadata().getAnnotations().get("creator") !=null
-											&& !claim.getMetadata().getAnnotations().get("creator").contains(":")) { // 방어로직
-										logger.info("[NamespaceClaim Controller] Set Owner Label from Annotation 'Creator'" );
-										// Set Owner Label from Annotation 'Creator'
-										if ( claim.getMetadata().getLabels() != null ) {
-											claim.getMetadata().getLabels().put("owner", claim.getMetadata().getAnnotations().get("creator"));
-										} else {
-											Map < String, String > labels = new HashMap<>();
-											labels.put("owner", claim.getMetadata().getAnnotations().get("creator").toString());
-											claim.getMetadata().setLabels(labels);
-										}
-										K8sApiCaller.replaceNamespaceClaim(claim);
-									}
-
 									if ( K8sApiCaller.namespaceAlreadyExist( resourceName ) ) {
-										replaceNscStatus( claimName, Constants.CLAIM_STATUS_REJECT, "Duplicated NameSpaceName" );
+										replaceNscStatus( claimName, Constants.CLAIM_STATUS_REJECT, "Duplicated NameSpaceName" ); 
+										patchLabel(claimName, "handled" ,"t");// must be after replaceNscStatus for awake watcher once more
 									} else {
 										// Patch Status to Awaiting
 										replaceNscStatus( claimName, Constants.CLAIM_STATUS_AWAITING, "wait for admin permission" );
@@ -107,11 +91,17 @@ public class NamespaceClaimController extends Thread {
 										if ( claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") !=null 
 												&& claim.getMetadata().getLabels().get("owner") !=null) {
 											// give owner all verbs of NSC ( Except admin-tmax.co.kr)
-											if (  !claim.getMetadata().getLabels().get("owner").equalsIgnoreCase( Constants.MASTER_USER_ID )) {
+											if ( !claim.getMetadata().getLabels().get("owner").equalsIgnoreCase( Constants.MASTER_USER_ID )) {
 												patchUserRole ( claim.getMetadata().getLabels().get("owner"), claim.getMetadata().getName() );
 											}
 										}
-									}						
+									}									
+									// Set Owner Label from Annotation 'Creator'
+									if ( claim.getMetadata().getAnnotations() != null && claim.getMetadata().getAnnotations().get("creator") !=null
+											&& !claim.getMetadata().getAnnotations().get("creator").contains(":")) { // 방어로직
+										logger.info("[NamespaceClaim Controller] Set Owner Label from Annotation 'Creator'" );
+										patchLabel(claimName, "owner" ,claim.getMetadata().getAnnotations().get("creator"));// FIXME
+									}								
 									break;
 								case Constants.EVENT_TYPE_MODIFIED : 
 									String status = getClaimStatus( claimName );		
@@ -142,56 +132,41 @@ public class NamespaceClaimController extends Thread {
 												}
 											} else {
 												logger.info(" Timer for Trial NameSpace [ " + nsResult.getMetadata().getName() + " ] Already Exists ");
-											}
+											}			
 											
-											if (claim.getMetadata().getLabels().get("successMailSend") == null) {
-												// Send Success confirm Mail
-												sendConfirmMail ( claim, nsResult.getMetadata().getCreationTimestamp(),  true );
-												// Update with successMailSend Label to "t"
-												logger.info(" Update with successMailSend Label to 't' for  Nmaespace ["+ claim.getMetadata().getName() +" ] Starts");
-												claim.getMetadata().getLabels().put("successMailSend", "t");
-												K8sApiCaller.replaceNamespaceClaim(claim);
-											}
+											// Send Success confirm Mail
+											sendConfirmMail ( claim, nsResult.getMetadata().getCreationTimestamp(),  true );																			
 										}
 										// Create Default NetWork Policy
-										logger.info(" Create Network Policy for new Nmaespace ["+ nsResult.getMetadata().getName() +" ] Starts");
+										logger.info(" Create Network Policy for new Namespace ["+ nsResult.getMetadata().getName() +" ] Starts");
 										K8sApiCaller.createDefaultNetPol(claim);
-										
 										replaceNscStatus( claimName, Constants.CLAIM_STATUS_SUCCESS, "namespace create success." );
+										patchLabel(claimName, "handled" ,"t");// FIXME
+
 									} else if ( status.equals( Constants.CLAIM_STATUS_REJECT )) {
 										if ( claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") !=null 
 												&& claim.getMetadata().getLabels().get("owner") !=null  ) {
-											if (claim.getMetadata().getLabels().get("rejectMailSend") == null) {
-												// Send Fail confirm Mail
-												sendConfirmMail ( claim, null, false );
-												// Update with rejectMailSend Label to "t"
-												logger.info(" Update with rejectMailSend Label to 't' for  Nmaespace ["+ claim.getMetadata().getName() +" ] Starts");
-												claim.getMetadata().getLabels().put("rejectMailSend", "t");
-												K8sApiCaller.replaceNamespaceClaim(claim);
-											}
+											// Send Fail confirm Mail
+											sendConfirmMail ( claim, null, false );										
 										}
+										patchLabel(claimName, "handled" ,"t");// FIXME
 									}				
 									break;
 								case Constants.EVENT_TYPE_DELETED : 
 									// Nothing to do
-									K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, claim.getMetadata().getResourceVersion());
 									break;
-							}
-						}	
-						
-//						logger.info("[NamespaceClaim Controller] Save latestHandledResourceVersion of NamespaceClaim Controller [" + response.object.getMetadata().getName() + "]");
-//						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, response.object.getMetadata().getResourceVersion());
-						
+							}		
+						}							
 					} catch (Exception e) {
-						logger.info("Exception: " + e.getMessage());
+						logger.error("Exception: " + e.getMessage());
 						StringWriter sw = new StringWriter();
 						e.printStackTrace(new PrintWriter(sw));
-						logger.info(sw.toString());
+						logger.error(sw.toString());
 						try {
 							replaceNscStatus( claimName, Constants.CLAIM_STATUS_ERROR, e.getMessage() );
 						} catch (ApiException e1) {
 							e1.printStackTrace();
-							logger.info("Namespace Claim Controller Exception : Change Status 'Error' Fail ");
+							logger.error("Namespace Claim Controller Exception : Change Status 'Error' Fail ");
 						}
 					} catch (Throwable e) {
 						// TODO Auto-generated catch block
@@ -204,18 +179,18 @@ public class NamespaceClaimController extends Thread {
 						new TypeToken<Watch.Response<NamespaceClaim>>() {}.getType());
 			}
 		} catch (Exception e) {
-			logger.info("Namespace Claim Controller Exception: " + e.getMessage());
+			logger.error("Namespace Claim Controller Exception: " + e.getMessage());
 			StringWriter sw = new StringWriter();
 			e.printStackTrace(new PrintWriter(sw));
-			logger.info(sw.toString());
+			logger.error(sw.toString());
 			if( e.getMessage().equals("abnormal") ) {
-				logger.info("Catch abnormal conditions!! Exit process");
+				logger.error("Catch abnormal conditions!! Exit process");
 				System.exit(1);
 			}
 		}
 	}
 
-	private void sendConfirmMail(NamespaceClaim claim, DateTime createTime, boolean flag) throws Throwable {
+	private void sendConfirmMail(NamespaceClaim claim, DateTime createTime, boolean flag ) throws Throwable {
 		UserCR user = null;
 		String subject = null;
 		String body = null;
@@ -231,7 +206,11 @@ public class NamespaceClaimController extends Thread {
 			}else {
 				subject = " HyperCloud 서비스 신청 승인 거절  ";
 				body = Constants.TRIAL_FAIL_CONFIRM_MAIL_CONTENTS;
-				body = body.replaceAll("%%FAIL_REASON%%", claim.getStatus().getReason());
+				if ( claim.getStatus()!= null && claim.getStatus().getReason() != null ) {
+					body = body.replaceAll("%%FAIL_REASON%%", claim.getStatus().getReason());
+				}else {
+					body = body.replaceAll("%%FAIL_REASON%%", "Unknown Reason");
+				}
 			}
 			Util.sendMail(user.getUserInfo().getEmail(), subject, body);
 		} catch (Throwable e) {
@@ -351,6 +330,31 @@ public class NamespaceClaimController extends Thread {
 					Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, 
 					name, 
 					patchStatusArray );
+		} catch (ApiException e) {
+			logger.info(e.getResponseBody());
+			logger.info("ApiException Code: " + e.getCode());
+			throw e;
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	private void patchLabel( String resourceName, String label, String value ) throws ApiException {
+		JsonArray patchArray = new JsonArray();
+		JsonObject patch = new JsonObject();
+		patch.addProperty("op", "replace");
+		patch.addProperty("path", "/metadata/labels/" + label);
+		patch.addProperty("value", value);
+		patchArray.add(patch);
+		
+		logger.info( "Patch Object : " + patchArray );
+
+		try {
+			api.patchClusterCustomObject(
+					Constants.CUSTOM_OBJECT_GROUP, 
+					Constants.CUSTOM_OBJECT_VERSION, 
+					Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, 
+					resourceName, 
+					patchArray );
 		} catch (ApiException e) {
 			logger.info(e.getResponseBody());
 			logger.info("ApiException Code: " + e.getCode());

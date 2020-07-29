@@ -65,7 +65,7 @@ public class RoleBindingClaimController extends Thread {
 							latestResourceVersion = Long.parseLong( response.object.getMetadata().getResourceVersion() );
 							String eventType = response.type.toString(); //ADDED, MODIFIED, DELETED
 							logger.info("[RoleBindingClaim Controller] Event Type : " + eventType );
-							logger.info("[RoleBindingClaim Controller] == ResourceQuotaClaim == \n" + claim.toString());
+							logger.info("[RoleBindingClaim Controller] == RoleBindingClaim == \n" + claim.toString());
 							claimName = claim.getMetadata().getName();
 							resourceName = claim.getResourceName();
 							claimNamespace = claim.getMetadata().getNamespace();
