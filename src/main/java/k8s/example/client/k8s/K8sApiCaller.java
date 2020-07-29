@@ -2155,18 +2155,19 @@ public class K8sApiCaller {
 		}
 	}
 	
-	public static void createRegistryConfigMap(Registry registry) throws Exception {
+	public static V1ConfigMap createRegistryConfigMap(Registry registry) throws Exception {
 		logger.info("[K8S ApiCaller] createRegistryConfigMap(Registry) Start");
+		V1ConfigMap cm = null;
+		
 		try {
 			String configMapName = registry.getSpec().getCustomConfigYml();
 			String namespace = registry.getMetadata().getNamespace();
-
+			
 			if (StringUtil.isNotEmpty(configMapName)) {
-				V1ConfigMap existCm = null;
 				try {
-					existCm = api.readNamespacedConfigMap(configMapName, namespace, null, null, null);
+					cm = api.readNamespacedConfigMap(configMapName, namespace, null, null, null);
 
-					logger.info("== customConfigYaml ==\n" + existCm.toString());
+					logger.info("== customConfigYaml ==\n" + cm.toString());
 				} catch (ApiException e) {
 					logger.info(e.getResponseBody());
 					try {
@@ -2179,29 +2180,31 @@ public class K8sApiCaller {
 					throw e;
 				}
 				
-				V1ObjectMeta metadata = existCm.getMetadata();
+				V1ObjectMeta metadata = cm.getMetadata();
 				Map<String,String> labels = new HashMap<>();
 				labels.put("registryUid", registry.getMetadata().getUid());
 				labels.put("app", "registry");
 				labels.put("apps", registry.getMetadata().getName());
 				metadata.setLabels(labels);
-				existCm.setMetadata(metadata);
+				cm.setMetadata(metadata);
 				
 				try {
 					// patch로 하면 data 내용 때문에 에러발생함
-					V1ConfigMap  result = api.replaceNamespacedConfigMap(existCm.getMetadata().getName(), namespace, existCm, null, null, null);
-					logger.info("ConfigMap is patched: " + existCm.getMetadata().getName() + "/" + namespace);
+					V1ConfigMap result = api.replaceNamespacedConfigMap(cm.getMetadata().getName(), namespace, cm, null, null, null);
+					logger.info("ConfigMap is patched: " + cm.getMetadata().getName() + "/" + namespace);
 					logger.info("\tmetadata:" + result.getMetadata().toString());
+					return result;
 				} catch (ApiException e) {
 					logger.info(e.getResponseBody());
 				}
 			} else { // Create New ConfigMap
 				configMapName = Constants.K8S_PREFIX + registry.getMetadata().getName();
 				try {
+					// get hypercloud4-system configmap
 					V1ConfigMap regConfig = api.readNamespacedConfigMap(Constants.REGISTRY_CONFIG_MAP_NAME,
 							Constants.REGISTRY_NAMESPACE, null, null, null);
 
-					V1ConfigMap configMap = new V1ConfigMap();
+					cm = new V1ConfigMap();
 					V1ObjectMeta metadata = new V1ObjectMeta();
 
 					metadata.setName(configMapName);
@@ -2228,14 +2231,16 @@ public class K8sApiCaller {
 					ownerRef.setUid(registry.getMetadata().getUid());
 					ownerRefs.add(ownerRef);
 					metadata.setOwnerReferences(ownerRefs);
-					configMap.setMetadata(metadata);
-					configMap.setData(regConfig.getData());
+					cm.setMetadata(metadata);
+					cm.setData(regConfig.getData());
 
-					V1ConfigMap result = api.createNamespacedConfigMap(namespace, configMap, null, null, null);
+					V1ConfigMap result = api.createNamespacedConfigMap(namespace, cm, null, null, null);
 					logger.info("Configmap is created: " + result.getMetadata().getName() + "/" + result.getMetadata().getNamespace());
 					logger.info("\tKey:" + result.getData().keySet() + "\n");
 					logger.info("\tOwnerReferences:" + result.getMetadata().getOwnerReferences());
 					logger.info("\tLabels:" + result.getMetadata().getLabels());
+					
+					return result;
 				} catch (ApiException e) {
 					logger.info(e.getResponseBody());
 					try {
@@ -2252,6 +2257,7 @@ public class K8sApiCaller {
 			e.printStackTrace();
 			throw e;
 		}
+		return cm;
 	}
 
 	public static void createRegistryReplicaSet(Registry registry) throws Exception {
@@ -2854,9 +2860,12 @@ public class K8sApiCaller {
 		// delete subresource
 		// required delete order: ConfigMap, Service >  Secret, Ingress > Replicaset(Pod)
 		if(recreateSubresources.contains(RegistryCondition.Condition.CONFIG_MAP)) {
-			deleteRegistrySubresource(registry, RegistryCondition.Condition.CONFIG_MAP);
+//			deleteRegistrySubresource(registry, RegistryCondition.Condition.CONFIG_MAP);
 			try {
-				createRegistryConfigMap(registry);
+				V1ConfigMap cm = createRegistryConfigMap(registry);
+				if(cm != null) {
+					updateRegistryStatus(cm, Constants.EVENT_TYPE_ADDED);
+				}
 			} catch (Exception e) {
 				logger.info(e.getMessage());
 			}
@@ -3982,7 +3991,7 @@ public class K8sApiCaller {
 			try {
 				appApi.deleteNamespacedReplicaSet(Constants.K8S_PREFIX + Constants.K8S_REGISTRY_PREFIX + registryId, namespace, null, null, null, null, null, new V1DeleteOptions());
 			} catch (ApiException e) {
-				logger.info(e.getMessage());
+				logger.info(e.getResponseBody());
 			}
 			break;
 		case POD:
@@ -4013,28 +4022,28 @@ public class K8sApiCaller {
 			try {
 				api.deleteNamespacedService(Constants.K8S_PREFIX + registryId, namespace, null, null, null, null, null, new V1DeleteOptions());
 			} catch (ApiException e) {
-				logger.info(e.getMessage());
+				logger.info(e.getResponseBody());
 			}
 			break;
 		case SECRET_OPAQUE:
 			try {
 				api.deleteNamespacedSecret(Constants.K8S_PREFIX + registryId, namespace, null, null, null, null, null, new V1DeleteOptions());
 			} catch (ApiException e) {
-				logger.info(e.getMessage());
+				logger.info(e.getResponseBody());
 			}
 			break;
 		case SECRET_DOCKER_CONFIG_JSON:
 			try {
 				api.deleteNamespacedSecret(Constants.K8S_PREFIX  + Constants.K8S_REGISTRY_PREFIX + registryId, namespace, null, null, null, null, null, new V1DeleteOptions());
 			} catch (ApiException e) {
-				logger.info(e.getMessage());
+				logger.info(e.getResponseBody());
 			}
 			break;
 		case SECRET_TLS:
 			try {
 				api.deleteNamespacedSecret(Constants.K8S_PREFIX  + Constants.K8S_TLS_PREFIX + registryId, namespace, null, null, null, null, null, new V1DeleteOptions());
 			} catch (ApiException e) {
-				logger.info(e.getMessage());
+				logger.info(e.getResponseBody());
 			}
 			break;
 		case INGRESS:
