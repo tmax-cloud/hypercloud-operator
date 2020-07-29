@@ -4873,7 +4873,7 @@ public class K8sApiCaller {
 				null, null, null, null, null, false);
 
 		JsonNode templateList = numberTypeConverter(objectToJsonNode(templates).get("items"));
-		logger.info("Catalog Debug 1");
+		logger.debug("Catalog Debug 1");
 
 		if (templateList.isArray()) {
 			for (JsonNode template : templateList) {
@@ -4936,7 +4936,7 @@ public class K8sApiCaller {
 				service.setTags(tags);
 				service.setMetadata(serviceMeta);
 
-				logger.info("Catalog Debug 2");
+				logger.debug("Catalog Debug 2");
 				if (template.get("objectKinds") != null) {
 					JsonNode objectKinds = template.get("objectKinds");
 					if (objectKinds.isArray()) {
@@ -4946,7 +4946,7 @@ public class K8sApiCaller {
 						try {
 							kinds = reader.readValue(objectKinds);
 						} catch (IOException e) {
-							logger.info(e.getMessage());
+							logger.debug(e.getMessage());
 							;
 						}
 
@@ -4960,7 +4960,7 @@ public class K8sApiCaller {
 				service.setBindings_retrievable(false);
 				service.setInstances_retrievable(false);
 
-				logger.info("Catalog Debug 3");
+				logger.debug("Catalog Debug 3");
 				try {
 					if (template.get("plans") != null) {
 						JsonNode plans = template.get("plans");
@@ -4998,7 +4998,7 @@ public class K8sApiCaller {
 									}
 									defaultPlaneId++;
 
-									logger.info("Catalog Debug 4");
+									logger.debug("Catalog Debug 4");
 									try {
 										if ( plan.get("metadata") != null ) {
 											if (plan.get("metadata").get("bullets") != null) {
@@ -5022,7 +5022,7 @@ public class K8sApiCaller {
 														});
 										create.setParameters(parameters);
 									} catch (Exception e) {
-										logger.info("This Plan is Error1");
+										logger.debug("This Plan is Error1");
 									}
 
 									instanceSchema.setCreate(create);
@@ -5030,7 +5030,7 @@ public class K8sApiCaller {
 									servicePlan.setSchemas(planSchema);
 									planList.add(servicePlan);
 								} catch (Exception e) {
-									logger.info("This Plan is Error2");
+									logger.debug("This Plan is Error2");
 								}
 							}
 						}
@@ -5043,9 +5043,9 @@ public class K8sApiCaller {
 						planList.add(servicePlan);
 					}
 				} catch (Exception e) {
-					logger.info("This Plan is Empty");
+					logger.debug("This Plan is Empty");
 				}
-				logger.info("Catalog Debug 5");
+				logger.debug("Catalog Debug 5");
 				service.setPlans(planList);
 				serviceList.add(service);
 			}
@@ -5076,7 +5076,7 @@ public class K8sApiCaller {
 		ownerRefs.add(ownerRef);
 		instanceMeta.setOwnerReferences(ownerRefs);
 
-		logger.info("Service Instance Namespace : " + inDO.getContext().getNamespace());
+		logger.debug("Service Instance Namespace : " + inDO.getContext().getNamespace());
 
 		try {
 			instance.setApiVersion(Constants.CUSTOM_OBJECT_GROUP + "/" + Constants.CUSTOM_OBJECT_VERSION);
@@ -5093,7 +5093,7 @@ public class K8sApiCaller {
 			String planName = inDO.getPlan_id(); 
 			
 			try {
-				logger.info("Get Plan Prameters : " + planName);
+				logger.debug("Get Plan Prameters : " + planName);
 				
 				Object planResponse = customObjectApi.getClusterCustomObject("servicecatalog.k8s.io", "v1beta1","clusterserviceplans", planName);
 				GetPlanDO plan = mapper.readValue(gson.toJson(planResponse), GetPlanDO.class);
@@ -5101,8 +5101,8 @@ public class K8sApiCaller {
 				if(plan.getSpec().getInstanceCreateParameterSchema() != null) {
 					for(String key : plan.getSpec().getInstanceCreateParameterSchema().keySet()) {
 						
-						logger.info("Plan Prameter Key : " + key);
-						logger.info("Plan Prameter Value : " + plan.getSpec().getInstanceCreateParameterSchema().get(key));
+						logger.debug("Plan Prameter Key : " + key);
+						logger.debug("Plan Prameter Value : " + plan.getSpec().getInstanceCreateParameterSchema().get(key));
 						
 						if (!inputParameters.containsKey(key)) {
 							inputParameters.put(key, plan.getSpec().getInstanceCreateParameterSchema().get(key));
@@ -5110,11 +5110,11 @@ public class K8sApiCaller {
 					}
 				}
 			} catch (ApiException e) {
-				logger.info("Response body: " + e.getResponseBody());
+				logger.debug("Response body: " + e.getResponseBody());
 				e.printStackTrace();
 				throw e;
 			} catch (Exception e) {
-				logger.info("Exception message: " + e.getMessage());
+				logger.debug("Exception message: " + e.getMessage());
 				e.printStackTrace();
 				throw e;
 			}
@@ -5128,8 +5128,8 @@ public class K8sApiCaller {
 			}
 			
 			for (String key : inputParameters.keySet()) {
-				logger.info("Template Instance Prameter Key : " + key);
-				logger.info("Template Instance Prameter Value : " + inputParameters.get(key));
+				logger.debug("Template Instance Prameter Key : " + key);
+				logger.debug("Template Instance Prameter Value : " + inputParameters.get(key));
 				
 				TemplateParameter parameter = new TemplateParameter();
 				parameter.setName(key);
@@ -5148,11 +5148,11 @@ public class K8sApiCaller {
 					Constants.CUSTOM_OBJECT_VERSION, inDO.getContext().getNamespace(),
 					Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, bodyObj, null);
 		} catch (ApiException e) {
-			logger.info("Response body: " + e.getResponseBody());
+			logger.debug("Response body: " + e.getResponseBody());
 			e.printStackTrace();
 			throw e;
 		} catch (Exception e) {
-			logger.info("Exception message: " + e.getMessage());
+			logger.debug("Exception message: " + e.getMessage());
 			e.printStackTrace();
 			throw e;
 		}
@@ -5164,7 +5164,7 @@ public class K8sApiCaller {
 			throws Exception {
 		BindingOutDO outDO = new BindingOutDO();
 		Map<String, Object> secretMap = new HashMap<String, Object>();
-		logger.info(" Binding Namespace : " + inDO.getContext().getNamespace());
+		logger.debug(" Binding Namespace : " + inDO.getContext().getNamespace());
 		try {
 			Object response = customObjectApi.getNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
 					Constants.CUSTOM_OBJECT_VERSION, inDO.getContext().getNamespace(),
