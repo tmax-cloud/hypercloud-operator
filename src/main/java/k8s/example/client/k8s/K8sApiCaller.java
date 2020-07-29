@@ -348,225 +348,7 @@ public class K8sApiCaller {
 		CapiClusterController ccOperator = new CapiClusterController(k8sClient, customObjectApi, api, 0);
 		ccOperator.start();
 
-		while (true) {
-			try {
-				if (!userWatcher.isAlive()) {
-					String userLatestResourceVersionStr = UserWatcher.getLatestResourceVersion();
-					logger.info("User watcher is not alive. Restart user watcher! (Latest resource version: "
-							+ userLatestResourceVersionStr + ")");
-					userWatcher.interrupt();
-					userWatcher = new UserWatcher(k8sClient, customObjectApi, userLatestResourceVersionStr);
-					userWatcher.start();
-				}
-
-				if (!userDeleteWatcher.isAlive()) {
-					String userLatestResourceVersionStr = UserWatcher.getLatestResourceVersion();
-					logger.info(
-							"User Delete watcher is not alive. Restart user delete watcher! (Latest resource version: "
-									+ userLatestResourceVersionStr + ")");
-					userDeleteWatcher.interrupt();
-					userDeleteWatcher = new UserDeleteWatcher(k8sClient, customObjectApi, userLatestResourceVersionStr);
-					userDeleteWatcher.start();
-				}
-
-				if (!registryWatcher.isAlive()) {
-					String registryLatestResourceVersionStr = RegistryWatcher.getLatestResourceVersion();
-					logger.info("Registry watcher is not alive. Restart registry watcher! (Latest resource version: "
-							+ registryLatestResourceVersionStr + ")");
-					registryWatcher.interrupt();
-					registryWatcher = new RegistryWatcher(k8sClient, customObjectApi, registryLatestResourceVersionStr);
-					registryWatcher.start();
-				}
-
-				if (!registryReplicaSetWatcher.isAlive()) {
-					String registryReplicaSetLatestResourceVersionStr = RegistryReplicaSetWatcher
-							.getLatestResourceVersion();
-					logger.info(
-							"Registry replicaSet watcher is not alive. Restart registry replica set watcher! (Latest resource version: "
-									+ registryReplicaSetLatestResourceVersionStr + ")");
-					registryReplicaSetWatcher.interrupt();
-					registryReplicaSetWatcher = new RegistryReplicaSetWatcher(k8sClient, appApi,
-							registryReplicaSetLatestResourceVersionStr);
-					registryReplicaSetWatcher.start();
-				}
-
-				if (!registryPodWatcher.isAlive()) {
-					String registryPodLatestResourceVersionStr = RegistryPodWatcher.getLatestResourceVersion();
-					logger.info(
-							"Registry pod watcher is not alive. Restart registry pod watcher! (Latest resource version: "
-									+ registryPodLatestResourceVersionStr + ")");
-					registryPodWatcher.interrupt();
-					registryPodWatcher = new RegistryPodWatcher(k8sClient, api, registryPodLatestResourceVersionStr);
-					registryPodWatcher.start();
-				}
-
-				if (!registryServiceWatcher.isAlive()) {
-					String registryServiceLatestResourceVersionStr = RegistryServiceWatcher.getLatestResourceVersion();
-					logger.info(
-							"Registry service watcher is not alive. Restart registry service watcher! (Latest resource version: "
-									+ registryServiceLatestResourceVersionStr + ")");
-					registryServiceWatcher.interrupt();
-					registryServiceWatcher = new RegistryServiceWatcher(k8sClient, api,
-							registryServiceLatestResourceVersionStr);
-					registryServiceWatcher.start();
-				}
-
-				if (!registryCertSecretWatcher.isAlive()) {
-					String registryCertSecretLatestResourceVersionStr = RegistryCertSecretWatcher
-							.getLatestResourceVersion();
-					logger.info(
-							"Registry cert secret watcher is not alive. Restart registry cert secret watcher! (Latest resource version: "
-									+ registryCertSecretLatestResourceVersionStr + ")");
-					registryCertSecretWatcher.interrupt();
-					registryCertSecretWatcher = new RegistryCertSecretWatcher(k8sClient, api,
-							registryCertSecretLatestResourceVersionStr);
-					registryCertSecretWatcher.start();
-				}
-
-				if (!registryDockerSecretWatcher.isAlive()) {
-					String registryDockerSecretLatestResourceVersionStr = RegistryDockerSecretWatcher
-							.getLatestResourceVersion();
-					logger.info(
-							"Registry docker secret watcher is not alive. Restart registry docker secret watcher! (Latest resource version: "
-									+ registryDockerSecretLatestResourceVersionStr + ")");
-					registryDockerSecretWatcher.interrupt();
-					registryDockerSecretWatcher = new RegistryDockerSecretWatcher(k8sClient, api,
-							registryDockerSecretLatestResourceVersionStr);
-					registryDockerSecretWatcher.start();
-				}
-				
-				if (!registryTlsSecretWatcher.isAlive()) {
-					String registryTlsSecretLatestResourceVersionStr = RegistryTlsSecretWatcher
-							.getLatestResourceVersion();
-					logger.info(
-							"Registry tls secret watcher is not alive. Restart registry tls secret watcher! (Latest resource version: "
-									+ registryTlsSecretLatestResourceVersionStr + ")");
-					registryTlsSecretWatcher.interrupt();
-					registryTlsSecretWatcher = new RegistryTlsSecretWatcher(k8sClient, api,
-							registryTlsSecretLatestResourceVersionStr);
-					registryTlsSecretWatcher.start();
-				}
-				
-				if (!registryIngressWatcher.isAlive()) {
-					String registryIngressLatestResourceVersionStr = RegistryIngressWatcher
-							.getLatestResourceVersion();
-					logger.info(
-							"Registry ingress watcher is not alive. Restart registry ingress watcher! (Latest resource version: "
-									+ registryIngressLatestResourceVersionStr + ")");
-					registryIngressWatcher.interrupt();
-					registryIngressWatcher = new RegistryIngressWatcher(k8sClient, extentionApi,
-							registryIngressLatestResourceVersionStr);
-					registryIngressWatcher.start();
-				}
-				
-				if (!registryPvcWatcher.isAlive()) {
-					String registryPvcLatestResourceVersionStr = RegistryPvcWatcher
-							.getLatestResourceVersion();
-					logger.info(
-							"Registry pvc watcher is not alive. Restart registry pvc watcher! (Latest resource version: "
-									+ registryPvcLatestResourceVersionStr + ")");
-					registryPvcWatcher.interrupt();
-					registryPvcWatcher = new RegistryPvcWatcher(k8sClient, api,
-							registryPvcLatestResourceVersionStr);
-					registryPvcWatcher.start();
-				}
-
-				if (!imageWatcher.isAlive()) {
-					String imageLatestResourceVersionStr = ImageWatcher.getLatestResourceVersion();
-					logger.info("Image watcher is not alive. Restart image watcher! (Latest resource version: "
-							+ imageLatestResourceVersionStr + ")");
-					imageWatcher.interrupt();
-					imageWatcher = new ImageWatcher(k8sClient, customObjectApi, imageLatestResourceVersionStr);
-					imageWatcher.start();
-				}
-
-				if (!templateOperator.isAlive()) {
-					long templateLatestResourceVersion = TemplateOperator.getLatestResourceVersion();
-					logger.info(("Template Operator is not Alive. Restart Operator! (Latest Resource Version: "
-							+ templateLatestResourceVersion + ")"));
-					templateOperator.interrupt();
-					templateOperator = new TemplateOperator(k8sClient, templateApi, templateLatestResourceVersion);
-					templateOperator.start();
-				}
-
-				if (!instanceOperator.isAlive()) {
-					long instanceLatestResourceVersion = InstanceOperator.getLatestResourceVersion();
-					logger.info(("Instance Operator is not Alive. Restart Operator! (Latest Resource Version: "
-							+ instanceLatestResourceVersion + ")"));
-					instanceOperator.interrupt();
-					instanceOperator = new InstanceOperator(k8sClient, templateApi, instanceLatestResourceVersion);
-					instanceOperator.start();
-				}
-				
-
-				if (!nscOperator.isAlive()) {
-					long nscLatestResourceVersion = NamespaceClaimController.getLatestResourceVersion();
-					logger.info(
-							("Namespace Claim Controller is not Alive. Restart Controller! (Latest Resource Version: "
-									+ nscLatestResourceVersion + ")"));
-					nscOperator.interrupt();
-					nscOperator = new NamespaceClaimController(k8sClient, customObjectApi, nscLatestResourceVersion);
-					nscOperator.start();
-				}
-
-				if (!rqcOperator.isAlive()) {
-					long rqcLatestResourceVersion = ResourceQuotaClaimController.getLatestResourceVersion();
-					logger.info(
-							("ResourceQuota Claim Controller is not Alive. Restart Controller! (Latest Resource Version: "
-									+ rqcLatestResourceVersion + ")"));
-					rqcOperator.interrupt();
-					rqcOperator = new ResourceQuotaClaimController(k8sClient, customObjectApi,
-							rqcLatestResourceVersion);
-					rqcOperator.start();
-				}
-
-				if (!rbcOperator.isAlive()) {
-					long rbcLatestResourceVersion = RoleBindingClaimController.getLatestResourceVersion();
-					logger.info(
-							("RoleBinding Claim Controller is not Alive. Restart Controller! (Latest Resource Version: "
-									+ rbcLatestResourceVersion + ")"));
-					rbcOperator.interrupt();
-					rbcOperator = new RoleBindingClaimController(k8sClient, customObjectApi, rbcLatestResourceVersion);
-					rbcOperator.start();
-				}
-				
-				if (!cscOperator.isAlive()) {
-					long cscLatestResourceVersion = CatalogServiceClaimController.getLatestResourceVersion();
-					logger.info(
-							("CatalogService Claim Controller is not Alive. Restart Controller! (Latest Resource Version: "
-									+ cscLatestResourceVersion + ")"));
-					cscOperator.interrupt();
-					cscOperator = new CatalogServiceClaimController(k8sClient, customObjectApi, cscLatestResourceVersion);
-					cscOperator.start();
-				}
-
-				if (!jfOperator.isAlive()) {
-					long jfLatestResourceVersion = JoinFedController.getLatestResourceVersion();
-					logger.info(
-							("JoinFed Controller is not Alive. Restart Controller! (Latest Resource Version: "
-									+ jfLatestResourceVersion + ")"));
-					jfOperator.interrupt();
-					jfOperator = new JoinFedController(k8sClient, customObjectApi, api, jfLatestResourceVersion);
-					jfOperator.start();
-				}
-
-				if (!ccOperator.isAlive()) {
-					long ccLatestResourceVersion = CapiClusterController.getLatestResourceVersion();
-					logger.info(
-							("CapiCluster Controller is not Alive. Restart Controller! (Latest Resource Version: "
-									+ ccLatestResourceVersion + ")"));
-					ccOperator.interrupt();
-					ccOperator = new CapiClusterController(k8sClient, customObjectApi, api, ccLatestResourceVersion);
-					ccOperator.start();
-				}
-				
-			} catch (Exception e) {
-				StringWriter sw = new StringWriter();
-				e.printStackTrace(new PrintWriter(sw));
-				logger.info(sw.toString());
-			}
-			Thread.sleep(10000); // Period: 10 sec
-		}
+		while (true); // Infinity Loop for keep alive Main Thread
 
 	}
 	
@@ -591,11 +373,11 @@ public class K8sApiCaller {
 			user = mapper.readValue((new Gson()).toJson(respJson), new TypeReference<UserCR>() {
 			});
 		} catch (ApiException e) {
-			logger.info("Response body: " + e.getResponseBody());
+			logger.error("Response body: " + e.getResponseBody());
 			e.printStackTrace();
 			throw e;
 		} catch (Exception e) {
-			logger.info("Exception message: " + e.getMessage());
+			logger.error("Exception message: " + e.getMessage());
 			e.printStackTrace();
 			throw e;
 		}
@@ -632,17 +414,17 @@ public class K8sApiCaller {
 			
 			jsonPatchStr = jsonPatchStr + "]";
 			
-			logger.info("jsonPatchStr: " + jsonPatchStr);	
+			logger.debug("jsonPatchStr: " + jsonPatchStr);	
 			JsonElement jsonPatch = (JsonElement) new JsonParser().parse(jsonPatchStr);
 
 			customObjectApi.patchClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION,
 					Constants.CUSTOM_OBJECT_PLURAL_USER, userInfo.getId(), jsonPatch);
 		} catch (ApiException e) {
-			logger.info("Response body: " + e.getResponseBody());
+			logger.error("Response body: " + e.getResponseBody());
 			e.printStackTrace();
 			throw e;
 		} catch (Exception e) {
-			logger.info("Exception message: " + e.getMessage());
+			logger.error("Exception message: " + e.getMessage());
 			e.printStackTrace();
 			throw e;
 		}
@@ -664,11 +446,11 @@ public class K8sApiCaller {
 						});
 
 		} catch (ApiException e) {
-			logger.info("Response body: " + e.getResponseBody());
+			logger.error("Response body: " + e.getResponseBody());
 			e.printStackTrace();
 			throw e;
 		} catch (Exception e) {
-			logger.info("Exception message: " + e.getMessage());
+			logger.error("Exception message: " + e.getMessage());
 			e.printStackTrace();
 			throw e;
 		}
@@ -684,7 +466,7 @@ public class K8sApiCaller {
 					null, null, Boolean.FALSE);
 
 			JsonObject respJson = (JsonObject) new JsonParser().parse((new Gson()).toJson(response));
-			logger.info("NamespaceClaim List respJson: " + respJson);
+			logger.debug("NamespaceClaim List respJson: " + respJson);
 
 			mapper.registerModule(new JodaModule());
 			if (respJson != null)
@@ -693,11 +475,11 @@ public class K8sApiCaller {
 						});
 
 		} catch (ApiException e) {
-			logger.info("Response body: " + e.getResponseBody());
+			logger.error("Response body: " + e.getResponseBody());
 			e.printStackTrace();
 			throw e;
 		} catch (Exception e) {
-			logger.info("Exception message: " + e.getMessage());
+			logger.error("Exception message: " + e.getMessage());
 			e.printStackTrace();
 			throw e;
 		}
@@ -721,11 +503,11 @@ public class K8sApiCaller {
 			token.setAccessToken(accessToken);
 			token.setRefreshToken(refreshToken);
 		} catch (ApiException e) {
-			logger.info("Response body: " + e.getResponseBody());
+			logger.error("Response body: " + e.getResponseBody());
 			e.printStackTrace();
 			throw e;
 		} catch (Exception e) {
-			logger.info("Exception message: " + e.getMessage());
+			logger.error("Exception message: " + e.getMessage());
 			e.printStackTrace();
 			throw e;
 		}
@@ -737,7 +519,7 @@ public class K8sApiCaller {
 		Client dbClientInfo = new Client();
 
 		try {
-			logger.info("Name of Client: " + clientInfo.getAppName() + clientInfo.getClientId());
+			logger.debug("Name of Client: " + clientInfo.getAppName() + clientInfo.getClientId());
 
 			Object response = customObjectApi.getClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP,
 					Constants.CUSTOM_OBJECT_VERSION, Constants.CUSTOM_OBJECT_PLURAL_CLIENT,
@@ -758,11 +540,11 @@ public class K8sApiCaller {
 					new ObjectMapper().readValue((new Gson()).toJson(clientInfoJson.get("redirectUri")), String.class));
 
 		} catch (ApiException e) {
-			logger.info("Response body: " + e.getResponseBody());
+			logger.error("Response body: " + e.getResponseBody());
 			e.printStackTrace();
 			throw e;
 		} catch (Exception e) {
-			logger.info("Exception message: " + e.getMessage());
+			logger.error("Exception message: " + e.getMessage());
 			e.printStackTrace();
 			throw e;
 		}
@@ -777,11 +559,11 @@ public class K8sApiCaller {
 			customObjectApi.deleteClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION,
 					Constants.CUSTOM_OBJECT_PLURAL_TOKEN, tokenName, 0, null, null, body);
 		} catch (ApiException e) {
-			logger.info("Response body: " + e.getResponseBody());
+			logger.error("Response body: " + e.getResponseBody());
 			e.printStackTrace();
 			throw e;
 		} catch (Exception e) {
-			logger.info("Exception message: " + e.getMessage());
+			logger.error("Exception message: " + e.getMessage());
 			e.printStackTrace();
 			throw e;
 		}
@@ -794,11 +576,11 @@ public class K8sApiCaller {
 			customObjectApi.deleteClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION,
 					Constants.CUSTOM_OBJECT_PLURAL_USER, userName, 0, null, null, body);
 		} catch (ApiException e) {
-			logger.info("Response body: " + e.getResponseBody());
+			logger.error("Response body: " + e.getResponseBody());
 			e.printStackTrace();
 			throw e;
 		} catch (Exception e) {
-			logger.info("Exception message: " + e.getMessage());
+			logger.error("Exception message: " + e.getMessage());
 			e.printStackTrace();
 			throw e;
 		}
@@ -811,11 +593,11 @@ public class K8sApiCaller {
 			customObjectApi.deleteClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION,
 					Constants.CUSTOM_OBJECT_PLURAL_USER_SECURITY_POLICY, uspName, 0, null, null, body);
 		} catch (ApiException e) {
-			logger.info("Response body: " + e.getResponseBody());
+			logger.error("Response body: " + e.getResponseBody());
 			e.printStackTrace();
 			throw e;
 		} catch (Exception e) {
-			logger.info("Exception message: " + e.getMessage());
+			logger.error("Exception message: " + e.getMessage());
 			e.printStackTrace();
 			throw e;
 		}
@@ -843,11 +625,11 @@ public class K8sApiCaller {
 			customObjectApi.createClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION,
 					Constants.CUSTOM_OBJECT_PLURAL_CLIENT, bodyObj, null);
 		} catch (ApiException e) {
-			logger.info("Response body: " + e.getResponseBody());
+			logger.error("Response body: " + e.getResponseBody());
 			e.printStackTrace();
 			throw e;
 		} catch (Exception e) {
-			logger.info("Exception message: " + e.getMessage());
+			logger.error("Exception message: " + e.getMessage());
 			e.printStackTrace();
 			throw e;
 		}
@@ -879,11 +661,11 @@ public class K8sApiCaller {
 			customObjectApi.createClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION,
 					Constants.CUSTOM_OBJECT_PLURAL_TOKEN, bodyObj, null);
 		} catch (ApiException e) {
-			logger.info("Response body: " + e.getResponseBody());
+			logger.error("Response body: " + e.getResponseBody());
 			e.printStackTrace();
 			throw e;
 		} catch (Exception e) {
-			logger.info("Exception message: " + e.getMessage());
+			logger.error("Exception message: " + e.getMessage());
 			e.printStackTrace();
 			throw e;
 		}
@@ -897,11 +679,11 @@ public class K8sApiCaller {
 			customObjectApi.patchClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION,
 					Constants.CUSTOM_OBJECT_PLURAL_TOKEN, tokenName, jsonPatch);
 		} catch (ApiException e) {
-			logger.info("Response body: " + e.getResponseBody());
+			logger.error("Response body: " + e.getResponseBody());
 			e.printStackTrace();
 			throw e;
 		} catch (Exception e) {
-			logger.info("Exception message: " + e.getMessage());
+			logger.error("Exception message: " + e.getMessage());
 			e.printStackTrace();
 			throw e;
 		}
@@ -924,11 +706,11 @@ public class K8sApiCaller {
 			customObjectApi.replaceClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION,
 					Constants.CUSTOM_OBJECT_PLURAL_USER, userId, user);
 		} catch (ApiException e) {
-			logger.info("Response body: " + e.getResponseBody());
+			logger.error("Response body: " + e.getResponseBody());
 			e.printStackTrace();
 			throw e;
 		} catch (Exception e) {
-			logger.info("Exception message: " + e.getMessage());
+			logger.error("Exception message: " + e.getMessage());
 			e.printStackTrace();
 			throw e;
 		}
