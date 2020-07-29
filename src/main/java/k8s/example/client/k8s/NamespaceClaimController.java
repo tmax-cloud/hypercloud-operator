@@ -43,7 +43,8 @@ public class NamespaceClaimController extends Thread {
 	StateCheckInfo sci = new StateCheckInfo();
 
 	NamespaceClaimController(ApiClient client, CustomObjectsApi api, long resourceVersion) throws Exception {
-		nscController = Watch.createWatch(client, api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, null, null, null, "handled=f", null, null, null, Boolean.TRUE, null),
+		nscController = Watch.createWatch(client, api.listClusterCustomObjectCall("tmax.io", "v1", 
+				Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, null, null, null, "handled=f", null, null, null, Boolean.TRUE, null),
 				new TypeToken<Watch.Response<NamespaceClaim>>() {}.getType());
 		this.api = api;
 		this.client = client;
@@ -62,7 +63,7 @@ public class NamespaceClaimController extends Thread {
 							nscController.close();
 						}
 					} catch (Exception e) {
-						logger.info(e.getMessage());
+						logger.error(e.getMessage());
 					}
 					
 					// Logic here
@@ -95,7 +96,8 @@ public class NamespaceClaimController extends Thread {
 												patchUserRole ( claim.getMetadata().getLabels().get("owner"), claim.getMetadata().getName() );
 											}
 										}
-									}									
+									}		
+									
 									// Set Owner Label from Annotation 'Creator'
 									if ( claim.getMetadata().getAnnotations() != null && claim.getMetadata().getAnnotations().get("creator") !=null
 											&& !claim.getMetadata().getAnnotations().get("creator").contains(":")) { // 방어로직
@@ -103,6 +105,7 @@ public class NamespaceClaimController extends Thread {
 										patchLabel(claimName, "owner" ,claim.getMetadata().getAnnotations().get("creator"));// FIXME
 									}								
 									break;
+									
 								case Constants.EVENT_TYPE_MODIFIED : 
 									String status = getClaimStatus( claimName );		
 									if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && K8sApiCaller.namespaceAlreadyExist( resourceName ) ) {	
@@ -128,7 +131,7 @@ public class NamespaceClaimController extends Thread {
 											if ( !TimerMap.isExists(nsResult.getMetadata().getName()) ) {
 												Util.setTrialNSTimer( nsResult );
 												for (String nsName : TimerMap.getTimerList()) {
-													logger.info("   Registered NameSpace Timer in test : " + nsName );
+													logger.info(" Registered NameSpace Timer in test : " + nsName );
 												}
 											} else {
 												logger.info(" Timer for Trial NameSpace [ " + nsResult.getMetadata().getName() + " ] Already Exists ");
@@ -152,6 +155,7 @@ public class NamespaceClaimController extends Thread {
 										patchLabel(claimName, "handled" ,"t");// FIXME
 									}				
 									break;
+									
 								case Constants.EVENT_TYPE_DELETED : 
 									// Nothing to do
 									break;
@@ -215,7 +219,7 @@ public class NamespaceClaimController extends Thread {
 			Util.sendMail(user.getUserInfo().getEmail(), subject, body);
 		} catch (Throwable e) {
 			e.printStackTrace();
-			logger.info(e.getMessage());
+			logger.error(e.getMessage());
 			throw e;
 		}
 		
@@ -315,7 +319,7 @@ public class NamespaceClaimController extends Thread {
 		patchStatus.add("value", statusObject);
 		patchStatusArray.add( patchStatus );
 		
-		logger.info( "Patch Status Object : " + patchStatusArray );
+		logger.debug( "Patch Status Object : " + patchStatusArray );
 		/*[
 		  "op" : "replace",
 		  "path" : "/status",
@@ -331,8 +335,8 @@ public class NamespaceClaimController extends Thread {
 					name, 
 					patchStatusArray );
 		} catch (ApiException e) {
-			logger.info(e.getResponseBody());
-			logger.info("ApiException Code: " + e.getCode());
+			logger.error(e.getResponseBody());
+			logger.error("ApiException Code: " + e.getCode());
 			throw e;
 		}
 	}
@@ -346,7 +350,7 @@ public class NamespaceClaimController extends Thread {
 		patch.addProperty("value", value);
 		patchArray.add(patch);
 		
-		logger.info( "Patch Object : " + patchArray );
+		logger.debug( "Patch Object : " + patchArray );
 
 		try {
 			api.patchClusterCustomObject(
@@ -356,8 +360,8 @@ public class NamespaceClaimController extends Thread {
 					resourceName, 
 					patchArray );
 		} catch (ApiException e) {
-			logger.info(e.getResponseBody());
-			logger.info("ApiException Code: " + e.getCode());
+			logger.error(e.getResponseBody());
+			logger.error("ApiException Code: " + e.getCode());
 			throw e;
 		}
 	}
@@ -372,18 +376,18 @@ public class NamespaceClaimController extends Thread {
 					Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, 
 					name );
 		} catch (ApiException e) {
-			logger.info(e.getResponseBody());
-			logger.info("ApiException Code: " + e.getCode());
+			logger.error(e.getResponseBody());
+			logger.error("ApiException Code: " + e.getCode());
 			throw e;
 		}
 
 		String objectStr = new Gson().toJson( claimJson );
-		logger.info( objectStr );
+		logger.debug( objectStr );
 		
 		JsonParser parser = new JsonParser();
 		String status = parser.parse( objectStr ).getAsJsonObject().get( "status" ).getAsJsonObject().get( "status" ).getAsString();
 		
-		logger.info( "Status : " + status );
+		logger.info( "Claim Name [ " + name + " ] | Status : " + status );
 
 		return status;
 	}
