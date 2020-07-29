@@ -119,8 +119,8 @@ public class InstanceOperator extends Thread {
 						
 		        		latestResourceVersion = instanceObj.get("metadata").get("resourceVersion").asLong();
 		        		String instanceNamespace = instanceObj.get("metadata").get("namespace").asText();
-		        		logger.info("[Instance Operator] Instance Name : " + instanceObj.get("metadata").get("name").asText());
-		        		logger.info("[Instance Operator] Instance Namespace : " + instanceObj.get("metadata").get("namespace").asText());
+		        		logger.debug("[Instance Operator] Instance Name : " + instanceObj.get("metadata").get("name").asText());
+		        		logger.debug("[Instance Operator] Instance Namespace : " + instanceObj.get("metadata").get("namespace").asText());
 		        		logger.debug("[Instance Operator] ResourceVersion : " + latestResourceVersion);
 		        		
 		        		if(response.type.toString().equals("ADDED")) {
@@ -476,9 +476,9 @@ public class InstanceOperator extends Thread {
 			}
 
 		} catch (Exception e) {
-			logger.debug("[Instance Operator] Instance Operator Exception: " + e.getMessage());
+			logger.error("[Instance Operator] Instance Operator Exception: " + e.getMessage());
 			if( e.getMessage().equals("abnormal") ) {
-				logger.debug("Catch abnormal conditions!! Exit process");
+				logger.error("Catch abnormal conditions!! Exit process");
 				System.exit(1);
 			}
 		}
@@ -561,7 +561,7 @@ public class InstanceOperator extends Thread {
 		try {
 			resultNode = mapper.readTree(objectStr);
 		} catch (IOException e) {
-			logger.debug(e.getMessage());
+			logger.error(e.getMessage());
 		}
 		return resultNode;
 	}

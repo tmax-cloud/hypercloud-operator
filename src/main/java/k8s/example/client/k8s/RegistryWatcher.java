@@ -58,7 +58,7 @@ public class RegistryWatcher extends Thread {
 				watchRegistry.forEach(response -> {
 					try {
 						if (Thread.interrupted()) {
-							logger.debug("Interrupted!");
+							logger.error("Interrupted!");
 							watchRegistry.close();
 						}
 					} catch (Exception e) {
