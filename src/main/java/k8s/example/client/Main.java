@@ -25,10 +25,12 @@ public class Main {
 		try {
 			// Start webhook server
 			logger.info("[Main] Start webhook server");
+			logger.debug("[Main][Debug] Start webhook server");
 			new WebHookServer();
 			
 			// Start Metering
 			logger.info("[Main] Start Metering per 30 mins");
+			logger.debug("[Main][Debug] Start Metering per 30 mins");
 			startMeteringTimer();
 			
 			// Start UserDelete
