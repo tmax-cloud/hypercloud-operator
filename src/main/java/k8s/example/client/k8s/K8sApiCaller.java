@@ -246,38 +246,31 @@ public class K8sApiCaller {
 			
 		// Start user watch
 		logger.info("Start user watcher");
-//		UserWatcher userWatcher = new UserWatcher(k8sClient, customObjectApi, String.valueOf(userLatestHandledResourceVersion));
 		UserWatcher userWatcher = new UserWatcher(k8sClient, customObjectApi, null);
 		userWatcher.start();
 		
 		// Start userDelete watch
 		logger.info("Start userDelete watcher");
-//		UserDeleteWatcher userDeleteWatcher = new UserDeleteWatcher(k8sClient, customObjectApi, String.valueOf(userLatestHandledResourceVersion));
 		UserDeleteWatcher userDeleteWatcher = new UserDeleteWatcher(k8sClient, customObjectApi, null);
-
 		userDeleteWatcher.start();
 
 		// Start registry watch
 		logger.info("Start registry watcher");
-//		RegistryWatcher registryWatcher = new RegistryWatcher(k8sClient, customObjectApi, String.valueOf(registryLatestHandledResourceVersion));
 		RegistryWatcher registryWatcher = new RegistryWatcher(k8sClient, customObjectApi, null);
 		registryWatcher.start();
 
 		// Start registry replicaSet watch
 		logger.info("Start registry replica set watcher");
-//		RegistryReplicaSetWatcher registryReplicaSetWatcher = new RegistryReplicaSetWatcher(k8sClient, appApi,String.valueOf(registryReplicaSetLatestHandledResourceVersion));
 		RegistryReplicaSetWatcher registryReplicaSetWatcher = new RegistryReplicaSetWatcher(k8sClient, appApi, null);
 		registryReplicaSetWatcher.start();
 
 		// Start registry pod watch
 		logger.info("Start registry pod watcher");
-//		RegistryPodWatcher registryPodWatcher = new RegistryPodWatcher(k8sClient, api, String.valueOf(registryPodLatestHandledResourceVersion));
 		RegistryPodWatcher registryPodWatcher = new RegistryPodWatcher(k8sClient, api, null);
 		registryPodWatcher.start();
 
 		// Start registry service watch
 		logger.info("Start registry service watcher");
-//		RegistryServiceWatcher registryServiceWatcher = new RegistryServiceWatcher(k8sClient, api, String.valueOf(registryServiceLatestHandledResourceVersion));
 		RegistryServiceWatcher registryServiceWatcher = new RegistryServiceWatcher(k8sClient, api, null);
 		registryServiceWatcher.start();
 
