@@ -104,29 +104,29 @@ public class InstanceOperator extends Thread {
 				watchInstance.forEach(response -> {
 					try {
 						if(Thread.interrupted()) {
-							logger.info("Interrupted!");
+							logger.debug("Interrupted!");
 							watchInstance.close();
 						}
 					} catch(Exception e) {
-						logger.info(e.getMessage());
+						logger.debug(e.getMessage());
 					}
 					
 					//Logic here
 					try {
 						JsonNode instanceObj = numberTypeConverter(objectToJsonNode(response.object));
 						logger.info("[Instance Operator] Event Type : " + response.type.toString()); //ADDED, MODIFIED, DELETED
-						logger.info("[Instance Operator] Object : " + instanceObj.toString());
+						logger.debug("[Instance Operator] Object : " + instanceObj.toString());
 						
 		        		latestResourceVersion = instanceObj.get("metadata").get("resourceVersion").asLong();
 		        		String instanceNamespace = instanceObj.get("metadata").get("namespace").asText();
 		        		logger.info("[Instance Operator] Instance Name : " + instanceObj.get("metadata").get("name").asText());
 		        		logger.info("[Instance Operator] Instance Namespace : " + instanceObj.get("metadata").get("namespace").asText());
-		        		logger.info("[Instance Operator] ResourceVersion : " + latestResourceVersion);
+		        		logger.debug("[Instance Operator] ResourceVersion : " + latestResourceVersion);
 		        		
 		        		if(response.type.toString().equals("ADDED")) {
 		        			String templateName = instanceObj.get("spec").get("template").get("metadata").get("name").asText();
 		        			
-		        			logger.info("[Instance Operator] Template Name : " + templateName);
+		        			logger.debug("[Instance Operator] Template Name : " + templateName);
 						
 							String templateNamespace = instanceObj.get("metadata").get("namespace").asText();
 		        			if ( instanceObj.get("metadata").get("ownerReferences") != null ) {
@@ -148,18 +148,18 @@ public class InstanceOperator extends Thread {
 												}
 											}
 										} catch (ApiException e) {
-											logger.info("Response body: " + e.getResponseBody());
+											logger.debug("Response body: " + e.getResponseBody());
 											e.printStackTrace();
 											throw e;
 										} catch (Exception e) {
-											logger.info("Exception message: " + e.getMessage());
+											logger.debug("Exception message: " + e.getMessage());
 											e.printStackTrace();
 											throw e;
 										}
 		        					}
 								}
 		        			}
-		        			logger.info("[Instance Operator] Template Namespace : " + templateNamespace);
+		        			logger.debug("[Instance Operator] Template Namespace : " + templateNamespace);
 		        			Object template = null;
 		        			try {
 		        				template = tpApi.getNamespacedCustomObject(
@@ -172,7 +172,7 @@ public class InstanceOperator extends Thread {
 		        				throw new Exception("Template Not Found");
 		        			}
 		        			
-		        			//logger.info("[Instance Operator] Template : " + template.toString());
+		        			//logger.debug("[Instance Operator] Template : " + template.toString());
 		        			
 		        			JsonNode templateObjs = numberTypeConverter(objectToJsonNode(template).get("objects"));
 		        			JsonNode parameters = instanceObj.get("spec").get("template").get("parameters");
@@ -207,7 +207,7 @@ public class InstanceOperator extends Thread {
 		        			if(templateObjs.isArray()) {
 		        				for(JsonNode object : templateObjs) {
 			        				String objStr = object.toString();
-			        				//logger.info("[Instance Operator] Template Object : " + objStr);
+			        				//logger.debug("[Instance Operator] Template Object : " + objStr);
 			        				if ( parameters != null ) {
 			        					
 			        					for(JsonNode parameter : parameters) {
@@ -234,16 +234,16 @@ public class InstanceOperator extends Thread {
 						        					if (dataType.equals(Constants.TEMPLATE_DATA_TYPE_NUMBER)) {
 						        						String replaceString = "\"${" + paramName + "}\"";
 						        						if( objStr.contains( replaceString ) ) {
-								        					logger.info("[Instance Operator] Parameter Number Name to be replaced : " + replaceString);
-									        				logger.info("[Instance Operator] Parameter Number Value to be replaced : " + paramValue);
+								        					logger.debug("[Instance Operator] Parameter Number Name to be replaced : " + replaceString);
+									        				logger.debug("[Instance Operator] Parameter Number Value to be replaced : " + paramValue);
 								        					objStr = objStr.replace( replaceString, paramValue );
 								        				}
 						        					}
 						        					
 						        					String replaceString = "${" + paramName + "}";
 						        					if( objStr.contains( replaceString ) ) {
-							        					logger.info("[Instance Operator] Parameter Name to be replaced : " + replaceString);
-								        				logger.info("[Instance Operator] Parameter Value to be replaced : " + paramValue);
+							        					logger.debug("[Instance Operator] Parameter Name to be replaced : " + replaceString);
+								        				logger.debug("[Instance Operator] Parameter Value to be replaced : " + paramValue);
 							        					objStr = objStr.replace( replaceString, paramValue );
 							        				}
 						        				}
@@ -264,8 +264,8 @@ public class InstanceOperator extends Thread {
 		        								if( parameter.has("valueType") && parameter.get("valueType").asText().equals( Constants.TEMPLATE_DATA_TYPE_NUMBER )) {
 			        								String replaceString = "\"${" + paramName + "}\"";
 					        						if( objStr.contains( replaceString ) ) {
-							        					logger.info("[Instance Operator] Default Parameter Number Name to be replaced : " + replaceString);
-								        				logger.info("[Instance Operator] Default Parameter Number Value to be replaced : " + defaultValue);
+							        					logger.debug("[Instance Operator] Default Parameter Number Name to be replaced : " + replaceString);
+								        				logger.debug("[Instance Operator] Default Parameter Number Value to be replaced : " + defaultValue);
 							        					objStr = objStr.replace( replaceString, defaultValue );
 							        					
 							        					if ( !existParm.contains( paramName ) ) {
@@ -280,8 +280,8 @@ public class InstanceOperator extends Thread {
 				        						}
 		        								String replaceString = "${" + paramName + "}";
 					        					if( objStr.contains( replaceString ) ) {
-						        					logger.info("[Instance Operator] Default Parameter Name to be replaced : " + replaceString);
-							        				logger.info("[Instance Operator] Default Parameter Value to be replaced : " + defaultValue);
+						        					logger.debug("[Instance Operator] Default Parameter Name to be replaced : " + replaceString);
+							        				logger.debug("[Instance Operator] Default Parameter Value to be replaced : " + defaultValue);
 						        					objStr = objStr.replace( replaceString, defaultValue );
 						        					
 						        					if ( !existParm.contains( paramName ) ) {
@@ -314,12 +314,12 @@ public class InstanceOperator extends Thread {
 			        					objSb.append( splitStr[i] );
 			        				}
 			        				//objStr = splitStr[0] + "\"metadata\":{" + sb.toString() + splitStr[1];
-			        				//logger.info("[Instance Operator] @@@@@@@@@@@@@@@@@ Split Template Object[0] : " + splitStr[0]);
-			        				//logger.info("[Instance Operator] @@@@@@@@@@@@@@@@@ Split Template Object[1] : " + splitStr[1]);
-			        				//logger.info("[Instance Operator] Template Object : " + objStr);
+			        				//logger.debug("[Instance Operator] @@@@@@@@@@@@@@@@@ Split Template Object[0] : " + splitStr[0]);
+			        				//logger.debug("[Instance Operator] @@@@@@@@@@@@@@@@@ Split Template Object[1] : " + splitStr[1]);
+			        				//logger.debug("[Instance Operator] Template Object : " + objStr);
 
 			        				JsonNode replacedObject = numberTypeConverter(mapper.readTree(objSb.toString()));
-			        				logger.info("[Instance Operator] Replaced Template Object : " + replacedObject);
+			        				logger.debug("[Instance Operator] Replaced Template Object : " + replacedObject);
 			        				
 			        				//if(!objStr.contains("${")) {
 			        					String apiGroup = null;
@@ -358,18 +358,18 @@ public class InstanceOperator extends Thread {
 			        							        							        					
 			        					try {
 			        						Object result = tpApi.createNamespacedCustomObject(apiGroup, apiVersion, namespace, kind, bodyObj, null);
-			        						logger.info(result.toString());
+			        						logger.debug(result.toString());
 			        						patchStatus(instanceObj.get("metadata").get("name").asText(), Constants.STATUS_RUNNING, instanceNamespace);
 			        					} catch (ApiException e) {
-			        						logger.info("[Instance Operator] ApiException: " + e.getMessage());
-			        						logger.info(e.getResponseBody());
+			        						logger.debug("[Instance Operator] ApiException: " + e.getMessage());
+			        						logger.debug(e.getResponseBody());
 			        						patchStatus(instanceObj.get("metadata").get("name").asText(), Constants.STATUS_ERROR, e.getResponseBody(), instanceNamespace);
 			        						throw e;
 			        					} catch (Exception e) {
-			        						logger.info("[Instance Operator] Exception: " + e.getMessage());
+			        						logger.debug("[Instance Operator] Exception: " + e.getMessage());
 			        						StringWriter sw = new StringWriter();
 			        						e.printStackTrace(new PrintWriter(sw));
-			        						logger.info(sw.toString());
+			        						logger.debug(sw.toString());
 			        						patchStatus(instanceObj.get("metadata").get("name").asText(), Constants.STATUS_ERROR, e.getMessage(), instanceNamespace);
 			        						throw e;
 			        					}
@@ -382,7 +382,7 @@ public class InstanceOperator extends Thread {
 		        			obj.put("objects", objArr);
 	    					tpObj.put("template", obj);
 	    					specObj.put("spec", tpObj);
-	    					logger.info("[Instance Operator] Object to be patched : " + specObj.toString());
+	    					logger.debug("[Instance Operator] Object to be patched : " + specObj.toString());
 	    					
 	    					JSONObject patch = new JSONObject();
 	    					JSONArray patchArray = new JSONArray();
@@ -393,7 +393,7 @@ public class InstanceOperator extends Thread {
 	    					
 	    					try{
 	    						Object result = tpApi.patchNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, instanceNamespace, Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, instanceObj.get("metadata").get("name").asText(), patchArray);
-	    						logger.info(result.toString());
+	    						logger.debug(result.toString());
 	    					} catch (ApiException e) {
 	    						throw new Exception(e.getResponseBody());
 	    					}
@@ -411,7 +411,7 @@ public class InstanceOperator extends Thread {
 		    					
 		    					try{
 		    						Object result = tpApi.patchNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, instanceNamespace, Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, instanceObj.get("metadata").get("name").asText(), parmPatchArrayInput);
-		    						logger.info(result.toString());
+		    						logger.debug(result.toString());
 		    					} catch (ApiException e) {
 		    						throw new Exception(e.getResponseBody());
 		    					}
@@ -419,7 +419,7 @@ public class InstanceOperator extends Thread {
 	    					
 		        		} else if(response.type.toString().equals("DELETED")) {
 		        			V1DeleteOptions body = new V1DeleteOptions();
-		        			logger.info("[Instance Operator] Template Instance " + instanceObj.get("metadata").get("name") + " is DELETED");
+		        			logger.debug("[Instance Operator] Template Instance " + instanceObj.get("metadata").get("name") + " is DELETED");
 		        			JsonNode instanceObjs = instanceObj.get("spec").get("template").get("objects");
 		        			
 		        			/*if(instanceObjs.isArray()) {
@@ -450,10 +450,10 @@ public class InstanceOperator extends Thread {
 		        						kind = object.get("kind").asText();
 		        					}
 		        					
-		        					logger.info(apiVersion + "/" + kind + " \"" + name + "\" deleted");
+		        					logger.debug(apiVersion + "/" + kind + " \"" + name + "\" deleted");
 		        					try {
 		        						Object result = tpApi.deleteNamespacedCustomObject(apiGroup, apiVersion, namespace, kind, name, body, 0, null, null);
-		        						logger.info(result.toString());
+		        						logger.debug(result.toString());
 		        					} catch (ApiException e) {
 		        						throw new Exception(e.getResponseBody());
 		        					}
@@ -461,14 +461,14 @@ public class InstanceOperator extends Thread {
 		        			}*/
 		        		}
 		        		
-//		        		logger.info("[Instance Operator] Save latestHandledResourceVersion of Instance Operator [" + instanceObj.get("metadata").get("name").asText() + "]");
+//		        		logger.debug("[Instance Operator] Save latestHandledResourceVersion of Instance Operator [" + instanceObj.get("metadata").get("name").asText() + "]");
 //						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, instanceObj.get("metadata").get("resourceVersion").asText());
 		        		
 					} catch(Exception e) {
-						logger.info("[Instance Operator] Instance Operator Exception: " + e.getMessage());
+						logger.debug("[Instance Operator] Instance Operator Exception: " + e.getMessage());
 					}
 	        	});
-				logger.info("=============== Instance 'For Each' END ===============");
+				logger.debug("=============== Instance 'For Each' END ===============");
 				watchInstance = Watch.createWatch(
 				        client,
 				        tpApi.listClusterCustomObjectCall(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, null, null, null, null, null, null, null, Boolean.TRUE, null),
@@ -476,9 +476,9 @@ public class InstanceOperator extends Thread {
 			}
 
 		} catch (Exception e) {
-			logger.info("[Instance Operator] Instance Operator Exception: " + e.getMessage());
+			logger.debug("[Instance Operator] Instance Operator Exception: " + e.getMessage());
 			if( e.getMessage().equals("abnormal") ) {
-				logger.info("Catch abnormal conditions!! Exit process");
+				logger.debug("Catch abnormal conditions!! Exit process");
 				System.exit(1);
 			}
 		}
@@ -561,7 +561,7 @@ public class InstanceOperator extends Thread {
 		try {
 			resultNode = mapper.readTree(objectStr);
 		} catch (IOException e) {
-			logger.info(e.getMessage());
+			logger.debug(e.getMessage());
 		}
 		return resultNode;
 	}
