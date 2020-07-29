@@ -84,7 +84,7 @@ public class NamespaceClaimController extends Thread {
 								case Constants.EVENT_TYPE_ADDED : 
 									if ( K8sApiCaller.namespaceAlreadyExist( resourceName ) ) {
 										replaceNscStatus( claimName, Constants.CLAIM_STATUS_REJECT, "Duplicated NameSpaceName" ); 
-										patchLabel(claimName, "handled" ,"t");// must be after replaceNscStatus for awake watcher once more
+										K8sApiCaller.patchLabel(claimName, "handled" ,"t");// must be after replaceNscStatus for awake watcher once more
 									} else {
 										// Patch Status to Awaiting
 										replaceNscStatus( claimName, Constants.CLAIM_STATUS_AWAITING, "wait for admin permission" );
@@ -102,7 +102,7 @@ public class NamespaceClaimController extends Thread {
 									if ( claim.getMetadata().getAnnotations() != null && claim.getMetadata().getAnnotations().get("creator") !=null
 											&& !claim.getMetadata().getAnnotations().get("creator").contains(":")) { // 방어로직
 										logger.info("[NamespaceClaim Controller] Set Owner Label from Annotation 'Creator'" );
-										patchLabel(claimName, "owner" ,claim.getMetadata().getAnnotations().get("creator"));// FIXME
+										K8sApiCaller.patchLabel(claimName, "owner" ,claim.getMetadata().getAnnotations().get("creator"));// FIXME
 									}								
 									break;
 									
@@ -144,7 +144,7 @@ public class NamespaceClaimController extends Thread {
 										logger.info(" Create Network Policy for new Namespace ["+ nsResult.getMetadata().getName() +" ] Starts");
 										K8sApiCaller.createDefaultNetPol(claim);
 										replaceNscStatus( claimName, Constants.CLAIM_STATUS_SUCCESS, "namespace create success." );
-										patchLabel(claimName, "handled" ,"t");// FIXME
+										K8sApiCaller.patchLabel(claimName, "handled" ,"t");// FIXME
 
 									} else if ( status.equals( Constants.CLAIM_STATUS_REJECT )) {
 										if ( claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") !=null 
@@ -152,7 +152,7 @@ public class NamespaceClaimController extends Thread {
 											// Send Fail confirm Mail
 											sendConfirmMail ( claim, null, false );										
 										}
-										patchLabel(claimName, "handled" ,"t");// FIXME
+										K8sApiCaller.patchLabel(claimName, "handled" ,"t");// FIXME
 									}				
 									break;
 									
@@ -179,7 +179,7 @@ public class NamespaceClaimController extends Thread {
 				});
 				logger.info("=============== NSC 'For Each' END ===============");
 				nscController = Watch.createWatch(client,
-						api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, null, null, null, null, null, null, null, Boolean.TRUE, null),
+						api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, null, null, null, "handled=f", null, null, null, Boolean.TRUE, null),
 						new TypeToken<Watch.Response<NamespaceClaim>>() {}.getType());
 			}
 		} catch (Exception e) {
@@ -334,31 +334,6 @@ public class NamespaceClaimController extends Thread {
 					Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, 
 					name, 
 					patchStatusArray );
-		} catch (ApiException e) {
-			logger.error(e.getResponseBody());
-			logger.error("ApiException Code: " + e.getCode());
-			throw e;
-		}
-	}
-	
-	@SuppressWarnings("unchecked")
-	private void patchLabel( String resourceName, String label, String value ) throws ApiException {
-		JsonArray patchArray = new JsonArray();
-		JsonObject patch = new JsonObject();
-		patch.addProperty("op", "replace");
-		patch.addProperty("path", "/metadata/labels/" + label);
-		patch.addProperty("value", value);
-		patchArray.add(patch);
-		
-		logger.debug( "Patch Object : " + patchArray );
-
-		try {
-			api.patchClusterCustomObject(
-					Constants.CUSTOM_OBJECT_GROUP, 
-					Constants.CUSTOM_OBJECT_VERSION, 
-					Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, 
-					resourceName, 
-					patchArray );
 		} catch (ApiException e) {
 			logger.error(e.getResponseBody());
 			logger.error("ApiException Code: " + e.getCode());

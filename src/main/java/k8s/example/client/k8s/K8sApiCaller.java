@@ -6770,6 +6770,31 @@ public class K8sApiCaller {
 
 	}
 
+	@SuppressWarnings("unchecked")
+	public static void patchLabel( String resourceName, String label, String value ) throws ApiException {
+		JsonArray patchArray = new JsonArray();
+		JsonObject patch = new JsonObject();
+		patch.addProperty("op", "replace");
+		patch.addProperty("path", "/metadata/labels/" + label);
+		patch.addProperty("value", value);
+		patchArray.add(patch);
+		
+		logger.debug( "Patch Object : " + patchArray );
+
+		try {
+			customObjectApi.patchClusterCustomObject(
+					Constants.CUSTOM_OBJECT_GROUP, 
+					Constants.CUSTOM_OBJECT_VERSION, 
+					Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, 
+					resourceName, 
+					patchArray );
+		} catch (ApiException e) {
+			logger.error(e.getResponseBody());
+			logger.error("ApiException Code: " + e.getCode());
+			throw e;
+		}
+	}
+
 
 //	public static void updateClusterRoleBindingOfGroup(String userGroupName, String userId) throws Exception {
 //		V1ClusterRoleBindingList crbList = null;

@@ -40,7 +40,7 @@ public class TemplateOperator extends Thread {
 		watchInstance = Watch.createWatch(
 		        client,
 		        api.listClusterCustomObjectCall(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE, 
-		        		null, null, null, null, null, null, null, Boolean.TRUE, null),
+		        		null, null, null, "handled=f", null, null, null, Boolean.TRUE, null),
 		        new TypeToken<Watch.Response<Object>>(){}.getType()
         );
 		
@@ -58,7 +58,7 @@ public class TemplateOperator extends Thread {
 				watchInstance.forEach(response -> {
 					try {
 						if(Thread.interrupted()) {
-							logger.debug("Interrupted!");
+							logger.error("Interrupted!");
 							watchInstance.close();
 						}
 					} catch(Exception e) {
@@ -72,8 +72,8 @@ public class TemplateOperator extends Thread {
 						String namespace = template.get("metadata").get("namespace").asText();
 
 						logger.info("[Template Operator] Event Type : " + response.type.toString()); //ADDED, MODIFIED, DELETED
-						logger.info("[Template Operator] Template Name : " + templateName);
-						logger.info("[Template Operator] Template Namespace : " + namespace);
+						logger.debug("[Template Operator] Template Name : " + templateName);
+						logger.debug("[Template Operator] Template Namespace : " + namespace);
 
 		        		latestResourceVersion = template.get("metadata").get("resourceVersion").asLong();
 		        		logger.debug("[Template Operator] Custom LatestResourceVersion : " + latestResourceVersion);
@@ -118,25 +118,23 @@ public class TemplateOperator extends Thread {
 	    					} catch (ApiException e) {
 	    						throw new Exception(e.getResponseBody());
 	    					}
-	    					
-		        		}
-		        		
-//		        		logger.debug("[Template Operator] Save latestHandledResourceVersion of Template Operator [" + templateName + "]");
-//						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE,  template.get("metadata").get("resourceVersion").asText());
+							K8sApiCaller.patchLabel(templateName, "handled" ,"t");  					
+		        		}		        		
 					} catch(Exception e) {
-						logger.debug(e.getMessage());
+						logger.error(e.getMessage());
 					}
 	        	});
 				logger.debug("=============== Template 'For Each' END ===============");
 				watchInstance = Watch.createWatch(
 				        client,
-				        tpApi.listClusterCustomObjectCall(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE, null, null, null, null, null, null, null, Boolean.TRUE, null),
+				        tpApi.listClusterCustomObjectCall(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, 
+				        		Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE, null, null, null, "handled=f", null, null, null, Boolean.TRUE, null),
 				        new TypeToken<Watch.Response<Object>>(){}.getType());
 			}
 		} catch (Exception e) {
-			logger.debug("[Template Operator] Template Operator Exception: " + e.getMessage());
+			logger.error("[Template Operator] Template Operator Exception: " + e.getMessage());
 			if( e.getMessage().equals("abnormal") ) {
-				logger.debug("Catch abnormal conditions!! Exit process");
+				logger.error("Catch abnormal conditions!! Exit process");
 				System.exit(1);
 			}
 		}

@@ -41,7 +41,7 @@ public class CatalogServiceClaimController extends Thread {
 
 	CatalogServiceClaimController(ApiClient client, CustomObjectsApi api, long resourceVersion) throws Exception {
 		cscController = Watch.createWatch(client,
-				api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_CATALOGSERVICECLAIM, null, null, null, null, null, null, null, Boolean.TRUE, null),
+				api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_CATALOGSERVICECLAIM, null, null, null, "handled=f", null, null, null, Boolean.TRUE, null),
 				new TypeToken<Watch.Response<Object>>() {}.getType());
 		this.api = api;
 		this.client = client;
@@ -56,7 +56,7 @@ public class CatalogServiceClaimController extends Thread {
 				cscController.forEach(response -> {
 					try {
 						if (Thread.interrupted()) {
-							logger.info("Interrupted!");
+							logger.error("Interrupted!");
 							cscController.close();
 						}
 					} catch (Exception e) {
@@ -77,7 +77,7 @@ public class CatalogServiceClaimController extends Thread {
 							latestResourceVersion = claim.get("metadata").get("resourceVersion").asLong();
 							String eventType = response.type.toString(); //ADDED, MODIFIED, DELETED
 							logger.info("[CatalogServiceClaim Controller] Event Type : " + eventType );
-							logger.info("[CatalogServiceClaim Controller] == CatalogServiceClaim == \n" + claim.toString());
+							logger.debug("[CatalogServiceClaim Controller] == CatalogServiceClaim == \n" + claim.toString());
 							claimName = claim.get("metadata").get("name").asText();
 							claimNamespace = claim.get("metadata").get("namespace").asText();
 							resourceName = claim.get("spec").get("metadata").get("name").asText();
@@ -86,10 +86,10 @@ public class CatalogServiceClaimController extends Thread {
     							catalogNamespace = System.getenv(Constants.SYSTEM_ENV_CATALOG_NAMESPACE);
     						}
 							
-							logger.info("[CatalogServiceClaim Controller] Claim Name : " + claimName );
-							logger.info("[CatalogServiceClaim Controller] Claim Namespace : " + claimNamespace );
-							logger.info("[CatalogServiceClaim Controller] Template Name : " + resourceName );
-							logger.info("[CatalogServiceClaim Controller] Catalog Namespace : " + catalogNamespace );
+							logger.debug("[CatalogServiceClaim Controller] Claim Name : " + claimName );
+							logger.debug("[CatalogServiceClaim Controller] Claim Namespace : " + claimNamespace );
+							logger.debug("[CatalogServiceClaim Controller] Template Name : " + resourceName );
+							logger.debug("[CatalogServiceClaim Controller] Catalog Namespace : " + catalogNamespace );
 
 							switch( eventType ) {
 								case Constants.EVENT_TYPE_ADDED : 
@@ -104,6 +104,7 @@ public class CatalogServiceClaimController extends Thread {
 									} else if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && !K8sApiCaller.templateAlreadyExist( resourceName, catalogNamespace ) ) {
 										K8sApiCaller.createTemplate( claim, catalogNamespace );
 										replaceCscStatus( claimName, Constants.CLAIM_STATUS_SUCCESS, "template create success.", claimNamespace );
+										K8sApiCaller.patchLabel(claimName, "handled" ,"t");
 									}
 									break;
 								case Constants.EVENT_TYPE_DELETED : 
@@ -111,23 +112,19 @@ public class CatalogServiceClaimController extends Thread {
 									break;
 							}
 						}
-						//FIXME
-//						logger.info("[CatalogServiceClaim Controller] Save latestHandledResourceVersion of CatalogServiceClaim [" + claim.get("metadata").get("name").asText() + "]");
-//						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_CATALOGSERVICECLAIM, claim.get("metadata").get("resourceVersion").asText());
 						
 					} catch (Exception e) {
-						logger.info("Exception: " + e.getMessage());
+						logger.error("Exception: " + e.getMessage());
 						StringWriter sw = new StringWriter();
 						e.printStackTrace(new PrintWriter(sw));
-						logger.info(sw.toString());
+						logger.error(sw.toString());
 						try {
 							replaceCscStatus( claimName, Constants.CLAIM_STATUS_ERROR, e.getMessage(), claimNamespace );
 						} catch (ApiException e1) {
 							e1.printStackTrace();
-							logger.info("Resource Quota Claim Controller Exception : Change Status 'Error' Fail ");
+							logger.error("Resource Quota Claim Controller Exception : Change Status 'Error' Fail ");
 						}
 					} catch (Throwable e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				});
@@ -137,12 +134,12 @@ public class CatalogServiceClaimController extends Thread {
 						new TypeToken<Watch.Response<Object>>() {}.getType());
 			}
 		} catch (Exception e) {
-			logger.info("Catalog Service Claim Controller Exception: " + e.getMessage());
+			logger.error("Catalog Service Claim Controller Exception: " + e.getMessage());
 			StringWriter sw = new StringWriter();
 			e.printStackTrace(new PrintWriter(sw));
-			logger.info(sw.toString());
+			logger.error(sw.toString());
 			if( e.getMessage().equals("abnormal") ) {
-				logger.info("Catch abnormal conditions!! Exit process");
+				logger.error("Catch abnormal conditions!! Exit process");
 				System.exit(1);
 			}
 		}
@@ -160,7 +157,7 @@ public class CatalogServiceClaimController extends Thread {
 		patchStatus.add("value", statusObject);
 		patchStatusArray.add( patchStatus );
 		
-		logger.info( "Patch Status Object : " + patchStatusArray );
+		logger.debug( "Patch Status Object : " + patchStatusArray );
 		/*[
 		  "op" : "replace",
 		  "path" : "/status",
@@ -177,8 +174,8 @@ public class CatalogServiceClaimController extends Thread {
 					name, 
 					patchStatusArray );
 		} catch (ApiException e) {
-			logger.info(e.getResponseBody());
-			logger.info("ApiException Code: " + e.getCode());
+			logger.error(e.getResponseBody());
+			logger.error("ApiException Code: " + e.getCode());
 			throw e;
 		}
 	}
@@ -194,13 +191,13 @@ public class CatalogServiceClaimController extends Thread {
 					Constants.CUSTOM_OBJECT_PLURAL_CATALOGSERVICECLAIM,  
 					name );
 		} catch (ApiException e) {
-			logger.info(e.getResponseBody());
-			logger.info("ApiException Code: " + e.getCode());
+			logger.error(e.getResponseBody());
+			logger.error("ApiException Code: " + e.getCode());
 			throw e;
 		}
 
 		String objectStr = new Gson().toJson( claimJson );
-		logger.info( objectStr );
+		logger.debug( objectStr );
 		
 		JsonParser parser = new JsonParser();
 		String status = parser.parse( objectStr ).getAsJsonObject().get( "status" ).getAsJsonObject().get( "status" ).getAsString();

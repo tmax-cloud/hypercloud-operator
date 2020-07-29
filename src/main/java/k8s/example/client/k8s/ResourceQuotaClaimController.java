@@ -30,7 +30,7 @@ public class ResourceQuotaClaimController extends Thread {
 
 	ResourceQuotaClaimController(ApiClient client, CustomObjectsApi api, long resourceVersion) throws Exception {
 		rqcController = Watch.createWatch(client,
-				api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_RESOURCEQUOTACLAIM, null, null, null, null, null, null, null, Boolean.TRUE, null),
+				api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_RESOURCEQUOTACLAIM, null, null, null, "handled=f", null, null, null, Boolean.TRUE, null),
 				new TypeToken<Watch.Response<NamespaceClaim>>() {}.getType());
 		this.api = api;
 		this.client = client;
@@ -80,6 +80,7 @@ public class ResourceQuotaClaimController extends Thread {
 									} else if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && !K8sApiCaller.resourcequotaAlreadyExist( resourceName, claimNamespace ) ) {
 										K8sApiCaller.createResourceQuota( claim );
 										replaceRqcStatus( claimName, Constants.CLAIM_STATUS_SUCCESS, "resource quota create success.", claimNamespace );
+										K8sApiCaller.patchLabel(claimName, "handled" ,"t");
 									} 
 									break;
 								case Constants.EVENT_TYPE_DELETED : 
@@ -109,7 +110,7 @@ public class ResourceQuotaClaimController extends Thread {
 				});
 				logger.info("=============== RQC 'For Each' END ===============");
 				rqcController = Watch.createWatch(client,
-						api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_RESOURCEQUOTACLAIM, null, null, null, null, null, null, null, Boolean.TRUE, null),
+						api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_RESOURCEQUOTACLAIM, null, null, null, "handled=f", null, null, null, Boolean.TRUE, null),
 						new TypeToken<Watch.Response<NamespaceClaim>>() {}.getType());
 			}
 		} catch (Exception e) {

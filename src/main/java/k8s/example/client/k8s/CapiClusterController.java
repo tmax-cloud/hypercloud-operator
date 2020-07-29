@@ -35,7 +35,7 @@ public class CapiClusterController extends Thread {
 			throws Exception {
 		ccController = Watch.createWatch(client,
 				api.listClusterCustomObjectCall(Constants.CAPI_OBJECT_GROUP, Constants.CAPI_OBJECT_VERSION,
-						Constants.CAPI_OBJECT_PLURAL_CAPICLUSTER, null, null, null, null, null, null, null,
+						Constants.CAPI_OBJECT_PLURAL_CAPICLUSTER, null, null, null, "handled=f", null, null, null,
 						Boolean.TRUE, null),
 				new TypeToken<Watch.Response<CapiCluster>>() {
 				}.getType());
@@ -50,11 +50,11 @@ public class CapiClusterController extends Thread {
 				ccController.forEach(response -> {
 					try {
 						if (Thread.interrupted()) {
-							logger.info("[CapiCluster controller] Interrupted");
+							logger.error("[CapiCluster controller] Interrupted");
 							ccController.close();
 						}
 					} catch (Exception e) {
-						logger.info(e.getMessage());
+						logger.error(e.getMessage());
 					}
 
 					// Logic here
@@ -75,11 +75,7 @@ public class CapiClusterController extends Thread {
 								if(annotateKubeConfigSecret(clusterName+KUBECONFIG, "join")) replaceCCAnnotate(clusterName, "success");
 								else replaceCCAnnotate(clusterName, "error");
 							}
-						}
-						
-//						logger.info("[CapiCluster controller] Save latestHandledResourceVersion of CapiCluster controller [" + response.object.getMetadata().getName() + "]");
-//						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CAPI_OBJECT_PLURAL_CAPICLUSTER, response.object.getMetadata().getResourceVersion());
-						
+						}					
 					} catch (Exception e) {
 						printException(e, "CapiCluster handle");
 					} catch (Throwable e) {
@@ -134,21 +130,21 @@ public class CapiClusterController extends Thread {
 	}
 
 	private static void printException(Exception e, String message) {
-		logger.info("[CapiCluster controller] " + message + " Error");
-		logger.info("[CapiCluster controller] Exception: " + e.getMessage());
+		logger.error("[CapiCluster controller] " + message + " Error");
+		logger.error("[CapiCluster controller] Exception: " + e.getMessage());
 		StringWriter sw = new StringWriter();
 		e.printStackTrace(new PrintWriter(sw));
-		logger.info(sw.toString());
+		logger.error(sw.toString());
 	}
 
 	public static void printApiException(ApiException e, String message) {
 		if (e.getCode() == 404)
 			return;
 
-		logger.info("[CapiCluster controller] " + message + " Error");
-		logger.info("Status code: " + e.getCode());
-		logger.info("Reason: " + e.getResponseBody());
-		logger.info("Response headers: " + e.getResponseHeaders());
+		logger.error("[CapiCluster controller] " + message + " Error");
+		logger.error("Status code: " + e.getCode());
+		logger.error("Reason: " + e.getResponseBody());
+		logger.error("Response headers: " + e.getResponseHeaders());
 		e.printStackTrace();
 	}
 

@@ -25,7 +25,7 @@ public class ImageWatcher extends Thread {
 	
 	ImageWatcher(ApiClient client, CustomObjectsApi api, String resourceVersion) throws Exception {
 		watchImage = Watch.createWatch(client,
-				api.listClusterCustomObjectCall("tmax.io", "v1", "images", null, null, null, null, null, null, null, Boolean.TRUE, null),
+				api.listClusterCustomObjectCall("tmax.io", "v1", "images", null, null, null, "handled=f", null, null, null, Boolean.TRUE, null),
 				new TypeToken<Watch.Response<Image>>() {}.getType());
 
 		this.api = api;
@@ -41,7 +41,7 @@ public class ImageWatcher extends Thread {
 				watchImage.forEach(response -> {
 					try {
 						if (Thread.interrupted()) {
-							logger.debug("Interrupted!");
+							logger.error("Interrupted!");
 							watchImage.close();
 						}
 					} catch (Exception e) {
@@ -71,16 +71,8 @@ public class ImageWatcher extends Thread {
 								break;
 							}						
 						}
-						
-//						logger.debug("[ImageWatcher] Save latestHandledResourceVersion of ImageWatcher [" + response.object.getMetadata().getName() + "]");
-//						String resourceVersion = K8sApiCaller.getCustomResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_IMAGE, 
-//								Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION,
-//								response.object.getMetadata().getName(), response.object.getMetadata().getNamespace(), true);
-//						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_IMAGE, resourceVersion);
-						
-//					} catch (ApiException e) {
-//						logger.error("ApiException: " + e.getMessage());
-//						logger.error(e.getResponseBody());
+
+
 					} catch (Exception e) {
 						logger.error("Exception: " + e.getMessage());
 						StringWriter sw = new StringWriter();
@@ -96,7 +88,7 @@ public class ImageWatcher extends Thread {
 				
 				logger.debug("=============== Image 'For Each' END ===============");
 				watchImage = Watch.createWatch(client,
-						api.listClusterCustomObjectCall("tmax.io", "v1", "images", null, null, null, null, null, null, null, Boolean.TRUE, null),
+						api.listClusterCustomObjectCall("tmax.io", "v1", "images", null, null, null, "handled=f", null, null, null, Boolean.TRUE, null),
 						new TypeToken<Watch.Response<Image>>() {}.getType());
 			}
 		} catch (Exception e) {

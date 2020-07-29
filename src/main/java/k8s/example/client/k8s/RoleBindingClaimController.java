@@ -31,7 +31,7 @@ public class RoleBindingClaimController extends Thread {
 
 	RoleBindingClaimController(ApiClient client, CustomObjectsApi api, long resourceVersion) throws Exception {
 		rbcController = Watch.createWatch(client,
-				api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_ROLEBINDINGCLAIM, null, null, null, null, null, null, null, Boolean.TRUE, null),
+				api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_ROLEBINDINGCLAIM, null, null, null, "handled=f", null, null, null, Boolean.TRUE, null),
 				new TypeToken<Watch.Response<RoleBindingClaim>>() {}.getType());
 		this.api = api;
 		this.client = client;
@@ -82,6 +82,7 @@ public class RoleBindingClaimController extends Thread {
 									} else if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && !K8sApiCaller.roleBindingAlreadyExist( resourceName, claimNamespace ) ) {
 										K8sApiCaller.createRoleBinding( claim );
 										replaceRbcStatus( claimName, Constants.CLAIM_STATUS_SUCCESS, "rolebinding create success.", claimNamespace );
+										K8sApiCaller.patchLabel(claimName, "handled" ,"t");
 									} 
 									break;
 								case Constants.EVENT_TYPE_DELETED : 
@@ -109,7 +110,7 @@ public class RoleBindingClaimController extends Thread {
 				});
 				logger.info("=============== RBC 'For Each' END ===============");
 				rbcController = Watch.createWatch(client,
-						api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_ROLEBINDINGCLAIM, null, null, null, null, null, null, null, Boolean.TRUE, null),
+						api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_ROLEBINDINGCLAIM, null, null, null, "handled=f", null, null, null, Boolean.TRUE, null),
 						new TypeToken<Watch.Response<RoleBindingClaim>>() {}.getType());
 			}
 		} catch (Exception e) {
