@@ -92,7 +92,7 @@ public class RegistryWatcher extends Thread {
 								if(registry.getStatus() == null ) {
 									K8sApiCaller.initRegistry(registry.getMetadata().getName(), registry);
 									logger.info(registry.getMetadata().getNamespace() + "/" 
-											+ registry.getMetadata().getName() + " registry is creating...");
+											+ registry.getMetadata().getName() + " registry is initializing...");
 								}
 								
 								break;
@@ -116,7 +116,7 @@ public class RegistryWatcher extends Thread {
 									String changeReason = null;
 									Map <RegistryCondition.Condition, Boolean> statusMap = getStatusMap(registry);
 									
-									logger.info("\t[" + registry.getMetadata().getResourceVersion() + "] " 
+									logger.debug("[" + registry.getMetadata().getResourceVersion() + "] " 
 											+ registry.getMetadata().getNamespace() + "/" 
 											+ registry.getMetadata().getName()
 											+ " Registry phase: " + phase);
@@ -137,6 +137,9 @@ public class RegistryWatcher extends Thread {
 												&& !statusMap.get(RegistryCondition.Condition.PVC) 
 												&& !statusMap.get(RegistryCondition.Condition.CONFIG_MAP)) {
 
+
+											logger.info(registry.getMetadata().getNamespace() + "/" 
+													+ registry.getMetadata().getName() + " registry is creating...");
 											K8sApiCaller.createRegistry(registry);
 										} 
 										// Registry Is NotReady
@@ -148,6 +151,9 @@ public class RegistryWatcher extends Thread {
 									}
 									// Registry Is Updating.
 									else if(phase.equals(RegistryStatus.StatusPhase.UPDATING.getStatus()) ) {
+										logger.info(registry.getMetadata().getNamespace() + "/" 
+												+ registry.getMetadata().getName() + " registry is updating...");
+										
 										// logger.debug("afterJson = " + Util.toJson(registry).toString());
 										JsonNode diff = Util.jsonDiff(beforeJson, Util.toJson(registry).toString());
 										
@@ -200,6 +206,7 @@ public class RegistryWatcher extends Thread {
 											if(!phase.equals(RegistryStatus.StatusPhase.RUNNING.getStatus())) {
 												boolean isSynced = false;
 												int tryCount = 0;
+												
 												while(!isSynced) {
 													if( ++tryCount > 10) {
 														break;
@@ -218,6 +225,9 @@ public class RegistryWatcher extends Thread {
 												changePhase = RegistryStatus.StatusPhase.RUNNING.getStatus();
 												changeMessage = "Registry is running. All registry resources are operating normally.";
 												changeReason = "Running";
+
+												logger.info(registry.getMetadata().getNamespace() + "/" 
+														+ registry.getMetadata().getName() + " registry is running!!");
 											}
 											// Last Phase: Running / Current Phase: Running
 											else { 

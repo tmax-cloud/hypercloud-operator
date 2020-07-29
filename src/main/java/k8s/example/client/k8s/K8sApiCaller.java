@@ -3890,12 +3890,12 @@ public class K8sApiCaller {
 					try {
 						Registry registry = mapper.treeToValue(mapper.valueToTree(registryObj), Registry.class);
 						
-						logger.info("== " + registry.getMetadata().getName() + "/" + registry.getMetadata().getNamespace()
-							+ " registry sync start ==");
+						logger.info("<-- " + registry.getMetadata().getNamespace() + "/" + registry.getMetadata().getName()
+							+ " registry sync start");
 					
 						syncImageList(registry);
-						logger.info("== " + registry.getMetadata().getName() + "/" + registry.getMetadata().getNamespace()
-								+ " registry sync end ==\n");
+						logger.info(registry.getMetadata().getNamespace() + "/" + registry.getMetadata().getName()
+								+ " registry sync end -->");
 					} catch (ApiException e) {
 						logger.error(e.getResponseBody());
 					} catch (Exception e) {
