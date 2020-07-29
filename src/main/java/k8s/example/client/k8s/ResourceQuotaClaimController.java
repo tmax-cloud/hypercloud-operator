@@ -45,11 +45,11 @@ public class ResourceQuotaClaimController extends Thread {
 				rqcController.forEach(response -> {
 					try {
 						if (Thread.interrupted()) {
-							logger.info("Interrupted!");
+							logger.error("Interrupted!");
 							rqcController.close();
 						}
 					} catch (Exception e) {
-						logger.info(e.getMessage());
+						logger.error(e.getMessage());
 					}
 									
 					// Logic here
@@ -63,7 +63,7 @@ public class ResourceQuotaClaimController extends Thread {
 							latestResourceVersion = Long.parseLong( response.object.getMetadata().getResourceVersion() );
 							String eventType = response.type.toString(); //ADDED, MODIFIED, DELETED
 							logger.info("[ResourceQuotaClaim Controller] Event Type : " + eventType );
-							logger.info("[ResourceQuotaClaim Controller] == ResourceQuotaClaim == \n" + claim.toString());
+							logger.debug("[ResourceQuotaClaim Controller] == ResourceQuotaClaim == \n" + claim.toString());
 							claimName = claim.getMetadata().getName();
 							resourceName = claim.getResourceName();
 							claimNamespace = claim.getMetadata().getNamespace();
@@ -92,15 +92,15 @@ public class ResourceQuotaClaimController extends Thread {
 //						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_RESOURCEQUOTACLAIM, response.object.getMetadata().getResourceVersion());
 
 					} catch (Exception e) {
-						logger.info("Exception: " + e.getMessage());
+						logger.error("Exception: " + e.getMessage());
 						StringWriter sw = new StringWriter();
 						e.printStackTrace(new PrintWriter(sw));
-						logger.info(sw.toString());
+						logger.error(sw.toString());
 						try {
 							replaceRqcStatus( claimName, Constants.CLAIM_STATUS_ERROR, e.getMessage(), claimNamespace );
 						} catch (ApiException e1) {
 							e1.printStackTrace();
-							logger.info("Resource Quota Claim Controller Exception : Change Status 'Error' Fail ");
+							logger.error("Resource Quota Claim Controller Exception : Change Status 'Error' Fail ");
 						}
 					} catch (Throwable e) {
 						// TODO Auto-generated catch block
@@ -113,12 +113,12 @@ public class ResourceQuotaClaimController extends Thread {
 						new TypeToken<Watch.Response<NamespaceClaim>>() {}.getType());
 			}
 		} catch (Exception e) {
-			logger.info("Resource Quota Claim Controller Exception: " + e.getMessage());
+			logger.error("Resource Quota Claim Controller Exception: " + e.getMessage());
 			StringWriter sw = new StringWriter();
 			e.printStackTrace(new PrintWriter(sw));
-			logger.info(sw.toString());
+			logger.error(sw.toString());
 			if( e.getMessage().equals("abnormal") ) {
-				logger.info("Catch abnormal conditions!! Exit process");
+				logger.error("Catch abnormal conditions!! Exit process");
 				System.exit(1);
 			}
 		}
@@ -136,7 +136,7 @@ public class ResourceQuotaClaimController extends Thread {
 		patchStatus.add("value", statusObject);
 		patchStatusArray.add( patchStatus );
 		
-		logger.info( "Patch Status Object : " + patchStatusArray );
+		logger.debug( "Patch Status Object : " + patchStatusArray );
 		/*[
 		  "op" : "replace",
 		  "path" : "/status",
@@ -153,8 +153,8 @@ public class ResourceQuotaClaimController extends Thread {
 					name, 
 					patchStatusArray );
 		} catch (ApiException e) {
-			logger.info(e.getResponseBody());
-			logger.info("ApiException Code: " + e.getCode());
+			logger.error(e.getResponseBody());
+			logger.error("ApiException Code: " + e.getCode());
 			throw e;
 		}
 	}
@@ -170,13 +170,13 @@ public class ResourceQuotaClaimController extends Thread {
 					Constants.CUSTOM_OBJECT_PLURAL_RESOURCEQUOTACLAIM,  
 					name );
 		} catch (ApiException e) {
-			logger.info(e.getResponseBody());
-			logger.info("ApiException Code: " + e.getCode());
+			logger.error(e.getResponseBody());
+			logger.error("ApiException Code: " + e.getCode());
 			throw e;
 		}
 
 		String objectStr = new Gson().toJson( claimJson );
-		logger.info( objectStr );
+		logger.debug( objectStr );
 		
 		JsonParser parser = new JsonParser();
 		String status = parser.parse( objectStr ).getAsJsonObject().get( "status" ).getAsJsonObject().get( "status" ).getAsString();

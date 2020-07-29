@@ -120,7 +120,7 @@ public class Util {
 	}
 	 
 	 public static void sendMail( String recipient, String subject, String body ) throws Throwable {	
-		logger.info( " Send Verification Mail User ");
+		logger.info( " Send Mail to User [ " + recipient + "] Start");
 		String host = "mail.tmax.co.kr";
 		int port = 25;
 		String sender = "no-reply-tc@tmax.co.kr";
@@ -164,7 +164,7 @@ public class Util {
 //		}
 		
 		// Make Body
-		logger.info( " Mail Body : "  + body );
+		logger.debug( " Mail Body : "  + body );
 		mimeMessage.setContent(body,"text/html; charset="+charSetUtf);
 		mimeMessage.setHeader("Content-Type", "text/html; charset="+charSetUtf);
 		
@@ -175,7 +175,7 @@ public class Util {
 			logger.info( " Sent E-Mail to " + recipient);
 		}catch (MessagingException e) {
             e.printStackTrace();
-            logger.info( e.getMessage() + e.getStackTrace());
+            logger.error( e.getMessage() + e.getStackTrace());
 		} 
 	}
 
