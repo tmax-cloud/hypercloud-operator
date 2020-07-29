@@ -59,8 +59,8 @@ public class RefreshHandler extends GeneralHandler {
 		try {
 			// Read inDO
 			refreshInDO = new ObjectMapper().readValue(body.get( "postData" ), Token.class);
-			logger.info( "  Access token: " + refreshInDO.getAccessToken() );
-    		logger.info( "  Refresh token: " + refreshInDO.getRefreshToken() );
+			logger.debug( "  Access token: " + refreshInDO.getAccessToken() );
+    		logger.debug( "  Refresh token: " + refreshInDO.getRefreshToken() );
 			
     		// Integrated Auth or OpenAuth
     		if (System.getenv( "PROAUTH_EXIST" ) != null) {   		
@@ -68,9 +68,9 @@ public class RefreshHandler extends GeneralHandler {
         			
     	    		logger.info( "  [[ Integrated OAuth System! ]] " );
     	    		JsonObject refreshOut = OAuthApiCaller.AuthenticateUpdate(refreshInDO.getRefreshToken());
-    	    		logger.info( "  Oauth Call Result : " + refreshOut.get("result").toString() );
-    	    		logger.info( "  New Access Token : " + refreshOut.get("token").toString() );
-    	    		logger.info( "  New Refresh Token : " + refreshOut.get("refresh_token").toString() );
+    	    		logger.debug( "  Oauth Call Result : " + refreshOut.get("result").toString() );
+    	    		logger.debug( "  New Access Token : " + refreshOut.get("token").toString() );
+    	    		logger.debug( "  New Refresh Token : " + refreshOut.get("refresh_token").toString() );
     	    		
     	    		if ( refreshOut.get("result").toString().equalsIgnoreCase("\"true\"") ){
         				logger.info( "  refresh success." );
@@ -98,7 +98,7 @@ public class RefreshHandler extends GeneralHandler {
         		String userId = jwt.getClaim(Constants.CLAIM_USER_ID).asString();
         		String tokenId = jwt.getClaim(Constants.CLAIM_TOKEN_ID).asString();
         		logger.info( "  User ID: " + userId );
-        		logger.info( "  Token ID: " + tokenId );
+        		logger.debug( "  Token ID: " + tokenId );
         		String tokenName = userId + "-" + tokenId;
         		
     			// Verify refresh token	
@@ -106,12 +106,12 @@ public class RefreshHandler extends GeneralHandler {
     			try {
     				jwt = verifier.verify(refreshInDO.getRefreshToken());
     			} catch (Exception e) {
-    				logger.info( "Exception message: " + e.getMessage() );
+    				logger.error( "Exception message: " + e.getMessage() );
     				K8sApiCaller.deleteToken(tokenName);
     			}
 
     			String issuer = jwt.getIssuer();
-    			logger.info( "  Issuer: " + issuer );
+    			logger.debug( "  Issuer: " + issuer );
     			
     			if(verifyRefreshToken(refreshInDO.getAccessToken(), refreshInDO.getRefreshToken(), tokenName, issuer)) {
     				logger.info( "  Refresh success" );	
@@ -141,7 +141,7 @@ public class RefreshHandler extends GeneralHandler {
         			}
         			
         			String newAccessToken = tokenBuilder.sign(Algorithm.HMAC256(Constants.ACCESS_TOKEN_SECRET_KEY));
-        			logger.info( "  New access token: " + newAccessToken );
+        			logger.debug( "  New access token: " + newAccessToken );
         			
         			// Make outDO
         			refreshOutDO = new Token();
@@ -160,7 +160,7 @@ public class RefreshHandler extends GeneralHandler {
         	}  		
 		} catch (Exception e) {
 			logger.info( "  Refresh fail" );
-			logger.info( "Exception message: " + e.getMessage() );
+			logger.error( "Exception message: " + e.getMessage() );
 			e.printStackTrace();
 			status = Status.UNAUTHORIZED;
 			outDO = Constants.REFRESH_FAILED;
@@ -189,7 +189,7 @@ public class RefreshHandler extends GeneralHandler {
 
 		try {
 			String bodyStr = readFile(body.get("content"), Integer.valueOf(session.getHeaders().get("content-length")));
-			logger.info("Body: " + bodyStr);
+			logger.debug("Body: " + bodyStr);
 			refreshInDO = new ObjectMapper().readValue(bodyStr, Token.class);
 			
     		if ( refreshInDO.getAtExpireTime() < 1 || refreshInDO.getAtExpireTime() >720 ) throw new Exception(ErrorCode.INVALID_TOKEN_EXPIRED_TIME);
@@ -203,9 +203,6 @@ public class RefreshHandler extends GeneralHandler {
     	    		logger.info( "  [[ Integrated OAuth System! ]] " );
     	    		JsonObject atExpireUpdateOut = OAuthApiCaller.ConfigurationUpdate(Constants.TOKEN_EXPIRED_TIME_KEY, Integer.toString(atExpireTimeSec));
     	    		JsonObject rtExpireUpdateOut = OAuthApiCaller.ConfigurationUpdate(Constants.REFRESH_TOKEN_EXPIRED_TIME_KEY, Integer.toString(atExpireTimeSec));
-//    	    		logger.info( "  Oauth Call Result : " + configurationUpdateOut.get("result").toString() );
-//    	    		logger.info( "  Updated Key : " + configurationUpdateOut.get("key").toString() );
-//    	    		logger.info( "  Updated Value : " + configurationUpdateOut.get("value").toString() );
     	    		
     	    		if ( atExpireUpdateOut.get("result").toString().equalsIgnoreCase("\"true\"") && rtExpireUpdateOut.get("result").toString().equalsIgnoreCase("\"true\"")){
         				logger.info( " Token Expire Time Change Service success." );     
@@ -236,7 +233,7 @@ public class RefreshHandler extends GeneralHandler {
 						e1.printStackTrace();
 					} 
     			} catch (ApiException e) {
-    				logger.info("Exception message: " + e.getResponseBody());
+    				logger.error("Exception message: " + e.getResponseBody());
     				e.printStackTrace();
     				
     				// Create new secret
@@ -256,21 +253,21 @@ public class RefreshHandler extends GeneralHandler {
         	}  		
 
 		} catch (ApiException e) {
-			logger.info("Exception message: " + e.getResponseBody());
+			logger.error("Exception message: " + e.getResponseBody());
 			e.printStackTrace();
 
 			status = Status.UNAUTHORIZED;
 			outDO = Constants.EXPIRE_TIME_UPDATE_FAILED;
 
 		} catch (Exception e) {
-			logger.info("Exception message: " + e.getMessage());
+			logger.error("Exception message: " + e.getMessage());
 
 			e.printStackTrace();
 			status = Status.UNAUTHORIZED;
 			outDO = Constants.EXPIRE_TIME_UPDATE_FAILED;
 
 		} catch (Throwable e) {
-			logger.info("Exception message: " + e.getMessage());
+			logger.error("Exception message: " + e.getMessage());
 			e.printStackTrace();
 			status = Status.UNAUTHORIZED;
 			outDO = Constants.EXPIRE_TIME_UPDATE_FAILED;

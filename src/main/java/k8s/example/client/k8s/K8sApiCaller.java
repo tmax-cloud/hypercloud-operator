@@ -5999,7 +5999,7 @@ public class K8sApiCaller {
 
 		if (nscList != null && nscList.getItems() != null && nscList.getItems().size() > 0) {
 			for (NamespaceClaim nsc : nscList.getItems()) {
-				logger.debug(" [ Accessible NameSpaceClaim ] : " + nsc.getMetadata().getName());
+				logger.info(" [ Accessible NameSpaceClaim ] : " + nsc.getMetadata().getName());
 			}
 		}
 		return nscList;

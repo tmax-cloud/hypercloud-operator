@@ -34,10 +34,10 @@ public class UserDeleteJob implements Job{
 			if ( deletedUserIdList !=null ) OAuthApiCaller.deleteBlockedUser( deletedUserIdList );
 
 		} catch (ApiException e) {
-			logger.info( "Exception message: " + e.getResponseBody() );
+			logger.error( "Exception message: " + e.getResponseBody() );
 			e.printStackTrace();
 		} catch (Exception e) {
-			logger.info(" Exception : " + e.getMessage());
+			logger.error(" Exception : " + e.getMessage());
 			e.printStackTrace();
 		}
 	}	

@@ -1,9 +1,5 @@
 package k8s.example.client.handler;
 
-import java.io.FileInputStream;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -54,16 +50,6 @@ public class NameSpaceHandler extends GeneralHandler {
 		
 		//if label selector exists
 		String labelSelector = SimpleUtil.getQueryParameter( session.getParameters(), Constants.QUERY_PARAMETER_LABEL_SELECTOR );
-//		Map< String, String > labels = null;
-//		if ( labelSelector != null ) {
-//			labels = new HashMap<>();
-//			labelSelector = labelSelector.trim();
-//			String[] labelArray = labelSelector.split(",");
-//			for ( String labelString : labelArray ) {   // ex) trial=t
-//				String[] labelComponent = labelString.split("=");
-//				labels.put( labelComponent[0], labelComponent[1] );
-//			}
-//		}
 		
 		try {
 			// Read AccessToken from Header
@@ -73,7 +59,7 @@ public class NameSpaceHandler extends GeneralHandler {
 				status = Status.BAD_REQUEST;
 				throw new Exception(ErrorCode.TOKEN_EMPTY);
 			}
-    		logger.info( "  Token: " + accessToken );
+    		logger.debug( "  Token: " + accessToken );
     		
     		if (System.getenv( "PROAUTH_EXIST" ) != null) { 
         		if( System.getenv( "PROAUTH_EXIST" ).equalsIgnoreCase("1")) {
@@ -109,9 +95,9 @@ public class NameSpaceHandler extends GeneralHandler {
     			issuer = jwt.getIssuer();
     			userId = jwt.getClaims().get(Constants.CLAIM_USER_ID).asString();
     			String tokenId = jwt.getClaims().get(Constants.CLAIM_TOKEN_ID).asString();
-    			logger.info( "  Issuer: " + issuer );
+    			logger.debug( "  Issuer: " + issuer );
     			logger.info( "  User ID: " + userId );
-    			logger.info( "  Token ID: " + tokenId );
+    			logger.debug( "  Token ID: " + tokenId );
     			
     			if(verifyAccessToken(accessToken, userId, tokenId, issuer)) {		
     				logger.info( "  Token Validated " );
@@ -145,13 +131,13 @@ public class NameSpaceHandler extends GeneralHandler {
     		}
 			
 		} catch (ApiException e) {
-			logger.info( "Exception message: " + e.getMessage() );
+			logger.error( "Exception message: " + e.getMessage() );
 			outDO = "Get NameSpace List failed.";
 			status = Status.BAD_REQUEST;
 			e.printStackTrace();
 
 		} catch (Exception e) {
-			logger.info( "Exception message: " + e.getMessage() );
+			logger.error( "Exception message: " + e.getMessage() );
 			e.printStackTrace();
 			outDO = "Get NameSpace List failed.";
 			status = Status.BAD_REQUEST;
@@ -200,14 +186,14 @@ public class NameSpaceHandler extends GeneralHandler {
         			
 
 		} catch (ApiException e) {
-			logger.info("Exception message: " + e.getResponseBody());
+			logger.error("Exception message: " + e.getResponseBody());
 			e.printStackTrace();
 
 			status = Status.UNAUTHORIZED;
 			outDO = Constants.TRIAL_PERIOD_EXTEND_FAILED;
 
 		} catch (Exception e) {
-			logger.info("Exception message: " + e.getMessage());
+			logger.error("Exception message: " + e.getMessage());
 			
 			e.printStackTrace();
 			status = Status.UNAUTHORIZED;
@@ -215,7 +201,7 @@ public class NameSpaceHandler extends GeneralHandler {
 			if ( e.getMessage().equalsIgnoreCase( ErrorCode.NOT_TRIAL_NAMESPACE )) outDO = ErrorCode.NOT_TRIAL_NAMESPACE;
 			
 		} catch (Throwable e) {
-			logger.info("Exception message: " + e.getMessage());
+			logger.error("Exception message: " + e.getMessage());
 			e.printStackTrace();
 			status = Status.UNAUTHORIZED;
 			outDO = Constants.TRIAL_PERIOD_EXTEND_FAILED;
@@ -249,32 +235,4 @@ public class NameSpaceHandler extends GeneralHandler {
 		
 		return result;
 	}
-	
-	private String readFile(String path, Integer length) {
-		Charset charset = Charset.defaultCharset();
-		String bodyStr = "";
-		int byteCount;
-		try {
-			ByteBuffer buf = ByteBuffer.allocate(Integer.valueOf(length));
-			FileInputStream fis = new FileInputStream(path);
-			FileChannel dest = fis.getChannel();
-
-			while (true) {
-				byteCount = dest.read(buf);
-				if (byteCount == -1) {
-					break;
-				} else {
-					buf.flip();
-					bodyStr += charset.decode(buf).toString();
-					buf.clear();
-				}
-			}
-			dest.close();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		return bodyStr;
-	}
-
 }

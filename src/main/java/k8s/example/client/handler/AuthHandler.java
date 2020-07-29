@@ -57,10 +57,8 @@ public class AuthHandler extends GeneralHandler {
 			String issuer = null;
 			String userId = null;
 			
-			
-			//logger.info( "  Token: " + token );
 			if ( !token.isEmpty() && token.equals( Constants.MASTER_TOKEN )) return Util.setCors( NanoHTTPD.newFixedLengthResponse( createAuthResponse( true, Constants.MASTER_USER_ID, null ) ) );
-			logger.info( "  Token: " + token );
+//			logger.info( "  Token: " + token );
 
         	if (System.getenv( "PROAUTH_EXIST" ) != null) { 
         		if( System.getenv( "PROAUTH_EXIST" ).equalsIgnoreCase("1")) {
@@ -88,9 +86,9 @@ public class AuthHandler extends GeneralHandler {
     			issuer = jwt.getIssuer();
     			userId = jwt.getClaims().get(Constants.CLAIM_USER_ID).asString();
     			String tokenId = jwt.getClaims().get(Constants.CLAIM_TOKEN_ID).asString();
-    			logger.info( "  Issuer: " + issuer );
+    			logger.debug( "  Issuer: " + issuer );
     			logger.info( "  User ID: " + userId );
-    			logger.info( "  Token ID: " + tokenId );
+    			logger.debug( "  Token ID: " + tokenId );
     			
     			if(verifyAccessToken(token, userId, tokenId, issuer)) {
     				logger.info( "  Authentication success" );
@@ -120,7 +118,7 @@ public class AuthHandler extends GeneralHandler {
 			
 			response = createAuthResponse( authResult, userId, userGroupNameList );
 		} catch (Exception e) {
-			//logger.info("Exception message: " + e.getMessage());
+			logger.error("Exception message: " + e.getMessage());
 			e.printStackTrace();
 			authResult = false;
 		}
@@ -203,7 +201,7 @@ public class AuthHandler extends GeneralHandler {
 		Gson gson = new Gson();
 		String response = gson.toJson( tr );
 		
-		logger.info( "  Response: " + response );
+		logger.debug( "  Response: " + response );
 		
 		return response;
 	}

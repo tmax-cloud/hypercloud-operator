@@ -58,7 +58,7 @@ public class EmailHandler extends GeneralHandler {
 
 			// Issue VerifyCode
 			String verifyCode = Util.numberGen(4, 1);
-			logger.info(" verifyCode: " + verifyCode); 
+//			logger.info(" verifyCode: " + verifyCode); 
 
 			// Insert VerifyCode into Secret
 			try {
@@ -74,7 +74,7 @@ public class EmailHandler extends GeneralHandler {
 				K8sApiCaller.createSecret(Constants.TEMPLATE_NAMESPACE, createMap, Util.makeK8sFieldValue( userInDO.getEmail() ),
 						null, null, null);
 			} catch (ApiException e) {
-				logger.info("Exception message: " + e.getResponseBody());
+				logger.error("Exception message: " + e.getResponseBody());
 				e.printStackTrace();
 				Map<String, String> createMap = new HashMap<>();
 				createMap.put("verifycode", verifyCode);
@@ -91,21 +91,21 @@ public class EmailHandler extends GeneralHandler {
 			outDO = "User Email Authenticate Code Send Success";
 
 		} catch (ApiException e) {
-			logger.info("Exception message: " + e.getResponseBody());
+			logger.error("Exception message: " + e.getResponseBody());
 			e.printStackTrace();
 
 			status = Status.UNAUTHORIZED;
 			outDO = Constants.USER_EMAIL_VERIFICATION_NUMBER_SEND_FAIL;
 
 		} catch (Exception e) {
-			logger.info("Exception message: " + e.getMessage());
+			logger.error("Exception message: " + e.getMessage());
 
 			e.printStackTrace();
 			status = Status.UNAUTHORIZED;
 			outDO = Constants.USER_EMAIL_VERIFICATION_NUMBER_SEND_FAIL;
 
 		} catch (Throwable e) {
-			logger.info("Exception message: " + e.getMessage());
+			logger.error("Exception message: " + e.getMessage());
 			e.printStackTrace();
 			status = Status.UNAUTHORIZED;
 			outDO = Constants.USER_EMAIL_VERIFICATION_NUMBER_SEND_FAIL;
@@ -131,7 +131,7 @@ public class EmailHandler extends GeneralHandler {
 		
         try {
 			String bodyStr = readFile(body.get("content"), Integer.valueOf(session.getHeaders().get("content-length")));
-			logger.info("Body: " + bodyStr);	
+			logger.debug("Body: " + bodyStr);	
 			userInDO = new ObjectMapper().readValue(bodyStr, User.class);
 			
 		} catch (Exception e) {
@@ -141,7 +141,7 @@ public class EmailHandler extends GeneralHandler {
 		try {
 			// Read inDO
     		logger.info( "  User E-Mail: " + userInDO.getEmail() );
-    		logger.info( "  User VerifyCode: " + userInDO.getVerifyCode() );
+//    		logger.info( "  User VerifyCode: " + userInDO.getVerifyCode() );
     		
     		V1Secret secretReturn = K8sApiCaller.readSecret(Constants.TEMPLATE_NAMESPACE, Constants.K8S_PREFIX + Util.makeK8sFieldValue( userInDO.getEmail() ));
     		Map<String, byte[]> secretMap = new HashMap<>();
@@ -174,21 +174,21 @@ public class EmailHandler extends GeneralHandler {
     		}	
     		
 		} catch (ApiException e) {
-			logger.info( "Exception message: " + e.getResponseBody() );
+			logger.error( "Exception message: " + e.getResponseBody() );
 			e.printStackTrace();
 			
 			status = Status.UNAUTHORIZED;
 			outDO = Constants.USER_EMAIL_VERIFY_FAIL;
 			
 		} catch (Exception e) {
-			logger.info( "Exception message: " + e.getMessage() );
+			logger.error( "Exception message: " + e.getMessage() );
 
 			e.printStackTrace();
 			status = Status.UNAUTHORIZED;
 			outDO = Constants.USER_EMAIL_VERIFY_FAIL;
 			
 		} catch (Throwable e) {
-			logger.info( "Exception message: " + e.getMessage() );
+			logger.error( "Exception message: " + e.getMessage() );
 			e.printStackTrace();
 			status = Status.UNAUTHORIZED;
 			outDO = Constants.USER_EMAIL_VERIFY_FAIL;

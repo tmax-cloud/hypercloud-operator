@@ -51,7 +51,7 @@ public class OtpHandler extends GeneralHandler {
 				// Read inDO
 	    		loginInDO = new ObjectMapper().readValue(body.get( "postData" ), LoginInDO.class);
 	    		logger.info( "  User ID: " + loginInDO.getId() );
-	    		logger.info( "  User Password: " + loginInDO.getPassword() );
+//	    		logger.debug( "  User Password: " + loginInDO.getPassword() );
 	    		
 	    		// Validate
 	    		if (StringUtil.isEmpty(loginInDO.getId())) 	throw new Exception(ErrorCode.USER_ID_EMPTY);
@@ -73,7 +73,7 @@ public class OtpHandler extends GeneralHandler {
 		    		String userId = loginInDO.getId();
 		    		UserCR user = K8sApiCaller.getUser(userId);
 		    		String encryptedPassword = Util.Crypto.encryptSHA256(loginInDO.getPassword() + loginInDO.getId() + user.getUserInfo().getPasswordSalt());
-		    		logger.info("  DB password: " + user.getUserInfo().getPassword() + " / Input password: " + encryptedPassword);
+		    		logger.debug("  DB password: " + user.getUserInfo().getPassword() + " / Input password: " + encryptedPassword);
 		    		
 		    		if (user.getUserInfo().getPassword() != null ) {
 		    			if(user.getUserInfo().getPassword().equals(encryptedPassword)) {
@@ -86,7 +86,7 @@ public class OtpHandler extends GeneralHandler {
 				    			if (uspCR.getOtpEnable().equalsIgnoreCase("t")) {
 				            		// Issue otpCode & Save into K8s
 				        			String otpCode = Util.numberGen(6, 1);
-				        			logger.info(" otpCode: " + otpCode);
+				        			logger.debug(" otpCode: " + otpCode);
 				        			K8sApiCaller.patchUserSecurityPolicy(loginInDO.getId(), otpCode);
 
 				        			// Send E-mail to User
@@ -102,7 +102,7 @@ public class OtpHandler extends GeneralHandler {
 				    				// If no USP, same as OTPEnable false
 					    			status = Status.OK;			
 			    				}else {
-			    					logger.info( "Response body: " + e.getResponseBody() );
+			    					logger.debug( "Response body: " + e.getResponseBody() );
 			    					e.printStackTrace();
 			    					status = Status.UNAUTHORIZED;
 			    					outDO = Constants.OTP_ERROR;
@@ -121,28 +121,28 @@ public class OtpHandler extends GeneralHandler {
 	        	} 		   			
 	    		 
 			} catch (ApiException e) {
-				logger.info( "Exception message: " + e.getResponseBody() );
-				logger.info( "Exception message: " + e.getMessage() );
+				logger.error( "Exception message: " + e.getResponseBody() );
+				logger.error( "Exception message: " + e.getMessage() );
 				
 				if (e.getResponseBody().contains("NotFound")) {
 					logger.info( "  Login fail. User not exist." );
 					status = Status.BAD_REQUEST; //ui요청
 					outDO = Constants.LOGIN_FAILED;
 				} else {
-					logger.info( "Response body: " + e.getResponseBody() );
+					logger.error( "Response body: " + e.getResponseBody() );
 					e.printStackTrace();
 					
 					status = Status.UNAUTHORIZED;
 					outDO = Constants.LOGIN_FAILED;
 				}
 			} catch (Exception e) {
-				logger.info( "Exception message: " + e.getMessage() );
+				logger.error( "Exception message: " + e.getMessage() );
 				e.printStackTrace();
 				status = Status.UNAUTHORIZED;
 				outDO = Constants.LOGIN_FAILED;
 
 			} catch (Throwable e) {
-				logger.info("Exception message: " + e.getMessage());
+				logger.error("Exception message: " + e.getMessage());
 				e.printStackTrace();
 				status = Status.UNAUTHORIZED;
 				outDO = Constants.LOGIN_FAILED;

@@ -55,10 +55,10 @@ public class UserHandler extends GeneralHandler {
 			// Read inDO
 			userInDO = new ObjectMapper().readValue(body.get("postData"), User.class);
 			logger.info("  User ID: " + userInDO.getId());
-			logger.info("  User Name: " + userInDO.getName());
-			logger.info("  User E-Mail: " + userInDO.getEmail());
-			logger.info("  User PassWord: " + userInDO.getPassword());
-			logger.info("  User DateOfBirth: " + userInDO.getDateOfBirth());
+			logger.debug("  User Name: " + userInDO.getName());
+			logger.debug("  User E-Mail: " + userInDO.getEmail());
+			logger.debug("  User PassWord: " + userInDO.getPassword());
+			logger.debug("  User DateOfBirth: " + userInDO.getDateOfBirth());
 
 			// Validate
 			if (userInDO.getId() == null)
@@ -103,21 +103,21 @@ public class UserHandler extends GeneralHandler {
 			outDO = "User Create Success";
 
 		} catch (ApiException e) {
-			logger.info("Exception message: " + e.getResponseBody());
+			logger.error("Exception message: " + e.getResponseBody());
 			e.printStackTrace();
 
 			status = Status.UNAUTHORIZED;
 			outDO = Constants.USER_CREATE_FAILED;
 
 		} catch (Exception e) {
-			logger.info("Exception message: " + e.getMessage());
+			logger.error("Exception message: " + e.getMessage());
 
 			e.printStackTrace();
 			status = Status.UNAUTHORIZED;
 			outDO = Constants.USER_CREATE_FAILED;
 
 		} catch (Throwable e) {
-			logger.info("Exception message: " + e.getMessage());
+			logger.error("Exception message: " + e.getMessage());
 			e.printStackTrace();
 			status = Status.UNAUTHORIZED;
 			outDO = Constants.USER_CREATE_FAILED;
@@ -162,13 +162,13 @@ public class UserHandler extends GeneralHandler {
 					}
 				}
 			} catch (ApiException e) {
-				logger.info("Exception message: " + e.getResponseBody());
-				logger.info("Exception message: " + e.getMessage());
+				logger.error("Exception message: " + e.getResponseBody());
+				logger.error("Exception message: " + e.getMessage());
 				status = Status.UNAUTHORIZED;
 				outDO = Constants.USER_ID_FIND_FAILED;
 
 			} catch (Exception e) {
-				logger.info("Exception message: " + e.getMessage());
+				logger.error("Exception message: " + e.getMessage());
 				e.printStackTrace();
 				status = Status.UNAUTHORIZED;
 				outDO = Constants.USER_ID_FIND_FAILED;
@@ -261,7 +261,7 @@ public class UserHandler extends GeneralHandler {
 
 		try {
 			String bodyStr = readFile(body.get("content"), Integer.valueOf(session.getHeaders().get("content-length")));
-			logger.info("Body: " + bodyStr);
+			logger.debug("Body: " + bodyStr);
 			userInDO = new ObjectMapper().readValue(bodyStr, User.class);
 
 		} catch (Exception e) {
@@ -297,13 +297,13 @@ public class UserHandler extends GeneralHandler {
 				outDO = Constants.USER_ID_DUPLICATION_VERIFY_SUCCESS;
 
 			} catch (ApiException e) {
-				logger.info("Exception message: " + e.getResponseBody());
-				logger.info("Exception message: " + e.getMessage());
+				logger.error("Exception message: " + e.getResponseBody());
+				logger.error("Exception message: " + e.getMessage());
 				status = Status.BAD_REQUEST;
 				outDO = Constants.USER_ID_DUPLICATION_VERIFY_FAILED;
 
 			} catch (Exception e) {
-				logger.info("Exception message: " + e.getMessage());
+				logger.error("Exception message: " + e.getMessage());
 				e.printStackTrace();
 				status = Status.BAD_REQUEST;
 				outDO = Constants.USER_ID_DUPLICATION_VERIFY_FAILED;
@@ -331,13 +331,13 @@ public class UserHandler extends GeneralHandler {
 				outDO = Constants.USER_EMAIL_DUPLICATION_VERIFY_SUCCESS;
 
 			} catch (ApiException e) {
-				logger.info("Exception message: " + e.getResponseBody());
-				logger.info("Exception message: " + e.getMessage());
+				logger.error("Exception message: " + e.getResponseBody());
+				logger.error("Exception message: " + e.getMessage());
 				status = Status.BAD_REQUEST;
 				outDO = Constants.USER_EMAIL_DUPLICATION_VERIFY_SUCCESS;
 
 			} catch (Exception e) {
-				logger.info("Exception message: " + e.getMessage());
+				logger.error("Exception message: " + e.getMessage());
 				e.printStackTrace();
 				status = Status.BAD_REQUEST;
 				outDO = Constants.USER_EMAIL_DUPLICATION_VERIFY_SUCCESS;
@@ -347,12 +347,12 @@ public class UserHandler extends GeneralHandler {
 		case "meta":
 			logger.info("  User Meta Update Service Start");
 			logger.info("  User ID: " + userInDO.getId());
-			logger.info("  User Name: " + userInDO.getName());
-			logger.info("  User email: " + userInDO.getEmail());
-			logger.info("  User Description: " + userInDO.getDescription());
-			logger.info("  User Department: " + userInDO.getDepartment());
-			logger.info("  User Phone: " + userInDO.getPhone());
-			logger.info("  User Position: " + userInDO.getPosition());
+			logger.debug("  User Name: " + userInDO.getName());
+			logger.debug("  User email: " + userInDO.getEmail());
+			logger.debug("  User Description: " + userInDO.getDescription());
+			logger.debug("  User Department: " + userInDO.getDepartment());
+			logger.debug("  User Phone: " + userInDO.getPhone());
+			logger.debug("  User Position: " + userInDO.getPosition());
 
 			try {
 				// Validate
@@ -368,13 +368,13 @@ public class UserHandler extends GeneralHandler {
 				}
 
 			} catch (ApiException e) {
-				logger.info("Exception message: " + e.getResponseBody());
-				logger.info("Exception message: " + e.getMessage());
+				logger.error("Exception message: " + e.getResponseBody());
+				logger.error("Exception message: " + e.getMessage());
 				status = Status.UNAUTHORIZED;
 				outDO = Constants.USER_UPDATE_FAILED;
 
 			} catch (Exception e) {
-				logger.info("Exception message: " + e.getMessage());
+				logger.error("Exception message: " + e.getMessage());
 				e.printStackTrace();
 				status = Status.UNAUTHORIZED;
 				outDO = Constants.USER_UPDATE_FAILED;
@@ -416,13 +416,13 @@ public class UserHandler extends GeneralHandler {
 				}
 
 			} catch (ApiException e) {
-				logger.info("Exception message: " + e.getResponseBody());
-				logger.info("Exception message: " + e.getMessage());
+				logger.error("Exception message: " + e.getResponseBody());
+				logger.error("Exception message: " + e.getMessage());
 				status = Status.UNAUTHORIZED;
 				outDO = Constants.PASSWORD_CHANGE_FAILED;
 
 			} catch (Exception e) {
-				logger.info("Exception message: " + e.getMessage());
+				logger.error("Exception message: " + e.getMessage());
 				e.printStackTrace();
 				status = Status.UNAUTHORIZED;
 				outDO = Constants.PASSWORD_CHANGE_FAILED;

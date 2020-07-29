@@ -71,7 +71,7 @@ public class LoginHandler extends GeneralHandler {
 				// Read inDO
 	    		loginInDO = new ObjectMapper().readValue(body.get( "postData" ), LoginInDO.class);
 	    		logger.info( "  User ID: " + loginInDO.getId() );
-	    		logger.info( "  User Password: " + loginInDO.getPassword() );
+//	    		logger.info( "  User Password: " + loginInDO.getPassword() );
 	    		
 	    		// Validate
 	    		if (StringUtil.isEmpty(loginInDO.getId())) 	throw new Exception(ErrorCode.USER_ID_EMPTY);
@@ -82,8 +82,8 @@ public class LoginHandler extends GeneralHandler {
 	    		if (session.getParameters().get("clientId") != null ) clientIdRequestParameter = session.getParameters().get("clientId").get(0);
 	    		if (session.getParameters().get("appName") != null ) appNameRequestParameter = session.getParameters().get("appName").get(0);
 	        	if (session.getParameters().get("clientId") != null && session.getParameters().get("appName") != null) {
-	        		logger.info( "  Client Id: " + clientIdRequestParameter );
-		    		logger.info( "  App Name: " + appNameRequestParameter );  
+	        		logger.debug( "  Client Id: " + clientIdRequestParameter );
+		    		logger.debug( "  App Name: " + appNameRequestParameter );  
 	        	}
 	    				   		
 	        	if (System.getenv( "PROAUTH_EXIST" ) != null) {   // 그대로 아이디 비번 구분 X		//TODO
@@ -92,14 +92,14 @@ public class LoginHandler extends GeneralHandler {
 	    	    		logger.info( "  [[ Integrated OAuth System! ]] " );
 	        			// Login to ProAuth & Get Token
 	    	    		JsonObject loginOut = OAuthApiCaller.AuthenticateCreate(loginInDO.getId(), loginInDO.getPassword());
-	    	    		logger.info( "  loginOut.get(\"result\") : " + loginOut.get("result").toString() );
+	    	    		logger.debug( "  loginOut.get(\"result\") : " + loginOut.get("result").toString() );
 	    	    		UserCR k8sUser = null;
 	    	    		
 	    	    		if ( loginOut.get("result").toString().equalsIgnoreCase("\"true\"") ){
 	    	    			accessToken = loginOut.get("token").toString().replaceAll("\"", ""); 
 		    	    		refreshToken = loginOut.get("refresh_token").toString().replaceAll("\"", "");
-		    	    		logger.info( "  accessToken : " + accessToken );
-		    	    		logger.info( "  refreshToken : " + refreshToken );	
+//		    	    		logger.info( "  accessToken : " + accessToken );
+//		    	    		logger.info( "  refreshToken : " + refreshToken );	
 		    	    		status = Status.OK; 
 		    	    		
 		    	    		//Check if retryCount is 10, if not set 0
@@ -107,7 +107,7 @@ public class LoginHandler extends GeneralHandler {
 		    	    		if(k8sUser.getUserInfo().getRetryCount()==10) {
 		    	    			status = Status.FORBIDDEN; 
 				    			outDO = ErrorCode.BLOCKED_USER; 
-		    	    			logger.info(" outDO : " + outDO);
+		    	    			logger.debug(" outDO : " + outDO);
 		    	    		} else {
 		    	    			User newUser = new User();
 		    					newUser.setId(loginInDO.getId());
@@ -119,28 +119,28 @@ public class LoginHandler extends GeneralHandler {
 	    	    			logger.info("  Login failed by ProAuth.");		    			
 			    			status = Status.BAD_REQUEST; 
 			    			outDO = loginOut.get("reason").toString().replaceAll("\"", ""); 
-	    	    			logger.info(" outDO : " + outDO);		    			
+	    	    			logger.debug(" outDO : " + outDO);		    			
 
 			    			if (outDO.equalsIgnoreCase("Wrong Password")) {
 			    	    		k8sUser = K8sApiCaller.getUser(loginInDO.getId());
 				    			retryCount = k8sUser.getUserInfo().getRetryCount();	
-		    	    			logger.info(" previous retryCount : " + retryCount);		    			
+		    	    			logger.debug(" previous retryCount : " + retryCount);		    			
 		    					if (retryCount == 10) {
 		    						status = Status.FORBIDDEN; 
 					    			outDO = ErrorCode.BLOCKED_USER; 
-			    	    			logger.info(" outDO : " + outDO);
+			    	    			logger.debug(" outDO : " + outDO);
 			    					retryCount--;
 			    	    		}
 		    					retryCount++;
 		    					User newUser = new User();
 		    					newUser.setId(loginInDO.getId());
 		    					newUser.setRetryCount(retryCount);
-		    	    			logger.info(" current retryCount : " + retryCount);		    			
+		    	    			logger.debug(" current retryCount : " + retryCount);		    			
 		    					K8sApiCaller.updateUserMeta(newUser, true);
 		    					if (retryCount == 10) {
 		    						status = Status.FORBIDDEN; 
 					    			outDO = ErrorCode.BLOCKED_USER; 
-			    	    			logger.info(" outDO : " + outDO);
+			    	    			logger.debug(" outDO : " + outDO);
 		    					}
 			    			}
 	    	    		}
@@ -154,7 +154,7 @@ public class LoginHandler extends GeneralHandler {
 		    		String userId = loginInDO.getId();
 		    		UserCR user = K8sApiCaller.getUser(userId);
 		    		String encryptedPassword = Util.Crypto.encryptSHA256(loginInDO.getPassword() + loginInDO.getId() + user.getUserInfo().getPasswordSalt());
-		    		logger.info("  DB password: " + user.getUserInfo().getPassword() + " / Input password: " + encryptedPassword);
+		    		logger.debug("  DB password: " + user.getUserInfo().getPassword() + " / Input password: " + encryptedPassword);
 		    		
 		    		if (user.getUserInfo().getPassword() !=null ) {
 		    			if(user.getUserInfo().getPassword().equals(encryptedPassword)) {
@@ -170,10 +170,10 @@ public class LoginHandler extends GeneralHandler {
 				    				DateTime currentTime = new DateTime();
 				    				DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:m:ss");
 				    				currentTime = formatter.parseDateTime(currentTime.toString("yyyy-MM-dd'T'HH:mm:ss").substring(0,19));
-				        			logger.info(" currentTime: " + currentTime);
+				        			logger.debug(" currentTime: " + currentTime);
 
 				    				DateTime otpRegisterTime = formatter.parseDateTime(uspCR.getOtpRegisterTime().substring(0,19));
-				        			logger.info(" otpRegisterTime: " + otpRegisterTime);
+				        			logger.debug(" otpRegisterTime: " + otpRegisterTime);
 
 				       			 	if( currentTime.minusMinutes(Constants.OTP_VERIFICATAION_DURATION_MINUTES).isBefore( otpRegisterTime ) ) {
 					       			 	if (uspCR.getOtp() == loginInDO.getOtp()) {
@@ -206,7 +206,7 @@ public class LoginHandler extends GeneralHandler {
 				    				accessToken = token.getAccessToken();
 			    					refreshToken = token.getRefreshToken();		
 			    				}else {
-			    					logger.info( "Response body: " + e.getResponseBody() );
+			    					logger.error( "Response body: " + e.getResponseBody() );
 			    					e.printStackTrace();
 			    					status = Status.UNAUTHORIZED;
 			    					outDO = Constants.OTP_ERROR;
@@ -232,9 +232,9 @@ public class LoginHandler extends GeneralHandler {
             		clientInfo.setClientId(clientIdRequestParameter); 		
             		Client dbClientInfo = K8sApiCaller.getClient(clientInfo);
             		
-        			logger.info("  App Name : " + dbClientInfo.getAppName());
-        			logger.info("  Origin URI : " + dbClientInfo.getOriginUri());
-        			logger.info("  Redirect URI : " + dbClientInfo.getRedirectUri());
+        			logger.debug("  App Name : " + dbClientInfo.getAppName());
+        			logger.debug("  Origin URI : " + dbClientInfo.getOriginUri());
+        			logger.debug("  Redirect URI : " + dbClientInfo.getRedirectUri());
             		
         			// Validate
             		if( !clientInfo.getClientId().equalsIgnoreCase( dbClientInfo.getClientId()) ) throw new Exception( ErrorCode.CLIENT_ID_MISMATCH );
@@ -244,27 +244,27 @@ public class LoginHandler extends GeneralHandler {
             		sb.append( dbClientInfo.getRedirectUri() );
             		sb.append( "?at=" + accessToken );
             		sb.append( "&rt=" + refreshToken );
-        			logger.info("Redirect URI : " + sb.toString());
+        			logger.debug("Redirect URI : " + sb.toString());
         			outDO = sb.toString();
             	} 		   			
 	    		 
 			} catch (ApiException e) {
-				logger.info( "Exception message: " + e.getResponseBody() );
-				logger.info( "Exception message: " + e.getMessage() );
+				logger.error( "Exception message: " + e.getResponseBody() );
+				logger.error( "Exception message: " + e.getMessage() );
 				
 				if (e.getResponseBody().contains("NotFound")) {
 					logger.info( "  Login fail. User not exist." );
 					status = Status.BAD_REQUEST; //ui요청
 					outDO = Constants.LOGIN_FAILED;
 				} else {
-					logger.info( "Response body: " + e.getResponseBody() );
+					logger.debug( "Response body: " + e.getResponseBody() );
 					e.printStackTrace();
 					
 					status = Status.UNAUTHORIZED;
 					outDO = Constants.LOGIN_FAILED;
 				}
 			} catch (Exception e) {
-				logger.info( "Exception message: " + e.getMessage() );
+				logger.error( "Exception message: " + e.getMessage() );
 				e.printStackTrace();
 				status = Status.UNAUTHORIZED;
 				if( e.getMessage().equalsIgnoreCase(ErrorCode.BLOCKED_USER) ) {
@@ -273,7 +273,7 @@ public class LoginHandler extends GeneralHandler {
 					outDO = Constants.LOGIN_FAILED;
 				}
 			} catch (Throwable e) {
-				logger.info("Exception message: " + e.getMessage());
+				logger.error("Exception message: " + e.getMessage());
 				e.printStackTrace();
 				status = Status.UNAUTHORIZED;
 				outDO = Constants.LOGIN_FAILED;
@@ -288,9 +288,9 @@ public class LoginHandler extends GeneralHandler {
 				loginOutDO.setAccessToken(accessToken);
 				loginOutDO.setRefreshToken(refreshToken);
     			loginOutDO.setOtpEnable(otpEnable);
-    			logger.info("  Access token: " + accessToken);
-    			logger.info("  Refresh token: " + refreshToken);
-    			logger.info("  otpEnable: " + otpEnable);
+    			logger.debug("  Access token: " + accessToken);
+    			logger.debug("  Refresh token: " + refreshToken);
+    			logger.debug("  otpEnable: " + otpEnable);
     			
     			Gson gson = new GsonBuilder().setPrettyPrinting().create();
     			outDO = gson.toJson(loginOutDO).toString();

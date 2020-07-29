@@ -70,7 +70,7 @@ public class NameSpaceClaimHandler extends GeneralHandler {
 				status = Status.BAD_REQUEST;
 				throw new Exception(ErrorCode.TOKEN_EMPTY);
 			}
-    		logger.info( "  Token: " + accessToken );
+    		logger.debug( "  Token: " + accessToken );
     		
     		if (System.getenv( "PROAUTH_EXIST" ) != null) { 
         		if( System.getenv( "PROAUTH_EXIST" ).equalsIgnoreCase("1")) {
@@ -107,9 +107,9 @@ public class NameSpaceClaimHandler extends GeneralHandler {
     			issuer = jwt.getIssuer();
     			userId = jwt.getClaims().get(Constants.CLAIM_USER_ID).asString();
     			String tokenId = jwt.getClaims().get(Constants.CLAIM_TOKEN_ID).asString();
-    			logger.info( "  Issuer: " + issuer );
+    			logger.debug( "  Issuer: " + issuer );
     			logger.info( "  User ID: " + userId );
-    			logger.info( "  Token ID: " + tokenId );
+    			logger.debug( "  Token ID: " + tokenId );
     			
     			if(verifyAccessToken(accessToken, userId, tokenId, issuer)) {		
     				logger.info( "  Token Validated " );
@@ -145,13 +145,13 @@ public class NameSpaceClaimHandler extends GeneralHandler {
     		}
 			
 		} catch (ApiException e) {
-			logger.info( "Exception message: " + e.getMessage() );
+			logger.error( "Exception message: " + e.getMessage() );
 			outDO = "Get NameSpaceClaim List failed.";
 			status = Status.BAD_REQUEST;
 			e.printStackTrace();
 
 		} catch (Exception e) {
-			logger.info( "Exception message: " + e.getMessage() );
+			logger.error( "Exception message: " + e.getMessage() );
 			e.printStackTrace();
 			outDO = "Get NameSpaceClaim List failed.";
 			status = Status.BAD_REQUEST;
@@ -181,7 +181,7 @@ public class NameSpaceClaimHandler extends GeneralHandler {
 
 		try {
 			String bodyStr = readFile(body.get("content"), Integer.valueOf(session.getHeaders().get("content-length")));
-			logger.info("Body: " + bodyStr);
+			logger.debug("Body: " + bodyStr);
 			userInDO = new ObjectMapper().readValue(bodyStr, User.class);
 
 		} catch (Exception e) {
@@ -210,13 +210,13 @@ public class NameSpaceClaimHandler extends GeneralHandler {
 				}
 
 			} catch (ApiException e) {
-				logger.info("Exception message: " + e.getResponseBody());
-				logger.info("Exception message: " + e.getMessage());
+				logger.error("Exception message: " + e.getResponseBody());
+				logger.error("Exception message: " + e.getMessage());
 				status = Status.BAD_REQUEST;
 				outDO = Constants.NAMESPACE_NAME_DUPLICATION_VERIFY_FAILED;
 
 			} catch (Exception e) {
-				logger.info("Exception message: " + e.getMessage());
+				logger.error("Exception message: " + e.getMessage());
 				e.printStackTrace();
 				status = Status.BAD_REQUEST;
 				outDO = Constants.NAMESPACE_NAME_DUPLICATION_VERIFY_FAILED;

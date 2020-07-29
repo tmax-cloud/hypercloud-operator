@@ -51,7 +51,7 @@ public class LogoutHandler extends GeneralHandler {
 			// Read inDO
 			logoutInDO = new ObjectMapper().readValue(body.get( "postData" ), Token.class);
 			String accessToken = logoutInDO.getAccessToken();
-    		logger.info( "  Token: " + accessToken );
+    		logger.debug( "  Token: " + accessToken );
     		
     		// Integrated Auth or OpenAuth
     		if (System.getenv( "PROAUTH_EXIST" ) != null) {   		
@@ -63,7 +63,7 @@ public class LogoutHandler extends GeneralHandler {
         			userId = jwt.getClaims().get(Constants.CLAIM_USER_ID).asString();
         			logger.info(" User ID: " + userId);    	    		
         			JsonObject logOutOut = OAuthApiCaller.AuthenticateDelete(accessToken);
-    	    		logger.info( "  logOutOut.get(\"result\") : " + logOutOut.get("result").toString() );
+    	    		logger.debug( "  logOutOut.get(\"result\") : " + logOutOut.get("result").toString() );
     	    		if ( logOutOut.get("result").toString().equalsIgnoreCase("\"true\"") ){
         				logger.info( "  Logout success." );
         				outDO = Constants.LOGOUT_SUCCESS;
@@ -87,9 +87,9 @@ public class LogoutHandler extends GeneralHandler {
     			userId = jwt.getClaims().get(Constants.CLAIM_USER_ID).asString();
     			String issuer = jwt.getIssuer();
     			String tokenId = jwt.getClaims().get(Constants.CLAIM_TOKEN_ID).asString();
-    			logger.info( "  Issuer: " + issuer );
+    			logger.debug( "  Issuer: " + issuer );
     			logger.info( "  User ID: " + userId );
-    			logger.info( "  Token ID: " + tokenId );
+    			logger.debug( "  Token ID: " + tokenId );
     			
     			if(verifyAccessToken(accessToken, userId, tokenId, issuer)) {
     				status = Status.OK;
@@ -106,21 +106,21 @@ public class LogoutHandler extends GeneralHandler {
         	}
     		
 		} catch (ApiException e) {
-			logger.info( "Exception message: " + e.getMessage() );
+			logger.error( "Exception message: " + e.getMessage() );
 			
 			if (e.getResponseBody().contains("NotFound")) {
 				logger.info( "  Logout fail. Token not exist." );
 				status = Status.UNAUTHORIZED;
 				outDO = Constants.LOGOUT_FAILED;
 			} else {
-				logger.info( "Response body: " + e.getResponseBody() );
+				logger.error( "Response body: " + e.getResponseBody() );
 				e.printStackTrace();
 				
 				status = Status.UNAUTHORIZED;
 				outDO = Constants.LOGOUT_FAILED;
 			}
 		} catch (Exception e) {
-			logger.info( "Exception message: " + e.getMessage() );
+			logger.error( "Exception message: " + e.getMessage() );
 			e.printStackTrace();
 			
 			status = Status.UNAUTHORIZED;
