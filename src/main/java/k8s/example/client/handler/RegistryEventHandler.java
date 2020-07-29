@@ -25,7 +25,7 @@ public class RegistryEventHandler extends GeneralHandler {
 	@Override
     public Response post(
       UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
-		logger.info("***** POST /registry/event");
+		logger.debug("***** POST /registry/event");
 		
 		Map<String, String> body = new HashMap<String, String>();
         try {
@@ -42,17 +42,17 @@ public class RegistryEventHandler extends GeneralHandler {
 			// Read inDO
 			regEvent = new ObjectMapper().readValue(body.get( "postData" ), RegistryEventDO.class);
 			
-			logger.info("====== Registry Event ======");
+			logger.debug("====== Registry Event ======");
 			
-			logger.info("  Registry Event Count: " + regEvent.getEvents().size());
+			logger.debug("  Registry Event Count: " + regEvent.getEvents().size());
 			for( RegistryEvent event : regEvent.getEvents()) {
 				if (event.getAction().equals("push")) {
-					logger.info("    Registry Action: " + event.getAction());
-					logger.info("    Registry Target Repository: " + event.getTarget().getRepository());
-					logger.info("    Registry Target Url: " + event.getTarget().getUrl());
-					logger.info("    Registry Request Host: " + event.getRequest().getHost());
-					logger.info("    Registry Actor: " + event.getActor());
-					logger.info("    Registry Source Addr: " + event.getSource().getAddr());
+					logger.debug("    Registry Action: " + event.getAction());
+					logger.debug("    Registry Target Repository: " + event.getTarget().getRepository());
+					logger.debug("    Registry Target Url: " + event.getTarget().getUrl());
+					logger.debug("    Registry Request Host: " + event.getRequest().getHost());
+					logger.debug("    Registry Actor: " + event.getActor());
+					logger.debug("    Registry Source Addr: " + event.getSource().getAddr());
 					try {
 						K8sApiCaller.createImage(event);
 					} catch (Throwable e) {
@@ -60,12 +60,12 @@ public class RegistryEventHandler extends GeneralHandler {
 					}
 				}
 				else if (event.getAction().equals("delete")) {
-					logger.info("    Registry Action: " + event.getAction());
-					logger.info("    Registry Target Repository: " + event.getTarget().getRepository());
-					logger.info("    Registry Target Url: " + event.getTarget().getUrl());
-					logger.info("    Registry Request Host: " + event.getRequest().getHost());
-					logger.info("    Registry Actor: " + event.getActor());
-					logger.info("    Registry Source Addr: " + event.getSource().getAddr());
+					logger.debug("    Registry Action: " + event.getAction());
+					logger.debug("    Registry Target Repository: " + event.getTarget().getRepository());
+					logger.debug("    Registry Target Url: " + event.getTarget().getUrl());
+					logger.debug("    Registry Request Host: " + event.getRequest().getHost());
+					logger.debug("    Registry Actor: " + event.getActor());
+					logger.debug("    Registry Source Addr: " + event.getSource().getAddr());
 					
 					try {
 						K8sApiCaller.deleteImage(event);
@@ -74,14 +74,14 @@ public class RegistryEventHandler extends GeneralHandler {
 					}
 				}
 				else {
-					logger.info("    Registry Action: " + event.getAction());
-					logger.info("    Registry Target Repository: " + event.getTarget().getRepository());
-					logger.info("    Registry Target Url: " + event.getTarget().getUrl());
+					logger.debug("    Registry Action: " + event.getAction());
+					logger.debug("    Registry Target Repository: " + event.getTarget().getRepository());
+					logger.debug("    Registry Target Url: " + event.getTarget().getUrl());
 				}
 			}
 
 		}catch (Exception e) {
-			logger.info( "Exception message: " + e.getMessage() );
+			logger.error( "Exception message: " + e.getMessage() );
 		}
 		status = Status.OK;
 		outDO = "event_get_success";
@@ -92,7 +92,7 @@ public class RegistryEventHandler extends GeneralHandler {
 	@Override
     public Response other(
       String method, UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
-		logger.info("***** OPTIONS /login");
+		logger.debug("***** OPTIONS /login");
 		
 		return Util.setCors(NanoHTTPD.newFixedLengthResponse(""));
     }

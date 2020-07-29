@@ -79,8 +79,8 @@ public class RegistryWatcher extends Thread {
 							logger.debug("====================== Registry " + eventType + " ====================== \n");
 
 							logger.debug("\t[" + registry.getMetadata().getResourceVersion() + "] " 
-									+ registry.getMetadata().getName() + "/" 
-									+ registry.getMetadata().getNamespace() 
+									+ registry.getMetadata().getNamespace() + "/" 
+									+ registry.getMetadata().getName()
 									+ " Registry Data\n" + response.object.toString() + "\n");
 							
 							String serviceType 
@@ -91,8 +91,8 @@ public class RegistryWatcher extends Thread {
 							case Constants.EVENT_TYPE_ADDED: 
 								if(registry.getStatus() == null ) {
 									K8sApiCaller.initRegistry(registry.getMetadata().getName(), registry);
-									logger.info(registry.getMetadata().getName() + "/" 
-											+ registry.getMetadata().getNamespace() + "Creating registry");
+									logger.info(registry.getMetadata().getNamespace() + "/" 
+											+ registry.getMetadata().getName() + " registry is creating...");
 								}
 								
 								break;
@@ -117,8 +117,8 @@ public class RegistryWatcher extends Thread {
 									Map <RegistryCondition.Condition, Boolean> statusMap = getStatusMap(registry);
 									
 									logger.info("\t[" + registry.getMetadata().getResourceVersion() + "] " 
-											+ registry.getMetadata().getName() + "/" 
-											+ registry.getMetadata().getNamespace() 
+											+ registry.getMetadata().getNamespace() + "/" 
+											+ registry.getMetadata().getName()
 											+ " Registry phase: " + phase);
 									for(RegistryCondition.Condition con : statusMap.keySet()) {
 										logger.debug("\t\t" + con.getType() + "(" + statusMap.get(con) + ")");
@@ -256,7 +256,8 @@ public class RegistryWatcher extends Thread {
 
 								break;
 							case Constants.EVENT_TYPE_DELETED : 
-								logger.debug("Registry is deleted");
+								logger.info(registry.getMetadata().getNamespace() + "/" 
+										+ registry.getMetadata().getName() + " registry is deleted!!");
 								
 								break;
 							}						

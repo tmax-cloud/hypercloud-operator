@@ -1060,7 +1060,7 @@ public class K8sApiCaller {
 	public static void createRegistryService(Registry registry) throws Exception {
 		logger.debug("[K8S ApiCaller] createRegistryService(Registry) Start");
 		try {
-			String registryId = registry.getMetadata().getName();
+			String registryName = registry.getMetadata().getName();
 			String namespace = registry.getMetadata().getNamespace();
 			RegistryService registryService = registry.getSpec().getService();
 			String clusterIP = null;
@@ -1069,6 +1069,8 @@ public class K8sApiCaller {
 			= registry.getSpec().getService().getIngress() != null 
 			? RegistryService.SVC_TYPE_INGRESS : RegistryService.SVC_TYPE_LOAD_BALANCER;
 
+			logger.info(namespace + "/" + registryName + " registry's service is creating...");
+			
 			// set default
 			int registrySVCTargetPort = RegistryService.REGISTRY_TARGET_PORT;
 			int registrySVCPort = registrySVCTargetPort;
@@ -1093,7 +1095,7 @@ public class K8sApiCaller {
 			List<V1ServicePort> ports = new ArrayList<>();
 			Map<String, String> lbSelector = new HashMap<String, String>();
 
-			lbMeta.setName(Constants.K8S_PREFIX + registryId);
+			lbMeta.setName(Constants.K8S_PREFIX + registryName);
 
 			logger.debug("<Service Label List>");
 			Map<String, String> serviceLabels = new HashMap<String, String>();
@@ -1127,8 +1129,8 @@ public class K8sApiCaller {
 			ports.add(v1port);
 			lbSpec.setPorts(ports);
 
-			logger.debug("Selector: " + Constants.K8S_PREFIX + registryId + "=lb");
-			lbSelector.put(Constants.K8S_PREFIX + registryId, "lb");
+			logger.debug("Selector: " + Constants.K8S_PREFIX + registryName + "=lb");
+			lbSelector.put(Constants.K8S_PREFIX + registryName, "lb");
 			lbSpec.setSelector(lbSelector);
 
 			if(serviceType.equals(RegistryService.SVC_TYPE_INGRESS)) {
@@ -1145,7 +1147,8 @@ public class K8sApiCaller {
 			lb.setSpec(lbSpec);
 
 			try {
-				api.createNamespacedService(namespace, lb, null, null, null);
+				V1Service result = api.createNamespacedService(namespace, lb, null, null, null);
+				logger.info(result.getMetadata().getNamespace() +"/"+result.getMetadata().getName() + " service created!!");
 			} catch (ApiException e) {
 				logger.error(e.getResponseBody());
 
@@ -1164,7 +1167,7 @@ public class K8sApiCaller {
 			V1Service service = null;
 			for (int i = 0; i < RETRY_CNT; i++) {
 				Thread.sleep(500);
-				service = api.readNamespacedService(Constants.K8S_PREFIX + registryId, namespace, null, null, null);
+				service = api.readNamespacedService(Constants.K8S_PREFIX + registryName, namespace, null, null, null);
 
 				clusterIP = service.getSpec().getClusterIP();
 				logger.debug("[ClusterIP]:" + clusterIP);
@@ -1201,7 +1204,6 @@ public class K8sApiCaller {
 			e.printStackTrace();
 			throw e;
 		}
-
 	}
 
 	public static void createRegistryPvc(Registry registry) throws Exception {
@@ -1212,7 +1214,7 @@ public class K8sApiCaller {
 			RegistryPVC registryPVC = registry.getSpec().getPersistentVolumeClaim();
 			boolean existPvcName = (registryPVC.getExist() != null);
 
-			logger.info(namespace + "/" + registryName + "registry pvc creating...");
+			logger.info(namespace + "/" + registryName + " registry's pvc is creating...");
 			if( existPvcName ) {
 				V1PersistentVolumeClaim existPvc = null;
 				try {
@@ -1270,7 +1272,7 @@ public class K8sApiCaller {
 
 				try {
 					V1PersistentVolumeClaim  result = api.patchNamespacedPersistentVolumeClaim(existPvc.getMetadata().getName(), namespace, new V1Patch(jArrayPatchPvc.toString()), null, null, null, null);
-					logger.debug("PVC is patched: " + existPvc.getMetadata().getName() + "/" + namespace);
+					logger.info("Registry PVC is patched: " + namespace + "/" + existPvc.getMetadata().getName());
 					logger.debug("\tmetadata:" + result.getMetadata().toString());
 				} catch (ApiException e) {
 					logger.error(e.getResponseBody());
@@ -1340,7 +1342,8 @@ public class K8sApiCaller {
 
 				// create storage.
 				try {
-					api.createNamespacedPersistentVolumeClaim(namespace, pvc, null, null, null);
+					V1PersistentVolumeClaim result = api.createNamespacedPersistentVolumeClaim(namespace, pvc, null, null, null);
+					logger.info(result.getMetadata().getNamespace() +"/"+result.getMetadata().getName() + " pvc created!!");
 				} catch (ApiException e) {
 					logger.error(e.getResponseBody());
 
@@ -1366,7 +1369,7 @@ public class K8sApiCaller {
 	public static void createRegistryCertSecret(Registry registry) throws Exception {
 		logger.debug("[K8S ApiCaller] createRegistryCertSecret(Registry) Start");
 		try {
-			String registryId = registry.getMetadata().getName();
+			String registryName = registry.getMetadata().getName();
 			String namespace = registry.getMetadata().getNamespace();
 			RegistryService registryService = registry.getSpec().getService();
 			String clusterIP = null;
@@ -1376,6 +1379,8 @@ public class K8sApiCaller {
 			String serviceType 
 			= registry.getSpec().getService().getIngress() != null 
 			? RegistryService.SVC_TYPE_INGRESS : RegistryService.SVC_TYPE_LOAD_BALANCER;
+
+			logger.info(namespace + "/" + registryName + " registry's cert secret is creating...");
 
 			// set default
 			int registrySVCTargetPort = RegistryService.REGISTRY_TARGET_PORT;
@@ -1399,7 +1404,7 @@ public class K8sApiCaller {
 			if(serviceType.equals(RegistryService.SVC_TYPE_INGRESS)) {
 
 
-				registryDomain = registryId + "." + ingressDomain;
+				registryDomain = registryName + "." + ingressDomain;
 				logger.debug("[registryDomain]:" + registryDomain);
 			}
 
@@ -1416,13 +1421,13 @@ public class K8sApiCaller {
 
 			// Create Cert Directory
 			logger.debug("Create Cert Directory");
-			String registryDir = createDirectory(namespace, registryId);
+			String registryDir = createDirectory(namespace, registryName);
 
 			int RETRY_CNT = 200;
 			V1Service service = null;
 			for (int i = 0; i < RETRY_CNT; i++) {
 				Thread.sleep(500);
-				service = api.readNamespacedService(Constants.K8S_PREFIX + registryId, namespace, null, null, null);
+				service = api.readNamespacedService(Constants.K8S_PREFIX + registryName, namespace, null, null, null);
 
 				clusterIP = service.getSpec().getClusterIP();
 				logger.debug("[ClusterIP]:" + clusterIP);
@@ -1549,7 +1554,8 @@ public class K8sApiCaller {
 			try {
 				// K8SApiCall createSecret
 				logger.debug("K8SApiCall createSecret");
-				K8sApiCaller.createSecret(namespace, secrets, registryId, labels, null, ownerRefs);
+				String secretName = K8sApiCaller.createSecret(namespace, secrets, registryName, labels, null, ownerRefs);
+				logger.info(namespace +"/"+ secretName + " secret created!!");
 			} catch (ApiException e) {
 				try {
 					patchRegistryStatus(registry, RegistryCondition.Condition.SECRET_OPAQUE, 
@@ -1570,7 +1576,7 @@ public class K8sApiCaller {
 	public static void createRegistryDcjSecret(Registry registry) throws Exception {
 		try {
 			// Create docker-config-json Secret Object
-			String registryId = registry.getMetadata().getName();
+			String registryName = registry.getMetadata().getName();
 			String namespace = registry.getMetadata().getNamespace();
 			RegistryService registryService = registry.getSpec().getService();
 			String clusterIP = null;
@@ -1580,6 +1586,8 @@ public class K8sApiCaller {
 			String serviceType 
 			= registry.getSpec().getService().getIngress() != null 
 			? RegistryService.SVC_TYPE_INGRESS : RegistryService.SVC_TYPE_LOAD_BALANCER;
+
+			logger.info(namespace + "/" + registryName + "registry docker-config-json Secret is creating...");
 
 			// set default
 			int registrySVCTargetPort = RegistryService.REGISTRY_TARGET_PORT;
@@ -1602,7 +1610,7 @@ public class K8sApiCaller {
 			if(serviceType.equals(RegistryService.SVC_TYPE_INGRESS)) {
 
 
-				registryDomain = registryId + "." + ingressDomain;
+				registryDomain = registryName + "." + ingressDomain;
 				logger.debug("[registryDomain]:" + registryDomain);
 			}
 
@@ -1621,7 +1629,7 @@ public class K8sApiCaller {
 			V1Service service = null;
 			for (int i = 0; i < RETRY_CNT; i++) {
 				Thread.sleep(500);
-				service = api.readNamespacedService(Constants.K8S_PREFIX + registryId, namespace, null, null, null);
+				service = api.readNamespacedService(Constants.K8S_PREFIX + registryName, namespace, null, null, null);
 
 				clusterIP = service.getSpec().getClusterIP();
 				logger.debug("[ClusterIP]:" + clusterIP);
@@ -1670,8 +1678,9 @@ public class K8sApiCaller {
 			Map<String, String> labels2 = new HashMap<>();
 			labels2.put("secret", "docker");
 			try {
-				K8sApiCaller.createSecret(namespace, secrets2, registryId, labels2,
+				String secretName = K8sApiCaller.createSecret(namespace, secrets2, registryName, labels2,
 						Constants.K8S_SECRET_TYPE_DOCKER_CONFIG_JSON, ownerRefs);
+				logger.info(namespace +"/"+ secretName + " secret created!!");
 			} catch (ApiException e) {
 				try {
 					patchRegistryStatus(registry, RegistryCondition.Condition.SECRET_DOCKER_CONFIG_JSON, 
@@ -1693,11 +1702,13 @@ public class K8sApiCaller {
 	public static void createRegistryTlsSecret(Registry registry) throws Exception {
 		logger.debug("[K8S ApiCaller] createRegistryTlsSecret(Registry) Start");
 		try {
-			String registryId = registry.getMetadata().getName();
+			String registryName = registry.getMetadata().getName();
 			String namespace = registry.getMetadata().getNamespace();
 			Map<String, String> tlsLabels = new HashMap<>();
 			Map<String, String> tlsSecrets = new HashMap<>();
-			String registryDir = Constants.OPENSSL_HOME_DIR + "/" + namespace + "/" + registryId;
+			String registryDir = Constants.OPENSSL_HOME_DIR + "/" + namespace + "/" + registryName;
+
+			logger.info(namespace + "/" + registryName + " registry's tls secret is creating...");
 			
 			tlsSecrets.put(Constants.K8S_SECRET_TLS_CRT, readFile(registryDir + "/" + Constants.CERT_CRT_FILE));
 			tlsSecrets.put(Constants.K8S_SECRET_TLS_KEY, readFile(registryDir + "/" + Constants.CERT_KEY_FILE));
@@ -1717,7 +1728,8 @@ public class K8sApiCaller {
 			try {
 				// K8SApiCall createSecret
 				logger.debug("K8SApiCall createSecret");
-				K8sApiCaller.createSecret(namespace, tlsSecrets, registryId, tlsLabels, Constants.K8S_SECRET_TYPE_TLS, ownerRefs);
+				String secretName = K8sApiCaller.createSecret(namespace, tlsSecrets, registryName, tlsLabels, Constants.K8S_SECRET_TYPE_TLS, ownerRefs);
+				logger.info(namespace +"/"+ secretName + " secret created!!");
 			} catch (ApiException e) {
 				try {
 					patchRegistryStatus(registry, RegistryCondition.Condition.SECRET_TLS, 
@@ -1738,7 +1750,7 @@ public class K8sApiCaller {
 	public static void createRegistryIngress(Registry registry) throws Exception {
 		logger.debug("[K8S ApiCaller] createRegistryIngress(Registry) Start");
 		try {
-			String registryId = registry.getMetadata().getName();
+			String registryName = registry.getMetadata().getName();
 			String namespace = registry.getMetadata().getNamespace();
 			RegistryService registryService = registry.getSpec().getService();
 			int registrySVCTargetPort = RegistryService.REGISTRY_TARGET_PORT;
@@ -1747,11 +1759,13 @@ public class K8sApiCaller {
 			V1ObjectMeta metadata = new V1ObjectMeta();
 			Map<String, String> annotations = new HashMap<>();
 
+			logger.info(namespace + "/" + registryName + " registry's ingress is creating...");
+
 			String ingressDomain = null;
 			String registryDomain = null;
 
 			ingressDomain = registryService.getIngress().getDomainName();
-			registryDomain = registryId + "." + ingressDomain;
+			registryDomain = registryName + "." + ingressDomain;
 			logger.debug("[registryDomain]:" + registryDomain);
 
 			if( registryService.getIngress().getPort() != 0 ) {
@@ -1759,7 +1773,7 @@ public class K8sApiCaller {
 				logger.debug("[Ingress]registrySVCPort: " + registrySVCPort);
 			}
 
-			metadata.setName(Constants.K8S_PREFIX + registryId);
+			metadata.setName(Constants.K8S_PREFIX + registryName);
 			metadata.setNamespace(namespace);
 			
 			Map<String, String> ingressLabels = new HashMap<String, String>();
@@ -1796,7 +1810,7 @@ public class K8sApiCaller {
 			ExtensionsV1beta1IngressTLS eTls = new ExtensionsV1beta1IngressTLS();
 			String hostsItem = registryDomain;
 			eTls.addHostsItem(hostsItem);
-			eTls.setSecretName(Constants.K8S_PREFIX + Constants.K8S_TLS_PREFIX + registryId);
+			eTls.setSecretName(Constants.K8S_PREFIX + Constants.K8S_TLS_PREFIX + registryName);
 
 			tls.add(eTls);
 			spec.setTls(tls);
@@ -1808,7 +1822,7 @@ public class K8sApiCaller {
 			ExtensionsV1beta1HTTPIngressPath ePath = new ExtensionsV1beta1HTTPIngressPath();
 			ExtensionsV1beta1IngressBackend backend = new ExtensionsV1beta1IngressBackend();
 			
-			backend.setServiceName(Constants.K8S_PREFIX + registryId);
+			backend.setServiceName(Constants.K8S_PREFIX + registryName);
 			backend.setServicePort(new IntOrString(registrySVCPort));
 			ePath.setBackend(backend);
 			
@@ -1825,6 +1839,8 @@ public class K8sApiCaller {
 
 			try {
 				extentionApi.createNamespacedIngress(namespace, ingress, null, null, null);
+
+				logger.info(namespace +"/"+ ingress.getMetadata().getName() + " ingress created!!");
 			} catch(ApiException e) {
 				logger.error(e.getResponseBody());
 				
@@ -1848,7 +1864,10 @@ public class K8sApiCaller {
 		
 		try {
 			String configMapName = registry.getSpec().getCustomConfigYml();
+			String registryName = registry.getMetadata().getName();
 			String namespace = registry.getMetadata().getNamespace();
+
+			logger.info(namespace + "/" + registryName + " registry's configmap is creating...");
 			
 			if (StringUtil.isNotEmpty(configMapName)) {
 				try {
@@ -1922,7 +1941,8 @@ public class K8sApiCaller {
 					cm.setData(regConfig.getData());
 
 					V1ConfigMap result = api.createNamespacedConfigMap(namespace, cm, null, null, null);
-					logger.debug("Configmap is created: " + result.getMetadata().getName() + "/" + result.getMetadata().getNamespace());
+					logger.info(namespace +"/"+ result.getMetadata().getName() + " ingress created!!");
+					logger.debug("Configmap is created: " + result.getMetadata().getNamespace() + "/" + result.getMetadata().getName());
 					logger.debug("\tKey:" + result.getData().keySet() + "\n");
 					logger.debug("\tOwnerReferences:" + result.getMetadata().getOwnerReferences());
 					logger.debug("\tLabels:" + result.getMetadata().getLabels());
@@ -1951,16 +1971,18 @@ public class K8sApiCaller {
 		logger.debug("[K8S ApiCaller] createRegistryReplicaSet(Registry) Start");
 		try {
 			V1ReplicaSetBuilder rsBuilder = new V1ReplicaSetBuilder();
-			String registryId = registry.getMetadata().getName();
+			String registryName = registry.getMetadata().getName();
 			String namespace = registry.getMetadata().getNamespace();
 			RegistryPVC registryPVC = registry.getSpec().getPersistentVolumeClaim();
 			int registrySVCTargetPort = RegistryService.REGISTRY_TARGET_PORT;
 
+			logger.info(namespace + "/" + registryName + " registry's replica set is creating...");
+			
 			// 1. metadata
 			V1ObjectMeta rsMeta = new V1ObjectMeta();
 
 			// 1-1. replica set name
-			rsMeta.setName(Constants.K8S_PREFIX + Constants.K8S_REGISTRY_PREFIX + registryId);
+			rsMeta.setName(Constants.K8S_PREFIX + Constants.K8S_REGISTRY_PREFIX + registryName);
 			logger.debug("RS Name: " + rsMeta.getName());
 
 			// 1-2 replica set label
@@ -2007,8 +2029,8 @@ public class K8sApiCaller {
 			logger.debug("app: registry");
 			logger.debug("apps: " + rsMeta.getName());
 
-			podLabels.put(Constants.K8S_PREFIX + registryId, "lb");
-			logger.debug(Constants.K8S_PREFIX + registryId + ": lb");
+			podLabels.put(Constants.K8S_PREFIX + registryName, "lb");
+			logger.debug(Constants.K8S_PREFIX + registryName + ": lb");
 
 			// add user label
 			if( registry.getSpec().getReplicaSet() != null) {
@@ -2030,7 +2052,7 @@ public class K8sApiCaller {
 			V1Container container = new V1Container();
 
 			// 2-2-2-2-1. container name
-			container.setName(Constants.K8S_PREFIX + registryId.toLowerCase());
+			container.setName(Constants.K8S_PREFIX + registryName.toLowerCase());
 			logger.debug("<Container Name: " + container.getName() + ">");
 
 			// 2-2-2-2-2. image
@@ -2099,7 +2121,7 @@ public class K8sApiCaller {
 			secretEnv1.setName("ID");
 			V1EnvVarSource valueFrom = new V1EnvVarSource();
 			V1SecretKeySelector secretKeyRef = new V1SecretKeySelector();
-			secretKeyRef.setName(Constants.K8S_PREFIX + registryId);
+			secretKeyRef.setName(Constants.K8S_PREFIX + registryName);
 			secretKeyRef.setKey("ID");
 			valueFrom.setSecretKeyRef(secretKeyRef);
 			secretEnv1.setValueFrom(valueFrom);
@@ -2109,7 +2131,7 @@ public class K8sApiCaller {
 			secretEnv2.setName("PASSWD");
 			V1EnvVarSource valueFrom2 = new V1EnvVarSource();
 			V1SecretKeySelector secretKeyRef2 = new V1SecretKeySelector();
-			secretKeyRef2.setName(Constants.K8S_PREFIX + registryId);
+			secretKeyRef2.setName(Constants.K8S_PREFIX + registryName);
 			secretKeyRef2.setKey("PASSWD");
 			valueFrom2.setSecretKeyRef(secretKeyRef2);
 			secretEnv2.setValueFrom(valueFrom2);
@@ -2245,7 +2267,7 @@ public class K8sApiCaller {
 
 
 			// Secret Volume
-			String secretName = Constants.K8S_PREFIX + registryId;
+			String secretName = Constants.K8S_PREFIX + registryName;
 			V1Volume certVolume = new V1Volume();
 			certVolume.setName("certs");
 			V1SecretVolumeSource volSecret = new V1SecretVolumeSource();
@@ -2255,7 +2277,7 @@ public class K8sApiCaller {
 			volumes.add(certVolume);
 
 			// Registry Volume
-			String pvcName = registryPVC.getExist() != null ? registryPVC.getExist().getPvcName() : Constants.K8S_PREFIX + registryId;
+			String pvcName = registryPVC.getExist() != null ? registryPVC.getExist().getPvcName() : Constants.K8S_PREFIX + registryName;
 			V1Volume registryVolume = new V1Volume();
 			registryVolume.setName("registry");
 			V1PersistentVolumeClaimVolumeSource regPvc = new V1PersistentVolumeClaimVolumeSource();
@@ -2324,7 +2346,7 @@ public class K8sApiCaller {
 			try {
 				logger.debug("Create ReplicaSet");
 				V1ReplicaSet result = appApi.createNamespacedReplicaSet(namespace, rsBuilder.build(), null, null, null);
-				logger.debug("ReplicaSet is created: " + result.getMetadata().getName() + "/" + result.getMetadata().getNamespace());
+				logger.info(namespace +"/"+ result.getMetadata().getName() + " replica set created!!");
 				logger.debug("\tOwnerReferences:" + result.getMetadata().getOwnerReferences());
 				logger.debug("\tLabels:" + result.getMetadata().getLabels());
 			} catch (ApiException e) {
@@ -2395,7 +2417,7 @@ public class K8sApiCaller {
 	public static void updateRegistrySubresources(Registry registry, JsonNode diff) throws ApiException {
 		logger.debug("[K8S ApiCaller] updateRegistrySubresources(Registry, JsonNode) Start");
 		String namespace = registry.getMetadata().getNamespace();
-		String registryId = registry.getMetadata().getName();
+		String registryName = registry.getMetadata().getName();
 		Set<String> updateSubResources = new HashSet<>();
 		Set<RegistryCondition.Condition> recreateSubresources = new HashSet<>();
 		boolean renewLoginAuthRequired = false;
@@ -2494,8 +2516,8 @@ public class K8sApiCaller {
 					jArrayPatchPvc.add(Util.makePatchJsonObject("replace", "/metadata/ownerReferences", ownerRefs));
 					
 					try {
-						V1PersistentVolumeClaim result = api.patchNamespacedPersistentVolumeClaim(Constants.K8S_PREFIX + registryId, namespace, new V1Patch(jArrayPatchPvc.toString()), null, null, null, null);
-						logger.debug("PVC is patched: " + result.getMetadata().getName() + "/" + result.getMetadata().getNamespace());
+						V1PersistentVolumeClaim result = api.patchNamespacedPersistentVolumeClaim(Constants.K8S_PREFIX + registryName, namespace, new V1Patch(jArrayPatchPvc.toString()), null, null, null, null);
+						logger.debug("PVC is patched: " + result.getMetadata().getNamespace() + "/" + result.getMetadata().getName());
 						logger.debug("\tOwnerReferences:" + result.getMetadata().getOwnerReferences());
 						logger.debug("\tLabels:" + result.getMetadata().getLabels());
 					} catch (ApiException e) {
@@ -2503,11 +2525,11 @@ public class K8sApiCaller {
 					}
 				} else {
 					try {
-						V1PersistentVolumeClaim pvc = api.readNamespacedPersistentVolumeClaim(Constants.K8S_PREFIX + registryId, namespace, null, null, null);
+						V1PersistentVolumeClaim pvc = api.readNamespacedPersistentVolumeClaim(Constants.K8S_PREFIX + registryName, namespace, null, null, null);
 						pvc.getMetadata().setOwnerReferences(null);
 						
-						V1PersistentVolumeClaim result = api.replaceNamespacedPersistentVolumeClaim(Constants.K8S_PREFIX + registryId, namespace, pvc, null, null, null);
-						logger.debug("PVC is replaced: " + result.getMetadata().getName() + "/" + result.getMetadata().getNamespace());
+						V1PersistentVolumeClaim result = api.replaceNamespacedPersistentVolumeClaim(Constants.K8S_PREFIX + registryName, namespace, pvc, null, null, null);
+						logger.debug("PVC is replaced: " + result.getMetadata().getNamespace() + "/" + result.getMetadata().getName());
 						logger.debug("\tOwnerReferences:" + result.getMetadata().getOwnerReferences());
 						logger.debug("\tLabels:" + result.getMetadata().getLabels());
 					} catch (ApiException e) {
@@ -2584,14 +2606,14 @@ public class K8sApiCaller {
 	public static void updateRegistryReplicaSet(Registry registry, JsonElement patchJson) throws ApiException {
 		logger.debug("[K8S ApiCaller] updateRegistryReplicaSet(Registry, JsonElement) Start");
 		String namespace = registry.getMetadata().getNamespace();
-		String registryId = registry.getMetadata().getName();
+		String registryName = registry.getMetadata().getName();
 		logger.debug("updateRegistryReplicaSet's Json: " + patchJson.toString());
 
 		try {
 			V1ReplicaSet result = appApi.patchNamespacedReplicaSet(
-					Constants.K8S_PREFIX + Constants.K8S_REGISTRY_PREFIX + registryId, namespace, new V1Patch(patchJson.toString()), null, null,
+					Constants.K8S_PREFIX + Constants.K8S_REGISTRY_PREFIX + registryName, namespace, new V1Patch(patchJson.toString()), null, null,
 					null, null);
-			logger.debug("Secret is created: " + result.getMetadata().getName() + "/" + result.getMetadata().getNamespace());
+			logger.debug("Secret is created: " + result.getMetadata().getNamespace() + "/" + result.getMetadata().getName());
 			logger.debug("\tOwnerReferences:" + result.getMetadata().getOwnerReferences());
 			logger.debug("\tLabels:" + result.getMetadata().getLabels());
 		} catch (ApiException e) {
@@ -2603,13 +2625,13 @@ public class K8sApiCaller {
 	public static void updateRegistrySecret(Registry registry, JsonElement patchJson) throws ApiException {
 		logger.debug("[K8S ApiCaller] updateRegistrySecret(Registry, JsonElement) Start");
 		String namespace = registry.getMetadata().getNamespace();
-		String registryId = registry.getMetadata().getName();
+		String registryName = registry.getMetadata().getName();
 		logger.debug("updateRegistrySecret's Json: " + patchJson.toString());
 
 		try {
-			V1Secret result = api.patchNamespacedSecret(Constants.K8S_PREFIX + registryId, namespace, new V1Patch(patchJson.toString()), null,
+			V1Secret result = api.patchNamespacedSecret(Constants.K8S_PREFIX + registryName, namespace, new V1Patch(patchJson.toString()), null,
 					null, null, null);
-			logger.debug("Secret is patched: " + result.getMetadata().getName() + "/" + result.getMetadata().getNamespace());
+			logger.debug("Secret is patched: " + result.getMetadata().getNamespace() + "/" + result.getMetadata().getName());
 			logger.debug("\tKey:" + result.getData().keySet() + "\n");
 			logger.debug("\tOwnerReferences:" + result.getMetadata().getOwnerReferences());
 			logger.debug("\tLabels:" + result.getMetadata().getLabels());
@@ -2622,7 +2644,7 @@ public class K8sApiCaller {
 	public static void updateRegistryAnnotationLastCR(Registry registry, JsonNode diff) throws ApiException {
 		logger.debug("[K8S ApiCaller] updateRegistryAnnotationLastCR(Registry) Start");
 		String namespace = registry.getMetadata().getNamespace();
-		String registryId = registry.getMetadata().getName();
+		String registryName = registry.getMetadata().getName();
 
 		// ------ Patch Registry
 		Map<String, String> annotations = registry.getMetadata().getAnnotations() == null ? new HashMap<>()
@@ -2640,7 +2662,7 @@ public class K8sApiCaller {
 
 		try {
 			Object result = customObjectApi.replaceNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
-					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registryId,
+					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registryName,
 					registry);
 			logger.debug("replaceNamespacedCustomObject result: " + result.toString() + "\n");
 
@@ -2653,10 +2675,10 @@ public class K8sApiCaller {
 	public static void addRegistryAnnotation(Registry registry) throws ApiException {
 		logger.debug("[K8S ApiCaller] addRegistryAnnotation(Registry) Start");
 		String namespace = registry.getMetadata().getNamespace();
-		String registryId = registry.getMetadata().getName();
+		String registryName = registry.getMetadata().getName();
 		String registryIpPort = "";
 
-		V1Secret secretRet = api.readNamespacedSecret(Constants.K8S_PREFIX + registryId, namespace, null, null, null);
+		V1Secret secretRet = api.readNamespacedSecret(Constants.K8S_PREFIX + registryName, namespace, null, null, null);
 
 		Map<String, byte[]> secretMap = secretRet.getData();
 		registryIpPort = new String(secretMap.get("REGISTRY_URL"));
@@ -2673,7 +2695,7 @@ public class K8sApiCaller {
 
 		try {
 			Object result = customObjectApi.replaceNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
-					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registryId,
+					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registryName,
 					registry);
 
 			logger.debug("replaceNamespacedCustomObject result: " + result.toString() + "\n");
@@ -2686,10 +2708,10 @@ public class K8sApiCaller {
 	public static boolean updateRegistryAnnotation(Registry registry) throws ApiException {
 		logger.debug("[K8S ApiCaller] updateRegistryAnnotation(Registry) Start");
 		String namespace = registry.getMetadata().getNamespace();
-		String registryId = registry.getMetadata().getName();
+		String registryName = registry.getMetadata().getName();
 		String registryIpPort = "";
 
-		V1Secret secretRet = api.readNamespacedSecret(Constants.K8S_PREFIX + registryId, namespace, null, null, null);
+		V1Secret secretRet = api.readNamespacedSecret(Constants.K8S_PREFIX + registryName, namespace, null, null, null);
 
 		Map<String, byte[]> secretMap = secretRet.getData();
 		registryIpPort = new String(secretMap.get("REGISTRY_URL"));
@@ -2718,7 +2740,7 @@ public class K8sApiCaller {
 
 		try {
 			Object result = customObjectApi.replaceNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
-					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registryId,
+					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registryName,
 					registry);
 
 			logger.debug("replaceNamespacedCustomObject result: " + result.toString() + "\n");
@@ -3868,11 +3890,11 @@ public class K8sApiCaller {
 					try {
 						Registry registry = mapper.treeToValue(mapper.valueToTree(registryObj), Registry.class);
 						
-						logger.debug("== " + registry.getMetadata().getName() + "/" + registry.getMetadata().getNamespace()
+						logger.info("== " + registry.getMetadata().getName() + "/" + registry.getMetadata().getNamespace()
 							+ " registry sync start ==");
 					
 						syncImageList(registry);
-						logger.debug("== " + registry.getMetadata().getName() + "/" + registry.getMetadata().getNamespace()
+						logger.info("== " + registry.getMetadata().getName() + "/" + registry.getMetadata().getNamespace()
 								+ " registry sync end ==\n");
 					} catch (ApiException e) {
 						logger.error(e.getResponseBody());
@@ -4456,6 +4478,7 @@ public class K8sApiCaller {
 
 				Object result = customObjectApi.createNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
 						Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_IMAGE, image, null);
+				
 				logger.debug("createNamespacedCustomObject result: " + result.toString() + "\n");
 			} catch (ApiException e) {
 				logger.error(e.getResponseBody());
@@ -4704,7 +4727,7 @@ public class K8sApiCaller {
 			Map<String, byte[]> secretMap = new HashMap<>();
 			result = api.createNamespacedSecret(namespace, secret, "true", null, null);
 
-			logger.debug("Secret is created: " + result.getMetadata().getName() + "/" + result.getMetadata().getNamespace());
+			logger.debug("Secret is created: " + result.getMetadata().getNamespace() + "/" + result.getMetadata().getName());
 			logger.debug("\tKey:" + result.getData().keySet() + "\n");
 			// V1Secret secretRet = api.readNamespacedSecret(Constants.K8S_PREFIX +
 			// secretName.toLowerCase(), Constants.K8S_PREFIX + domainId.toLowerCase(),

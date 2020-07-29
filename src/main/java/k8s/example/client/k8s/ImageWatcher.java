@@ -41,11 +41,11 @@ public class ImageWatcher extends Thread {
 				watchImage.forEach(response -> {
 					try {
 						if (Thread.interrupted()) {
-							logger.info("Interrupted!");
+							logger.debug("Interrupted!");
 							watchImage.close();
 						}
 					} catch (Exception e) {
-						logger.info(e.getMessage());
+						logger.error(e.getMessage());
 					}
 
 
@@ -57,7 +57,7 @@ public class ImageWatcher extends Thread {
 							
 							latestResourceVersion = response.object.getMetadata().getResourceVersion();
 							String eventType = response.type.toString();
-							logger.info("====================== Image " + eventType + " ====================== \n");
+							logger.debug("====================== Image " + eventType + " ====================== \n");
 							
 							switch(eventType) {
 							case Constants.EVENT_TYPE_ADDED: 
@@ -72,20 +72,20 @@ public class ImageWatcher extends Thread {
 							}						
 						}
 						
-//						logger.info("[ImageWatcher] Save latestHandledResourceVersion of ImageWatcher [" + response.object.getMetadata().getName() + "]");
+//						logger.debug("[ImageWatcher] Save latestHandledResourceVersion of ImageWatcher [" + response.object.getMetadata().getName() + "]");
 //						String resourceVersion = K8sApiCaller.getCustomResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_IMAGE, 
 //								Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION,
 //								response.object.getMetadata().getName(), response.object.getMetadata().getNamespace(), true);
 //						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_IMAGE, resourceVersion);
 						
 //					} catch (ApiException e) {
-//						logger.info("ApiException: " + e.getMessage());
-//						logger.info(e.getResponseBody());
+//						logger.error("ApiException: " + e.getMessage());
+//						logger.error(e.getResponseBody());
 					} catch (Exception e) {
-						logger.info("Exception: " + e.getMessage());
+						logger.error("Exception: " + e.getMessage());
 						StringWriter sw = new StringWriter();
 						e.printStackTrace(new PrintWriter(sw));
-						logger.info(sw.toString());
+						logger.error(sw.toString());
 					} catch (Throwable e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -94,18 +94,18 @@ public class ImageWatcher extends Thread {
 					
 				});
 				
-				logger.info("=============== Image 'For Each' END ===============");
+				logger.debug("=============== Image 'For Each' END ===============");
 				watchImage = Watch.createWatch(client,
 						api.listClusterCustomObjectCall("tmax.io", "v1", "images", null, null, null, null, null, null, null, Boolean.TRUE, null),
 						new TypeToken<Watch.Response<Image>>() {}.getType());
 			}
 		} catch (Exception e) {
-			logger.info("Image Watcher Exception: " + e.getMessage());
+			logger.error("Image Watcher Exception: " + e.getMessage());
 			StringWriter sw = new StringWriter();
 			e.printStackTrace(new PrintWriter(sw));
-			logger.info(sw.toString());
+			logger.error(sw.toString());
 			if( e.getMessage().equals("abnormal") ) {
-				logger.info("Catch abnormal conditions!! Exit process");
+				logger.error("Catch abnormal conditions!! Exit process");
 				System.exit(1);
 			}
 		}
