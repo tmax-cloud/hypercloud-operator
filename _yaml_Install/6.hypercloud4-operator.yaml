@@ -68,6 +68,10 @@ spec:
           value: "hostcluster"
         - name: FED_NS # name of namespace which contains federation-system pods
           value: "kube-federation-system"
+        - name: LOG_INFO_MAX_HISTORY_DAYS
+          value: "30"
+        - name: LOG_DEBUG_MAX_HISTORY_DAYS
+          value: "1"
         ports:
         - containerPort: 28677
         resources:

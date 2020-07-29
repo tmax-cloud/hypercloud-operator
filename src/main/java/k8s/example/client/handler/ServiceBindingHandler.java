@@ -45,8 +45,8 @@ public class ServiceBindingHandler extends GeneralHandler {
 
 		String instanceId = urlParams.get("instance_id");
 		String bindingId = urlParams.get("binding_id");
-		logger.info("Instance ID: " + instanceId);
-		logger.info("Binding ID: " + bindingId);
+		logger.debug("Instance ID: " + instanceId);
+		logger.debug("Binding ID: " + bindingId);
 		
         BindingInDO inDO = null;
         String outDO = null;
@@ -54,33 +54,32 @@ public class ServiceBindingHandler extends GeneralHandler {
 		
 		try {
 			String bodyStr = readFile(body.get("content"), Integer.valueOf(session.getHeaders().get("content-length")));
-			logger.info("Body: " + bodyStr);
+			logger.debug("Body: " + bodyStr);
 			
 			inDO = new ObjectMapper().readValue(bodyStr, BindingInDO.class);
-			logger.info("Service ID: " + inDO.getService_id());
-			logger.info("Service Plan ID: " + inDO.getPlan_id());
-			logger.info("Context: " + inDO.getContext().toString());
+			logger.debug("Service ID: " + inDO.getService_id());
+			logger.debug("Service Plan ID: " + inDO.getPlan_id());
+			logger.debug("Context: " + inDO.getContext().toString());
 			if(!inDO.getBind_resource().getApp_guid().isEmpty()) {
-				logger.info("Application GUID: " + inDO.getBind_resource().getApp_guid());
+				logger.debug("Application GUID: " + inDO.getBind_resource().getApp_guid());
 			}
 //			if(!inDO.getBind_resource().getRoute().isEmpty()) {
-//				logger.info("Application URL: " + inDO.getBind_resource().getRoute());
+//				logger.debug("Application URL: " + inDO.getBind_resource().getRoute());
 //			}
 			
 			response = K8sApiCaller.insertBindingSecret(inDO.getContext().getInstance_name()+"."+instanceId, bindingId, inDO);
 			status = Status.OK;
 		} catch (Exception e) {
-			logger.info( "  Failed to bind instance of service class \"" + inDO.getService_id() + "\"");
-			logger.info( "Exception message: " + e.getMessage() );
+			logger.debug( "  Failed to bind instance of service class \"" + inDO.getService_id() + "\"");
+			logger.debug( "Exception message: " + e.getMessage() );
 			e.printStackTrace();
 			status = Status.BAD_REQUEST;
 		}
 		
 		Gson gson = new GsonBuilder().setPrettyPrinting().create();
 		outDO = gson.toJson(response).toString();
-		logger.info("Response : " + outDO);
-		
-//		logger.info();
+		logger.debug("Response : " + outDO);
+//		logger.debug();
 		return NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO);
     }
 	
@@ -92,8 +91,8 @@ public class ServiceBindingHandler extends GeneralHandler {
 		String serviceClassName = session.getParameters().get("service_id").get(0);
 		String instanceId = urlParams.get("instance_id");
 		String bindingId = urlParams.get("binding_id");
-		logger.info("Instance ID: " + instanceId);
-		logger.info("Binding ID: " + bindingId);
+		logger.debug("Instance ID: " + instanceId);
+		logger.debug("Binding ID: " + bindingId);
 		
 		BrokerResponse response = new BrokerResponse();
 		String outDO = null;
@@ -103,17 +102,16 @@ public class ServiceBindingHandler extends GeneralHandler {
 			response.setOperation("");
 			status = Status.OK;
 		} catch (Exception e) {
-			logger.info( "  Failed to unbind instance of service class \"" + serviceClassName + "\"");
-			logger.info( "Exception message: " + e.getMessage() );
+			logger.debug( "  Failed to unbind instance of service class \"" + serviceClassName + "\"");
+			logger.debug( "Exception message: " + e.getMessage() );
 			e.printStackTrace();
 			status = Status.BAD_REQUEST;
 		}
 		
 		Gson gson = new GsonBuilder().setPrettyPrinting().create();
 		outDO = gson.toJson(response).toString();
-		logger.info("Response : " + outDO);
-		
-//		logger.info();
+		logger.debug("Response : " + outDO);
+//		logger.debug();
 		return NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO);
     }
 	

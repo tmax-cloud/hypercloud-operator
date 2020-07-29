@@ -36,15 +36,15 @@ public class CatalogHandler extends GeneralHandler {
 			catalog = K8sApiCaller.getCatalog();
 			status = Status.OK;
 		} catch (ApiException e) {
-			logger.info( "  Get Catalog fail" );
-			logger.info( "Exception message: " + e.getMessage() );
+			logger.debug( "  Get Catalog fail" );
+			logger.debug( "Exception message: " + e.getMessage() );
 			e.printStackTrace();
 			status = Status.NOT_FOUND;
 		} catch (Exception e) {
-			logger.info( "  Get Catalog fail" );
-			logger.info( "Exception message: " + e.getMessage() );
-			logger.info( "Exception message: " + e.getStackTrace().toString() );
-			logger.info( "Exception message: " + e.toString() );
+			logger.debug( "  Get Catalog fail" );
+			logger.debug( "Exception message: " + e.getMessage() );
+			logger.debug( "Exception message: " + e.getStackTrace().toString() );
+			logger.debug( "Exception message: " + e.toString() );
 
 
 			
@@ -55,9 +55,8 @@ public class CatalogHandler extends GeneralHandler {
 		
 		Gson gson = new GsonBuilder().setPrettyPrinting().create();
 		outDO = gson.toJson(catalog).toString();
-		logger.info("Catalog : " + outDO);
-		
-		//logger.info();
+		logger.debug("Catalog : " + outDO);
+		//logger.debug();
 		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO));
 	}
 }

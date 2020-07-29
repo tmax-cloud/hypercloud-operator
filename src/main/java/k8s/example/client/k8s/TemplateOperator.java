@@ -58,11 +58,11 @@ public class TemplateOperator extends Thread {
 				watchInstance.forEach(response -> {
 					try {
 						if(Thread.interrupted()) {
-							logger.info("Interrupted!");
+							logger.debug("Interrupted!");
 							watchInstance.close();
 						}
 					} catch(Exception e) {
-						logger.info(e.getMessage());
+						logger.debug(e.getMessage());
 					}
 					
 					// Logic here
@@ -76,7 +76,7 @@ public class TemplateOperator extends Thread {
 						logger.info("[Template Operator] Template Namespace : " + namespace);
 
 		        		latestResourceVersion = template.get("metadata").get("resourceVersion").asLong();
-		        		logger.info("[Template Operator] Custom LatestResourceVersion : " + latestResourceVersion);
+		        		logger.debug("[Template Operator] Custom LatestResourceVersion : " + latestResourceVersion);
 		        		
 		        		if(response.type.toString().equals("ADDED")) {
 		        			JsonNode templateObjs = numberTypeConverter(objectToJsonNode(template).get("objects"));
@@ -97,7 +97,7 @@ public class TemplateOperator extends Thread {
 			        			}
 		        			}
 		        			
-	    					logger.info("[Template Operator] Object to be patched to objectKinds: " + kindArr.toString());
+	    					logger.debug("[Template Operator] Object to be patched to objectKinds: " + kindArr.toString());
 	    					
 	    					JSONObject patch = new JSONObject();
 	    					JSONArray patchArray = new JSONArray();
@@ -114,29 +114,29 @@ public class TemplateOperator extends Thread {
 	    								Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE, 
 	    								templateName, 
 	    								patchArray);
-	    						logger.info(result.toString());
+	    						logger.debug(result.toString());
 	    					} catch (ApiException e) {
 	    						throw new Exception(e.getResponseBody());
 	    					}
 	    					
 		        		}
 		        		
-//		        		logger.info("[Template Operator] Save latestHandledResourceVersion of Template Operator [" + templateName + "]");
+//		        		logger.debug("[Template Operator] Save latestHandledResourceVersion of Template Operator [" + templateName + "]");
 //						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE,  template.get("metadata").get("resourceVersion").asText());
 					} catch(Exception e) {
-						logger.info(e.getMessage());
+						logger.debug(e.getMessage());
 					}
 	        	});
-				logger.info("=============== Template 'For Each' END ===============");
+				logger.debug("=============== Template 'For Each' END ===============");
 				watchInstance = Watch.createWatch(
 				        client,
 				        tpApi.listClusterCustomObjectCall(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE, null, null, null, null, null, null, null, Boolean.TRUE, null),
 				        new TypeToken<Watch.Response<Object>>(){}.getType());
 			}
 		} catch (Exception e) {
-			logger.info("[Template Operator] Template Operator Exception: " + e.getMessage());
+			logger.debug("[Template Operator] Template Operator Exception: " + e.getMessage());
 			if( e.getMessage().equals("abnormal") ) {
-				logger.info("Catch abnormal conditions!! Exit process");
+				logger.debug("Catch abnormal conditions!! Exit process");
 				System.exit(1);
 			}
 		}

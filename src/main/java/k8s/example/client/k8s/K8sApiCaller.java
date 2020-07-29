@@ -4836,24 +4836,28 @@ public class K8sApiCaller {
 		Path opensslHome = Paths.get(Constants.OPENSSL_HOME_DIR);
 		if (!Files.exists(opensslHome)) {
 			Files.createDirectory(opensslHome);
+
 			logger.debug("Directory created: " + Constants.OPENSSL_HOME_DIR);
 		}
 
 		String domainDir = Constants.OPENSSL_HOME_DIR + "/" + domainId;
 		if (!Files.exists(Paths.get(domainDir))) {
 			Files.createDirectory(Paths.get(domainDir));
+
 			logger.debug("Directory created: " + domainDir);
 		}
 
 		String registryDir = Constants.OPENSSL_HOME_DIR + "/" + domainId + "/" + registryId;
 		if (!Files.exists(Paths.get(registryDir))) {
 			Files.createDirectory(Paths.get(registryDir));
+
 			logger.debug("Directory created: " + registryDir);
 		}
 
 		Path dockerLoginHome = Paths.get(Constants.DOCKER_LOGIN_HOME_DIR);
 		if (!Files.exists(dockerLoginHome)) {
 			Files.createDirectory(dockerLoginHome);
+
 			logger.debug("Directory created: " + Constants.DOCKER_LOGIN_HOME_DIR);
 		}
 
@@ -4873,6 +4877,7 @@ public class K8sApiCaller {
 				null, null, null, null, null, false);
 
 		JsonNode templateList = numberTypeConverter(objectToJsonNode(templates).get("items"));
+
 
 		if (templateList.isArray()) {
 			for (JsonNode template : templateList) {
@@ -4935,6 +4940,7 @@ public class K8sApiCaller {
 				service.setTags(tags);
 				service.setMetadata(serviceMeta);
 
+
 				if (template.get("objectKinds") != null) {
 					JsonNode objectKinds = template.get("objectKinds");
 					if (objectKinds.isArray()) {
@@ -4957,6 +4963,7 @@ public class K8sApiCaller {
 				}
 				service.setBindings_retrievable(false);
 				service.setInstances_retrievable(false);
+
 
 				try {
 					if (template.get("plans") != null) {
@@ -4994,6 +5001,7 @@ public class K8sApiCaller {
 										servicePlan.setBindable(plan.get("bindable").asBoolean());
 									}
 									defaultPlaneId++;
+
 
 									try {
 										if ( plan.get("metadata") != null ) {
@@ -5041,6 +5049,7 @@ public class K8sApiCaller {
 				} catch (Exception e) {
 					logger.error("This Plan is Empty");
 				}
+
 				service.setPlans(planList);
 				serviceList.add(service);
 			}
