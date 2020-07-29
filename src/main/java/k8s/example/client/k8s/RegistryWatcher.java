@@ -74,9 +74,7 @@ public class RegistryWatcher extends Thread {
 							logger.info("[mapper error]: " + e.getMessage());
 						}
 						
-						if( registry != null
-								&& Integer.parseInt(registry.getMetadata().getResourceVersion()) > Integer.parseInt(latestResourceVersion)) {
-							latestResourceVersion = registry.getMetadata().getResourceVersion();
+						if( registry != null) {
 							String eventType = response.type.toString();
 							logger.info("====================== Registry " + eventType + " ====================== \n");
 
@@ -135,7 +133,8 @@ public class RegistryWatcher extends Thread {
 												&& !statusMap.get(RegistryCondition.Condition.SECRET_DOCKER_CONFIG_JSON)
 												&& !statusMap.get(RegistryCondition.Condition.SECRET_TLS)
 												&& !statusMap.get(RegistryCondition.Condition.INGRESS)
-												&& !statusMap.get(RegistryCondition.Condition.PVC)) {
+												&& !statusMap.get(RegistryCondition.Condition.PVC) 
+												&& !statusMap.get(RegistryCondition.Condition.CONFIG_MAP)) {
 
 											K8sApiCaller.createRegistry(registry);
 										} 
@@ -324,6 +323,7 @@ public class RegistryWatcher extends Thread {
 				&& statusMap.get(RegistryCondition.Condition.SECRET_OPAQUE)
 				&& statusMap.get(RegistryCondition.Condition.SECRET_DOCKER_CONFIG_JSON)
 				&& statusMap.get(RegistryCondition.Condition.PVC)
+				&& statusMap.get(RegistryCondition.Condition.CONFIG_MAP)
 				&& (
 						(
 							serviceType.equals(RegistryService.SVC_TYPE_INGRESS) 
@@ -346,6 +346,7 @@ public class RegistryWatcher extends Thread {
 				|| !statusMap.get(RegistryCondition.Condition.SECRET_OPAQUE)
 				|| !statusMap.get(RegistryCondition.Condition.SECRET_DOCKER_CONFIG_JSON)
 				|| !statusMap.get(RegistryCondition.Condition.PVC)
+				|| !statusMap.get(RegistryCondition.Condition.CONFIG_MAP)
 				|| (
 						serviceType.equals(RegistryService.SVC_TYPE_INGRESS) 
 						&& (!statusMap.get(RegistryCondition.Condition.SECRET_TLS)
@@ -366,6 +367,7 @@ public class RegistryWatcher extends Thread {
 				&& statusMap.get(RegistryCondition.Condition.SECRET_OPAQUE)
 				&& statusMap.get(RegistryCondition.Condition.SECRET_DOCKER_CONFIG_JSON)
 				&& statusMap.get(RegistryCondition.Condition.PVC)
+				&& statusMap.get(RegistryCondition.Condition.CONFIG_MAP)
 				&& (
 						(
 							serviceType.equals(RegistryService.SVC_TYPE_INGRESS) 

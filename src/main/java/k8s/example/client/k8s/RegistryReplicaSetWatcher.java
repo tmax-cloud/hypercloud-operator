@@ -49,8 +49,7 @@ public class RegistryReplicaSetWatcher extends Thread {
 				try {
 					V1ReplicaSet rs = response.object;
 					
-					if( rs != null
-							&& Integer.parseInt(rs.getMetadata().getResourceVersion()) > Integer.parseInt(latestResourceVersion)) {
+					if( rs != null ) {
 						
 						latestResourceVersion = response.object.getMetadata().getResourceVersion();
 						String eventType = response.type.toString();

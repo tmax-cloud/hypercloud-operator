@@ -49,8 +49,7 @@ public class RegistryPvcWatcher extends Thread {
 				try {
 					V1PersistentVolumeClaim pvc = response.object;
 					
-					if( pvc != null
-							&& Integer.parseInt(pvc.getMetadata().getResourceVersion()) > Integer.parseInt(latestResourceVersion)) {
+					if( pvc != null ) {
 						
 						latestResourceVersion = response.object.getMetadata().getResourceVersion();
 						String eventType = response.type.toString();

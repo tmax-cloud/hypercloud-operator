@@ -10,22 +10,23 @@ import com.google.gson.reflect.TypeToken;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
-import io.kubernetes.client.openapi.models.V1Secret;
+import io.kubernetes.client.openapi.models.V1ConfigMap;
+import io.kubernetes.client.openapi.models.V1PersistentVolumeClaim;
 import io.kubernetes.client.util.Watch;
 import k8s.example.client.Constants;
 import k8s.example.client.Main;
 
-public class RegistryDockerSecretWatcher extends Thread {
-	private final Watch<V1Secret> watchRegistrySecret;
+public class RegistryConfigMapWatcher extends Thread {
+	private final Watch<V1ConfigMap> watchRegistryConfigMap;
 	private static String latestResourceVersion = "0";
 
     private Logger logger = Main.logger;
     
-	RegistryDockerSecretWatcher(ApiClient client, CoreV1Api api, String resourceVersion) throws Exception {
-		watchRegistrySecret = Watch.createWatch(
+	RegistryConfigMapWatcher(ApiClient client, CoreV1Api api, String resourceVersion) throws Exception {
+		watchRegistryConfigMap = Watch.createWatch(
 		        client,
-		        api.listSecretForAllNamespacesCall(null, null, null, "secret=docker", null, null, null, null, Boolean.TRUE, null),
-		        new TypeToken<Watch.Response<V1Secret>>(){}.getType()
+		        api.listConfigMapForAllNamespacesCall(null, null, null, "app=registry", null, null, null, null, Boolean.TRUE, null),
+		        new TypeToken<Watch.Response<V1ConfigMap>>(){}.getType()
         );
 		
 		latestResourceVersion = resourceVersion;	
@@ -34,11 +35,11 @@ public class RegistryDockerSecretWatcher extends Thread {
 	@Override
 	public void run() {
 		try {
-			watchRegistrySecret.forEach(response -> {
+			watchRegistryConfigMap.forEach(response -> {
 				try {
 					if (Thread.interrupted()) {
 						logger.info("Interrupted!");
-						watchRegistrySecret.close();
+						watchRegistryConfigMap.close();
 					}
 				} catch (Exception e) {
 					logger.info(e.getMessage());
@@ -47,17 +48,19 @@ public class RegistryDockerSecretWatcher extends Thread {
 				
 				// Logic here
 				try {
-					V1Secret secret = response.object;
+					V1ConfigMap cm = response.object;
 					
-					if( secret != null ) {
+					if( cm != null ) {
 						
 						latestResourceVersion = response.object.getMetadata().getResourceVersion();
 						String eventType = response.type.toString();
-						logger.info("[RegistryDockerSecretWatcher] Registry Docker Secret " + eventType + "\n");
-						K8sApiCaller.updateRegistryStatus(secret, eventType);						
+						logger.info("[RegistryConfigMapWatcher] Registry ConfigMap " + eventType + "\n");
+
+						K8sApiCaller.updateRegistryStatus(cm, eventType);
+						
 					}
-//					logger.info("[RegistryDockerSecretWatcher] Save latestHandledResourceVersion of RegistryDockerSecretWatcher [" + response.object.getMetadata().getName() + "]");
-//					K8sApiCaller.updateLatestHandledResourceVersion(Constants.PLURAL_REGISTRY_DOCKER, response.object.getMetadata().getResourceVersion());
+//					logger.info("[RegistryConfigMapWatcher] Save latestHandledResourceVersion of RegistryConfigMapWatcher [" + response.object.getMetadata().getName() + "]");
+//					K8sApiCaller.updateLatestHandledResourceVersion(Constants.PLURAL_REGISTRY_ConfigMap, response.object.getMetadata().getResourceVersion());
 				} catch (ApiException e) {
 //					logger.info("ApiException: " + e.getMessage());
 //					logger.info(e.getResponseBody());
@@ -70,8 +73,8 @@ public class RegistryDockerSecretWatcher extends Thread {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-			});			
-			logger.info("@@@@@@@@@@@@@@@@@@@@ Registry Docker Secret 'For Each' END @@@@@@@@@@@@@@@@@@@@");
+			});
+			logger.info("@@@@@@@@@@@@@@@@@@@@ Registry ConfigMap 'For Each' END @@@@@@@@@@@@@@@@@@@@");
 		} catch (Exception e) {
 			logger.info("Registry Watcher Exception: " + e.getMessage());
 			StringWriter sw = new StringWriter();

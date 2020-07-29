@@ -53,8 +53,7 @@ public class ImageWatcher extends Thread {
 					try {
 						Image image = response.object;
 
-						if( image != null
-								&& Long.parseLong(image.getMetadata().getResourceVersion()) > Long.parseLong(latestResourceVersion)) {
+						if( image != null ) {
 							
 							latestResourceVersion = response.object.getMetadata().getResourceVersion();
 							String eventType = response.type.toString();

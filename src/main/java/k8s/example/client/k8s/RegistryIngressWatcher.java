@@ -49,8 +49,7 @@ public class RegistryIngressWatcher extends Thread {
 				try {
 					ExtensionsV1beta1Ingress ingress = response.object;
 					
-					if( ingress != null
-							&& Integer.parseInt(ingress.getMetadata().getResourceVersion()) > Integer.parseInt(latestResourceVersion)) {
+					if( ingress != null ) {
 						
 						latestResourceVersion = response.object.getMetadata().getResourceVersion();
 						String eventType = response.type.toString();
