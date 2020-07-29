@@ -47,7 +47,7 @@ public class ServiceInstanceHandler extends GeneralHandler {
 		}
 		
 		String instanceId = urlParams.get("instance_id");
-		logger.info("Instance ID: " + instanceId);
+		logger.debug("Instance ID: " + instanceId);
 		
         ProvisionInDO inDO = null;
         String outDO = null;
@@ -55,12 +55,12 @@ public class ServiceInstanceHandler extends GeneralHandler {
 		
 		try {
 			String bodyStr = readFile(body.get("content"), Integer.valueOf(session.getHeaders().get("content-length")));
-			logger.info("Body: " + bodyStr);
+			logger.debug("Body: " + bodyStr);
 			
 			inDO = new ObjectMapper().readValue(bodyStr, ProvisionInDO.class);
-			logger.info("Service ID: " + inDO.getService_id());
-			logger.info("Service Plan ID: " + inDO.getPlan_id());
-			logger.info("Context: " + inDO.getContext().toString());
+			logger.debug("Service ID: " + inDO.getService_id());
+			logger.debug("Service Plan ID: " + inDO.getPlan_id());
+			logger.debug("Context: " + inDO.getContext().toString());
 			
 			/**
 			 * 			List<V1OwnerReference> ownerRefs = new ArrayList<>();
@@ -81,17 +81,17 @@ public class ServiceInstanceHandler extends GeneralHandler {
 			response = K8sApiCaller.createTemplateInstance(instanceId, inDO, inDO.getContext().getInstance_name(), uid);
 			status = Status.OK;
 		} catch (Exception e) {
-			logger.info( "  Failed to provision instance of service class \"" + inDO.getService_id() + "\"");
-			logger.info( "Exception message: " + e.getMessage() );
+			logger.debug( "  Failed to provision instance of service class \"" + inDO.getService_id() + "\"");
+			logger.debug( "Exception message: " + e.getMessage() );
 			e.printStackTrace();
 			status = Status.BAD_REQUEST;
 		}
 		
 		Gson gson = new GsonBuilder().setPrettyPrinting().create();
 		outDO = gson.toJson(response).toString();
-		logger.info("Response : " + outDO);
+		logger.debug("Response : " + outDO);
 		
-//		logger.info();
+//		logger.debug();
 		return NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO);
     }
 	
@@ -103,13 +103,13 @@ public class ServiceInstanceHandler extends GeneralHandler {
 		String serviceClassName = session.getParameters().get("service_id").get(0);
 		String instanceId = urlParams.get("instance_id");
 		for ( String key : session.getParameters().keySet() ) {
-			logger.info("Delete Service input key : " + key);
+			logger.debug("Delete Service input key : " + key);
 			for ( String value : session.getParameters().get(key) ) {
-				logger.info("Delete Service input value : " + value);
+				logger.debug("Delete Service input value : " + value);
 			}
 		}
-		logger.info("Service Class Name: " + serviceClassName);
-		logger.info("Instance ID: " + instanceId);
+		logger.debug("Service Class Name: " + serviceClassName);
+		logger.debug("Instance ID: " + instanceId);
 		
 		Object response = null;
 		String outDO = null;
@@ -119,13 +119,13 @@ public class ServiceInstanceHandler extends GeneralHandler {
 			//response = K8sApiCaller.deleteTemplateInstance(instanceId);
 			status = Status.OK;
 		} catch (Exception e) {
-			logger.info( "  Failed to delete instance of service class \"" + serviceClassName + "\"");
-			logger.info( "Exception message: " + e.getMessage() );
+			logger.debug( "  Failed to delete instance of service class \"" + serviceClassName + "\"");
+			logger.debug( "Exception message: " + e.getMessage() );
 			e.printStackTrace();
 			status = Status.BAD_REQUEST;
 		}
 		
-//		logger.info();
+//		logger.debug();
 		return NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO);
     }
 	
