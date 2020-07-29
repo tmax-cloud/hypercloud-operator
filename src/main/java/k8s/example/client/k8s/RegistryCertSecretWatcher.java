@@ -37,11 +37,11 @@ public class RegistryCertSecretWatcher extends Thread {
 			watchRegistrySecret.forEach(response -> {
 				try {
 					if (Thread.interrupted()) {
-						logger.info("Interrupted!");
+						logger.debug("Interrupted!");
 						watchRegistrySecret.close();
 					}
 				} catch (Exception e) {
-					logger.info(e.getMessage());
+					logger.error(e.getMessage());
 				}
 				
 				
@@ -53,34 +53,34 @@ public class RegistryCertSecretWatcher extends Thread {
 						
 						latestResourceVersion = response.object.getMetadata().getResourceVersion();
 						String eventType = response.type.toString();
-						logger.info("[RegistryCertSecretWatcher] Registry Cert Secret " + eventType + "\n");
+						logger.debug("[RegistryCertSecretWatcher] Registry Cert Secret " + eventType + "\n");
 
 						K8sApiCaller.updateRegistryStatus(secret, eventType);
 						
 					}
 					
-//					logger.info("[RegistryCertSecretWatcher] Save latestHandledResourceVersion of RegistryCertSecretWatcher [" + response.object.getMetadata().getName() + "]");
+//					logger.debug("[RegistryCertSecretWatcher] Save latestHandledResourceVersion of RegistryCertSecretWatcher [" + response.object.getMetadata().getName() + "]");
 //					K8sApiCaller.updateLatestHandledResourceVersion(Constants.PLURAL_REGISTRY_CERT, response.object.getMetadata().getResourceVersion());
 
 				} catch (ApiException e) {
-//					logger.info("ApiException: " + e.getMessage());
-//					logger.info(e.getResponseBody());
+//					logger.error("ApiException: " + e.getMessage());
+//					logger.error(e.getResponseBody());
 				} catch (Exception e) {
-					logger.info("Exception: " + e.getMessage());
+					logger.error("Exception: " + e.getMessage());
 					StringWriter sw = new StringWriter();
 					e.printStackTrace(new PrintWriter(sw));
-					logger.info(sw.toString());
+					logger.error(sw.toString());
 				} catch (Throwable e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			});
-			logger.info("@@@@@@@@@@@@@@@@@@@@ Registry Cert Secret 'For Each' END @@@@@@@@@@@@@@@@@@@@");
+			logger.debug("@@@@@@@@@@@@@@@@@@@@ Registry Cert Secret 'For Each' END @@@@@@@@@@@@@@@@@@@@");
 		} catch (Exception e) {
-			logger.info("Registry Watcher Exception: " + e.getMessage());
+			logger.error("Registry Watcher Exception: " + e.getMessage());
 			StringWriter sw = new StringWriter();
 			e.printStackTrace(new PrintWriter(sw));
-			logger.info(sw.toString());
+			logger.error(sw.toString());
 		}
 	}
 

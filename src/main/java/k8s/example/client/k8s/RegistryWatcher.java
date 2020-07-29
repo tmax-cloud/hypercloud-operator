@@ -58,11 +58,11 @@ public class RegistryWatcher extends Thread {
 				watchRegistry.forEach(response -> {
 					try {
 						if (Thread.interrupted()) {
-							logger.info("Interrupted!");
+							logger.debug("Interrupted!");
 							watchRegistry.close();
 						}
 					} catch (Exception e) {
-						logger.info(e.getMessage());
+						logger.error(e.getMessage());
 					}
 					
 					// Logic here
@@ -71,14 +71,14 @@ public class RegistryWatcher extends Thread {
 						try {
 							registry = mapper.treeToValue(mapper.valueToTree(response.object), Registry.class);
 						} catch(Exception e) {
-							logger.info("[mapper error]: " + e.getMessage());
+							logger.error("[mapper error]: " + e.getMessage());
 						}
 						
 						if( registry != null) {
 							String eventType = response.type.toString();
-							logger.info("====================== Registry " + eventType + " ====================== \n");
+							logger.debug("====================== Registry " + eventType + " ====================== \n");
 
-							logger.info("\t[" + registry.getMetadata().getResourceVersion() + "] " 
+							logger.debug("\t[" + registry.getMetadata().getResourceVersion() + "] " 
 									+ registry.getMetadata().getName() + "/" 
 									+ registry.getMetadata().getNamespace() 
 									+ " Registry Data\n" + response.object.toString() + "\n");
@@ -91,7 +91,8 @@ public class RegistryWatcher extends Thread {
 							case Constants.EVENT_TYPE_ADDED: 
 								if(registry.getStatus() == null ) {
 									K8sApiCaller.initRegistry(registry.getMetadata().getName(), registry);
-									logger.info("Creating registry");
+									logger.info(registry.getMetadata().getName() + "/" 
+											+ registry.getMetadata().getNamespace() + "Creating registry");
 								}
 								
 								break;
@@ -102,7 +103,7 @@ public class RegistryWatcher extends Thread {
 								}
 								
 								String beforeJson = registry.getMetadata().getAnnotations().get(Constants.LAST_CUSTOM_RESOURCE);
-//								logger.info("beforeJson = " + beforeJson);
+//								logger.debug("beforeJson = " + beforeJson);
 								if( beforeJson == null) {
 									K8sApiCaller.updateRegistryAnnotationLastCR(registry, null);
 									break;
@@ -118,9 +119,9 @@ public class RegistryWatcher extends Thread {
 									logger.info("\t[" + registry.getMetadata().getResourceVersion() + "] " 
 											+ registry.getMetadata().getName() + "/" 
 											+ registry.getMetadata().getNamespace() 
-											+ " Registry Status");
+											+ " Registry phase: " + phase);
 									for(RegistryCondition.Condition con : statusMap.keySet()) {
-										logger.info("\t\t" + con.getType() + "(" + statusMap.get(con) + ")");
+										logger.debug("\t\t" + con.getType() + "(" + statusMap.get(con) + ")");
 									}
 									
 									// Registry Is Creating.
@@ -147,11 +148,11 @@ public class RegistryWatcher extends Thread {
 									}
 									// Registry Is Updating.
 									else if(phase.equals(RegistryStatus.StatusPhase.UPDATING.getStatus()) ) {
-										// logger.info("afterJson = " + Util.toJson(registry).toString());
+										// logger.debug("afterJson = " + Util.toJson(registry).toString());
 										JsonNode diff = Util.jsonDiff(beforeJson, Util.toJson(registry).toString());
 										
 										if(diff.size() > 0) {
-											logger.info("[Updated Registry Spec]\ndiff: " + diff.toString() + "\n");
+											logger.debug("[Updated Registry Spec]\ndiff: " + diff.toString() + "\n");
 											K8sApiCaller.updateRegistryAnnotationLastCR(registry, diff);
 											K8sApiCaller.updateRegistrySubresources(registry, diff);
 											break;
@@ -171,14 +172,14 @@ public class RegistryWatcher extends Thread {
 										Set<RegistryCondition.Condition> recreateSubresources = K8sApiCaller.getRecreatedSubres(updatingJson);
 										DateTime phaseChangedAt = registry.getStatus().getPhaseChangedAt();
 										
-										logger.info("phaseChangedAt: " + phaseChangedAt);
+										logger.debug("phaseChangedAt: " + phaseChangedAt);
 										
 										for(RegistryCondition.Condition con : recreateSubresources) {
 											DateTime conTime = registry.getStatus().getConditions().get(con.ordinal()).getLastTransitionTime();
 											
-											logger.info(con.getType() + " type lastTransitionTime: " + conTime);
+											logger.debug(con.getType() + " type lastTransitionTime: " + conTime);
 											if(phaseChangedAt.toDate().after(conTime.toDate())) {
-												logger.info("Registry is not updated yet.");
+												logger.debug("Registry is not updated yet.");
 												return;
 											}
 										}
@@ -190,7 +191,7 @@ public class RegistryWatcher extends Thread {
 											
 											// delete updating-fields annotation
 											K8sApiCaller.updateRegistryAnnotationLastCR(registry, null);
-											logger.info("Delete updating-fields annotation.");
+											logger.debug("Delete updating-fields annotation.");
 										}
 									}
 									// Registry Is Running.
@@ -207,9 +208,9 @@ public class RegistryWatcher extends Thread {
 														K8sApiCaller.syncImageList(registry);
 														isSynced = true;
 													} catch (ApiException e) {
-														logger.info(e.getResponseBody());
+														logger.error(e.getResponseBody());
 													} catch (Exception e) {
-														logger.info(e.getMessage());
+														logger.error(e.getMessage());
 													}
 													Thread.sleep(1000);
 												}
@@ -221,14 +222,14 @@ public class RegistryWatcher extends Thread {
 											// Last Phase: Running / Current Phase: Running
 											else { 
 												if(K8sApiCaller.updateRegistryAnnotation(registry)) {
-													logger.info("Update registry-login-url annotation");
+													logger.debug("Update registry-login-url annotation");
 													break;
 												}
-												// logger.info("afterJson = " + Util.toJson(registry).toString());
+												// logger.debug("afterJson = " + Util.toJson(registry).toString());
 												JsonNode diff = Util.jsonDiff(beforeJson, Util.toJson(registry).toString());
 												if(diff.size() > 0) {
-													logger.info("[Updated Registry Spec]\ndiff: " + diff.toString() + "\n");
-													logger.info("Change Status: Running -> Updating");
+													logger.debug("[Updated Registry Spec]\ndiff: " + diff.toString() + "\n");
+													logger.debug("Change Status: Running -> Updating");
 													changePhase = RegistryStatus.StatusPhase.UPDATING.getStatus();
 													changeMessage = "Registry is Updating";
 													changeReason = "Updating";
@@ -255,41 +256,41 @@ public class RegistryWatcher extends Thread {
 
 								break;
 							case Constants.EVENT_TYPE_DELETED : 
-								logger.info("Registry is deleted");
+								logger.debug("Registry is deleted");
 								
 								break;
 							}						
 						}
 						
 						//TODO
-//						logger.info("[RegistryWatcher] SsResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registry.getMetadata().getResourceVersion());
+//						logger.debug("[RegistryWatcher] SsResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registry.getMetadata().getResourceVersion());
 						
 					} catch (ApiException e) {
-						logger.info("ApiException: " + e.getMessage());
-						logger.info(e.getResponseBody());
+						logger.error("ApiException: " + e.getMessage());
+						logger.error(e.getResponseBody());
 					} catch (Exception e) {
-						logger.info("Exception: " + e.getMessage());
+						logger.error("Exception: " + e.getMessage());
 						StringWriter sw = new StringWriter();
 						e.printStackTrace(new PrintWriter(sw));
-						logger.info(sw.toString());
+						logger.error(sw.toString());
 					} catch (Throwable e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				});
 				
-				logger.info("=============== Registry 'For Each' END ===============");
+				logger.debug("=============== Registry 'For Each' END ===============");
 				watchRegistry = Watch.createWatch(client,
 						api.listClusterCustomObjectCall("tmax.io", "v1", "registries", null, null, null, null, null, null, null, Boolean.TRUE, null),
 						new TypeToken<Watch.Response<Object>>() {}.getType());
 			}
 		} catch (Exception e) {
-			logger.info("Registry Watcher Exception: " + e.getMessage());
+			logger.error("Registry Watcher Exception: " + e.getMessage());
 			StringWriter sw = new StringWriter();
 			e.printStackTrace(new PrintWriter(sw));
-			logger.info(sw.toString());
+			logger.error(sw.toString());
 			if( e.getMessage().equals("abnormal") ) {
-				logger.info("Catch abnormal conditions!! Exit process");
+				logger.error("Catch abnormal conditions!! Exit process");
 				System.exit(1);
 			}
 		}
@@ -307,10 +308,10 @@ public class RegistryWatcher extends Thread {
 				statusMap.put(con,
 					registry.getStatus().getConditions().get(con.ordinal()).getStatus().equals(RegistryStatus.Status.TRUE.getStatus()));
 			} catch(IndexOutOfBoundsException e) {
-				logger.info(con.getType() + " type condition is empty.");
+				logger.error(con.getType() + " type condition is empty.");
 				statusMap.put(con, Boolean.TRUE);
 			} catch (NullPointerException e) {
-				logger.info(con.getType() + " type condition is null.");
+				logger.error(con.getType() + " type condition is null.");
 			}
 		}
 		return statusMap;

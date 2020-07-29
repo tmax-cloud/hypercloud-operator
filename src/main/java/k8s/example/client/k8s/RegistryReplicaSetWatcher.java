@@ -37,11 +37,11 @@ public class RegistryReplicaSetWatcher extends Thread {
 			watchRegistryRs.forEach(response -> {
 				try {
 					if (Thread.interrupted()) {
-						logger.info("Interrupted!");
+						logger.debug("Interrupted!");
 						watchRegistryRs.close();
 					}
 				} catch (Exception e) {
-					logger.info(e.getMessage());
+					logger.error(e.getMessage());
 				}
 				
 				
@@ -53,32 +53,32 @@ public class RegistryReplicaSetWatcher extends Thread {
 						
 						latestResourceVersion = response.object.getMetadata().getResourceVersion();
 						String eventType = response.type.toString();
-						logger.info("[RegistryReplicaSetWatcher] Registry ReplicaSet " + eventType + "\n");
+						logger.debug("[RegistryReplicaSetWatcher] Registry ReplicaSet " + eventType + "\n");
 
 						K8sApiCaller.updateRegistryStatus(rs, eventType);
 						
 					}
-//					logger.info("[RegistryReplicaSetWatcher] Save latestHandledResourceVersion of RegistryReplicaSetWatcher [" + response.object.getMetadata().getName() + "]");
+//					logger.debug("[RegistryReplicaSetWatcher] Save latestHandledResourceVersion of RegistryReplicaSetWatcher [" + response.object.getMetadata().getName() + "]");
 //					K8sApiCaller.updateLatestHandledResourceVersion(Constants.PLURAL_REGISTRY_REPLICASET, response.object.getMetadata().getResourceVersion());
 				} catch (ApiException e) {
-//					logger.info("ApiException: " + e.getMessage());
-//					logger.info(e.getResponseBody());
+//					logger.debug("ApiException: " + e.getMessage());
+//					logger.debug(e.getResponseBody());
 				} catch (Exception e) {
-					logger.info("Exception: " + e.getMessage());
+					logger.error("Exception: " + e.getMessage());
 					StringWriter sw = new StringWriter();
 					e.printStackTrace(new PrintWriter(sw));
-					logger.info(sw.toString());
+					logger.error(sw.toString());
 				} catch (Throwable e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			});
-			logger.info("@@@@@@@@@@@@@@@@@@@@ Registry ReplicaSet 'For Each' END @@@@@@@@@@@@@@@@@@@@");
+			logger.debug("@@@@@@@@@@@@@@@@@@@@ Registry ReplicaSet 'For Each' END @@@@@@@@@@@@@@@@@@@@");
 		} catch (Exception e) {
-			logger.info("Registry Watcher Exception: " + e.getMessage());
+			logger.error("Registry Watcher Exception: " + e.getMessage());
 			StringWriter sw = new StringWriter();
 			e.printStackTrace(new PrintWriter(sw));
-			logger.info(sw.toString());
+			logger.error(sw.toString());
 		}
 	}
 

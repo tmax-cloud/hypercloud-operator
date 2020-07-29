@@ -38,11 +38,11 @@ public class RegistryConfigMapWatcher extends Thread {
 			watchRegistryConfigMap.forEach(response -> {
 				try {
 					if (Thread.interrupted()) {
-						logger.info("Interrupted!");
+						logger.debug("Interrupted!");
 						watchRegistryConfigMap.close();
 					}
 				} catch (Exception e) {
-					logger.info(e.getMessage());
+					logger.error(e.getMessage());
 				}
 				
 				
@@ -54,32 +54,32 @@ public class RegistryConfigMapWatcher extends Thread {
 						
 						latestResourceVersion = response.object.getMetadata().getResourceVersion();
 						String eventType = response.type.toString();
-						logger.info("[RegistryConfigMapWatcher] Registry ConfigMap " + eventType + "\n");
+						logger.debug("[RegistryConfigMapWatcher] Registry ConfigMap " + eventType + "\n");
 
 						K8sApiCaller.updateRegistryStatus(cm, eventType);
 						
 					}
-//					logger.info("[RegistryConfigMapWatcher] Save latestHandledResourceVersion of RegistryConfigMapWatcher [" + response.object.getMetadata().getName() + "]");
+//					logger.debug("[RegistryConfigMapWatcher] Save latestHandledResourceVersion of RegistryConfigMapWatcher [" + response.object.getMetadata().getName() + "]");
 //					K8sApiCaller.updateLatestHandledResourceVersion(Constants.PLURAL_REGISTRY_ConfigMap, response.object.getMetadata().getResourceVersion());
 				} catch (ApiException e) {
-//					logger.info("ApiException: " + e.getMessage());
-//					logger.info(e.getResponseBody());
+//					logger.error("ApiException: " + e.getMessage());
+//					logger.error(e.getResponseBody());
 				} catch (Exception e) {
-					logger.info("Exception: " + e.getMessage());
+					logger.error("Exception: " + e.getMessage());
 					StringWriter sw = new StringWriter();
 					e.printStackTrace(new PrintWriter(sw));
-					logger.info(sw.toString());
+					logger.error(sw.toString());
 				} catch (Throwable e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			});
-			logger.info("@@@@@@@@@@@@@@@@@@@@ Registry ConfigMap 'For Each' END @@@@@@@@@@@@@@@@@@@@");
+			logger.debug("@@@@@@@@@@@@@@@@@@@@ Registry ConfigMap 'For Each' END @@@@@@@@@@@@@@@@@@@@");
 		} catch (Exception e) {
-			logger.info("Registry Watcher Exception: " + e.getMessage());
+			logger.error("Registry Watcher Exception: " + e.getMessage());
 			StringWriter sw = new StringWriter();
 			e.printStackTrace(new PrintWriter(sw));
-			logger.info(sw.toString());
+			logger.error(sw.toString());
 		}
 	}
 

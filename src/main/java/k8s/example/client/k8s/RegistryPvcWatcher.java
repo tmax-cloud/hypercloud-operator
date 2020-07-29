@@ -37,11 +37,11 @@ public class RegistryPvcWatcher extends Thread {
 			watchRegistryPvc.forEach(response -> {
 				try {
 					if (Thread.interrupted()) {
-						logger.info("Interrupted!");
+						logger.debug("Interrupted!");
 						watchRegistryPvc.close();
 					}
 				} catch (Exception e) {
-					logger.info(e.getMessage());
+					logger.error(e.getMessage());
 				}
 				
 				
@@ -53,32 +53,32 @@ public class RegistryPvcWatcher extends Thread {
 						
 						latestResourceVersion = response.object.getMetadata().getResourceVersion();
 						String eventType = response.type.toString();
-						logger.info("[RegistryPvcWatcher] Registry PVC " + eventType + "\n");
+						logger.debug("[RegistryPvcWatcher] Registry PVC " + eventType + "\n");
 
 						K8sApiCaller.updateRegistryStatus(pvc, eventType);
 						
 					}
-//					logger.info("[RegistryPvcWatcher] Save latestHandledResourceVersion of RegistryPvcWatcher [" + response.object.getMetadata().getName() + "]");
+//					logger.debug("[RegistryPvcWatcher] Save latestHandledResourceVersion of RegistryPvcWatcher [" + response.object.getMetadata().getName() + "]");
 //					K8sApiCaller.updateLatestHandledResourceVersion(Constants.PLURAL_REGISTRY_PVC, response.object.getMetadata().getResourceVersion());
 				} catch (ApiException e) {
-//					logger.info("ApiException: " + e.getMessage());
-//					logger.info(e.getResponseBody());
+//					logger.error("ApiException: " + e.getMessage());
+//					logger.error(e.getResponseBody());
 				} catch (Exception e) {
-					logger.info("Exception: " + e.getMessage());
+					logger.error("Exception: " + e.getMessage());
 					StringWriter sw = new StringWriter();
 					e.printStackTrace(new PrintWriter(sw));
-					logger.info(sw.toString());
+					logger.error(sw.toString());
 				} catch (Throwable e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			});
-			logger.info("@@@@@@@@@@@@@@@@@@@@ Registry PVC 'For Each' END @@@@@@@@@@@@@@@@@@@@");
+			logger.debug("@@@@@@@@@@@@@@@@@@@@ Registry PVC 'For Each' END @@@@@@@@@@@@@@@@@@@@");
 		} catch (Exception e) {
-			logger.info("Registry Watcher Exception: " + e.getMessage());
+			logger.error("Registry Watcher Exception: " + e.getMessage());
 			StringWriter sw = new StringWriter();
 			e.printStackTrace(new PrintWriter(sw));
-			logger.info(sw.toString());
+			logger.error(sw.toString());
 		}
 	}
 

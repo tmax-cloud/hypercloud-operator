@@ -37,11 +37,11 @@ public class RegistryPodWatcher extends Thread {
 			watchRegistryPod.forEach(response -> {
 				try {
 					if (Thread.interrupted()) {
-						logger.info("Interrupted!");
+						logger.debug("Interrupted!");
 						watchRegistryPod.close();
 					}
 				} catch (Exception e) {
-					logger.info(e.getMessage());
+					logger.error(e.getMessage());
 				}
 				
 				
@@ -53,35 +53,35 @@ public class RegistryPodWatcher extends Thread {
 						
 						latestResourceVersion = response.object.getMetadata().getResourceVersion();
 						String eventType = response.type.toString();
-						logger.info("[RegistryPodWatcher] Registry Pod " + eventType + "\n"
+						logger.debug("[RegistryPodWatcher] Registry Pod " + eventType + "\n"
 //						+ pod.toString()
 						);
 
 						K8sApiCaller.updateRegistryStatus(pod, eventType);
 						
 					}
-//					logger.info("[RegistryPodWatcher] Save latestHandledResourceVersion of RegistryPodWatcher [" + response.object.getMetadata().getName() + "]");
+//					logger.debug("[RegistryPodWatcher] Save latestHandledResourceVersion of RegistryPodWatcher [" + response.object.getMetadata().getName() + "]");
 //					K8sApiCaller.updateLatestHandledResourceVersion(Constants.PLURAL_REGISTRY_POD, response.object.getMetadata().getResourceVersion());
 				
 				} catch (ApiException e) {
-//					logger.info("ApiException: " + e.getMessage());
-//					logger.info(e.getResponseBody());
+//					logger.error("ApiException: " + e.getMessage());
+//					logger.error(e.getResponseBody());
 				} catch (Exception e) {
-					logger.info("Exception: " + e.getMessage());
+					logger.error("Exception: " + e.getMessage());
 					StringWriter sw = new StringWriter();
 					e.printStackTrace(new PrintWriter(sw));
-					logger.info(sw.toString());
+					logger.error(sw.toString());
 				} catch (Throwable e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			});
-			logger.info("@@@@@@@@@@@@@@@@@@@@ Registry Pod 'For Each' END @@@@@@@@@@@@@@@@@@@@");
+			logger.debug("@@@@@@@@@@@@@@@@@@@@ Registry Pod 'For Each' END @@@@@@@@@@@@@@@@@@@@");
 		} catch (Exception e) {
-			logger.info("Registry Watcher Exception: " + e.getMessage());
+			logger.error("Registry Watcher Exception: " + e.getMessage());
 			StringWriter sw = new StringWriter();
 			e.printStackTrace(new PrintWriter(sw));
-			logger.info(sw.toString());
+			logger.error(sw.toString());
 		}
 	}
 
