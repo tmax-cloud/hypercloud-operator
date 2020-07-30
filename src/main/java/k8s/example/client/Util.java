@@ -291,10 +291,10 @@ public class Util {
 							logger.info(" [Trial Timer] Paid NameSpace, Nothing to do ");
 						}
 					} catch (Exception e) {
-						logger.info( " [Trial Timer] Exception : " + e.getMessage());
+						logger.error( " [Trial Timer] Exception : " + e.getMessage());
 						e.printStackTrace();
 					} catch (Throwable e) {
-						logger.info( " [Trial Timer] Exception : " + e.getMessage());
+						logger.error( " [Trial Timer] Exception : " + e.getMessage());
 						e.printStackTrace();
 					}
 				}
@@ -333,10 +333,10 @@ public class Util {
 							logger.info(" [Trial Timer] Paid NameSpace, Nothing to do ");
 						}
 					} catch (Exception e) {
-						logger.info( "Exception : " + e.getMessage());
+						logger.error( "Exception : " + e.getMessage());
 						e.printStackTrace();
 					} catch (Throwable e) {
-						logger.info( "Exception : " + e.getMessage());
+						logger.error( "Exception : " + e.getMessage());
 						e.printStackTrace();
 					}
 				}
@@ -356,8 +356,8 @@ public class Util {
 			try {
 				K8sApiCaller.replaceNamespace(nsResult);
 			} catch (Throwable e) {
-				logger.info(" [Trial Timer] Replace NameSpace for new Label Failed ");
-				logger.info(" Exception : " + e.getMessage());
+				logger.error(" [Trial Timer] Replace NameSpace for new Label Failed ");
+				logger.error(" Exception : " + e.getMessage());
 				e.printStackTrace();
 			}
 			
@@ -389,14 +389,14 @@ public class Util {
 	}
 
 	public static JsonObject yamlStringToJsonObject(String yamlString) throws JsonMappingException, JsonProcessingException {
-		logger.info("yamlString : " + yamlString );
+		logger.debug("yamlString : " + yamlString );
 
 		ObjectMapper yamlReader = new ObjectMapper(new YAMLFactory());
         Object obj = yamlReader.readValue(yamlString, Object.class);
 
         ObjectMapper jsonWriter = new ObjectMapper();
         String jsonString = jsonWriter.writeValueAsString(obj);	
-		logger.info("jsonString : " + jsonString );
+		logger.debug("jsonString : " + jsonString );
         
         return new JsonParser().parse(jsonString).getAsJsonObject();		//FIXME
 	}

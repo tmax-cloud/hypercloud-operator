@@ -118,7 +118,7 @@ public class MeteringJob implements Job{
 			logger.info("Insert into Mertering Success!!");
 
 		} catch (SQLException e) {
-			logger.info("SQL Exception : " + e.getMessage());
+			logger.error("SQL Exception : " + e.getMessage());
 			e.printStackTrace();
 		}
 	}
@@ -193,7 +193,7 @@ public class MeteringJob implements Job{
 			metricObject = new Gson().fromJson(metricData, MetricDataList.class);
 			
 		} catch (Exception e){
-			logger.info("Exception : " + e.getMessage());
+			logger.error("Exception : " + e.getMessage());
 		}
 		return metricObject;
 	}
@@ -247,7 +247,7 @@ public class MeteringJob implements Job{
 			try {
 				pstmtinsert.executeBatch();
 			}catch(SQLException e) {
-				logger.info("SQL Exception : " + e.getMessage());
+				logger.error("SQL Exception : " + e.getMessage());
 			}
 			pstmtinsert.close();
 			pstmtSelect.close();
@@ -263,7 +263,7 @@ public class MeteringJob implements Job{
 			conn.commit();
 
 		} catch (SQLException e) {
-			logger.info("SQL Exception : " + e.getMessage());
+			logger.error("SQL Exception : " + e.getMessage());
 			e.printStackTrace();
 		}
 	}
@@ -301,7 +301,7 @@ public class MeteringJob implements Job{
 			try {
 				pstmtinsert.executeBatch();
 			}catch(SQLException e) {
-				logger.info("SQL Exception : " + e.getMessage());
+				logger.error("SQL Exception : " + e.getMessage());
 			}
 			pstmtinsert.close();
 			pstmtSelect.close();
@@ -316,7 +316,7 @@ public class MeteringJob implements Job{
 			conn.commit();
 
 		} catch (SQLException e) {
-			logger.info("SQL Exception : " + e.getMessage());
+			logger.error("SQL Exception : " + e.getMessage());
 			e.printStackTrace();
 		}
 	}
