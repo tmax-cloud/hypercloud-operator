@@ -1,6 +1,34 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.0.43 start -------------------->
+
+## HyperCloudServer_4.1.0.43 (Thu Jul 30 17:22:19 KST 2020)
+
+### Added
+
+### Changed
+  - [mod] debug용 log file 분리(위치: /home/tmax/hypercloud4-operator/logs/debug 디렉토리) & info log 간소화 by sukhee_yun
+  - [mod] Handler 로그 정리 by taegeon_woo
+  - [mod] watcher 기동 로직 정리 by taegeon_woo
+  - [mod] log 레벨 정리중 by taegeon_woo
+  - [mod] seperate log level and parameterize day of keeping log files by sukhee_yun
+  - [mod] instance operator log level debug로 변경 by jitae_yun
+  - [mod] template operator log level debug로 변경 by jitae_yun
+  - [mod] k8sApiCaller service catalog 메소드 log level debug로 변경 by jitae_yun
+  - [mod] service catalog handler log level debug로 변경 by jitae_yun
+  - [mod] NamespaceClaimController.java 처리 한 부분 체크 하는 로직 구현 by taegeon_woo
+  - [mod] Registry Status에 ConfigMap 추가 by sukhee_yun
+
+### Fixed
+  - [ims][221436] Registry customConfigYml field edit 안되는 버그 수정 by sukhee_yun
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.0.43 end --------------------->
+
 <!-------------------- v4.1.0.42 start -------------------->
 
 ## HyperCloudServer_4.1.0.42 (Tue Jul 28 16:45:22 KST 2020)
