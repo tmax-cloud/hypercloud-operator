@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 ### Changed
+  - [mod] _yaml_Install/6.hypercloud4-operator.yaml 수정(env 추가) by sukhee_yun
   - [mod] debug용 log file 분리(위치: /home/tmax/hypercloud4-operator/logs/debug 디렉토리) & info log 간소화 by sukhee_yun
   - [mod] Handler 로그 정리 by taegeon_woo
   - [mod] watcher 기동 로직 정리 by taegeon_woo
