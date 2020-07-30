@@ -36,7 +36,7 @@ public class EventQueue {
 			eventList.add(event);
 			
 			if(eventList.size() == maxQueueSize) {
-				logger.info("The queue is full, forcing data to be processed.");
+				logger.debug("The queue is full, forcing data to be processed.");
 				notEmpty.signal();
 			}
 
