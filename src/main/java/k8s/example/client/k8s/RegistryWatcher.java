@@ -319,7 +319,7 @@ public class RegistryWatcher extends Thread {
 				statusMap.put(con,
 					registry.getStatus().getConditions().get(con.ordinal()).getStatus().equals(RegistryStatus.Status.TRUE.getStatus()));
 			} catch(IndexOutOfBoundsException e) {
-				logger.error(con.getType() + " type condition is empty.");
+				logger.debug(con.getType() + " type condition is empty.");
 				statusMap.put(con, Boolean.TRUE);
 			} catch (NullPointerException e) {
 				logger.error(con.getType() + " type condition is null.");
