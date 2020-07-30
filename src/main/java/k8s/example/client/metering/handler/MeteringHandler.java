@@ -86,11 +86,11 @@ public class MeteringHandler extends GeneralHandler {
 		try {
 			metering = getMeteringData( sb.toString() );
 		} catch (SQLException e) {
-			logger.info("SQL Exception : " + e.getMessage());
+			logger.error("SQL Exception : " + e.getMessage());
 			e.printStackTrace();
 			return Util.setCors(NanoHTTPD.newFixedLengthResponse(Status.EXPECTATION_FAILED, NanoHTTPD.MIME_HTML, "SQL Exception"));
 		} catch (ClassNotFoundException e) {
-			logger.info("Class Not Found Exection");
+			logger.error("Class Not Found Exection");
 			e.printStackTrace();
 			return Util.setCors(NanoHTTPD.newFixedLengthResponse(Status.EXPECTATION_FAILED, NanoHTTPD.MIME_HTML, "Class Not Found Exection"));
 		}
@@ -114,8 +114,8 @@ public class MeteringHandler extends GeneralHandler {
 	private List< Metering > getMeteringData( String query ) throws SQLException, ClassNotFoundException {
 		Connection conn = getConnection();
 		LogPreparedStatement pstmt = new LogPreparedStatement( conn, query );
-		logger.info( "=== Qeury ===" );
-		logger.info( query );
+		logger.debug( "=== Qeury ===" );
+		logger.debug( query );
 		ResultSet rs = pstmt.executeQuery();
 		
 		List< Metering > meteringList = new ArrayList<>();

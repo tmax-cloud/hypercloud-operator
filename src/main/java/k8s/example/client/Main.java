@@ -64,8 +64,6 @@ public class Main {
 				if( ns.getMetadata().getLabels() != null && ns.getMetadata().getLabels().get("trial") != null
 						&& ns.getMetadata().getLabels().get("owner") != null) {
 					logger.info("[Main] Trial NameSpace : " + ns.getMetadata().getName());
-					logger.info("[Main] Trial NameSpace : " + ns.getMetadata().getName());
-
 					Util.setTrialNSTimer(ns);
 				}
 			}
