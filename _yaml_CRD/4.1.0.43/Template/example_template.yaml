@@ -3,8 +3,6 @@ kind: Template
 metadata:
   name: nginx-template
   namespace: default
-  labels:
-    handled: f  
 imageUrl: example.com/example.gif
 provider: tmax
 recommend: true

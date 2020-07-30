@@ -3,10 +3,9 @@ kind: ResourceQuotaClaim
 metadata:
   name: example-resource-quota
   namespace: example-namespace
-  labels:
-    handled: f
-resourceName: example-claim
+resourceName: example-claim  
 spec:
   hard:
-    limits.cpu: "1"
-    limits.memory: "1Gi"
+    limits.cpu: "2"
+    limits.memory: "2Gi"
+    requests.storage: "2Gi"

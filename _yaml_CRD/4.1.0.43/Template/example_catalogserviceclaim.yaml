@@ -3,8 +3,6 @@ kind: CatalogServiceClaim
 metadata:
   name: nginx-catalog-service-claim
   namespace: default
-  labels:
-    handled: f  
 spec:
   apiVersion: tmax.io/v1
   kind: Template

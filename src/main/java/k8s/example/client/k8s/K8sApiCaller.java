@@ -31,6 +31,7 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.math3.analysis.function.Constant;
 import org.joda.time.DateTime;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
@@ -1916,6 +1917,9 @@ public class K8sApiCaller {
 
 					logger.info(result.getMetadata().getNamespace() + "/" + result.getMetadata().getName() + " configmap patched!!");
 					logger.debug("\tmetadata:" + result.getMetadata().toString());
+					
+					updateRegistryStatus(result, Constants.EVENT_TYPE_ADDED);
+					
 					return result;
 				} catch (ApiException e) {
 					logger.error(e.getResponseBody());
@@ -2430,7 +2434,7 @@ public class K8sApiCaller {
 		return recreateSubresources;
 	}
 	
-	public static void updateRegistrySubresources(Registry registry, JsonNode diff) throws ApiException {
+	public static void updateRegistrySubresources(Registry registry, JsonNode diff, JsonNode beforeJson) throws ApiException {
 		logger.debug("[K8S ApiCaller] updateRegistrySubresources(Registry, JsonNode) Start");
 		String namespace = registry.getMetadata().getNamespace();
 		String registryName = registry.getMetadata().getName();
@@ -2456,7 +2460,55 @@ public class K8sApiCaller {
 				recreateSubresources.add(RegistryCondition.Condition.REPLICA_SET);
 			}
 			if (path.equals("/spec/customConfigYml")) {
-				recreateSubresources.add(RegistryCondition.Condition.CONFIG_MAP);
+				String configMapName = null;
+				V1ConfigMap cm = null;
+				if(op.equals("add")) {
+					deleteRegistrySubresource(registry, RegistryCondition.Condition.CONFIG_MAP);
+				} else if(op.equals("remove") || op.equals("replace")) {
+					configMapName = beforeJson.get("spec").get("customConfigYml").asText();
+					
+					try {
+						cm = api.readNamespacedConfigMap(configMapName, namespace, null, null, null);
+						logger.debug(cm.toString());
+					} catch (ApiException e) {
+						logger.error(e.getResponseBody());
+						try {
+							patchRegistryStatus(registry, RegistryCondition.Condition.CONFIG_MAP, 
+									RegistryStatus.Status.FALSE.getStatus(), e.getResponseBody(), "ConfigMapNotExist");
+						} catch (ApiException e2) {
+							logger.error(e2.getResponseBody());
+						}
+					}
+
+					if (cm != null) {
+						V1ObjectMeta metadata = cm.getMetadata();
+						Map<String,String> labels = metadata.getLabels();
+						if (labels != null) {
+							labels.remove("registryUid");
+							labels.remove("app");
+							labels.remove("apps");
+							metadata.setLabels(labels);
+							cm.setMetadata(metadata);
+						}
+
+						try {
+							// patch로 하면 data 내용 때문에 에러발생함
+							V1ConfigMap result = api.replaceNamespacedConfigMap(cm.getMetadata().getName(), namespace, cm, null, null, null);
+
+							logger.info(result.getMetadata().getNamespace() + "/" + result.getMetadata().getName() + " configmap patched!!");
+							logger.debug("\tmetadata:" + result.getMetadata().toString());
+						} catch (ApiException e) {
+							logger.error(e.getResponseBody());
+						}
+					}
+
+					try {
+						createRegistryConfigMap(registry);
+					} catch (Exception e) {
+						logger.error(e.getMessage());
+					}
+				}
+//				recreateSubresources.add(RegistryCondition.Condition.CONFIG_MAP);
 				recreateSubresources.add(RegistryCondition.Condition.REPLICA_SET);
 			}
 			if (path.startsWith("/spec/service")) {
@@ -2589,9 +2641,9 @@ public class K8sApiCaller {
 //			deleteRegistrySubresource(registry, RegistryCondition.Condition.CONFIG_MAP);
 			try {
 				V1ConfigMap cm = createRegistryConfigMap(registry);
-				if(cm != null) {
-					updateRegistryStatus(cm, Constants.EVENT_TYPE_ADDED);
-				}
+//				if(cm != null) {
+//					updateRegistryStatus(cm, Constants.EVENT_TYPE_ADDED);
+//				}
 			} catch (Exception e) {
 				logger.error(e.getMessage());
 			}

@@ -3,7 +3,6 @@ kind: NamespaceClaim
 metadata:
   name: example-claim
   labels: 
-    handled: f
     #trial: t
     #owner: example-tmax.co.kr
   annotations:

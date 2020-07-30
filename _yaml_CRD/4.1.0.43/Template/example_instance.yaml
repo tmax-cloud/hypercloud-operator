@@ -3,8 +3,6 @@ kind: TemplateInstance
 metadata:
   name: nginx-template-instance
   namespace: hypercloud-system
-  labels:
-    handled: f  
 spec:
   template:
     metadata:

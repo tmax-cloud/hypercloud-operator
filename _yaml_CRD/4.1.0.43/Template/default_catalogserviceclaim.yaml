@@ -3,15 +3,12 @@ kind: CatalogServiceClaim
 metadata:
   name: nginx-catalog-service-claim
   namespace: default
-  labels:
-    handled: f  
 spec:
   apiVersion: tmax.io/v1
   kind: Template
   metadata:
     name: example-template
     namespace: default
-    labels:
   imageUrl: example.com/example.gif
   provider: tmax
   recommend: true

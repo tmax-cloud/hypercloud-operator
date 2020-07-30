@@ -354,7 +354,7 @@ public class MeteringJob implements Job{
 			try {
 				pstmtinsert.executeBatch();
 			}catch(SQLException e) {
-				logger.info("SQL Exception : " + e.getMessage());
+				logger.error("SQL Exception : " + e.getMessage());
 			}
 			pstmtinsert.close();
 			pstmtSelect.close();
@@ -369,7 +369,7 @@ public class MeteringJob implements Job{
 			conn.commit();
 
 		} catch (SQLException e) {
-			logger.info("SQL Exception : " + e.getMessage());
+			logger.error("SQL Exception : " + e.getMessage());
 			e.printStackTrace();
 		}
 	}
@@ -407,7 +407,7 @@ public class MeteringJob implements Job{
 			try {
 				pstmtinsert.executeBatch();
 			}catch(SQLException e) {
-				logger.info("SQL Exception : " + e.getMessage());
+				logger.error("SQL Exception : " + e.getMessage());
 			}
 			pstmtinsert.close();
 			pstmtSelect.close();
@@ -422,7 +422,7 @@ public class MeteringJob implements Job{
 			conn.commit();
 
 		} catch (SQLException e) {
-			logger.info("SQL Exception : " + e.getMessage());
+			logger.error("SQL Exception : " + e.getMessage());
 			e.printStackTrace();
 		}
 	}
