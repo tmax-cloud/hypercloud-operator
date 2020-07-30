@@ -299,6 +299,11 @@ public class K8sApiCaller {
 		RegistryPvcWatcher registryPvcWatcher = new RegistryPvcWatcher(k8sClient, api, null);
 		registryPvcWatcher.start();
 
+		// Start registry config map watch
+		logger.info("Start registry config map watcher");
+		RegistryConfigMapWatcher registryConfigMapWatcher = new RegistryConfigMapWatcher(k8sClient, api, null);
+		registryConfigMapWatcher.start();
+
 		// Start image watch
 		logger.info("Start image watcher");
 		ImageWatcher imageWatcher = new ImageWatcher(k8sClient, customObjectApi, null);
@@ -469,6 +474,18 @@ public class K8sApiCaller {
 					registryPvcWatcher = new RegistryPvcWatcher(k8sClient, api,
 							registryPvcLatestResourceVersionStr);
 					registryPvcWatcher.start();
+				}
+				
+				if (!registryConfigMapWatcher.isAlive()) {
+					String registryConfigMapLatestResourceVersionStr = RegistryConfigMapWatcher
+							.getLatestResourceVersion();
+					logger.info(
+							"Registry configmap watcher is not alive. Restart registry configmap watcher! (Latest resource version: "
+									+ registryConfigMapLatestResourceVersionStr + ")");
+					registryConfigMapWatcher.interrupt();
+					registryConfigMapWatcher = new RegistryConfigMapWatcher(k8sClient, api,
+							registryConfigMapLatestResourceVersionStr);
+					registryConfigMapWatcher.start();
 				}
 
 				if (!imageWatcher.isAlive()) {
