@@ -76,16 +76,15 @@ public class RegistryWatcher extends Thread {
 						
 						if( registry != null) {
 							String eventType = response.type.toString();
+							String serviceType 
+								= registry.getSpec().getService().getIngress() != null ? 
+										RegistryService.SVC_TYPE_INGRESS : RegistryService.SVC_TYPE_LOAD_BALANCER;
+							
 							logger.debug("====================== Registry " + eventType + " ====================== \n");
-
 							logger.debug("\t[" + registry.getMetadata().getResourceVersion() + "] " 
 									+ registry.getMetadata().getNamespace() + "/" 
 									+ registry.getMetadata().getName()
 									+ " Registry Data\n" + response.object.toString() + "\n");
-							
-							String serviceType 
-							= registry.getSpec().getService().getIngress() != null ? 
-									RegistryService.SVC_TYPE_INGRESS : RegistryService.SVC_TYPE_LOAD_BALANCER;
 							
 							switch(eventType) {
 							case Constants.EVENT_TYPE_ADDED: 
@@ -147,6 +146,8 @@ public class RegistryWatcher extends Thread {
 											changePhase = RegistryStatus.StatusPhase.NOT_READY.getStatus();
 											changeMessage = "Registry is not ready.";
 											changeReason = "NotReady";
+											logger.info(registry.getMetadata().getNamespace() + "/" 
+													+ registry.getMetadata().getName() + " registry is not ready.");
 										}
 									}
 									// Registry Is Updating.
@@ -198,6 +199,9 @@ public class RegistryWatcher extends Thread {
 											// delete updating-fields annotation
 											K8sApiCaller.updateRegistryAnnotationLastCR(registry, null);
 											logger.debug("Delete updating-fields annotation.");
+											
+											logger.info(registry.getMetadata().getNamespace() + "/" 
+													+ registry.getMetadata().getName() + " registry is not ready.");
 										}
 									}
 									// Registry Is Running.
@@ -253,11 +257,17 @@ public class RegistryWatcher extends Thread {
 											changePhase = RegistryStatus.StatusPhase.NOT_READY.getStatus();
 											changeMessage = "Registry is not ready.";
 											changeReason = "NotReady";
+											
+											logger.info(registry.getMetadata().getNamespace() + "/" 
+													+ registry.getMetadata().getName() + " registry is not ready.");
 										} else if(!phase.equals(RegistryStatus.StatusPhase.ERROR.getStatus()) 
 												&&conditionsError(statusMap, serviceType)) {
 											changePhase = RegistryStatus.StatusPhase.ERROR.getStatus();
 											changeMessage = "Registry's condtion is not satisfied.";
 											changeReason = "Error";
+											
+											logger.info(registry.getMetadata().getNamespace() + "/" 
+													+ registry.getMetadata().getName() + " registry is error.");
 										}
 									}
 									
@@ -272,10 +282,6 @@ public class RegistryWatcher extends Thread {
 								break;
 							}						
 						}
-						
-						//TODO
-//						logger.debug("[RegistryWatcher] SsResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registry.getMetadata().getResourceVersion());
-						
 					} catch (ApiException e) {
 						logger.error("ApiException: " + e.getMessage());
 						logger.error(e.getResponseBody());
@@ -313,16 +319,18 @@ public class RegistryWatcher extends Thread {
 	
 	public static Map <RegistryCondition.Condition, Boolean> getStatusMap(Registry registry) {
 		Map <RegistryCondition.Condition, Boolean> statusMap = new HashMap<>();
+		String namespace = registry.getMetadata().getNamespace();
+		String registryName = registry.getMetadata().getName();
 		
 		for(RegistryCondition.Condition con : RegistryCondition.Condition.values()) {
 			try {
 				statusMap.put(con,
 					registry.getStatus().getConditions().get(con.ordinal()).getStatus().equals(RegistryStatus.Status.TRUE.getStatus()));
 			} catch(IndexOutOfBoundsException e) {
-				logger.debug(con.getType() + " type condition is empty.");
+				logger.debug("[" + namespace + "/" + registryName + "] " + con.getType() + " type condition is empty.");
 				statusMap.put(con, Boolean.TRUE);
 			} catch (NullPointerException e) {
-				logger.error(con.getType() + " type condition is null.");
+				logger.error("[" + namespace + "/" + registryName + "] " + con.getType() + " type condition is null.");
 			}
 		}
 		return statusMap;
