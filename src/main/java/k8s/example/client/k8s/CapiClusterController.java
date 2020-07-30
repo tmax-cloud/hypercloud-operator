@@ -35,7 +35,7 @@ public class CapiClusterController extends Thread {
 			throws Exception {
 		ccController = Watch.createWatch(client,
 				api.listClusterCustomObjectCall(Constants.CAPI_OBJECT_GROUP, Constants.CAPI_OBJECT_VERSION,
-						Constants.CAPI_OBJECT_PLURAL_CAPICLUSTER, null, null, null, "handled=f", null, null, null,
+						Constants.CAPI_OBJECT_PLURAL_CAPICLUSTER, null, null, null, null, null, null, null,
 						Boolean.TRUE, null),
 				new TypeToken<Watch.Response<CapiCluster>>() {
 				}.getType());
@@ -79,7 +79,6 @@ public class CapiClusterController extends Thread {
 					} catch (Exception e) {
 						printException(e, "CapiCluster handle");
 					} catch (Throwable e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				});
