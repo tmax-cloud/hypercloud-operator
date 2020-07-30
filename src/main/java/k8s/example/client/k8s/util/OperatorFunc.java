@@ -118,7 +118,10 @@ public class OperatorFunc {
 		pluralMapper.put("AWSCluster", "awsclusters");
 		pluralMapper.put("AWSMachine", "awsmachines");
 		pluralMapper.put("AWSMachineTemplate", "awsmachinetemplates");
-
+		pluralMapper.put("AzureCluster", "azureclusters");
+		pluralMapper.put("AzureMachine", "azuremachines");
+		pluralMapper.put("AzureMachineTemplate", "azuremachinetemplates");
+		
 //		pluralMapper.put("", "");
 //		pluralMapper.put("", "");
 //		pluralMapper.put("", "");
