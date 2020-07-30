@@ -37,7 +37,7 @@ public class RegistryPodWatcher extends Thread {
 			watchRegistryPod.forEach(response -> {
 				try {
 					if (Thread.interrupted()) {
-						logger.debug("Interrupted!");
+						logger.error("Interrupted!");
 						watchRegistryPod.close();
 					}
 				} catch (Exception e) {

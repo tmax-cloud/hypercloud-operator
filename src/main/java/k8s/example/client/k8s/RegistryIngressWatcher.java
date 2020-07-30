@@ -37,7 +37,7 @@ public class RegistryIngressWatcher extends Thread {
 			watchRegistryIngress.forEach(response -> {
 				try {
 					if (Thread.interrupted()) {
-						logger.debug("Interrupted!");
+						logger.error("Interrupted!");
 						watchRegistryIngress.close();
 					}
 				} catch (Exception e) {

@@ -37,7 +37,7 @@ public class RegistryServiceWatcher extends Thread {
 			watchRegistryService.forEach(response -> {
 				try {
 					if (Thread.interrupted()) {
-						logger.debug("Interrupted!");
+						logger.error("Interrupted!");
 						watchRegistryService.close();
 					}
 				} catch (Exception e) {

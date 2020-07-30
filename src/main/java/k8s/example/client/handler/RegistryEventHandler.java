@@ -47,9 +47,9 @@ public class RegistryEventHandler extends GeneralHandler {
 			logger.debug("  Registry Event Count: " + regEvent.getEvents().size());
 			for( RegistryEvent event : regEvent.getEvents()) {
 				if (event.getAction().equals("push")) {
-					logger.debug("    Registry Action: " + event.getAction());
-					logger.debug("    Registry Target Repository: " + event.getTarget().getRepository());
-					logger.debug("    Registry Target Url: " + event.getTarget().getUrl());
+					logger.info("    Registry Action: " + event.getAction());
+					logger.info("    Registry Target Repository: " + event.getTarget().getRepository());
+					logger.info("    Registry Target Url: " + event.getTarget().getUrl());
 					logger.debug("    Registry Request Host: " + event.getRequest().getHost());
 					logger.debug("    Registry Actor: " + event.getActor());
 					logger.debug("    Registry Source Addr: " + event.getSource().getAddr());
@@ -60,9 +60,9 @@ public class RegistryEventHandler extends GeneralHandler {
 					}
 				}
 				else if (event.getAction().equals("delete")) {
-					logger.debug("    Registry Action: " + event.getAction());
-					logger.debug("    Registry Target Repository: " + event.getTarget().getRepository());
-					logger.debug("    Registry Target Url: " + event.getTarget().getUrl());
+					logger.info("    Registry Action: " + event.getAction());
+					logger.info("    Registry Target Repository: " + event.getTarget().getRepository());
+					logger.info("    Registry Target Url: " + event.getTarget().getUrl());
 					logger.debug("    Registry Request Host: " + event.getRequest().getHost());
 					logger.debug("    Registry Actor: " + event.getActor());
 					logger.debug("    Registry Source Addr: " + event.getSource().getAddr());
@@ -74,9 +74,9 @@ public class RegistryEventHandler extends GeneralHandler {
 					}
 				}
 				else {
-					logger.debug("    Registry Action: " + event.getAction());
-					logger.debug("    Registry Target Repository: " + event.getTarget().getRepository());
-					logger.debug("    Registry Target Url: " + event.getTarget().getUrl());
+					logger.info("    Registry Action: " + event.getAction());
+					logger.info("    Registry Target Repository: " + event.getTarget().getRepository());
+					logger.info("    Registry Target Url: " + event.getTarget().getUrl());
 				}
 			}
 

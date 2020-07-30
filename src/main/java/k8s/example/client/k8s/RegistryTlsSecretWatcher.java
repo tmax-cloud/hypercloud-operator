@@ -37,7 +37,7 @@ public class RegistryTlsSecretWatcher extends Thread {
 			watchRegistrySecret.forEach(response -> {
 				try {
 					if (Thread.interrupted()) {
-						logger.debug("Interrupted!");
+						logger.error("Interrupted!");
 						watchRegistrySecret.close();
 					}
 				} catch (Exception e) {
