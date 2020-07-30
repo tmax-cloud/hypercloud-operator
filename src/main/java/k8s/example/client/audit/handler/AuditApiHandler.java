@@ -46,7 +46,7 @@ public class AuditApiHandler extends GeneralHandler{
 			EventList eventList = new ObjectMapper().registerModule(new DateTimeFormatModule()).readValue(postData, EventList.class);
 			
 			List<Event> listevent = eventList.getItems();
-			logger.info("Check event list size, size=" + listevent.size());
+			logger.debug("Check event list size, size=" + listevent.size());
 			for(Event event : listevent) {
 				queue.put(event);
 			}

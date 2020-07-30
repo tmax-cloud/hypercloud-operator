@@ -64,12 +64,11 @@ public class AuditDataFactory {
 				pstmt.setString(i++, responseStatus == null ? "" : responseStatus.getReason());
 				pstmt.setString(i++, responseStatus == null ? "" : responseStatus.getMessage());
 										
-				logger.info("Query=\"" + pstmt.getQueryString() + "\"");
+				logger.debug("Query=\"" + pstmt.getQueryString() + "\"");
 				pstmt.addBatch();
 			}
 			int[] result = pstmt.executeBatch();
 			conn.commit();
-			logger.info("Insert audit data success, dataCnt=" + result.length);
 		}
 	}
 	
@@ -135,7 +134,7 @@ public class AuditDataFactory {
 		
 		List<Event> result = new ArrayList<>();
 		try(LogPreparedStatement pstmt = new LogPreparedStatement(conn, sb.toString())){
-			logger.info("Query=\"" + pstmt.getQueryString() + "\"");
+			logger.debug("Query=\"" + pstmt.getQueryString() + "\"");
 			try(ResultSet rs = pstmt.executeQuery()) {
 				while(rs.next()) {
 					Event event = new Event();
@@ -169,7 +168,7 @@ public class AuditDataFactory {
 		long result;
 		
 		try(LogPreparedStatement pstmt = new LogPreparedStatement(conn, sb.toString())){
-			logger.info("Query=\"" + pstmt.getQueryString() + "\"");
+			logger.debug("Query=\"" + pstmt.getQueryString() + "\"");
 			try(ResultSet rs = pstmt.executeQuery()) {
 				rs.next();
 				result = rs.getLong("FOUND_ROWS()");

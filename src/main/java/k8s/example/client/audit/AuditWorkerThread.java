@@ -21,7 +21,7 @@ public class AuditWorkerThread extends Thread {
 	@Override
 	public void run() {
 		try {
-			logger.info("Worker thread start.");
+			logger.debug("Worker thread start.");
 			
 			while(true) {
 				List<Event> eventList = queue.takeAll();
