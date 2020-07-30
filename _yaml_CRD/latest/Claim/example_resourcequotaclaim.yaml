@@ -3,6 +3,8 @@ kind: ResourceQuotaClaim
 metadata:
   name: example-resource-quota
   namespace: example-namespace
+  labels:
+    handled: f  
 resourceName: example-claim  
 spec:
   hard:

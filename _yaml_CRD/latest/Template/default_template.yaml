@@ -3,6 +3,8 @@ kind: Template
 metadata:
   name: example-template
   namespace: default
+  labels:
+    handled: f  
 imageUrl: example.com/example.gif
 provider: tmax
 recommend: true

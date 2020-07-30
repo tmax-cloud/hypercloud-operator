@@ -3,6 +3,8 @@ kind: RoleBindingClaim
 metadata:
   name: example-rolebinding
   namespace: example-namespace
+  labels:
+    handled: f  
 resourceName: example-claim
 subjects:
 - kind: User
