@@ -101,9 +101,9 @@ public class RegistryWatcher extends Thread {
 									break;
 								}
 								
-								String beforeJson = registry.getMetadata().getAnnotations().get(Constants.LAST_CUSTOM_RESOURCE);
-//								logger.debug("beforeJson = " + beforeJson);
-								if( beforeJson == null) {
+								String beforeJsonStr = registry.getMetadata().getAnnotations().get(Constants.LAST_CUSTOM_RESOURCE);
+//								logger.debug("beforeJsonStr = " + beforeJsonStr);
+								if( beforeJsonStr == null) {
 									K8sApiCaller.updateRegistryAnnotationLastCR(registry, null);
 									break;
 								}
@@ -156,12 +156,14 @@ public class RegistryWatcher extends Thread {
 												+ registry.getMetadata().getName() + " registry is updating...");
 										
 										// logger.debug("afterJson = " + Util.toJson(registry).toString());
-										JsonNode diff = Util.jsonDiff(beforeJson, Util.toJson(registry).toString());
-										
+										JsonNode diff = Util.jsonDiff(beforeJsonStr, Util.toJson(registry).toString());
+										ObjectMapper jackson = new ObjectMapper(); 
+							    		JsonNode beforeJson = jackson.readTree(beforeJsonStr);
 										if(diff.size() > 0) {
 											logger.debug("[Updated Registry Spec]\ndiff: " + diff.toString() + "\n");
+											logger.debug("[Before Json]\nbeforeJsonStr: " + beforeJsonStr);
 											K8sApiCaller.updateRegistryAnnotationLastCR(registry, diff);
-											K8sApiCaller.updateRegistrySubresources(registry, diff);
+											K8sApiCaller.updateRegistrySubresources(registry, diff, beforeJson);
 											break;
 										} 
 
@@ -240,7 +242,7 @@ public class RegistryWatcher extends Thread {
 													break;
 												}
 												// logger.debug("afterJson = " + Util.toJson(registry).toString());
-												JsonNode diff = Util.jsonDiff(beforeJson, Util.toJson(registry).toString());
+												JsonNode diff = Util.jsonDiff(beforeJsonStr, Util.toJson(registry).toString());
 												if(diff.size() > 0) {
 													logger.debug("[Updated Registry Spec]\ndiff: " + diff.toString() + "\n");
 													logger.debug("Change Status: Running -> Updating");
