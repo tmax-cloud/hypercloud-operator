@@ -37,7 +37,7 @@ public class RegistryReplicaSetWatcher extends Thread {
 			watchRegistryRs.forEach(response -> {
 				try {
 					if (Thread.interrupted()) {
-						logger.debug("Interrupted!");
+						logger.error("Interrupted!");
 						watchRegistryRs.close();
 					}
 				} catch (Exception e) {

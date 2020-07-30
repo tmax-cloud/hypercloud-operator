@@ -38,7 +38,7 @@ public class RegistryConfigMapWatcher extends Thread {
 			watchRegistryConfigMap.forEach(response -> {
 				try {
 					if (Thread.interrupted()) {
-						logger.debug("Interrupted!");
+						logger.error("Interrupted!");
 						watchRegistryConfigMap.close();
 					}
 				} catch (Exception e) {

@@ -37,7 +37,7 @@ public class RegistryPvcWatcher extends Thread {
 			watchRegistryPvc.forEach(response -> {
 				try {
 					if (Thread.interrupted()) {
-						logger.debug("Interrupted!");
+						logger.error("Interrupted!");
 						watchRegistryPvc.close();
 					}
 				} catch (Exception e) {
