@@ -25,7 +25,7 @@ public class ImageWatcher extends Thread {
 	
 	ImageWatcher(ApiClient client, CustomObjectsApi api, String resourceVersion) throws Exception {
 		watchImage = Watch.createWatch(client,
-				api.listClusterCustomObjectCall("tmax.io", "v1", "images", null, null, null, "handled=f", null, null, null, Boolean.TRUE, null),
+				api.listClusterCustomObjectCall("tmax.io", "v1", "images", null, null, null, null, null, null, null, Boolean.TRUE, null),
 				new TypeToken<Watch.Response<Image>>() {}.getType());
 
 		this.api = api;
@@ -88,7 +88,7 @@ public class ImageWatcher extends Thread {
 				
 				logger.debug("=============== Image 'For Each' END ===============");
 				watchImage = Watch.createWatch(client,
-						api.listClusterCustomObjectCall("tmax.io", "v1", "images", null, null, null, "handled=f", null, null, null, Boolean.TRUE, null),
+						api.listClusterCustomObjectCall("tmax.io", "v1", "images", null, null, null, null, null, null, null, Boolean.TRUE, null),
 						new TypeToken<Watch.Response<Image>>() {}.getType());
 			}
 		} catch (Exception e) {
