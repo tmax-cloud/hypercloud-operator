@@ -1,6 +1,25 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.0.45 start -------------------->
+
+## HyperCloudServer_4.1.0.45 (Fri Jul 31 16:00:44 KST 2020)
+
+### Added
+
+### Changed
+  - [mod] template operator handled label 남은 부분 제거 by jitae_yun
+  - [mod] template operator handled label 제거 by jitae_yun
+  - [mod] image watcher handled=f 삭제 by sukhee_yun
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.0.45 end --------------------->
+
 <!-------------------- v4.1.0.44 start -------------------->
 
 ## HyperCloudServer_4.1.0.44 (Fri Jul 31 13:56:34 KST 2020)
