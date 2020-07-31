@@ -1,6 +1,25 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.0.44 start -------------------->
+
+## HyperCloudServer_4.1.0.44 (Fri Jul 31 13:56:34 KST 2020)
+
+### Added
+
+### Changed
+  - [mod] capi-azure의 service instance 사용을 위한 capi-azure resource 등록 by mincheol_jeon
+  - [mod] audit log 레벨 변경 by sangwon_cho
+  - [mod] watcher handled label yaml 에 반영 by taegeon_woo
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.0.44 end --------------------->
+
 <!-------------------- v4.1.0.43 start -------------------->
 
 ## HyperCloudServer_4.1.0.43 (Thu Jul 30 17:22:19 KST 2020)
