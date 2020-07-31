@@ -1,6 +1,23 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.0.46 start -------------------->
+
+## HyperCloudServer_4.1.0.46 (Fri Jul 31 17:38:05 KST 2020)
+
+### Added
+
+### Changed
+  - [mod] tmax crd resourceVersion 최신으로 올리는 로직 다시 추가 by taegeon_woo
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.0.46 end --------------------->
+
 <!-------------------- v4.1.0.45 start -------------------->
 
 ## HyperCloudServer_4.1.0.45 (Fri Jul 31 16:00:44 KST 2020)
