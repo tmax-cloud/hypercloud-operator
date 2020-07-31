@@ -127,7 +127,7 @@ public class TemplateOperator extends Thread {
 				watchInstance = Watch.createWatch(
 				        client,
 				        tpApi.listClusterCustomObjectCall(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, 
-				        		Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE, null, null, null, "handled=f", null, null, null, Boolean.TRUE, null),
+				        		Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE, null, null, null, null, null, null, null, Boolean.TRUE, null),
 				        new TypeToken<Watch.Response<Object>>(){}.getType());
 			}
 		} catch (Exception e) {
