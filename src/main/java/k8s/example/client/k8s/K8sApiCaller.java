@@ -31,7 +31,6 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.math3.analysis.function.Constant;
 import org.joda.time.DateTime;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
@@ -244,7 +243,38 @@ public class K8sApiCaller {
 		} catch(Exception e) {
 			logger.info("initializeImageList Exception: " + e.getMessage());
 		}
-			
+				
+		// Update ResourceVersion
+		logger.info("Update ResourceVersion");
+		long userLatestResourceVersion = getLatestResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_USER, false);
+		logger.info("User Latest resource version: " + userLatestResourceVersion);
+		long registryLatestResourceVersion = getLatestResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, true);
+		logger.info("Registry Latest resource version: " + registryLatestResourceVersion);
+		long imageLatestResourceVersion = getLatestResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_IMAGE, true);
+		logger.info("Image Latest resource version: " + imageLatestResourceVersion);
+		long templateLatestResourceVersion = getLatestResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE, true);
+		logger.info("Template Latest resource version: " + templateLatestResourceVersion);
+		long instanceLatestResourceVersion = getLatestResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE,
+				true);
+		logger.info("Instance Latest resource version: " + instanceLatestResourceVersion);
+		long nscLatestResourceVersion = getLatestResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, false);
+		logger.info("Namespace Claim Latest resource version: " + nscLatestResourceVersion);
+		long rqcLatestResourceVersion = getLatestResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_RESOURCEQUOTACLAIM,
+				true);
+		logger.info("ResourceQuota Claim Latest resource version: " + rqcLatestResourceVersion);
+		long rbcLatestResourceVersion = getLatestResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_ROLEBINDINGCLAIM, true);
+		logger.info("RoleBinding Claim Latest resource version: " + rbcLatestResourceVersion);
+		
+		long cscLatestResourceVersion = getLatestResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_CATALOGSERVICECLAIM, true);
+		logger.info("Catalog Service Claim Latest resource version: " + cscLatestResourceVersion);
+		
+		long jfLatestResourceVersion = 0;
+		logger.info("joinFed Latest resource version: " + jfLatestResourceVersion);
+
+		long ccLatestResourceVersion = 0;
+		logger.info("CapiCluster Latest resource version: " + ccLatestResourceVersion);
+
+		
 		// Start user watch
 		logger.info("Start user watcher");
 		UserWatcher userWatcher = new UserWatcher(k8sClient, customObjectApi, null);
@@ -326,31 +356,26 @@ public class K8sApiCaller {
 
 		// Start ResourceQuotaClaim Controller
 		logger.info("Start ResourceQuotaClaim Controller");
-//		ResourceQuotaClaimController rqcOperator = new ResourceQuotaClaimController(k8sClient, customObjectApi, rqcLatestHandledResourceVersion);
 		ResourceQuotaClaimController rqcOperator = new ResourceQuotaClaimController(k8sClient, customObjectApi, 0);
 		rqcOperator.start();
 
 		// Start RoleBindingClaim Controller
 		logger.info("Start RoleBindingClaim Controller");
-//		RoleBindingClaimController rbcOperator = new RoleBindingClaimController(k8sClient, customObjectApi, rbcLatestHandledResourceVersion);
 		RoleBindingClaimController rbcOperator = new RoleBindingClaimController(k8sClient, customObjectApi, 0);
 		rbcOperator.start();
 		
 		// Start CatalogServiceClaim Controller
 		logger.info("Start CatalogServiceClaim Controller");
-//		CatalogServiceClaimController cscOperator = new CatalogServiceClaimController(k8sClient, customObjectApi, cscLatestHandledResourceVersion);
 		CatalogServiceClaimController cscOperator = new CatalogServiceClaimController(k8sClient, customObjectApi, 0);
 		cscOperator.start();
 
 		// start JoinFed Controller
 		logger.info("Start JoinFed Controller");
-//		JoinFedController jfOperator = new JoinFedController(k8sClient, customObjectApi, api, jfLatestHandledResourceVersion);
 		JoinFedController jfOperator = new JoinFedController(k8sClient, customObjectApi, api, 0);
 		jfOperator.start();
 
 		// start CapiCluster Controller
 		logger.info("Start CapiCluster Controller");
-//		CapiClusterController ccOperator = new CapiClusterController(k8sClient, customObjectApi, api, ccLatestHandledResourceVersion);
 		CapiClusterController ccOperator = new CapiClusterController(k8sClient, customObjectApi, api, 0);
 		ccOperator.start();
 
@@ -499,7 +524,7 @@ public class K8sApiCaller {
 				}
 
 				if (!templateOperator.isAlive()) {
-					long templateLatestResourceVersion = TemplateOperator.getLatestResourceVersion();
+					templateLatestResourceVersion = TemplateOperator.getLatestResourceVersion();
 					logger.info(("Template Operator is not Alive. Restart Operator! (Latest Resource Version: "
 							+ templateLatestResourceVersion + ")"));
 					templateOperator.interrupt();
@@ -508,7 +533,7 @@ public class K8sApiCaller {
 				}
 
 				if (!instanceOperator.isAlive()) {
-					long instanceLatestResourceVersion = InstanceOperator.getLatestResourceVersion();
+					instanceLatestResourceVersion = InstanceOperator.getLatestResourceVersion();
 					logger.info(("Instance Operator is not Alive. Restart Operator! (Latest Resource Version: "
 							+ instanceLatestResourceVersion + ")"));
 					instanceOperator.interrupt();
@@ -517,7 +542,7 @@ public class K8sApiCaller {
 				}
 
 				if (!nscOperator.isAlive()) {
-					long nscLatestResourceVersion = NamespaceClaimController.getLatestResourceVersion();
+					nscLatestResourceVersion = NamespaceClaimController.getLatestResourceVersion();
 					logger.info(
 							("Namespace Claim Controller is not Alive. Restart Controller! (Latest Resource Version: "
 									+ nscLatestResourceVersion + ")"));
@@ -527,7 +552,7 @@ public class K8sApiCaller {
 				}
 
 				if (!rqcOperator.isAlive()) {
-					long rqcLatestResourceVersion = ResourceQuotaClaimController.getLatestResourceVersion();
+					rqcLatestResourceVersion = ResourceQuotaClaimController.getLatestResourceVersion();
 					logger.info(
 							("ResourceQuota Claim Controller is not Alive. Restart Controller! (Latest Resource Version: "
 									+ rqcLatestResourceVersion + ")"));
@@ -538,7 +563,7 @@ public class K8sApiCaller {
 				}
 
 				if (!rbcOperator.isAlive()) {
-					long rbcLatestResourceVersion = RoleBindingClaimController.getLatestResourceVersion();
+					rbcLatestResourceVersion = RoleBindingClaimController.getLatestResourceVersion();
 					logger.info(
 							("RoleBinding Claim Controller is not Alive. Restart Controller! (Latest Resource Version: "
 									+ rbcLatestResourceVersion + ")"));
@@ -548,7 +573,7 @@ public class K8sApiCaller {
 				}
 				
 				if (!cscOperator.isAlive()) {
-					long cscLatestResourceVersion = CatalogServiceClaimController.getLatestResourceVersion();
+					cscLatestResourceVersion = CatalogServiceClaimController.getLatestResourceVersion();
 					logger.info(
 							("CatalogService Claim Controller is not Alive. Restart Controller! (Latest Resource Version: "
 									+ cscLatestResourceVersion + ")"));
@@ -558,7 +583,7 @@ public class K8sApiCaller {
 				}
 
 				if (!jfOperator.isAlive()) {
-					long jfLatestResourceVersion = JoinFedController.getLatestResourceVersion();
+					jfLatestResourceVersion = JoinFedController.getLatestResourceVersion();
 					logger.info(
 							("JoinFed Controller is not Alive. Restart Controller! (Latest Resource Version: "
 									+ jfLatestResourceVersion + ")"));
@@ -568,7 +593,7 @@ public class K8sApiCaller {
 				}
 
 				if (!ccOperator.isAlive()) {
-					long ccLatestResourceVersion = CapiClusterController.getLatestResourceVersion();
+					ccLatestResourceVersion = CapiClusterController.getLatestResourceVersion();
 					logger.info(
 							("CapiCluster Controller is not Alive. Restart Controller! (Latest Resource Version: "
 									+ ccLatestResourceVersion + ")"));
