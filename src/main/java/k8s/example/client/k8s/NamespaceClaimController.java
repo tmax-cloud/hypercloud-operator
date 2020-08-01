@@ -82,21 +82,36 @@ public class NamespaceClaimController extends Thread {
 							
 							switch( eventType ) {
 								case Constants.EVENT_TYPE_ADDED : 
-									if ( K8sApiCaller.namespaceAlreadyExist( resourceName ) ) {
-										replaceNscStatus( claimName, Constants.CLAIM_STATUS_REJECT, "Duplicated NameSpaceName" ); 
-										K8sApiCaller.patchLabel(claimName, "handled" ,"t");// must be after replaceNscStatus for awake watcher once more
-									} else {
-										// Patch Status to Awaiting
-										replaceNscStatus( claimName, Constants.CLAIM_STATUS_AWAITING, "wait for admin permission" );
-										// If Trial Type 
-										if ( claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") !=null 
-												&& claim.getMetadata().getLabels().get("owner") !=null) {
-											// give owner all verbs of NSC ( Except admin-tmax.co.kr)
-											if ( !claim.getMetadata().getLabels().get("owner").equalsIgnoreCase( Constants.MASTER_USER_ID )) {
-												patchUserRole ( claim.getMetadata().getLabels().get("owner"), claim.getMetadata().getName() );
+									if ( claim.getStatus() !=null && claim.getStatus().getStatus() != null ) { // Generated And Status has Changed when DownTime 
+										logger.info("[NamespaceClaim Controller] Status of NamespaceClaim [ " + claim.getMetadata().getName() + " ] "
+												+ "Already Exists as [ " + claim.getStatus().getStatus() + " ]" );
+										if ( claim.getStatus().getStatus().equals(Constants.CLAIM_STATUS_SUCCESS) ) {
+											// If Trial Type 
+											if ( claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") !=null 
+													&& claim.getMetadata().getLabels().get("owner") !=null) {
+												// give owner all verbs of NSC ( Except admin-tmax.co.kr)
+												if ( !claim.getMetadata().getLabels().get("owner").equalsIgnoreCase( Constants.MASTER_USER_ID )) {
+													patchUserRole ( claim.getMetadata().getLabels().get("owner"), claim.getMetadata().getName() );
+												}
 											}
 										}
-									}		
+									}else {
+										if ( K8sApiCaller.namespaceAlreadyExist( resourceName ) ) {
+											replaceNscStatus( claimName, Constants.CLAIM_STATUS_REJECT, "Duplicated NameSpaceName" ); 
+											K8sApiCaller.patchLabel(claimName, "handled" ,"t");// must be after replaceNscStatus for awake watcher once more
+										} else {
+											// Patch Status to Awaiting
+											replaceNscStatus( claimName, Constants.CLAIM_STATUS_AWAITING, "wait for admin permission" );
+											// If Trial Type 
+											if ( claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") !=null 
+													&& claim.getMetadata().getLabels().get("owner") !=null) {
+												// give owner all verbs of NSC ( Except admin-tmax.co.kr)
+												if ( !claim.getMetadata().getLabels().get("owner").equalsIgnoreCase( Constants.MASTER_USER_ID )) {
+													patchUserRole ( claim.getMetadata().getLabels().get("owner"), claim.getMetadata().getName() );
+												}
+											}
+										}		
+									}
 									
 									// Set Owner Label from Annotation 'Creator'
 									if ( claim.getMetadata().getAnnotations() != null && claim.getMetadata().getAnnotations().get("creator") !=null
@@ -218,12 +233,14 @@ public class NamespaceClaimController extends Thread {
 			}
 			Util.sendMail(user.getUserInfo().getEmail(), subject, body);
 		} catch (Throwable e) {
-			e.printStackTrace();
-			logger.error(e.getMessage());
-			throw e;
-		}
-		
-		
+			if (e.getMessage().contains("Not Found") || e.getMessage().contains("404")) {
+				logger.info("This Trial NSC was made by Unknown user or System admin, Will not Send Email");
+			}else {
+				e.printStackTrace();
+				logger.error(e.getMessage());
+				throw e;
+			}
+		}			
 	}
 
 	private void patchUserRole(String clusterRoleName, String claimName ) {
