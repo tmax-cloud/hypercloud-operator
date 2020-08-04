@@ -5947,12 +5947,12 @@ public class K8sApiCaller {
 		}
 	}
 	
-	public static void createRoleBindingForIngressNginx(User userInDO) throws ApiException {
+	public static void createRoleBindingForIngressNginx(User userInDO, String userId) throws ApiException {
 		logger.debug("[K8S ApiCaller] Create roleBinding for New User Start");
 
 		V1RoleBinding roleBinding = new V1RoleBinding();
 		V1ObjectMeta roleBindingMeta = new V1ObjectMeta();
-		roleBindingMeta.setName(Constants.INGRESS_NGINX_SHARED_READ_ROLE_BINDING);
+		roleBindingMeta.setName(Constants.INGRESS_NGINX_SHARED_READ_ROLE_BINDING + "-" + userId);
 		roleBindingMeta.setNamespace(Constants.INGRESS_NGINX_SHARED_NAMESPACE);
 		roleBinding.setMetadata(roleBindingMeta);
 
@@ -5967,7 +5967,7 @@ public class K8sApiCaller {
 		V1Subject subject = new V1Subject();
 		subject.setApiGroup(Constants.RBAC_API_GROUP);
 		subject.setKind("User");
-		subject.setName(userInDO.getId());
+		subject.setName(userId);
 		roleBinding.addSubjectsItem(subject);
 
 		try {
