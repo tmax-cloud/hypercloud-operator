@@ -66,9 +66,19 @@ public class UserWatcher extends Thread {
 //						K8sApiCaller.createClusterRoleForNewUser(response.object.getUserInfo());  		
 //			    		K8sApiCaller.createClusterRoleBindingForNewUser(response.object.getUserInfo()); 
 						
-						// ingress-nginx-shared namespace read role
-			    		K8sApiCaller.createRoleBindingForIngressNginx(response.object.getUserInfo(), response.object.getMetadata().getName()); 
-
+						String eventType = response.type;
+						
+						switch (eventType) {
+						case Constants.EVENT_TYPE_ADDED:
+							// ingress-nginx-shared namespace read role
+				    		K8sApiCaller.createRoleBindingForIngressNginx(response.object.getUserInfo(), response.object.getMetadata().getName()); 
+				    		break;
+						case Constants.EVENT_TYPE_MODIFIED:
+							// Nothing to do
+							break;
+						case Constants.EVENT_TYPE_DELETED:
+							break;
+						}
 			    		// Create UserSecurityPolicy with otpEnable false
 //						try {
 //							K8sApiCaller.createUserSecurityPolicy(response.object.getMetadata().getName());  
