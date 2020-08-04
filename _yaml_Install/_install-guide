@@ -1,5 +1,5 @@
 
-1-1. http://192.168.1.150:10080/hypercloud/hypercloud-operator/blob/master/_yaml_Install/1.initialization.yaml 실행
+1-1. https://github.com/tmax-cloud/hypercloud-operator/blob/master/_yaml_Install/1.initialization.yaml 실행
 
 1-2. HyperCloud CRDs Definition Yaml 적용
 	- Auth/UserCRD.yaml
@@ -17,12 +17,12 @@
 	- Template/TemplateInstanceCRD_v1beta1.yaml
 	- Template/CatalogServiceCalimCRD_v1beta1.yaml
 
-2. http://192.168.1.150:10080/hypercloud/hypercloud-operator/blob/master/_yaml_Install/2.mysql-settings.yaml 실행
+2. https://github.com/tmax-cloud/hypercloud-operator/blob/master/_yaml_Install/2.mysql-settings.yaml 실행
 
-3. http://192.168.1.150:10080/hypercloud/hypercloud-operator/blob/master/_yaml_Install/3.mysql-create.yaml 실행
+3. https://github.com/tmax-cloud/hypercloud-operator/blob/master/_yaml_Install/3.mysql-create.yaml 실행
 
-4. http://192.168.1.150:10080/hypercloud/hypercloud-operator/blob/master/_yaml_Install/4-1.proauth-init.yaml 실행 &
-http://192.168.1.150:10080/hypercloud/hypercloud-operator/blob/master/_yaml_Install/4-2.proauth-db.yaml 실행
+4. https://github.com/tmax-cloud/hypercloud-operator/blob/master/_yaml_Install/4-1.proauth-init.yaml 실행 &
+https://github.com/tmax-cloud/hypercloud-operator/blob/master/_yaml_Install/4-2.proauth-db.yaml 실행
 
 4-1. proauth-db는 최초로 기동시 20~30분 정도가 소요될 수 있음.
   * proauth-db 기동 확인
@@ -42,16 +42,27 @@ http://192.168.1.150:10080/hypercloud/hypercloud-operator/blob/master/_yaml_Inst
 		/var/lib/kubelet/kubeadm-flags.env 에 --allowed-unsafe-sysctls=kernel.sem 추가
 		kubelet 재기동 (systemctl daemon-reload && systemctl restart kubelet)     	
 
-5. http://192.168.1.150:10080/hypercloud/hypercloud-operator/blob/master/_yaml_Install/5.proauth-server.yaml 실행 
+5. https://github.com/tmax-cloud/hypercloud-operator/blob/master/_yaml_Install/5.proauth-server.yaml 실행 
 
-6. http://192.168.1.150:10080/hypercloud/hypercloud-operator/blob/master/_yaml_Install/6.hypercloud4-operator.yaml 실행
+6. https://github.com/tmax-cloud/hypercloud-operator/blob/master/_yaml_Install/6.hypercloud4-operator.yaml 실행
 	* {HPCD_VERSION}의 값을 설치할 이미지의 버전으로 수정한다.
 		Example: b4.1.0.41
 
-7. http://192.168.1.150:10080/hypercloud/hypercloud-operator/blob/master/_yaml_Install/7.secret-watcher.yaml 실행
+7. https://github.com/tmax-cloud/hypercloud-operator/blob/master/_yaml_Install/7.secret-watcher.yaml 실행
 
-8. http://192.168.1.150:10080/hypercloud/hypercloud-operator/blob/master/_yaml_Install/8.default-auth-object-init.yaml 실행
+8. https://github.com/tmax-cloud/hypercloud-operator/blob/master/_yaml_Install/8.default-auth-object-init.yaml 실행
 
 9. authenticate webhook 설정 (http://192.168.1.150:10080/hypercloud/hypercloud-operator/wikis/WebHook-Guide)      
   
+10. https://github.com/tmax-cloud/hypercloud-operator/blob/master/_yaml_Install/9.nginx-controller.yaml 실행
+	* 내용 수정(필수)
+		# export INGRESS_NGINX_NAME=ingress-nginx-shared
+		# export INGRESS_CLASS=nginx-shd
+		# export NGINX_INGRESS_VERSION=0.33.0
+		# export KUBE_WEBHOOK_CERTGEN_VERSION=v1.2.2
+		# sed -i 's/ingress-nginx/'${INGRESS_NGINX_NAME}'/g' 9.nginx-controller.yaml
+		# sed -i 's/--ingress-class=nginx/--ingress-class='${INGRESS_CLASS}'/g' 9.nginx-controller.yaml
+		# sed -i 's/ingress-controller-leader-nginx/ingress-controller-leader-'${INGRESS_CLASS}'/g' 9.nginx-controller.yaml
+		# sed -i 's/{nginx_ingress_version}/'${NGINX_INGRESS_VERSION}'/g' 9.nginx-controller.yaml
+ 		# sed -i 's/{kube_webhook_certgen_version}/'${KUBE_WEBHOOK_CERTGEN_VERSION}'/g' 9.nginx-controller.yaml
 
