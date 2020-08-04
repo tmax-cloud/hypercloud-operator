@@ -62,6 +62,12 @@ public class Constants {
 	public static final String CAPI_OBJECT_VERSION =  "v1alpha3";
 	public static final String CAPI_OBJECT_PLURAL_CAPICLUSTER = "clusters";
 
+	//role
+	public static final String INGRESS_NGINX_SHARED_NAMESPACE = "ingress-nginx-shared";
+	public static final String INGRESS_NGINX_SHARED_READ_ROLE_BINDING = "ingress-nginx-shared-read";
+	public static final String INGRESS_NGINX_SHARED_READ_CLUSTER_ROLE = "ingress-nginx-shared-read-clusterrole";
+
+	
 	// HTTPS REQUEST URL
 	public static final String HTTPS_SCHEME_PREFIX = "https://";
 	

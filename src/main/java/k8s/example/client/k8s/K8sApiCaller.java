@@ -5892,6 +5892,37 @@ public class K8sApiCaller {
 			throw e;
 		}
 	}
+	
+	public static void createRoleBindingForIngressNginx(User userInDO) throws ApiException {
+		logger.debug("[K8S ApiCaller] Create roleBinding for New User Start");
+
+		V1RoleBinding roleBinding = new V1RoleBinding();
+		V1ObjectMeta roleBindingMeta = new V1ObjectMeta();
+		roleBindingMeta.setName(Constants.INGRESS_NGINX_SHARED_READ_ROLE_BINDING);
+		roleBindingMeta.setNamespace(Constants.INGRESS_NGINX_SHARED_NAMESPACE);
+		roleBinding.setMetadata(roleBindingMeta);
+
+		// RoleRef
+		V1RoleRef roleRef = new V1RoleRef();
+		roleRef.setApiGroup(Constants.RBAC_API_GROUP);
+		roleRef.setKind("ClusterRole");
+		roleRef.setName(Constants.INGRESS_NGINX_SHARED_READ_CLUSTER_ROLE);
+		roleBinding.setRoleRef(roleRef);
+
+		// subject
+		V1Subject subject = new V1Subject();
+		subject.setApiGroup(Constants.RBAC_API_GROUP);
+		subject.setKind("User");
+		subject.setName(userInDO.getId());
+		roleBinding.addSubjectsItem(subject);
+
+		try {
+			rbacApi.createNamespacedRoleBinding(Constants.INGRESS_NGINX_SHARED_NAMESPACE, roleBinding, null, null, null);
+		} catch (ApiException e) {
+			logger.error(e.getResponseBody());
+			throw e;
+		}
+	}
 
 	public static void deleteClusterRole(String name) throws Exception {
 		try {

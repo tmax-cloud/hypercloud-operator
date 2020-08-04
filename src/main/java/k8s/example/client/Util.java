@@ -12,13 +12,16 @@ import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import javax.mail.BodyPart;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimeUtility;
 
 import org.joda.time.DateTime;
@@ -167,6 +170,35 @@ public class Util {
 		logger.debug( " Mail Body : "  + body );
 		mimeMessage.setContent(body,"text/html; charset="+charSetUtf);
 		mimeMessage.setHeader("Content-Type", "text/html; charset="+charSetUtf);
+		
+		/////////////////////////////////////
+//		MimeMultipart multiPart = new MimeMultipart();
+//		multiPart.setSubType("mixed");
+//		
+//		// set html text body.
+//		BodyPart messageBodyPart = new MimeBodyPart();
+//		messageBodyPart.setContent(body, "text/html; charset=UTF-8");
+//		
+//		multiPart.addBodyPart(messageBodyPart);
+//		
+//		// set image.
+////		List<ContextDataObject> imageInfoList = indto.get("imageInfo");
+////		for (ContextDataObject imageInfo : imageInfoList) {
+//		String path = getClass().getClassLoader().getResource(imageInfo.get("value")).toString().substring(5);
+//		logger.info(path);
+//		messageBodyPart = new MimeBodyPart();
+//		DataSource ds = new FileDataSource(path);
+//		messageBodyPart.setDataHandler(new DataHandler(ds));
+//		messageBodyPart.setHeader("Content-Type", "image/png");
+//		messageBodyPart.setHeader("Content-ID", "<" + imageInfo.get("key") + ">");
+//		multiPart.addBodyPart(messageBodyPart);
+//			
+//		
+//		
+//		msg.setContent(multiPart);
+	
+		
+		//////////////////////////////////////
 		
 		logger.info( " Ready to Send Mail to " + recipient);
 		try {
