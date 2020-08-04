@@ -4,6 +4,8 @@ public class RegistryService {
 	public class Ingress {
 		private int port = 443;
 		private String domainName = null;
+		private String ingressClass = null;
+		
 		public int getPort() {
 			return port;
 		}
@@ -15,6 +17,12 @@ public class RegistryService {
 		}
 		public void setDomainName(String domainName) {
 			this.domainName = domainName;
+		}
+		public String getIngressClass() {
+			return ingressClass;
+		}
+		public void setIngressClass(String ingressClass) {
+			this.ingressClass = ingressClass;
 		}
 	}
 	
@@ -36,6 +44,7 @@ public class RegistryService {
 	public static final int REGISTRY_TARGET_PORT = 443;
 	public static final String REGISTRY_PORT_NAME = "tls";
 	public static final String REGISTRY_PORT_PROTOCOL = "TCP";
+	public static final String REGISTRY_DEFAULT_INGRESS_CLASS = "nginx-shd";
 	
 	private Ingress ingress = null;
 	private LoadBalancer loadBalancer = null;
