@@ -60,7 +60,15 @@ public class UserWatcher extends Thread {
 								response.object.getMetadata().getName(), 
 								response.object.getUserInfo().getPassword(),
 								response.object);
-			    		
+						
+						
+						// basic role setting for new user
+//						K8sApiCaller.createClusterRoleForNewUser(response.object.getUserInfo());  		
+//			    		K8sApiCaller.createClusterRoleBindingForNewUser(response.object.getUserInfo()); 
+						
+						// ingress-nginx-shared namespace read role
+			    		K8sApiCaller.createRoleBindingForIngressNginx(response.object.getUserInfo()); 
+
 			    		// Create UserSecurityPolicy with otpEnable false
 //						try {
 //							K8sApiCaller.createUserSecurityPolicy(response.object.getMetadata().getName());  
