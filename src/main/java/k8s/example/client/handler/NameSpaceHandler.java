@@ -118,7 +118,8 @@ public class NameSpaceHandler extends GeneralHandler {
     		}
 
 			// Make outDO					
-    		if( (nsList!=null && nsList.getItems() != null && nsList.getItems().size() > 0) || nsList.getMetadata().getContinue().equalsIgnoreCase("wrongLabel")) {
+    		if( (nsList!=null && nsList.getItems() != null && nsList.getItems().size() > 0) || nsList.getMetadata().getContinue().equalsIgnoreCase("wrongLabelorNoResource")) {
+    			nsList.getMetadata().setContinue(null);
     			Gson gson = new GsonBuilder().setPrettyPrinting().create();
     			outDO = gson.toJson( nsList ).toString();
     		} else {

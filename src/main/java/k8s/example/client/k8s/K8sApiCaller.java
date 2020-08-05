@@ -718,11 +718,11 @@ public class K8sApiCaller {
 		return userList;
 	}
 	
-	public static NamespaceClaimList listNamespaceClaim( String labelSelector ) throws Exception {
+	public static NamespaceClaimList listNamespaceClaim( String labelSelector, String _continue ) throws Exception {
 		NamespaceClaimList nscList = null;
 		try {
 			Object response = customObjectApi.listClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP,
-					Constants.CUSTOM_OBJECT_VERSION, Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, null, null, null, labelSelector, null,
+					Constants.CUSTOM_OBJECT_VERSION, Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, null, _continue, null, labelSelector, null,
 					null, null, Boolean.FALSE);
 
 			JsonObject respJson = (JsonObject) new JsonParser().parse((new Gson()).toJson(response));
@@ -6181,12 +6181,12 @@ public class K8sApiCaller {
 			if (clusterRoleFlag) {
 				nsList = api.listNamespace("true", false, null, null, labelSelector, 100, null, 60, false);
 				if(!(nsList.getItems().size() > 0)) {
-					nsList.getMetadata().setContinue("wrongLabel");  // for 권한 구분
+					nsList.getMetadata().setContinue("wrongLabelorNoResource");  // for 권한 구분
 				}
 			} else {
 				V1NamespaceList nsListK8S = api.listNamespace("true", false, null, null, labelSelector, 100, null, 60, false);
 				if(!(nsListK8S.getItems().size() > 0)) {
-					nsList.getMetadata().setContinue("wrongLabel");  // for 권한 구분
+					nsList.getMetadata().setContinue("wrongLabelorNoResource");  // for 권한 구분
 				}
 				// 4. List of RoleBinding
 				if (nsListK8S.getItems() != null && nsListK8S.getItems().size() > 0) {
@@ -6300,7 +6300,7 @@ public class K8sApiCaller {
 		return nsList;
 	}
 	
-	public static NamespaceClaimList getAccessibleNSC(String token, String userId, String labelSelector) throws Exception {
+	public static NamespaceClaimList getAccessibleNSC(String token, String userId, String labelSelector, String _continue) throws Exception {
 		NamespaceClaimList nscList = null;
 		
 		try {
@@ -6337,9 +6337,9 @@ public class K8sApiCaller {
 		    // 2. User has NSC List Permission
 		    if (result.getStatus().getAllowed()) {
 				logger.debug("2. User has NSC List Permission");
-				nscList = listNamespaceClaim( labelSelector );
+				nscList = listNamespaceClaim( labelSelector, _continue );
 				if(!(nscList.getItems().size() > 0)) {  //label selector 잘못 입력 고려
-					nscList.getMetadata().setContinue("wrongLabel");  
+					nscList.getMetadata().setContinue("wrongLabelorNoResource");
 				}
 		    } else {
 		    	// 3. User has No NSC List Permission --> Check if there is owner NSC with label	
@@ -6365,9 +6365,9 @@ public class K8sApiCaller {
 			    	//3-1. User has NSC Get Permission
 					logger.debug("3-1. User has NSC Get Permission");
 					NamespaceClaimList possibleNscList = null;		
-					possibleNscList = listNamespaceClaim( labelSelector );
+					possibleNscList = listNamespaceClaim( labelSelector, _continue );
 					if(!(possibleNscList.getItems().size() > 0)) {  //label selector 잘못 입력 고려
-						possibleNscList.getMetadata().setContinue("wrongLabel");  
+						possibleNscList.getMetadata().setContinue("wrongLabelorNoResource");  
 					}
 					if (possibleNscList != null && possibleNscList.getItems()!=null && possibleNscList.getItems().size() > 0) {
 				    	for( NamespaceClaim possibleNsc :  possibleNscList.getItems()) {
