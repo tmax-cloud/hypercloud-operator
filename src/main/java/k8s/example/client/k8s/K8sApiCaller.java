@@ -5947,7 +5947,7 @@ public class K8sApiCaller {
 		}
 	}
 	
-	public static void createRoleBindingForIngressNginx(User userInDO, String userId) throws ApiException {
+	public static void createRoleBindingForIngressNginx(String userId) throws ApiException {
 		logger.debug("[K8S ApiCaller] Create roleBinding for New User Start");
 
 		V1RoleBinding roleBinding = new V1RoleBinding();

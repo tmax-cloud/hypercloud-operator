@@ -71,7 +71,7 @@ public class UserWatcher extends Thread {
 						switch (eventType) {
 						case Constants.EVENT_TYPE_ADDED:
 							// ingress-nginx-shared namespace read role
-				    		K8sApiCaller.createRoleBindingForIngressNginx(response.object.getUserInfo(), response.object.getMetadata().getName()); 
+				    		K8sApiCaller.createRoleBindingForIngressNginx(response.object.getMetadata().getName()); 
 				    		break;
 						case Constants.EVENT_TYPE_MODIFIED:
 							// Nothing to do
