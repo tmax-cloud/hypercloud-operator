@@ -215,6 +215,8 @@ public class NamespaceClaimController extends Thread {
 		UserCR user = null;
 		String subject = null;
 		String body = null;
+		String imgPath = null;
+		String imgCid = null;
 		try {
 			user = K8sApiCaller.getUser(claim.getMetadata().getLabels().get("owner"));
 			if (flag) {
@@ -224,6 +226,8 @@ public class NamespaceClaimController extends Thread {
 				body = body.replaceAll("%%TRIAL_START_TIME%%", createTime.toDateTime().toString("yyyy-MM-dd"));
 				body = body.replaceAll("%%TRIAL_END_TIME%%", createTime.plusDays(30).toDateTime().toString("yyyy-MM-dd"));
 //				body = body.replaceAll("%%SUCCESS_REASON%%", claim.getStatus().getReason());
+				imgPath = "/hypercloud-operator/src/main/java/k8s/example/client/img/trial-approval.png";
+				imgCid = "trial-approval";
 			}else {
 				subject = " HyperCloud 서비스 신청 승인 거절  ";
 				body = Constants.TRIAL_FAIL_CONFIRM_MAIL_CONTENTS;
@@ -232,8 +236,11 @@ public class NamespaceClaimController extends Thread {
 				}else {
 					body = body.replaceAll("%%FAIL_REASON%%", "Unknown Reason");
 				}
+				imgPath = "/hypercloud-operator/src/main/java/k8s/example/client/img/trial-disapproval.png";
+				imgCid = "trial-disapproval";
+
 			}
-			Util.sendMail(user.getUserInfo().getEmail(), subject, body);
+			Util.sendMail(user.getUserInfo().getEmail(), subject, body, imgPath, imgCid);
 		} catch (Throwable e) {
 			if (e.getMessage().contains("Not Found") || e.getMessage().contains("404")) {
 				logger.info("This Trial NSC was made by Unknown user or System admin, Will not Send Email");

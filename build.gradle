@@ -63,7 +63,7 @@ task makeJar(type: Jar) {
     archiveName "hypercloud4-operator.jar"
     destinationDir = file("build/hypercloud4-operator/lib")
 
-    from(sourceSets.main.output.classesDirs) {
+	from(sourceSets.main.output.classesDirs) {
         include("**")
     }
     manifest {
