@@ -226,7 +226,7 @@ public class NamespaceClaimController extends Thread {
 				body = body.replaceAll("%%TRIAL_START_TIME%%", createTime.toDateTime().toString("yyyy-MM-dd"));
 				body = body.replaceAll("%%TRIAL_END_TIME%%", createTime.plusDays(30).toDateTime().toString("yyyy-MM-dd"));
 //				body = body.replaceAll("%%SUCCESS_REASON%%", claim.getStatus().getReason());
-				imgPath = "/hypercloud-operator/src/main/java/k8s/example/client/img/trial-approval.png";
+				imgPath = "/home/tmax/hypercloud4-operator/_html/img/trial-approval.png";
 				imgCid = "trial-approval";
 			}else {
 				subject = " HyperCloud 서비스 신청 승인 거절  ";
@@ -236,7 +236,7 @@ public class NamespaceClaimController extends Thread {
 				}else {
 					body = body.replaceAll("%%FAIL_REASON%%", "Unknown Reason");
 				}
-				imgPath = "/hypercloud-operator/src/main/java/k8s/example/client/img/trial-disapproval.png";
+				imgPath = "/home/tmax/hypercloud4-operator/_html/img/trial-disapproval.png";
 				imgCid = "trial-disapproval";
 
 			}

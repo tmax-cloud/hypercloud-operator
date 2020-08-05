@@ -85,7 +85,7 @@ public class EmailHandler extends GeneralHandler {
 			// Send E-mail to User
 			String subject = "[ 인증번호 : " + verifyCode + " ] 이메일을 인증해 주세요";
 			String content = Constants.VERIFY_MAIL_CONTENTS.replaceAll("%%verifyNumber%%", verifyCode);
-			Util.sendMail(userInDO.getEmail(), subject, content, "/hypercloud-operator/src/main/java/k8s/example/client/img/index.svg", "index");
+			Util.sendMail(userInDO.getEmail(), subject, content, "/home/tmax/hypercloud4-operator/_html/img/index.svg", "index");
 			
 			status = Status.CREATED;
 			outDO = "User Email Authenticate Code Send Success";

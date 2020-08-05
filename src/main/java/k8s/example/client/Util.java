@@ -307,7 +307,7 @@ public class Util {
 							String subject = " 신청해주신 Trial NameSpace [ " + nameSpace.getMetadata().getName() + " ] 만료 안내 ";
 							String body = Constants.TRIAL_TIME_OUT_CONTENTS;
 							body = body.replaceAll("%%TRIAL_END_TIME%%", deleteTime);
-							Util.sendMail(email, subject, body, "/hypercloud-operator/src/main/java/k8s/example/client/img/service-timeout.png", "service-timeout");
+							Util.sendMail(email, subject, body, "/home/tmax/hypercloud4-operator/_html/img/service-timeout.png", "service-timeout");
 						} else {
 							logger.info(" [Trial Timer] Paid NameSpace, Nothing to do ");
 						}
