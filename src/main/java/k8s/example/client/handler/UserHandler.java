@@ -97,7 +97,7 @@ public class UserHandler extends GeneralHandler {
     		K8sApiCaller.createClusterRoleBindingForNewUser(userInDO);
     		
     		// ingress-nginx-shared namespace read role
-    		K8sApiCaller.createRoleBindingForIngressNginx(userInDO);
+    		K8sApiCaller.createRoleBindingForIngressNginx(userInDO.getId());
 
 			// Call UserCreate to ProAuth
 			OAuthApiCaller.createUser(userInDO);

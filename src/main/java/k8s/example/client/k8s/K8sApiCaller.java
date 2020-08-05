@@ -2,6 +2,7 @@ package k8s.example.client.k8s;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -1242,7 +1243,9 @@ public class K8sApiCaller {
 				}
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			StringWriter sw = new StringWriter();
+			e.printStackTrace(new PrintWriter(sw));
+			logger.error(sw.toString());
 			throw e;
 		}
 	}
@@ -1403,7 +1406,9 @@ public class K8sApiCaller {
 				}
 			}
 		}catch (Exception e) {
-			e.printStackTrace();
+			StringWriter sw = new StringWriter();
+			e.printStackTrace(new PrintWriter(sw));
+			logger.error(sw.toString());
 			throw e;
 		}
 	}
@@ -1610,7 +1615,9 @@ public class K8sApiCaller {
 				throw e;
 			}
 		}catch (Exception e) {
-			e.printStackTrace();
+			StringWriter sw = new StringWriter();
+			e.printStackTrace(new PrintWriter(sw));
+			logger.error(sw.toString());
 			throw e;
 		}
 	}
@@ -1650,8 +1657,6 @@ public class K8sApiCaller {
 			}
 
 			if(serviceType.equals(RegistryService.SVC_TYPE_INGRESS)) {
-
-
 				registryDomain = registryName + "." + ingressDomain;
 				logger.debug("[registryDomain]:" + registryDomain);
 			}
@@ -1736,7 +1741,9 @@ public class K8sApiCaller {
 			}
 
 		}catch (Exception e) {
-			e.printStackTrace();
+			StringWriter sw = new StringWriter();
+			e.printStackTrace(new PrintWriter(sw));
+			logger.error(sw.toString());
 			throw e;
 		}
 	}
@@ -1752,8 +1759,30 @@ public class K8sApiCaller {
 
 			logger.info(namespace + "/" + registryName + " registry's tls secret is creating...");
 			
-			tlsSecrets.put(Constants.K8S_SECRET_TLS_CRT, readFile(registryDir + "/" + Constants.CERT_CRT_FILE));
-			tlsSecrets.put(Constants.K8S_SECRET_TLS_KEY, readFile(registryDir + "/" + Constants.CERT_KEY_FILE));
+			int MAX_RETRY_CNT=30;
+			int tryCount = 0;
+			
+			for(; tryCount<MAX_RETRY_CNT; tryCount++) {
+				try {
+					tlsSecrets.put(Constants.K8S_SECRET_TLS_CRT, readFile(registryDir + "/" + Constants.CERT_CRT_FILE));
+					tlsSecrets.put(Constants.K8S_SECRET_TLS_KEY, readFile(registryDir + "/" + Constants.CERT_KEY_FILE));
+					break;
+				} catch(FileNotFoundException e) {
+					logger.debug("[retry " + (tryCount+1) + "/" + MAX_RETRY_CNT + "]" + e.getMessage());
+					Thread.sleep(1000);
+				}
+			}
+			
+			if (tryCount == MAX_RETRY_CNT) {
+				try {
+					patchRegistryStatus(registry, RegistryCondition.Condition.SECRET_TLS, 
+							RegistryStatus.Status.FALSE.getStatus(), "Can't read cert files.", "CreateTlsSecretFailed");
+				} catch (ApiException e2) {
+					logger.error(e2.getResponseBody());
+					throw e2;
+				}
+				throw new Exception("Can't read cert files.");
+			}
 			tlsLabels.put("secret", "tls");
 			
 			List<V1OwnerReference> ownerRefs = new ArrayList<>();
@@ -1784,7 +1813,9 @@ public class K8sApiCaller {
 				throw e;
 			}
 		}catch (Exception e) {
-			e.printStackTrace();
+			StringWriter sw = new StringWriter();
+			e.printStackTrace(new PrintWriter(sw));
+			logger.error(sw.toString());
 			throw e;
 		}
 	}
@@ -1825,7 +1856,18 @@ public class K8sApiCaller {
 			logger.debug("apps: " + metadata.getName());
 			metadata.setLabels(ingressLabels);
 			
-			annotations.put("kubernetes.io/ingress.class", "nginx"); 
+			if(registryService.getIngress().getIngressClass() != null) {
+				annotations.put("kubernetes.io/ingress.class", registryService.getIngress().getIngressClass()); 
+			} else {
+				try {
+					patchRegistryStatus(registry, RegistryCondition.Condition.INGRESS, 
+							RegistryStatus.Status.FALSE.getStatus(), "ingressClass field is null", "CreateIngressFailed");
+				} catch (ApiException e2) {
+					logger.error(e2.getResponseBody());
+					throw e2;
+				}
+				throw new Exception("ingressClass field is null");
+			}
 			annotations.put("nginx.ingress.kubernetes.io/proxy-connect-timeout", "3600");
 			annotations.put("nginx.ingress.kubernetes.io/proxy-read-timeout", "3600");
 			annotations.put("nginx.ingress.kubernetes.io/ssl-redirect", "true");
@@ -1895,7 +1937,9 @@ public class K8sApiCaller {
 				}
 			}
 		}catch (Exception e) {
-			e.printStackTrace();
+			StringWriter sw = new StringWriter();
+			e.printStackTrace(new PrintWriter(sw));
+			logger.error(sw.toString());
 			throw e;
 		}
 	}
@@ -2006,7 +2050,9 @@ public class K8sApiCaller {
 				}
 			}
 		}catch (Exception e) {
-			e.printStackTrace();
+			StringWriter sw = new StringWriter();
+			e.printStackTrace(new PrintWriter(sw));
+			logger.error(sw.toString());
 			throw e;
 		}
 		return cm;
@@ -2408,7 +2454,9 @@ public class K8sApiCaller {
 				throw e;
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			StringWriter sw = new StringWriter();
+			e.printStackTrace(new PrintWriter(sw));
+			logger.error(sw.toString());
 			throw e;
 		}
 	}
@@ -2892,22 +2940,26 @@ public class K8sApiCaller {
 						String namespace = registry.getMetadata().getNamespace();
 						Integer ingressPort = null;
 						Integer lbPort = null;
-						
 						if(registry.getSpec().getService().getIngress() != null) {
 							if(registry.getSpec().getService().getIngress().getPort() < 1
 									|| registry.getSpec().getService().getIngress().getPort() > 65535)
 								ingressPort = registry.getSpec().getService().getIngress().getPort();
-								patchArray.add(Util.makePatchJsonObject("replace", "/spec/service/ingress/port", 443));
+							patchArray.add(Util.makePatchJsonObject("replace", "/spec/service/ingress/port", 443));
+							
+							// Patch: 4.1.0.46- => 4.1.0.47+
+							if (registry.getSpec().getService().getIngress().getIngressClass() == null) {
+								patchArray.add(Util.makePatchJsonObject("add", "/spec/service/ingress/ingressClass", "nginx"));
+							}
 						}
 
 						if(registry.getSpec().getService().getLoadBalancer() != null) {
 							if(registry.getSpec().getService().getLoadBalancer().getPort() < 1
 									|| registry.getSpec().getService().getLoadBalancer().getPort() > 65535)
 								lbPort = registry.getSpec().getService().getLoadBalancer().getPort();
-								patchArray.add(Util.makePatchJsonObject("replace", "/spec/service/loadBalancer/port", 443));
+							patchArray.add(Util.makePatchJsonObject("replace", "/spec/service/loadBalancer/port", 443));
 						}
 						
-						if(ingressPort == null && lbPort == null) 
+						if(patchArray.size() == 0) 
 							continue;
 						
 						logger.debug(registry.getMetadata().getName() + "/" + registry.getMetadata().getNamespace()
@@ -3815,7 +3867,7 @@ public class K8sApiCaller {
 					break;
 				}
 
-				api.deleteNamespacedPod(podName, namespace, null, null, null, null, null, null);
+				api.deleteNamespacedPod(podName, namespace, null, null, null, null, null, new V1DeleteOptions());
 
 			} catch (ApiException e) {
 				logger.error(e.getResponseBody());
@@ -4865,7 +4917,9 @@ public class K8sApiCaller {
 			
 			} catch (ApiException e) {
 				logger.error(e.getResponseBody());
-				e.printStackTrace();
+				StringWriter sw = new StringWriter();
+				e.printStackTrace(new PrintWriter(sw));
+				logger.error(sw.toString());
 				throw e;
 			}
 		}
@@ -5893,12 +5947,12 @@ public class K8sApiCaller {
 		}
 	}
 	
-	public static void createRoleBindingForIngressNginx(User userInDO) throws ApiException {
+	public static void createRoleBindingForIngressNginx(String userId) throws ApiException {
 		logger.debug("[K8S ApiCaller] Create roleBinding for New User Start");
 
 		V1RoleBinding roleBinding = new V1RoleBinding();
 		V1ObjectMeta roleBindingMeta = new V1ObjectMeta();
-		roleBindingMeta.setName(Constants.INGRESS_NGINX_SHARED_READ_ROLE_BINDING);
+		roleBindingMeta.setName(Constants.INGRESS_NGINX_SHARED_READ_ROLE_BINDING + "-" + userId);
 		roleBindingMeta.setNamespace(Constants.INGRESS_NGINX_SHARED_NAMESPACE);
 		roleBinding.setMetadata(roleBindingMeta);
 
@@ -5913,7 +5967,7 @@ public class K8sApiCaller {
 		V1Subject subject = new V1Subject();
 		subject.setApiGroup(Constants.RBAC_API_GROUP);
 		subject.setKind("User");
-		subject.setName(userInDO.getId());
+		subject.setName(userId);
 		roleBinding.addSubjectsItem(subject);
 
 		try {
