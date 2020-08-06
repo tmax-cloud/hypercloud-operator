@@ -38,8 +38,8 @@ public class NameSpaceHandler extends GeneralHandler {
 		V1NamespaceList nsList = null;
 		String outDO = null; 
 		String accessToken = null;
-		String userId = SimpleUtil.getQueryParameter( session.getParameters(), Constants.QUERY_PARAMETER_USER_ID );
-
+//		String userId = SimpleUtil.getQueryParameter( session.getParameters(), Constants.QUERY_PARAMETER_USER_ID );
+		String userId = "admin-tmax.co.kr";
 		// if limit exists
 		String limit = SimpleUtil.getQueryParameter( session.getParameters(), Constants.QUERY_PARAMETER_LIMIT );
 		
