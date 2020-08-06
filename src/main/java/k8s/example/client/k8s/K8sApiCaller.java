@@ -5906,6 +5906,13 @@ public class K8sApiCaller {
 		rule.addVerbsItem("get");		
 		rule.addVerbsItem("list");		
 		rules.add(rule);
+		
+		// CMP Rule
+		rule = new V1PolicyRule();
+		rule.addApiGroupsItem(Constants.UI_CUSTOM_OBJECT_GROUP);
+		rule.addResourcesItem("clustermenupolicies");
+		rule.addVerbsItem("get");		
+		rules.add(rule);
 
 		clusterRole.setRules(rules);
 
@@ -5973,8 +5980,12 @@ public class K8sApiCaller {
 		try {
 			rbacApi.createNamespacedRoleBinding(Constants.INGRESS_NGINX_SHARED_NAMESPACE, roleBinding, null, null, null);
 		} catch (ApiException e) {
-			logger.error(e.getResponseBody());
-			throw e;
+			if(e.getResponseBody().contains("Not Found") || e.getResponseBody().contains("404")) {
+				logger.info(Constants.INGRESS_NGINX_SHARED_NAMESPACE + " does not exist, Do nothing ");
+			} else {
+				logger.error(e.getResponseBody());
+				throw e;
+			}
 		}
 	}
 

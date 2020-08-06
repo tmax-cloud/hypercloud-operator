@@ -14,6 +14,7 @@ public class Constants {
 	public static final String REGISTRY_NAMESPACE = "hypercloud4-system";
 	public static final String PREFIX_RESOURCE_VERSION_CONFIGMAP = "resourceversion-";
 
+	public static final String UI_CUSTOM_OBJECT_GROUP = "ui.tmax.io";
 	public static final String CUSTOM_OBJECT_GROUP = "tmax.io";
 	public static final String CUSTOM_OBJECT_VERSION = "v1";
 	public static final String CUSTOM_OBJECT_PLURAL_USER = "users";
