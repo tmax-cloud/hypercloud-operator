@@ -6068,21 +6068,8 @@ public class K8sApiCaller {
 		try {
 			// 1. Get UserGroup List if Exists
 			logger.debug(" userId :" + userId);
-			UserCR user = getUser(userId);
-			Map< String, String > userLabel = user.getMetadata().getLabels();
-			if (userLabel != null) {
-				Iterator<String> iter = userLabel.keySet().iterator();
-				while (iter.hasNext()) {
-					String key = iter.next();
-					logger.debug(" User label key " + key);
-
-					if( key.startsWith("group-")) {
-						if( userGroupList == null ) userGroupList = new ArrayList<>();
-						logger.info(" userGroup Name " + key.substring(6));
-						userGroupList.add(key.substring(6));
-					}
-				}
-			}					
+			
+			// TODO : keycloak에서의 user Group 고려 추가해야함
 			// 2. List of ClusterRoleBinding
 			crbList = rbacApi.listClusterRoleBinding("true", false, null, null, null, 1000, null, 60, false);
 			for (V1ClusterRoleBinding item : crbList.getItems()) {
