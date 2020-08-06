@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import io.kubernetes.client.openapi.models.V1Namespace;
 import io.kubernetes.client.openapi.models.V1NamespaceList;
 import k8s.example.client.audit.AuditController;
-import k8s.example.client.handler.UserDeleteJob;
 import k8s.example.client.k8s.K8sApiCaller;
 import k8s.example.client.metering.MeteringJob;
 
@@ -30,10 +29,6 @@ public class Main {
 			// Start Metering
 			logger.info("[Main] Start Metering per 30 mins");
 			startMeteringTimer();
-			
-			// Start UserDelete
-			logger.info("[Main] Start User Delete per Week");
-			startUserDeleteTimer();
 
 			// Init K8S Client
 			logger.info("[Main] Init K8S Client");
@@ -81,21 +76,6 @@ public class Main {
 				.withIdentity( "MeteringCronTrigger" )
 				.withSchedule(
 				CronScheduleBuilder.cronSchedule( Constants.METERING_CRON_EXPRESSION ))
-				.build();
-
-		Scheduler sch = new StdSchedulerFactory().getScheduler();
-		sch.start(); sch.scheduleJob( job, cronTrigger );
-	}
-	
-	private static void startUserDeleteTimer() throws SchedulerException {
-		JobDetail job = JobBuilder.newJob( UserDeleteJob.class )
-				.withIdentity( "UserDeleteJob" ).build();
-
-		CronTrigger cronTrigger = TriggerBuilder
-				.newTrigger()
-				.withIdentity( "UserDeleteCronTrigger" )
-				.withSchedule(
-				CronScheduleBuilder.cronSchedule( Constants.USER_DELETE_CRON_EXPRESSION ))
 				.build();
 
 		Scheduler sch = new StdSchedulerFactory().getScheduler();

@@ -247,8 +247,6 @@ public class K8sApiCaller {
 				
 		// Update ResourceVersion
 		logger.info("Update ResourceVersion");
-		long userLatestResourceVersion = getLatestResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_USER, false);
-		logger.info("User Latest resource version: " + userLatestResourceVersion);
 		long registryLatestResourceVersion = getLatestResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, true);
 		logger.info("Registry Latest resource version: " + registryLatestResourceVersion);
 		long imageLatestResourceVersion = getLatestResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_IMAGE, true);
@@ -274,17 +272,6 @@ public class K8sApiCaller {
 
 		long ccLatestResourceVersion = 0;
 		logger.info("CapiCluster Latest resource version: " + ccLatestResourceVersion);
-
-		
-		// Start user watch
-		logger.info("Start user watcher");
-		UserWatcher userWatcher = new UserWatcher(k8sClient, customObjectApi, null);
-		userWatcher.start();
-		
-		// Start userDelete watch
-		logger.info("Start userDelete watcher");
-		UserDeleteWatcher userDeleteWatcher = new UserDeleteWatcher(k8sClient, customObjectApi, null);
-		userDeleteWatcher.start();
 
 		// Start registry watch
 		logger.info("Start registry watcher");
@@ -382,25 +369,6 @@ public class K8sApiCaller {
 
 		while (true) { // Infinity Loop for keep alive Main Thread
 			try {
-				if (!userWatcher.isAlive()) {
-					String userLatestResourceVersionStr = UserWatcher.getLatestResourceVersion();
-					logger.info("User watcher is not alive. Restart user watcher! (Latest resource version: "
-							+ userLatestResourceVersionStr + ")");
-					userWatcher.interrupt();
-					userWatcher = new UserWatcher(k8sClient, customObjectApi, userLatestResourceVersionStr);
-					userWatcher.start();
-				}
-
-				if (!userDeleteWatcher.isAlive()) {
-					String userLatestResourceVersionStr = UserWatcher.getLatestResourceVersion();
-					logger.info(
-							"User Delete watcher is not alive. Restart user delete watcher! (Latest resource version: "
-									+ userLatestResourceVersionStr + ")");
-					userDeleteWatcher.interrupt();
-					userDeleteWatcher = new UserDeleteWatcher(k8sClient, customObjectApi, userLatestResourceVersionStr);
-					userDeleteWatcher.start();
-				}
-
 				if (!registryWatcher.isAlive()) {
 					String registryLatestResourceVersionStr = RegistryWatcher.getLatestResourceVersion();
 					logger.info("Registry watcher is not alive. Restart registry watcher! (Latest resource version: "
@@ -5854,29 +5822,23 @@ public class K8sApiCaller {
 		}
 	}
 
-	public static void createClusterRoleForNewUser(User userInDO) throws ApiException {
-		logger.debug("[K8S ApiCaller] Create Temporary ClusterRole for New User Start");
+	public static void createClusterRoleForNewUser(String userId) throws ApiException {
+		logger.info("[K8S ApiCaller] Create Temporary ClusterRole for New User Start");
 
 		V1ClusterRole clusterRole = new V1ClusterRole();
 		V1ObjectMeta clusterRoleMeta = new V1ObjectMeta();
-		clusterRoleMeta.setName(userInDO.getId());
+		clusterRoleMeta.setName(userId);
 		clusterRole.setMetadata(clusterRoleMeta);
 		List<V1PolicyRule> rules = new ArrayList<>();
 
 		V1PolicyRule rule = new V1PolicyRule();
-		// User Rule
-		rule.addApiGroupsItem(Constants.CUSTOM_OBJECT_GROUP);
-		rule.addResourcesItem("users");
-		rule.addResourceNamesItem(userInDO.getId());
-		rule.addVerbsItem("*");
-		rules.add(rule);
 
 		// ClusterRole & ClusterRoleBinding Rule
 		rule = new V1PolicyRule();
 		rule.addApiGroupsItem(Constants.RBAC_API_GROUP);
 		rule.addResourcesItem("clusterroles");
 		rule.addResourcesItem("clusterrolebindings");
-		rule.addResourceNamesItem(userInDO.getId());
+		rule.addResourceNamesItem(userId);
 		rule.addVerbsItem("*");
 		rules.add(rule);
 		
@@ -5906,6 +5868,13 @@ public class K8sApiCaller {
 		rule.addVerbsItem("get");		
 		rule.addVerbsItem("list");		
 		rules.add(rule);
+		
+		// CMP Rule
+		rule = new V1PolicyRule();
+		rule.addApiGroupsItem(Constants.UI_CUSTOM_OBJECT_GROUP);
+		rule.addResourcesItem("clustermenupolicies");
+		rule.addVerbsItem("get");		
+		rules.add(rule);
 
 		clusterRole.setRules(rules);
 
@@ -5917,26 +5886,26 @@ public class K8sApiCaller {
 		}
 	}
 
-	public static void createClusterRoleBindingForNewUser(User userInDO) throws ApiException {
-		logger.debug("[K8S ApiCaller] Create Temporary ClusterRoleBinding for New User Start");
+	public static void createClusterRoleBindingForNewUser(String userId) throws ApiException {
+		logger.info("[K8S ApiCaller] Create Temporary ClusterRoleBinding for New User Start");
 
 		V1ClusterRoleBinding clusterRoleBinding = new V1ClusterRoleBinding();
 		V1ObjectMeta clusterRoleBindingMeta = new V1ObjectMeta();
-		clusterRoleBindingMeta.setName(userInDO.getId());
+		clusterRoleBindingMeta.setName(userId);
 		clusterRoleBinding.setMetadata(clusterRoleBindingMeta);
 
 		// RoleRef
 		V1RoleRef roleRef = new V1RoleRef();
 		roleRef.setApiGroup(Constants.RBAC_API_GROUP);
 		roleRef.setKind("ClusterRole");
-		roleRef.setName(userInDO.getId());
+		roleRef.setName(userId);
 		clusterRoleBinding.setRoleRef(roleRef);
 
 		// subject
 		V1Subject subject = new V1Subject();
 		subject.setApiGroup(Constants.RBAC_API_GROUP);
 		subject.setKind("User");
-		subject.setName(userInDO.getId());
+		subject.setName(userId);
 		clusterRoleBinding.addSubjectsItem(subject);
 
 		try {
@@ -5948,7 +5917,7 @@ public class K8sApiCaller {
 	}
 	
 	public static void createRoleBindingForIngressNginx(String userId) throws ApiException {
-		logger.debug("[K8S ApiCaller] Create roleBinding for New User Start");
+		logger.info("[K8S ApiCaller] Create roleBinding for New User Start");
 
 		V1RoleBinding roleBinding = new V1RoleBinding();
 		V1ObjectMeta roleBindingMeta = new V1ObjectMeta();
@@ -5973,8 +5942,12 @@ public class K8sApiCaller {
 		try {
 			rbacApi.createNamespacedRoleBinding(Constants.INGRESS_NGINX_SHARED_NAMESPACE, roleBinding, null, null, null);
 		} catch (ApiException e) {
-			logger.error(e.getResponseBody());
-			throw e;
+			if(e.getResponseBody().contains("Not Found") || e.getResponseBody().contains("404")) {
+				logger.info(Constants.INGRESS_NGINX_SHARED_NAMESPACE + " does not exist, Do nothing ");
+			} else {
+				logger.error(e.getResponseBody());
+				throw e;
+			}
 		}
 	}
 
