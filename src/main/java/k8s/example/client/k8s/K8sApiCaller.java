@@ -380,6 +380,11 @@ public class K8sApiCaller {
 		CapiClusterController ccOperator = new CapiClusterController(k8sClient, customObjectApi, api, 0);
 		ccOperator.start();
 
+		// start FederatedService Controller
+		logger.info("Start FederatedService Controller");
+		FederatedServiceController fsOperator = new FederatedServiceController(k8sClient, customObjectApi, 0);
+		fsOperator.start();
+
 		while (true) { // Infinity Loop for keep alive Main Thread
 			try {
 				if (!userWatcher.isAlive()) {
@@ -601,6 +606,13 @@ public class K8sApiCaller {
 					ccOperator.interrupt();
 					ccOperator = new CapiClusterController(k8sClient, customObjectApi, api, ccLatestResourceVersion);
 					ccOperator.start();
+				}
+
+				if (!fsOperator.isAlive()) {
+					logger.info("FederatedService Controller is not Alive. Restart Controller! (Latest Resource Version: 0)");
+					fsOperator.interrupt();
+					fsOperator = new FederatedServiceController(k8sClient, customObjectApi, 0);
+					fsOperator.start();
 				}
 			} catch (Exception e) {
 				StringWriter sw = new StringWriter();
