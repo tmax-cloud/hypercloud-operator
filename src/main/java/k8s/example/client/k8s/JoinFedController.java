@@ -39,9 +39,11 @@ import k8s.example.client.Main;
 import k8s.example.client.models.KubeFedCluster;
 import k8s.example.client.models.KubeFedCluster.KubeFedClusterSpec;
 import k8s.example.client.models.KubeFedCluster.SecretRef;
+import k8s.example.client.models.StateCheckInfo;
 
 public class JoinFedController extends Thread {
 	private Watch<V1Secret> jfController;
+	private ApiClient client;
 	private CoreV1Api coreApi;
 	private CoreV1Api coreApiMember;
 	private CustomObjectsApi api = null;
@@ -60,12 +62,15 @@ public class JoinFedController extends Thread {
 	private static String FED_CONTOLLER = "kubefed-controller-manager:";
 	private static String HYPERCLOUD_OPERATOR = "-hypercloud4-operator";
 
+	StateCheckInfo sci = new StateCheckInfo();
+	
 	JoinFedController(ApiClient client, CustomObjectsApi api, CoreV1Api coreApi, long resourceVersion)
 			throws Exception {
 		jfController = Watch.createWatch(client, coreApi.listSecretForAllNamespacesCall(null, null, null, null, null, null,  null, null, Boolean.TRUE, null),
 				new TypeToken<Watch.Response<V1Secret>>() {
 				}.getType());
 		this.api = api;
+		this.client = client;
 		this.coreApi = coreApi;
 		latestResourceVersion = resourceVersion;
 		setEnv();
@@ -74,6 +79,7 @@ public class JoinFedController extends Thread {
 	public void run() {
 		try {
 			while (true) {
+				sci.checkThreadState();
 				jfController.forEach(response -> {
 					try {
 						if (Thread.interrupted()) {
@@ -105,17 +111,17 @@ public class JoinFedController extends Thread {
 									replaceCCAnnotate(secret.getMetadata().getName(), "detached");
 								}
 							}
-						}
-						
-//						logger.info("[JoinFed controller] Save latestHandledResourceVersion of JoinFed controller [" + response.object.getMetadata().getName() + "]");
-//						K8sApiCaller.updateLatestHandledResourceVersion(Constants.PLURAL_JOIN_FED, response.object.getMetadata().getResourceVersion());
-						
+						}						
 					} catch (Exception e) {
 						printException(e, "JoinFed handle");
 					} catch (Throwable e) {
 						e.printStackTrace();
 					}
 				});
+				logger.info("=============== JoinFed 'For Each' END ===============");
+                jfController = Watch.createWatch(client, coreApi.listSecretForAllNamespacesCall(null, null, null, null, null, null,  null, null, Boolean.TRUE, null),
+                                new TypeToken<Watch.Response<V1Secret>>() {
+                                }.getType());
 			}
 		} catch (Exception e) {
 			printException(e, "JoinFed controller");

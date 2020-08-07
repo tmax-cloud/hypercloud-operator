@@ -92,7 +92,8 @@ public class OtpHandler extends GeneralHandler {
 				        			// Send E-mail to User
 				        			String subject = "인증번호 : " + otpCode;
 				        			String content = Constants.OTP_VERIFICATION_CONTENTS.replaceAll("%%otpCode%%", otpCode);
-				        			Util.sendMail(user.getUserInfo().getEmail(), subject, content); 
+				        			Util.sendMail(user.getUserInfo().getEmail(), subject, content, 
+				        					"/home/tmax/hypercloud4-operator/_html/img/email-authentication.svg", "email-authentication"); 
 				        			otpEnable = true;
 				    			} else {
 					    			status = Status.OK;			    			

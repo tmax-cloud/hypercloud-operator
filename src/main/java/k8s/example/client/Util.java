@@ -12,6 +12,9 @@ import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import javax.activation.DataHandler;
+import javax.activation.DataSource;
+import javax.activation.FileDataSource;
 import javax.mail.BodyPart;
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -122,7 +125,7 @@ public class Util {
         return numStr;
 	}
 	 
-	 public static void sendMail( String recipient, String subject, String body ) throws Throwable {	
+	 public static void sendMail( String recipient, String subject, String body, String imgPath, String imgCid ) throws Throwable {	
 		logger.info( " Send Mail to User [ " + recipient + "] Start");
 		String host = "mail.tmax.co.kr";
 		int port = 25;
@@ -166,39 +169,25 @@ public class Util {
 //			if( content != null) body = body + " \n Alter PassWord\n" + content; //TODO
 //		}
 		
-		// Make Body
+		// Make Body ( text/html + img )
+		MimeMultipart multiPart = new MimeMultipart();
+		
 		logger.debug( " Mail Body : "  + body );
-		mimeMessage.setContent(body,"text/html; charset="+charSetUtf);
-		mimeMessage.setHeader("Content-Type", "text/html; charset="+charSetUtf);
+		BodyPart messageBodyPart = new MimeBodyPart();
+		messageBodyPart.setContent(body, "text/html; charset="+charSetUtf);
+		multiPart.addBodyPart(messageBodyPart);
+
+		BodyPart messageImgPart = new MimeBodyPart();
+		DataSource ds = new FileDataSource(imgPath);
+		messageImgPart.setDataHandler(new DataHandler(ds));
+		messageImgPart.setHeader("Content-Type", "image/svg");
+		messageImgPart.setHeader("Content-ID", "<"+imgCid+">");
+		multiPart.addBodyPart(messageImgPart);
+
+		mimeMessage.setContent(multiPart);
 		
-		/////////////////////////////////////
-//		MimeMultipart multiPart = new MimeMultipart();
-//		multiPart.setSubType("mixed");
-//		
-//		// set html text body.
-//		BodyPart messageBodyPart = new MimeBodyPart();
-//		messageBodyPart.setContent(body, "text/html; charset=UTF-8");
-//		
-//		multiPart.addBodyPart(messageBodyPart);
-//		
-//		// set image.
-////		List<ContextDataObject> imageInfoList = indto.get("imageInfo");
-////		for (ContextDataObject imageInfo : imageInfoList) {
-//		String path = getClass().getClassLoader().getResource(imageInfo.get("value")).toString().substring(5);
-//		logger.info(path);
-//		messageBodyPart = new MimeBodyPart();
-//		DataSource ds = new FileDataSource(path);
-//		messageBodyPart.setDataHandler(new DataHandler(ds));
-//		messageBodyPart.setHeader("Content-Type", "image/png");
-//		messageBodyPart.setHeader("Content-ID", "<" + imageInfo.get("key") + ">");
-//		multiPart.addBodyPart(messageBodyPart);
-//			
-//		
-//		
-//		msg.setContent(multiPart);
-	
-		
-		//////////////////////////////////////
+//		mimeMessage.setContent(body,"text/html; charset="+charSetUtf);
+//		mimeMessage.setHeader("Content-Type", "text/html; charset="+charSetUtf);
 		
 		logger.info( " Ready to Send Mail to " + recipient);
 		try {
@@ -318,7 +307,7 @@ public class Util {
 							String subject = " 신청해주신 Trial NameSpace [ " + nameSpace.getMetadata().getName() + " ] 만료 안내 ";
 							String body = Constants.TRIAL_TIME_OUT_CONTENTS;
 							body = body.replaceAll("%%TRIAL_END_TIME%%", deleteTime);
-							Util.sendMail(email, subject, body);
+							Util.sendMail(email, subject, body, "/home/tmax/hypercloud4-operator/_html/img/service-timeout.png", "service-timeout");
 						} else {
 							logger.info(" [Trial Timer] Paid NameSpace, Nothing to do ");
 						}

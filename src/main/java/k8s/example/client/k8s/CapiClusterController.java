@@ -20,9 +20,11 @@ import io.kubernetes.client.util.Watch;
 import k8s.example.client.Constants;
 import k8s.example.client.Main;
 import k8s.example.client.models.CapiCluster;
+import k8s.example.client.models.StateCheckInfo;
 
 public class CapiClusterController extends Thread {
 	private Watch<CapiCluster> ccController;
+	private ApiClient client;
 	private CoreV1Api coreApi;
 	private CustomObjectsApi api = null;
 
@@ -31,6 +33,8 @@ public class CapiClusterController extends Thread {
 
 	private static String KUBECONFIG = "-kubeconfig";
 
+	StateCheckInfo sci = new StateCheckInfo();
+	
 	CapiClusterController(ApiClient client, CustomObjectsApi api, CoreV1Api coreApi, long ccresourceVersion)
 			throws Exception {
 		ccController = Watch.createWatch(client,
@@ -40,6 +44,7 @@ public class CapiClusterController extends Thread {
 				new TypeToken<Watch.Response<CapiCluster>>() {
 				}.getType());
 		this.api = api;
+		this.client = client;
 		this.coreApi = coreApi;
 		cclatestResourceVersion = ccresourceVersion;
 	}
@@ -47,6 +52,8 @@ public class CapiClusterController extends Thread {
 	public void run() {
 		try {
 			while (true) {
+				sci.checkThreadState();
+				
 				ccController.forEach(response -> {
 					try {
 						if (Thread.interrupted()) {
@@ -82,6 +89,13 @@ public class CapiClusterController extends Thread {
 						e.printStackTrace();
 					}
 				});
+				logger.info("=============== CapiCluster 'For Each' END ===============");
+                ccController = Watch.createWatch(client,
+                                api.listClusterCustomObjectCall(Constants.CAPI_OBJECT_GROUP, Constants.CAPI_OBJECT_VERSION,
+                                                Constants.CAPI_OBJECT_PLURAL_CAPICLUSTER, null, null, null, null, null, null, null,
+                                                Boolean.TRUE, null),
+                                new TypeToken<Watch.Response<CapiCluster>>() {
+                                }.getType());
 			}
 		} catch (Exception e) {
 			printException(e, "CapiCluster Controller");
