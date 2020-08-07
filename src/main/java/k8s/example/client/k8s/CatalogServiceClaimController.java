@@ -130,7 +130,7 @@ public class CatalogServiceClaimController extends Thread {
 				});
 				logger.info("=============== CSC 'For Each' END ===============");
 				cscController = Watch.createWatch(client,
-						api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_CATALOGSERVICECLAIM, null, null, null, null, null, null, null, Boolean.TRUE, null),
+						api.listClusterCustomObjectCall("tmax.io", "v1", Constants.CUSTOM_OBJECT_PLURAL_CATALOGSERVICECLAIM, null, null, null, "handled=f", null, null, null, Boolean.TRUE, null),
 						new TypeToken<Watch.Response<Object>>() {}.getType());
 			}
 		} catch (Exception e) {
