@@ -63,7 +63,7 @@ public class NameSpaceClaimHandler extends GeneralHandler {
 		String labelSelector = SimpleUtil.getQueryParameter( session.getParameters(), Constants.QUERY_PARAMETER_LABEL_SELECTOR );
 		
 		//if contunue exists
-		String _continue = SimpleUtil.getQueryParameter( session.getParameters(), Constants.QUERY_PARAMETER_LABEL_SELECTOR ); // 
+		String _continue = SimpleUtil.getQueryParameter( session.getParameters(), Constants.QUERY_PARAMETER_CONTINUE ); // 
 
 		try {
 			// Read AccessToken from Header
