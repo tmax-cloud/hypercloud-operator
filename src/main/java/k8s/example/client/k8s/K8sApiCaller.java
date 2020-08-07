@@ -6389,7 +6389,7 @@ public class K8sApiCaller {
 					    		}
 							}	
 				    	}
-				    	
+				    	if ( nscItems == null ) possibleNscList.getMetadata().setContinue("wrongLabelorNoResource");  
 					}
 					possibleNscList.setItems(nscItems);
 			    	nscList = possibleNscList;
