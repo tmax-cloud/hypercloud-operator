@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
   - [mod] 메일에 쓰일 html, img 파일 관리 by taegeon_woo
   - [mod] 메일 html 에 포함된 이미지 첨부 파일로 보내는 형식으로 변경 by taegeon_woo
   - [mod] install-guiide 수정 및 9.nginx-controller.yaml 추가 by sukhee_yun
+  - [mod] _yaml_Install/8.default-auth-object-init.yaml 파일에 ingress-nginx-shared-read-clusterrole 추가 by taegeon_woo
   - [mod] 유저 생성시 ingress-nginx-shared namespace read 권한 주기 구현 by taegeon_woo
   - [mod] NamespaceClaim 사용자가 handled=t 라벨을 handled=f 라벨로 임의로 업데이트할때 를 위한 방어로직 추가 by taegeon_woo
   - [mod] NamespaceClaim cli 를 통해 생성할 경우, 유저 정보가 없을때 에러나는 현상 수정 [mod] 다운타임동안에 namespaceClaim 생성하고, 관리자가 상태까지 변경했을 경우, 고려하는 로직 추가 by taegeon_woo
@@ -20,7 +21,6 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 ### CRD yaml
-  - [crd] RegistryCRD 수정(ingressClass 추가) by sukhee_yun
 
 ### Etc
 
