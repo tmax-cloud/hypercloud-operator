@@ -57,11 +57,21 @@ public class Constants {
 	public static final String FED_OBJECT_GROUP = "core.kubefed.io";
 	public static final String FED_OBJECT_VERSION =  "v1beta1";
 	public static final String FED_OBJECT_FEDCLUSTER_PLURAL = "kubefedclusters";
+	public static final String FED_OBJECT_RESOURCE_GROUP = "types.kubefed.io";
+	public static final String FED_OBJECT_RESOURCE_VERSION = "v1beta1";
+	public static final String FED_OBJECT_RESOURCE_SERVICE_PLURAL = "federatedservices";
 
 	//capi
 	public static final String CAPI_OBJECT_GROUP = "cluster.x-k8s.io";
 	public static final String CAPI_OBJECT_VERSION =  "v1alpha3";
 	public static final String CAPI_OBJECT_PLURAL_CAPICLUSTER = "clusters";
+
+	//externalDNS
+	public static final String EXTERNAL_OBJECT_GROUP = "multiclusterdns.kubefed.io";
+	public static final String EXTERNAL_OBJECT_VERSION = "v1alpha1";
+	public static final String EXTERNAL_OBJECT_PLURAL_SERVICEDNSRECORD = "servicednsrecords";
+	public static final String EXTERNAL_OBJECT_KIND_SERVICEDNSRECORD = "ServiceDNSRecord";
+	public static final String EXTERNAL_OBJECT_PLURAL_DOMAIN = "domains";
 
 	//role
 	public static final String INGRESS_NGINX_SHARED_NAMESPACE = "ingress-nginx-shared";
