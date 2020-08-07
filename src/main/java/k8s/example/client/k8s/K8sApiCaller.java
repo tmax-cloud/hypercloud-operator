@@ -1856,18 +1856,20 @@ public class K8sApiCaller {
 			logger.debug("apps: " + metadata.getName());
 			metadata.setLabels(ingressLabels);
 			
-			if(registryService.getIngress().getIngressClass() != null) {
-				annotations.put("kubernetes.io/ingress.class", registryService.getIngress().getIngressClass()); 
-			} else {
-				try {
-					patchRegistryStatus(registry, RegistryCondition.Condition.INGRESS, 
-							RegistryStatus.Status.FALSE.getStatus(), "ingressClass field is null", "CreateIngressFailed");
-				} catch (ApiException e2) {
-					logger.error(e2.getResponseBody());
-					throw e2;
-				}
-				throw new Exception("ingressClass field is null");
-			}
+//			if(registryService.getIngress().getIngressClass() != null) {
+//				annotations.put("kubernetes.io/ingress.class", registryService.getIngress().getIngressClass()); 
+//			} else {
+//				try {
+//					patchRegistryStatus(registry, RegistryCondition.Condition.INGRESS, 
+//							RegistryStatus.Status.FALSE.getStatus(), "ingressClass field is null", "CreateIngressFailed");
+//				} catch (ApiException e2) {
+//					logger.error(e2.getResponseBody());
+//					throw e2;
+//				}
+//				throw new Exception("ingressClass field is null");
+//			}
+			
+			annotations.put("kubernetes.io/ingress.class", RegistryService.REGISTRY_DEFAULT_INGRESS_CLASS);
 			annotations.put("nginx.ingress.kubernetes.io/proxy-connect-timeout", "3600");
 			annotations.put("nginx.ingress.kubernetes.io/proxy-read-timeout", "3600");
 			annotations.put("nginx.ingress.kubernetes.io/ssl-redirect", "true");
@@ -2946,10 +2948,10 @@ public class K8sApiCaller {
 								ingressPort = registry.getSpec().getService().getIngress().getPort();
 							patchArray.add(Util.makePatchJsonObject("replace", "/spec/service/ingress/port", 443));
 							
-							// Patch: 4.1.0.46- => 4.1.0.47+
-							if (registry.getSpec().getService().getIngress().getIngressClass() == null) {
-								patchArray.add(Util.makePatchJsonObject("add", "/spec/service/ingress/ingressClass", "nginx"));
-							}
+//							// Patch: 4.1.0.46- => 4.1.0.47+
+//							if (registry.getSpec().getService().getIngress().getIngressClass() == null) {
+//								patchArray.add(Util.makePatchJsonObject("add", "/spec/service/ingress/ingressClass", "nginx"));
+//							}
 						}
 
 						if(registry.getSpec().getService().getLoadBalancer() != null) {
