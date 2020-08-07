@@ -4,7 +4,6 @@ public class RegistryService {
 	public class Ingress {
 		private int port = 443;
 		private String domainName = null;
-		private String ingressClass = null;
 		
 		public int getPort() {
 			return port;
@@ -17,12 +16,6 @@ public class RegistryService {
 		}
 		public void setDomainName(String domainName) {
 			this.domainName = domainName;
-		}
-		public String getIngressClass() {
-			return ingressClass;
-		}
-		public void setIngressClass(String ingressClass) {
-			this.ingressClass = ingressClass;
 		}
 	}
 	

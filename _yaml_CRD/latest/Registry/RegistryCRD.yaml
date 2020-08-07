@@ -109,9 +109,6 @@ spec:
                     domainName: 
                       type: string
                       description: "(example: 192.168.6.110.nip.io)"
-                    ingressClass:
-                      type: string
-                      description: "(example: nginx-shd)"
                     port:
                       type: integer
                       description: "external port. Generally use 443 port"
