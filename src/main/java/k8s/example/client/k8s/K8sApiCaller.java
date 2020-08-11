@@ -6694,7 +6694,7 @@ public class K8sApiCaller {
 	public static V1NamespaceList listNameSpace() throws Exception {
 		V1NamespaceList nsList = null;
 		try {
-			nsList = api.listNamespace("true", false, null, null, null, 100, null, 60, false);
+			nsList = api.listNamespace("true", false, null, null, null, null, null, 60, false);
 		} catch (ApiException e) {
 			logger.error("Response body: " + e.getResponseBody());
 			e.printStackTrace();
