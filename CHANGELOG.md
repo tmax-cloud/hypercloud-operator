@@ -1,6 +1,26 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.0.48 start -------------------->
+
+## HyperCloudServer_4.1.0.48 (Fri Aug  7 18:03:13 KST 2020)
+
+### Added
+  - [feat] federatedService 생성시, serviceDNSRecord 자동 생성. by mincheol_jeon
+
+### Changed
+  - [mod] nsc listget continue 잘못 들어가던 버그 수정 by taegeon_woo
+  - [mod] catalogServiceClaim handled=f 반영 by jitae_yun
+
+### Fixed
+  - [ims][234738] 일반유저일때, nsc는 존재하는데, 자기가 만든 nsc가 없을때, 403에러 나던 현상 해결 by taegeon_woo
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.0.48 end --------------------->
+
 <!-------------------- v4.1.0.47 start -------------------->
 
 ## HyperCloudServer_4.1.0.47 (Fri Aug  7 13:14:04 KST 2020)
