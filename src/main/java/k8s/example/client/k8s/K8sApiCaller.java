@@ -6139,12 +6139,12 @@ public class K8sApiCaller {
 			logger.info("clusterRoleflag : " + clusterRoleFlag);
 			// Get All NameSpace
 			if (clusterRoleFlag) {
-				nsList = api.listNamespace("true", false, null, null, labelSelector, 100, null, 60, false);
+				nsList = api.listNamespace("true", false, null, null, labelSelector, null, null, 60, false);
 				if(!(nsList.getItems().size() > 0)) {
 					nsList.getMetadata().setContinue("wrongLabelorNoResource");  // for 권한 구분
 				}
 			} else {
-				V1NamespaceList nsListK8S = api.listNamespace("true", false, null, null, labelSelector, 100, null, 60, false);
+				V1NamespaceList nsListK8S = api.listNamespace("true", false, null, null, labelSelector, null, null, 60, false);
 				if(!(nsListK8S.getItems().size() > 0)) {
 					nsList.getMetadata().setContinue("wrongLabelorNoResource");  // for 권한 구분
 				}
