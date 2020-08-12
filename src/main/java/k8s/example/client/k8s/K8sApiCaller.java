@@ -5728,9 +5728,9 @@ public class K8sApiCaller {
 			logger.info("clusterRoleflag : " + clusterRoleFlag);
 			// Get All NameSpace
 			if (clusterRoleFlag) {
-				nsList = api.listNamespace("true", false, null, null, null, 100, null, 60, false);
+				nsList = api.listNamespace("true", false, null, null, null, null, null, 60, false);
 			} else {
-				V1NamespaceList nsListK8S = api.listNamespace("true", false, null, null, null, 100, null, 60, false);
+				V1NamespaceList nsListK8S = api.listNamespace("true", false, null, null, null, null, null, 60, false);
 				// 4. List of RoleBinding
 				if (nsListK8S.getItems() != null) {
 					for (V1Namespace ns : nsListK8S.getItems()) {
