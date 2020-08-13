@@ -281,7 +281,9 @@ public class Util {
 		DateTime deleteTime = createTime.plusDays(30);
 		if ( nsResult.getMetadata().getLabels().get("period") != null ) {
 			deleteTime = createTime.plusDays( Integer.parseInt(nsResult.getMetadata().getLabels().get("period")) * 30 );
+//			deleteTime = createTime.plusMinutes( Integer.parseInt(nsResult.getMetadata().getLabels().get("period"))*2);
 			mailTime = deleteTime.minusDays(7);
+//			mailTime = deleteTime.plusMinutes( Integer.parseInt(nsResult.getMetadata().getLabels().get("period")));
 		}
 
 		Timer timer = new Timer(nsResult.getMetadata().getUid() + "#" + nsResult.getMetadata().getName() + "#" + nsResult.getMetadata().getLabels().get("owner") + "#" + deleteTime.toDateTime().toString("yyyy-MM-dd") );
