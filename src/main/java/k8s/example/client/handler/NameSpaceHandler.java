@@ -168,21 +168,4 @@ public class NameSpaceHandler extends GeneralHandler {
 		return Util.setCors(NanoHTTPD.newFixedLengthResponse(""));
     }
 	
-	private boolean verifyAccessToken (String accessToken, String userId, String tokenId, String issuer) throws Exception {
-		boolean result = false;		
-	
-		// for master token
-		if(accessToken.equalsIgnoreCase(Constants.MASTER_TOKEN)) return true;
-		
-		String tokenName = userId.replace("@", "-") + "-" + tokenId;
-		TokenCR token = K8sApiCaller.getToken(tokenName);
-		
-		accessToken = Util.Crypto.encryptSHA256(accessToken);
-		
-		if(issuer.equals(Constants.ISSUER) &&
-				accessToken.equals(token.getAccessToken()))
-			result = true;		
-		
-		return result;
-	}
 }

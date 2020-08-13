@@ -141,14 +141,10 @@ import io.kubernetes.client.openapi.models.V1VolumeDevice;
 import io.kubernetes.client.openapi.models.V1VolumeMount;
 import io.kubernetes.client.util.Config;
 import k8s.example.client.Constants;
-import k8s.example.client.DataObject.Client;
-import k8s.example.client.DataObject.ClientCR;
 import k8s.example.client.DataObject.RegistryEvent;
 import k8s.example.client.DataObject.TokenCR;
-import k8s.example.client.DataObject.User;
 import k8s.example.client.DataObject.UserCR;
 import k8s.example.client.DataObject.UserSecurityPolicyCR;
-import k8s.example.client.ErrorCode;
 import k8s.example.client.Main;
 import k8s.example.client.StringUtil;
 import k8s.example.client.Util;
@@ -613,34 +609,6 @@ public class K8sApiCaller {
 		return user;
 	}
 
-	public static List<UserCR> listUser() throws Exception {
-		List<UserCR> userList = null;
-		try {
-			Object response = customObjectApi.listClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP,
-					Constants.CUSTOM_OBJECT_VERSION, Constants.CUSTOM_OBJECT_PLURAL_USER, null, null, null, null, null,
-					null, null, Boolean.FALSE);
-
-			JsonObject respJson = (JsonObject) new JsonParser().parse((new Gson()).toJson(response));
-
-			mapper.registerModule(new JodaModule());
-			if (respJson.get("items") != null)
-				userList = mapper.readValue((new Gson()).toJson(respJson.get("items")),
-						new TypeReference<ArrayList<UserCR>>() {
-						});
-
-		} catch (ApiException e) {
-			logger.error("Response body: " + e.getResponseBody());
-			e.printStackTrace();
-			throw e;
-		} catch (Exception e) {
-			logger.error("Exception message: " + e.getMessage());
-			e.printStackTrace();
-			throw e;
-		}
-
-		return userList;
-	}
-	
 	public static NamespaceClaimList listNamespaceClaim( String labelSelector, String _continue ) throws Exception {
 		NamespaceClaimList nscList = null;
 		try {
@@ -670,104 +638,6 @@ public class K8sApiCaller {
 		return nscList;
 	}
 
-	public static TokenCR getToken(String tokenName) throws Exception {
-		TokenCR token = new TokenCR();
-
-		try {
-			Object response = customObjectApi.getClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP,
-					Constants.CUSTOM_OBJECT_VERSION, Constants.CUSTOM_OBJECT_PLURAL_TOKEN, tokenName);
-
-			JsonObject respJson = (JsonObject) new JsonParser().parse((new Gson()).toJson(response));
-			String accessToken = new ObjectMapper().readValue((new Gson()).toJson(respJson.get("accessToken")),
-					String.class);
-			String refreshToken = new ObjectMapper().readValue((new Gson()).toJson(respJson.get("refreshToken")),
-					String.class);
-
-			token.setAccessToken(accessToken);
-			token.setRefreshToken(refreshToken);
-		} catch (ApiException e) {
-			logger.error("Response body: " + e.getResponseBody());
-			e.printStackTrace();
-			throw e;
-		} catch (Exception e) {
-			logger.error("Exception message: " + e.getMessage());
-			e.printStackTrace();
-			throw e;
-		}
-
-		return token;
-	}
-
-	public static Client getClient(Client clientInfo) throws Exception {
-		Client dbClientInfo = new Client();
-
-		try {
-			logger.debug("Name of Client: " + clientInfo.getAppName() + clientInfo.getClientId());
-
-			Object response = customObjectApi.getClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP,
-					Constants.CUSTOM_OBJECT_VERSION, Constants.CUSTOM_OBJECT_PLURAL_CLIENT,
-					clientInfo.getAppName() + clientInfo.getClientId());
-
-			JsonObject respJson = (JsonObject) new JsonParser().parse((new Gson()).toJson(response));
-			JsonObject clientInfoJson = respJson.get("clientInfo").getAsJsonObject();
-
-			dbClientInfo.setAppName(
-					new ObjectMapper().readValue((new Gson()).toJson(clientInfoJson.get("appName")), String.class));
-			dbClientInfo.setClientId(
-					new ObjectMapper().readValue((new Gson()).toJson(clientInfoJson.get("clientId")), String.class));
-			dbClientInfo.setClientSecret(new ObjectMapper()
-					.readValue((new Gson()).toJson(clientInfoJson.get("clientSecret")), String.class));
-			dbClientInfo.setOriginUri(
-					new ObjectMapper().readValue((new Gson()).toJson(clientInfoJson.get("originUri")), String.class));
-			dbClientInfo.setRedirectUri(
-					new ObjectMapper().readValue((new Gson()).toJson(clientInfoJson.get("redirectUri")), String.class));
-
-		} catch (ApiException e) {
-			logger.error("Response body: " + e.getResponseBody());
-			e.printStackTrace();
-			throw e;
-		} catch (Exception e) {
-			logger.error("Exception message: " + e.getMessage());
-			e.printStackTrace();
-			throw e;
-		}
-
-		return dbClientInfo;
-	}
-
-	public static void deleteToken(String tokenName) throws Exception {
-		try {
-			V1DeleteOptions body = new V1DeleteOptions();
-
-			customObjectApi.deleteClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION,
-					Constants.CUSTOM_OBJECT_PLURAL_TOKEN, tokenName, 0, null, null, body);
-		} catch (ApiException e) {
-			logger.error("Response body: " + e.getResponseBody());
-			e.printStackTrace();
-			throw e;
-		} catch (Exception e) {
-			logger.error("Exception message: " + e.getMessage());
-			e.printStackTrace();
-			throw e;
-		}
-	}
-
-	public static void deleteUser(String userName) throws Exception {
-		try {
-			V1DeleteOptions body = new V1DeleteOptions();
-
-			customObjectApi.deleteClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION,
-					Constants.CUSTOM_OBJECT_PLURAL_USER, userName, 0, null, null, body);
-		} catch (ApiException e) {
-			logger.error("Response body: " + e.getResponseBody());
-			e.printStackTrace();
-			throw e;
-		} catch (Exception e) {
-			logger.error("Exception message: " + e.getMessage());
-			e.printStackTrace();
-			throw e;
-		}
-	}
 	
 	public static void deleteUserSecurityPolicy (String uspName) throws Exception {
 		try {
@@ -775,119 +645,6 @@ public class K8sApiCaller {
 
 			customObjectApi.deleteClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION,
 					Constants.CUSTOM_OBJECT_PLURAL_USER_SECURITY_POLICY, uspName, 0, null, null, body);
-		} catch (ApiException e) {
-			logger.error("Response body: " + e.getResponseBody());
-			e.printStackTrace();
-			throw e;
-		} catch (Exception e) {
-			logger.error("Exception message: " + e.getMessage());
-			e.printStackTrace();
-			throw e;
-		}
-	}
-
-	public static void saveClient(Client clientInfo) throws Exception {
-
-		try {
-			ClientCR clientCR = new ClientCR();
-
-			// Set name & label
-			V1ObjectMeta metadata = new V1ObjectMeta();
-			metadata.setName(clientInfo.getAppName() + clientInfo.getClientId());
-//        	Map<String, String> label = new HashMap<>();   있어야할지 판단 안됨
-//        	label.put("client", );
-			clientCR.setMetadata(metadata);
-
-			// Set ClientInfo
-			clientCR.setClientInfo(clientInfo);
-
-			// Make body
-			JSONParser parser = new JSONParser();
-			JSONObject bodyObj = (JSONObject) parser.parse(new Gson().toJson(clientCR));
-
-			customObjectApi.createClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION,
-					Constants.CUSTOM_OBJECT_PLURAL_CLIENT, bodyObj, null);
-		} catch (ApiException e) {
-			logger.error("Response body: " + e.getResponseBody());
-			e.printStackTrace();
-			throw e;
-		} catch (Exception e) {
-			logger.error("Exception message: " + e.getMessage());
-			e.printStackTrace();
-			throw e;
-		}
-	}
-
-	public static void saveToken(String userId, String tokenId, String accessToken, String refreshToken)
-			throws Exception {
-		String tokenName = userId + "-" + tokenId;
-
-		try {
-			TokenCR token = new TokenCR();
-
-			// Set name & label
-			V1ObjectMeta metadata = new V1ObjectMeta();
-			metadata.setName(tokenName);
-			Map<String, String> label = new HashMap<>();
-			label.put("user", userId);
-			metadata.setLabels(label);
-			token.setMetadata(metadata);
-
-			// Set tokens
-			token.setAccessToken(accessToken);
-			token.setRefreshToken(refreshToken);
-
-			// Make body
-			JSONParser parser = new JSONParser();
-			JSONObject bodyObj = (JSONObject) parser.parse(new Gson().toJson(token));
-
-			customObjectApi.createClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION,
-					Constants.CUSTOM_OBJECT_PLURAL_TOKEN, bodyObj, null);
-		} catch (ApiException e) {
-			logger.error("Response body: " + e.getResponseBody());
-			e.printStackTrace();
-			throw e;
-		} catch (Exception e) {
-			logger.error("Exception message: " + e.getMessage());
-			e.printStackTrace();
-			throw e;
-		}
-	}
-
-	public static void updateAccessToken(String tokenName, String accessToken) throws Exception {
-		try {
-			String jsonPatchStr = "[{\"op\":\"replace\",\"path\":\"/accessToken\",\"value\": " + accessToken + "}]";
-			JsonElement jsonPatch = (JsonElement) new JsonParser().parse(jsonPatchStr);
-
-			customObjectApi.patchClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION,
-					Constants.CUSTOM_OBJECT_PLURAL_TOKEN, tokenName, jsonPatch);
-		} catch (ApiException e) {
-			logger.error("Response body: " + e.getResponseBody());
-			e.printStackTrace();
-			throw e;
-		} catch (Exception e) {
-			logger.error("Exception message: " + e.getMessage());
-			e.printStackTrace();
-			throw e;
-		}
-	}
-
-	public static void encryptUserPassword(String userId, String password, UserCR user) throws Exception {
-		try {
-			// Encrypt password
-			String passwordSalt = UUID.randomUUID().toString();
-			String encryptedPassword = Util.Crypto
-					.encryptSHA256(password + userId + passwordSalt);
-
-			// Patch user CR
-			user.getUserInfo().setPassword(encryptedPassword);
-			user.getUserInfo().setPasswordSalt(passwordSalt);
-			Map<String, String> label = user.getMetadata().getLabels();
-			label.put("encrypted", "t");
-			user.getMetadata().setLabels(label);
-
-			customObjectApi.replaceClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION,
-					Constants.CUSTOM_OBJECT_PLURAL_USER, userId, user);
 		} catch (ApiException e) {
 			logger.error("Response body: " + e.getResponseBody());
 			e.printStackTrace();
@@ -6314,112 +6071,6 @@ public class K8sApiCaller {
 			}
 		}
 		return nscList;
-	}
-
-	public static boolean verifyAdmin(String userId) throws ApiException {
-		V1ClusterRoleBindingList crbList = null;
-		boolean isAdmin = false;
-		try {
-			crbList = rbacApi.listClusterRoleBinding("true", false, null, null, null, 1000, null, 60, false);
-			for (V1ClusterRoleBinding item : crbList.getItems()) {
-				List<V1Subject> subjects = item.getSubjects();
-				V1RoleRef roleRef = item.getRoleRef();
-				if (subjects != null) {
-					for (V1Subject subject : subjects) {
-						if (subject.getKind().equalsIgnoreCase("User")) {
-							if (subject.getName().equalsIgnoreCase(userId)) {
-								V1ClusterRole clusterRole = rbacApi.readClusterRole(roleRef.getName(), "true");
-								List<V1PolicyRule> rules = clusterRole.getRules();
-								if (rules != null) {
-									for (V1PolicyRule rule : rules) {
-										if (rule.getApiGroups().contains("*") && rule.getResources().contains("*")
-												&& rule.getVerbs().contains("*")) { // check admin rule
-											isAdmin = true;
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-		} catch (ApiException e) {
-			logger.error(e.getResponseBody());
-			throw e;
-		} catch (Exception e2) {
-			logger.error(e2.getStackTrace().toString());
-		}
-		return isAdmin;
-	}
-
-	public static void createUser(User userInDO) throws Exception {
-		try {
-			UserCR userCR = new UserCR();
-			// Set name & label
-			V1ObjectMeta metadata = new V1ObjectMeta();
-			metadata.setName(userInDO.getId());
-			userCR.setMetadata(metadata);
-
-			// Set userInfo
-			userCR.setUserInfo(userInDO);
-			// Truncate PW
-			userCR.getUserInfo().setPassword(null);
-			userCR.setStatus("active"); 
-
-			// Make body
-			JSONParser parser = new JSONParser();
-			JSONObject bodyObj = (JSONObject) parser.parse(new Gson().toJson(userCR));
-
-			customObjectApi.createClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION,
-					Constants.CUSTOM_OBJECT_PLURAL_USER, bodyObj, null);
-		} catch (ApiException e) {
-			logger.error("Response body: " + e.getResponseBody());
-			e.printStackTrace();
-			throw e;
-		} catch (Exception e) {
-			logger.error("Exception message: " + e.getMessage());
-			e.printStackTrace();
-			throw e;
-		}
-
-	}
-
-	public static List<String> deleteBlockedUser() throws Exception {
-		List<String> deletedUserIdList = null;
-		try {
-			List<UserCR> userList = listUser();
-			if (userList != null) {
-				for (UserCR user : userList) {
-					if (user.getStatus().equalsIgnoreCase(Constants.USER_STATUS_BLOCKED)) {
-						deleteUser(user.getMetadata().getName());
-						logger.debug(" Bloced User [ " + user.getMetadata().getName() + " ] delete Success in k8s");
-
-						deleteClusterRole(user.getMetadata().getName());
-//						logger.info(  " Cluster Role [ " + user.getMetadata().getName() + " ] delete Success in k8s");
-
-						deleteClusterRoleBinding(user.getMetadata().getName());
-//						logger.info(  " Cluster RoleBindning [ " + user.getMetadata().getName() + " ] delete Success in k8s");
-
-						if (deletedUserIdList == null)
-							deletedUserIdList = new ArrayList<>();
-						deletedUserIdList.add(user.getMetadata().getName());
-					}
-				}
-			}
-		} catch (ApiException e) {
-			logger.error("Response body: " + e.getResponseBody());
-			e.printStackTrace();
-			throw e;
-		} catch (Exception e) {
-			logger.error("Exception message: " + e.getMessage());
-			e.printStackTrace();
-			throw e;
-		}
-
-		if (deletedUserIdList == null)
-			logger.debug(" No Blocked User to Delete !!");
-
-		return deletedUserIdList;
 	}
 
 	private static long patchOperatorStartTime(String plural, String name, String namespace, long version) {
