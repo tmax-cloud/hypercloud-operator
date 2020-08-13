@@ -613,51 +613,6 @@ public class K8sApiCaller {
 		return user;
 	}
 
-	public static void updateUserMeta(User userInfo, boolean retryCountFlag) throws Exception {
-		try {
-			List < UserCR > userCRList = null;
-			String jsonPatchStr = "[";
-			
-			if ( !retryCountFlag ) {
-				jsonPatchStr = jsonPatchStr + "{\"op\":\"replace\",\"path\":\"/userInfo/dateOfBirth\",\"value\": \"" + userInfo.getDateOfBirth() + "\"}";
-				if (userInfo.getName() != null) jsonPatchStr = jsonPatchStr + ", {\"op\":\"replace\",\"path\":\"/userInfo/name\",\"value\": " + userInfo.getName() + "}";
-				if (userInfo.getDepartment() != null) jsonPatchStr = jsonPatchStr + ", {\"op\":\"replace\",\"path\":\"/userInfo/department\",\"value\": " + userInfo.getDepartment() + "}";
-				if (userInfo.getPosition() != null) jsonPatchStr = jsonPatchStr + ", {\"op\":\"replace\",\"path\":\"/userInfo/position\",\"value\": " + userInfo.getPosition() + "}";
-				if (userInfo.getPhone() != null) jsonPatchStr = jsonPatchStr + ", {\"op\":\"replace\",\"path\":\"/userInfo/phone\",\"value\": " + userInfo.getPhone() + "}";
-				if (userInfo.getDescription() != null) jsonPatchStr = jsonPatchStr + ", {\"op\":\"replace\",\"path\":\"/userInfo/description\",\"value\": " + userInfo.getDescription() + "}";
-				if (userInfo.getProfile() != null) jsonPatchStr = jsonPatchStr + ", {\"op\":\"replace\",\"path\":\"/userInfo/profile\",\"value\": " + userInfo.getProfile() + "}";
-				if (userInfo.getEmail() != null) {
-		    		userCRList = listUser();
-		    		if ( userCRList != null ) {
-		        		for(UserCR userCR : userCRList) {
-		        			User user = userCR.getUserInfo();
-		        			if ( user.getEmail().equalsIgnoreCase(userInfo.getEmail())) throw new Exception(ErrorCode.USER_MAIL_DUPLICATED);
-		        		}
-		    		}
-					jsonPatchStr = jsonPatchStr + ", {\"op\":\"replace\",\"path\":\"/userInfo/email\",\"value\": " + userInfo.getEmail() + "}";
-				}
-			} else {
-				jsonPatchStr = jsonPatchStr + "{\"op\":\"replace\",\"path\":\"/userInfo/retryCount\",\"value\": " + userInfo.getRetryCount() + "}";
-			}
-			
-			jsonPatchStr = jsonPatchStr + "]";
-			
-			logger.debug("jsonPatchStr: " + jsonPatchStr);	
-			JsonElement jsonPatch = (JsonElement) new JsonParser().parse(jsonPatchStr);
-
-			customObjectApi.patchClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION,
-					Constants.CUSTOM_OBJECT_PLURAL_USER, userInfo.getId(), jsonPatch);
-		} catch (ApiException e) {
-			logger.error("Response body: " + e.getResponseBody());
-			e.printStackTrace();
-			throw e;
-		} catch (Exception e) {
-			logger.error("Exception message: " + e.getMessage());
-			e.printStackTrace();
-			throw e;
-		}
-	}
-
 	public static List<UserCR> listUser() throws Exception {
 		List<UserCR> userList = null;
 		try {
