@@ -46,8 +46,8 @@ public class UserHandler extends GeneralHandler {
     		// ingress-nginx-shared namespace read role
     		K8sApiCaller.createRoleBindingForIngressNginx(userId);
     		
-			status = Status.CREATED;
-			outDO = "User New Role Create Success";
+			status = Status.OK;
+			outDO = Constants.USER_NEW_ROLE_CREATE_SUCCESS;
 
 		} catch (ApiException e) {
 			logger.error("Exception message: " + e.getResponseBody());
@@ -71,6 +71,55 @@ public class UserHandler extends GeneralHandler {
 		}
 
 		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO));
+	}
+	
+	public Response delete(UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
+		logger.info("***** DELETE /User");
+
+		Map<String, String> body = new HashMap<String, String>();
+		try {
+			session.parseBody(body);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		String outDO = null;
+		IStatus status = null;
+		String userId = SimpleUtil.getQueryParameter( session.getParameters(), Constants.QUERY_PARAMETER_USER_ID );
+
+		try {
+    		// Delete Role & RoleBinding 
+			K8sApiCaller.deleteClusterRole(userId);
+			K8sApiCaller.deleteClusterRoleBinding(userId);
+    		
+    		// Delete ingress-nginx-shared namespace read role
+    		K8sApiCaller.deleteRoleBinding(Constants.INGRESS_NGINX_SHARED_NAMESPACE,Constants.INGRESS_NGINX_SHARED_READ_ROLE_BINDING + "-" + userId);
+    		
+			status = Status.OK;
+			outDO = Constants.USER_NEW_ROLE_DELETE_SUCCESS;
+
+		} catch (ApiException e) {
+			logger.error("Exception message: " + e.getResponseBody());
+			e.printStackTrace();
+
+			status = Status.UNAUTHORIZED;
+			outDO = Constants.USER_NEW_ROLE_DELETE_FAILED;
+
+		} catch (Exception e) {
+			logger.error("Exception message: " + e.getMessage());
+
+			e.printStackTrace();
+			status = Status.UNAUTHORIZED;
+			outDO = Constants.USER_NEW_ROLE_DELETE_FAILED;
+
+		} catch (Throwable e) {
+			logger.error("Exception message: " + e.getMessage());
+			e.printStackTrace();
+			status = Status.UNAUTHORIZED;
+			outDO = Constants.USER_NEW_ROLE_DELETE_FAILED;
+		}
+
+		return Util.setCors(NanoHTTPD.newFixedLengthResponse(status, NanoHTTPD.MIME_HTML, outDO));	
 	}
 
 	@Override

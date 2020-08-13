@@ -235,6 +235,8 @@ public class Constants {
 	public static final String OAUTH_URL = "http://proauth-server-service.proauth-system";
 	public static final String USER_NEW_ROLE_CREATE_SUCCESS = "User New Role Create Success";
 	public static final String USER_NEW_ROLE_CREATE_FAILED = "User New Role Create Failed";
+	public static final String USER_NEW_ROLE_DELETE_SUCCESS = "User New Role Delete Success";
+	public static final String USER_NEW_ROLE_DELETE_FAILED = "User New Role Delete Failed";
 	public static final String USER_UPDATE_SUCCESS = "User Update Success";
 	public static final String USER_UPDATE_FAILED = "User Update Failed";
 	public static final String USER_EMAIL_DUPLICATION_VERIFY_SUCCESS = "User Email Duplication verify Success";

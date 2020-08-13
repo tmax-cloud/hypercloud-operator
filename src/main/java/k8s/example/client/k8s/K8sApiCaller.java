@@ -5699,6 +5699,21 @@ public class K8sApiCaller {
 			throw e;
 		}
 	}
+	
+	public static void deleteRole(String name, String namespace) throws Exception {
+		try {
+			V1DeleteOptions body = new V1DeleteOptions();
+			rbacApi.deleteNamespacedRole(name, namespace, null, null, null, null, null, body);
+		} catch (ApiException e) {
+			logger.error("Response body: " + e.getResponseBody());
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			logger.error("Exception message: " + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		}
+	}
 
 	public static void deleteClusterRoleBinding(String name) throws Exception {
 		try {
