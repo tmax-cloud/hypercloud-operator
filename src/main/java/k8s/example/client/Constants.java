@@ -2,8 +2,8 @@ package k8s.example.client;
 
 public class Constants {
 	public static final String ISSUER = "Tmax-ProAuth";
-//	public static final String ACCESS_TOKEN_SECRET_KEY = "Access-Token-Secret-Key";
-	public static final String ACCESS_TOKEN_SECRET_KEY = "ProAuth_Secret";
+	public static final String ACCESS_TOKEN_SECRET_KEY = "Access-Token-Secret-Key";
+//	public static final String ACCESS_TOKEN_SECRET_KEY = "ProAuth_Secret";
 	public static final String REFRESH_TOKEN_SECRET_KEY = "Refresh-Token-Secret-Key";
 
 	public static final String K8S_PREFIX = "hpcd-";
@@ -16,6 +16,7 @@ public class Constants {
 
 	public static final String UI_CUSTOM_OBJECT_GROUP = "ui.tmax.io";
 	public static final String CUSTOM_OBJECT_GROUP = "tmax.io";
+	public static final String UI_CUSTOM_OBJECT_GROUP = "ui.tmax.io";
 	public static final String CUSTOM_OBJECT_VERSION = "v1";
 	public static final String CUSTOM_OBJECT_PLURAL_USER = "users";
 	public static final String CUSTOM_OBJECT_PLURAL_USER_SECURITY_POLICY = "usersecuritypolicies";
@@ -94,8 +95,11 @@ public class Constants {
 	public static final String TOKEN_EXPIRED_TIME_KEY = "TokenExpiredTime";
 	public static final String REFRESH_TOKEN_EXPIRED_TIME_KEY = "RefreshTokenExpiredTime";
 	
+	public static final String CLAIM_PREFERRED_USERNAME = "preferred_username";
 	public static final String CLAIM_USER_ID = "id";
+	public static final String CLAIM_ISSUER = "iss";
 	public static final String CLAIM_USER_GROUP_NAME = "groupName";
+	public static final String CLAIM_AUDIENCE = "aud";
 	public static final String CLAIM_TOKEN_ID = "tokenId";
 	public static final String CLAIM_ROLE = "role";
 	
@@ -206,6 +210,7 @@ public class Constants {
 	public static final String QUERY_PARAMETER_RESOURCE = "resource";
 	
 	// Namespace 
+	public static final String QUERY_PARAMETER_USER_ID = "userId";
 	public static final String QUERY_PARAMETER_LABEL_SELECTOR = "labelSelector";
 	public static final String QUERY_PARAMETER_CONTINUE = "continue";
 	public static final String QUERY_PARAMETER_PERIOD = "period";
@@ -228,8 +233,8 @@ public class Constants {
 	
 	// Oauth 
 	public static final String OAUTH_URL = "http://proauth-server-service.proauth-system";
-	public static final String USER_CREATE_SUCCESS = "User Create Success";
-	public static final String USER_CREATE_FAILED = "User Create Failed";
+	public static final String USER_NEW_ROLE_CREATE_SUCCESS = "User New Role Create Success";
+	public static final String USER_NEW_ROLE_CREATE_FAILED = "User New Role Create Failed";
 	public static final String USER_UPDATE_SUCCESS = "User Update Success";
 	public static final String USER_UPDATE_FAILED = "User Update Failed";
 	public static final String USER_EMAIL_DUPLICATION_VERIFY_SUCCESS = "User Email Duplication verify Success";
