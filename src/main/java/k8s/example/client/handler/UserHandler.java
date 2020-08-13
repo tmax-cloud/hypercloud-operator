@@ -89,22 +89,49 @@ public class UserHandler extends GeneralHandler {
 
 		try {
     		// Delete Role & RoleBinding 
-			K8sApiCaller.deleteClusterRole(userId);
-			K8sApiCaller.deleteClusterRoleBinding(userId);
+			try {
+				K8sApiCaller.deleteClusterRole(userId);
+			} catch (ApiException e) {
+				if ( e.getResponseBody().contains("404")) {
+					logger.info("Nothing to do");
+				}else {
+					throw e;
+				}
+			}
+			
+			try {
+				K8sApiCaller.deleteClusterRoleBinding(userId);
+			} catch (ApiException e) {
+				if ( e.getResponseBody().contains("404")) {
+					logger.info("Nothing to do");
+				}else {
+					throw e;
+				}
+			}
     		
     		// Delete ingress-nginx-shared namespace read role
-    		K8sApiCaller.deleteRoleBinding(Constants.INGRESS_NGINX_SHARED_NAMESPACE,Constants.INGRESS_NGINX_SHARED_READ_ROLE_BINDING + "-" + userId);
-    		
+			try {
+	    		K8sApiCaller.deleteRoleBinding(Constants.INGRESS_NGINX_SHARED_NAMESPACE,Constants.INGRESS_NGINX_SHARED_READ_ROLE_BINDING + "-" + userId);
+			} catch (ApiException e) {
+				if ( e.getResponseBody().contains("404")) {
+					logger.info("Nothing to do");
+				}else {
+					throw e;
+				}
+			}  		
 			status = Status.OK;
 			outDO = Constants.USER_NEW_ROLE_DELETE_SUCCESS;
 
 		} catch (ApiException e) {
-			logger.error("Exception message: " + e.getResponseBody());
-			e.printStackTrace();
+			if ( e.getResponseBody().contains("404")) {
+				logger.info("");
+			}else {
+				logger.error("Exception message: " + e.getResponseBody());
+				e.printStackTrace();
 
-			status = Status.UNAUTHORIZED;
-			outDO = Constants.USER_NEW_ROLE_DELETE_FAILED;
-
+				status = Status.UNAUTHORIZED;
+				outDO = Constants.USER_NEW_ROLE_DELETE_FAILED;
+			}
 		} catch (Exception e) {
 			logger.error("Exception message: " + e.getMessage());
 
