@@ -5601,6 +5601,14 @@ public class K8sApiCaller {
 		rule.addResourcesItem("clustermenupolicies");
 		rule.addVerbsItem("get");		
 		rules.add(rule);
+		
+		// StorageClass Rule
+		rule = new V1PolicyRule();
+		rule.addApiGroupsItem(Constants.STORAGE_API_GROUP);
+		rule.addResourcesItem("storageclasses");
+		rule.addVerbsItem("get");
+		rule.addVerbsItem("list");
+		rules.add(rule);
 
 		clusterRole.setRules(rules);
 

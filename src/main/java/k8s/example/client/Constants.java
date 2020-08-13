@@ -52,6 +52,7 @@ public class Constants {
 
 	public static final String RBAC_API_GROUP = "rbac.authorization.k8s.io";
 	public static final String CORE_API_GROUP = "''";
+	public static final String STORAGE_API_GROUP = "storage.k8s.io";
 
 	//federation
 	public static final String FED_OBJECT_GROUP = "core.kubefed.io";
