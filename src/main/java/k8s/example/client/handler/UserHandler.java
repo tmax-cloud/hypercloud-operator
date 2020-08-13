@@ -123,15 +123,12 @@ public class UserHandler extends GeneralHandler {
 			outDO = Constants.USER_NEW_ROLE_DELETE_SUCCESS;
 
 		} catch (ApiException e) {
-			if ( e.getResponseBody().contains("404")) {
-				logger.info("");
-			}else {
-				logger.error("Exception message: " + e.getResponseBody());
-				e.printStackTrace();
+			logger.error("Exception message: " + e.getResponseBody());
+			e.printStackTrace();
 
-				status = Status.UNAUTHORIZED;
-				outDO = Constants.USER_NEW_ROLE_DELETE_FAILED;
-			}
+			status = Status.UNAUTHORIZED;
+			outDO = Constants.USER_NEW_ROLE_DELETE_FAILED;
+			
 		} catch (Exception e) {
 			logger.error("Exception message: " + e.getMessage());
 
