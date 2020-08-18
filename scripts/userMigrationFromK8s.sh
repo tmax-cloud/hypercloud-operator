@@ -1,9 +1,12 @@
 #!/bin/bash
-apiserver=$1
-echo apiserver : $apiserver
 
+hyperAuthServer=$1
+operatorServer=$2
+
+echo hyperAuthServer : $hyperAuthServer
+echo operatorServer : $operatorServer
 # get Admin Token
-token=$(curl -X POST 'http://'$apiserver':8080/auth/realms/master/protocol/openid-connect/token' \
+token=$(curl -X POST 'http://'$hyperAuthServer'/auth/realms/master/protocol/openid-connect/token' \
  -H "Content-Type: application/x-www-form-urlencoded" \
  -d "username=admin" \
  -d 'password=admin' \
@@ -19,7 +22,7 @@ userIdList=`kubectl get user -o=jsonpath='{.items[*].metadata.name}'`
 for userId in $userIdList
 
 do
-	# Get User Email
+	# Get User Meta
 	email=`kubectl get user $userId -o=jsonpath='{.userInfo.email}'`
 	dateOfBirth=`kubectl get user $userId -o=jsonpath='{.userInfo.dateOfBirth}' | tr -d ' '`
 	phone=`kubectl get user $userId -o=jsonpath='{.userInfo.phone}' | tr -d ' '`
@@ -50,7 +53,7 @@ do
 		  "emailVerified": "",
 		  "email": "'$email'"
 		}' \
-		 'http://'$apiserver':8080/auth/admin/realms/tmax/users' 
+		 'http://'$hyperAuthServer'/auth/admin/realms/tmax/users' 
 	echo
 	echo user registration of $userId Complete!!
 	echo ---------------------------------------------------
