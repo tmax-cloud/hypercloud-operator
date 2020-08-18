@@ -1,10 +1,8 @@
 #!/bin/bash
 
 hyperAuthServer=$1
-operatorServer=$2
-
 echo hyperAuthServer : $hyperAuthServer
-echo operatorServer : $operatorServer
+
 # get Admin Token
 token=$(curl -X POST 'http://'$hyperAuthServer'/auth/realms/master/protocol/openid-connect/token' \
  -H "Content-Type: application/x-www-form-urlencoded" \
