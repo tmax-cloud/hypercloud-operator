@@ -6,6 +6,8 @@
    hyperauth 서비스의 http ip:port 를 복사한다. ex) 192.168.6.223:8080
    
 4. ./userMigrationFromK8s.sh 192.168.6.223:8080 으로 call 한다.
+	* 전제조건 : tmax realm은 만들어진 상태라고 가정한다.
+	* 이미 존재해서 중복되는 아이디가 있을 경우, 해당 유저만 migration이 되지 않는다.
 
 5. hyperauth admin console에서 tmax realm의 user가 추가된 것을 확인한다, attribute도 추가된 것을 확인한다. ( phone, department, dateOfBirth, description 지원 )
 
