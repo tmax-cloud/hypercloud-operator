@@ -151,6 +151,9 @@ rules:
 - apiGroups: ['servicecatalog.k8s.io']
   resources: ['*']
   verbs: ['*']
+- apiGroups: ['storage.k8s.io']
+  resources: ['storageclasses']
+  verbs: ['get', 'list']
   
 ---
 

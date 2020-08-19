@@ -43,9 +43,6 @@ public class UserHandler extends GeneralHandler {
     		K8sApiCaller.createClusterRoleForNewUser(userId);  		
     		K8sApiCaller.createClusterRoleBindingForNewUser(userId);
     		
-    		// ingress-nginx-shared namespace read role
-    		K8sApiCaller.createRoleBindingForIngressNginx(userId);
-    		
 			status = Status.OK;
 			outDO = Constants.USER_NEW_ROLE_CREATE_SUCCESS;
 
