@@ -4,7 +4,7 @@ metadata:
   name: mysql-template
   namespace: default
   annotations:
-    template-version: 1.0.1
+    template-version: 1.0.2
     tested-operator-version: 4.1.0.23
 shortDescription: MySQL Deployment
 longDescription: MySQL Deployment
