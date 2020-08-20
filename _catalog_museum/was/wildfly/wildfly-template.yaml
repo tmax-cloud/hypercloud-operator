@@ -4,7 +4,7 @@ metadata:
   name: wildfly-cicd-template
   namespace: default
   annotations:
-    template-version: 1.0.1
+    template-version: 1.0.2
     tested-operator-version: 4.1.0.23
   labels:
     cicd-template-was: wildfly
@@ -57,7 +57,7 @@ parameters:
   required: true
 - name: SERVICE_TYPE
   displayName: ServiceType
-  description: Service Type (ClsuterIP/NodePort/LoadBalancer)
+  description: Service Type (ClusterIP/NodePort/LoadBalancer)
   required: true
 - name: PACKAGE_SERVER_URL
   displayName: PackageServerUrl
