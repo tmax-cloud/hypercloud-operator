@@ -98,7 +98,7 @@ public class NamespaceClaimController extends Thread {
 									}else {
 										if ( K8sApiCaller.namespaceAlreadyExist( resourceName ) ) {
 											replaceNscStatus( claimName, Constants.CLAIM_STATUS_REJECT, "Duplicated NameSpaceName" ); 
-											K8sApiCaller.patchLabel(claimName, "handled" ,"t", Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM);// must be after replaceNscStatus for awake watcher once more
+											K8sApiCaller.patchLabel(claimName, "handled" ,"t", Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM , false, null);// must be after replaceNscStatus for awake watcher once more
 										} else {
 											// Patch Status to Awaiting
 											replaceNscStatus( claimName, Constants.CLAIM_STATUS_AWAITING, "wait for admin permission" );
@@ -117,7 +117,8 @@ public class NamespaceClaimController extends Thread {
 									if ( claim.getMetadata().getAnnotations() != null && claim.getMetadata().getAnnotations().get("creator") !=null
 											&& !claim.getMetadata().getAnnotations().get("creator").contains(":")) { // 방어로직
 										logger.info("[NamespaceClaim Controller] Set Owner Label from Annotation 'Creator'" );
-										K8sApiCaller.patchLabel(claimName, "owner" ,claim.getMetadata().getAnnotations().get("creator"), Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM);// FIXME
+										K8sApiCaller.patchLabel(claimName, "owner" ,claim.getMetadata().getAnnotations()
+												.get("creator"), Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, false, null);// FIXME
 									}								
 									break;
 									
@@ -125,7 +126,7 @@ public class NamespaceClaimController extends Thread {
 									String status = getClaimStatus( claimName );		
 									if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && K8sApiCaller.namespaceAlreadyExist( resourceName ) ) {	
 										K8sApiCaller.updateNamespace( claim );
-										K8sApiCaller.patchLabel(claimName, "handled" ,"t", Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM);// FIXME
+										K8sApiCaller.patchLabel(claimName, "handled" ,"t", Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM , false, null);// FIXME
 										replaceNscStatus( claimName, Constants.CLAIM_STATUS_SUCCESS, "namespace update success." );
 										
 									} else if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && !K8sApiCaller.namespaceAlreadyExist( resourceName ) ) {
@@ -165,7 +166,7 @@ public class NamespaceClaimController extends Thread {
 										logger.info(" Create Network Policy for new Namespace ["+ nsResult.getMetadata().getName() +" ] Starts");
 										K8sApiCaller.createDefaultNetPol(claim);
 										replaceNscStatus( claimName, Constants.CLAIM_STATUS_SUCCESS, "namespace create success." );
-										K8sApiCaller.patchLabel(claimName, "handled" ,"t", Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM);// FIXME
+										K8sApiCaller.patchLabel(claimName, "handled" ,"t", Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM , false, null);// FIXME
 
 									} else if ( status.equals( Constants.CLAIM_STATUS_REJECT )) {
 										if ( claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") !=null 
@@ -173,14 +174,14 @@ public class NamespaceClaimController extends Thread {
 											// Send Fail confirm Mail
 											sendConfirmMail ( claim, null, false );										
 										}
-										K8sApiCaller.patchLabel(claimName, "handled" ,"t", Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM);// FIXME
+										K8sApiCaller.patchLabel(claimName, "handled" ,"t", Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM , false, null);// FIXME
 									}				
 									break;
 									
 								case Constants.EVENT_TYPE_DELETED : 
 									// Delete ClusterRoleBinding for Trial New User
-									K8sApiCaller.deleteClusterRoleBinding("trial-" + claim.getMetadata().getName());
-									K8sApiCaller.deleteClusterRoleBinding(Constants.INGRESS_NGINX_SHARED_READ_ROLE_BINDING + "-" + claim.getMetadata().getLabels().get("owner"));
+//									K8sApiCaller.deleteClusterRoleBinding("trial-" + claim.getMetadata().getName());
+//									K8sApiCaller.deleteClusterRoleBinding(Constants.INGRESS_NGINX_SHARED_READ_ROLE_BINDING + "-" + claim.getMetadata().getLabels().get("owner"));
 									
 									break;
 							}		

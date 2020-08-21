@@ -101,10 +101,12 @@ public class CatalogServiceClaimController extends Thread {
 									if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && K8sApiCaller.templateAlreadyExist( resourceName, catalogNamespace ) ) {
 										//K8sApiCaller.updateTemplate( claim );
 										replaceCscStatus( claimName, Constants.CLAIM_STATUS_SUCCESS, "template update success.", claimNamespace );
+										K8sApiCaller.patchLabel(claimName, "handled" ,"t", Constants.CUSTOM_OBJECT_PLURAL_CATALOGSERVICECLAIM, true, claimNamespace);
+
 									} else if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && !K8sApiCaller.templateAlreadyExist( resourceName, catalogNamespace ) ) {
 										K8sApiCaller.createTemplate( claim, catalogNamespace );
 										replaceCscStatus( claimName, Constants.CLAIM_STATUS_SUCCESS, "template create success.", claimNamespace );
-										K8sApiCaller.patchLabel(claimName, "handled" ,"t", Constants.CUSTOM_OBJECT_PLURAL_CATALOGSERVICECLAIM);
+										K8sApiCaller.patchLabel(claimName, "handled" ,"t", Constants.CUSTOM_OBJECT_PLURAL_CATALOGSERVICECLAIM, true, claimNamespace);
 									}
 									break;
 								case Constants.EVENT_TYPE_DELETED : 

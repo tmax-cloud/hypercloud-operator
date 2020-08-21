@@ -77,10 +77,12 @@ public class ResourceQuotaClaimController extends Thread {
 									if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && K8sApiCaller.resourcequotaAlreadyExist( resourceName, claimNamespace ) ) {
 										K8sApiCaller.updateResourceQuota( claim );
 										replaceRqcStatus( claimName, Constants.CLAIM_STATUS_SUCCESS, "resource quota update success.", claimNamespace );
+										K8sApiCaller.patchLabel(claimName, "handled" ,"t", Constants.CUSTOM_OBJECT_PLURAL_RESOURCEQUOTACLAIM, true, claimNamespace);
+
 									} else if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && !K8sApiCaller.resourcequotaAlreadyExist( resourceName, claimNamespace ) ) {
 										K8sApiCaller.createResourceQuota( claim );
 										replaceRqcStatus( claimName, Constants.CLAIM_STATUS_SUCCESS, "resource quota create success.", claimNamespace );
-										K8sApiCaller.patchLabel(claimName, "handled" ,"t", Constants.CUSTOM_OBJECT_PLURAL_RESOURCEQUOTACLAIM);
+										K8sApiCaller.patchLabel(claimName, "handled" ,"t", Constants.CUSTOM_OBJECT_PLURAL_RESOURCEQUOTACLAIM, true, claimNamespace);
 									} 
 									break;
 								case Constants.EVENT_TYPE_DELETED : 

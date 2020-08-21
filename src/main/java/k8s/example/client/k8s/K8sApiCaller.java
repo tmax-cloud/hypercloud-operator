@@ -6549,7 +6549,7 @@ public class K8sApiCaller {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static void patchLabel( String resourceName, String label, String value, String cumtomObjectResource ) throws ApiException {
+	public static void patchLabel( String resourceName, String label, String value, String cumtomObjectResource, boolean isNamespaced, String namespace ) throws ApiException {
 		JsonArray patchArray = new JsonArray();
 		JsonObject patch = new JsonObject();
 		patch.addProperty("op", "replace");
@@ -6558,14 +6558,19 @@ public class K8sApiCaller {
 		patchArray.add(patch);
 		
 		logger.debug( "Patch Object : " + patchArray );
-
+		
 		try {
-			customObjectApi.patchClusterCustomObject(
-					Constants.CUSTOM_OBJECT_GROUP, 
-					Constants.CUSTOM_OBJECT_VERSION, 
-					cumtomObjectResource, 
-					resourceName, 
-					patchArray );
+			if ( !isNamespaced) {
+				customObjectApi.patchClusterCustomObject(
+						Constants.CUSTOM_OBJECT_GROUP, 
+						Constants.CUSTOM_OBJECT_VERSION, 
+						cumtomObjectResource, 
+						resourceName, 
+						patchArray );
+			} else {
+				customObjectApi.patchNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP, 
+						Constants.CUSTOM_OBJECT_VERSION, namespace, cumtomObjectResource, resourceName, patchArray);
+			}		
 		} catch (ApiException e) {
 			logger.error(e.getResponseBody());
 			logger.error("ApiException Code: " + e.getCode());
