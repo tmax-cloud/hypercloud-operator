@@ -81,7 +81,7 @@ public class RoleBindingClaimController extends Thread {
 									} else if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && !K8sApiCaller.roleBindingAlreadyExist( resourceName, claimNamespace ) ) {
 										K8sApiCaller.createRoleBinding( claim );
 										replaceRbcStatus( claimName, Constants.CLAIM_STATUS_SUCCESS, "rolebinding create success.", claimNamespace );
-										K8sApiCaller.patchLabel(claimName, "handled" ,"t", Constants.CUSTOM_OBJECT_PLURAL_RESOURCEQUOTACLAIM);
+										K8sApiCaller.patchLabel(claimName, "handled" ,"t", Constants.CUSTOM_OBJECT_PLURAL_ROLEBINDINGCLAIM);
 									} 
 									break;
 								case Constants.EVENT_TYPE_DELETED : 
