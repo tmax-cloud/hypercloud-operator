@@ -2287,9 +2287,13 @@ public class K8sApiCaller {
 				}
 			}
 			
-			if( !existPvcName && registry.getSpec().getPersistentVolumeClaim().getCreate().getVolumeMode() != null) {
-				volumeMode = registry.getSpec().getPersistentVolumeClaim().getCreate().getVolumeMode();
-			}
+			if( !existPvcName) {
+				if (registry.getSpec().getPersistentVolumeClaim().getCreate().getVolumeMode() != null) {
+					volumeMode = registry.getSpec().getPersistentVolumeClaim().getCreate().getVolumeMode();
+				} else {
+					volumeMode = "Filesystem";	// default value
+				}
+			} 
 
 			if( volumeMode.equals("Block")) {
 				V1VolumeDevice volumeDevicesItem = new V1VolumeDevice();
