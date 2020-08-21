@@ -5226,6 +5226,7 @@ public class K8sApiCaller {
 				 && claim.getMetadata().getLabels().get("owner") != null) {
 			labels.put("trial", claim.getMetadata().getLabels().get("trial"));
 			labels.put("owner", claim.getMetadata().getLabels().get("owner"));
+			labels.put("period", claim.getMetadata().getLabels().get("period"));
 		}
 		
 		//Add Trial Annotations if exists
@@ -5280,6 +5281,7 @@ public class K8sApiCaller {
 				&& claim.getMetadata().getLabels().get("owner") !=null) {
 			labels.put("trial", claim.getMetadata().getLabels().get("trial"));
 			labels.put("owner", claim.getMetadata().getLabels().get("owner"));
+			labels.put("period", claim.getMetadata().getLabels().get("period"));
 		}
 		
 		//Add Trial Annotations if exists

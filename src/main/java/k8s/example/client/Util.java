@@ -283,7 +283,7 @@ public class Util {
 			deleteTime = createTime.plusDays( Integer.parseInt(nsResult.getMetadata().getLabels().get("period")) * 30 );
 //			deleteTime = createTime.plusMinutes( Integer.parseInt(nsResult.getMetadata().getLabels().get("period"))*2);
 			mailTime = deleteTime.minusDays(7);
-//			mailTime = deleteTime.plusMinutes( Integer.parseInt(nsResult.getMetadata().getLabels().get("period")));
+//			mailTime = createTime.plusMinutes( Integer.parseInt(nsResult.getMetadata().getLabels().get("period")));
 		}
 
 		Timer timer = new Timer(nsResult.getMetadata().getUid() + "#" + nsResult.getMetadata().getName() + "#" + nsResult.getMetadata().getLabels().get("owner") + "#" + deleteTime.toDateTime().toString("yyyy-MM-dd") );
@@ -303,13 +303,13 @@ public class Util {
 						if ( nameSpace.getMetadata().getLabels() != null && nameSpace.getMetadata().getLabels().get("trial") != null
 								&& nameSpace.getMetadata().getLabels().get("owner") != null) {
 							logger.info(" [Trial Timer] Still Trial NameSpace, Send Info Mail to User [ " + userId + " ]");
-							UserCR user = K8sApiCaller.getUser( userId );
-							String email = user.getUserInfo().getEmail();
-							logger.info(" [Trial Timer] Email : " + email );
-							String subject = " 신청해주신 Trial NameSpace [ " + nameSpace.getMetadata().getName() + " ] 만료 안내 ";
-							String body = Constants.TRIAL_TIME_OUT_CONTENTS;
-							body = body.replaceAll("%%TRIAL_END_TIME%%", deleteTime);
-							Util.sendMail(email, subject, body, "/home/tmax/hypercloud4-operator/_html/img/service-timeout.png", "service-timeout");
+//							UserCR user = K8sApiCaller.getUser( userId );
+//							String email = user.getUserInfo().getEmail();
+//							logger.info(" [Trial Timer] Email : " + email );
+//							String subject = " 신청해주신 Trial NameSpace [ " + nameSpace.getMetadata().getName() + " ] 만료 안내 ";
+//							String body = Constants.TRIAL_TIME_OUT_CONTENTS;
+//							body = body.replaceAll("%%TRIAL_END_TIME%%", deleteTime);
+//							Util.sendMail(email, subject, body, "/home/tmax/hypercloud4-operator/_html/img/service-timeout.png", "service-timeout");
 						} else {
 							logger.info(" [Trial Timer] Paid NameSpace, Nothing to do ");
 						}
@@ -351,6 +351,8 @@ public class Util {
 								&& nameSpace.getMetadata().getLabels().get("owner") != null) {
 							logger.info(" [Trial Timer] Still Trial NameSpace, Delete Expired Namespace [ " + nsName + " ]");
 							K8sApiCaller.deleteRoleBinding(nsName, "trial-" + nsName);
+							// Delete ClusterRoleBinding for Trial New User
+							K8sApiCaller.deleteClusterRoleBinding("trial-" + nsName);
 							K8sApiCaller.deleteNameSpace(nsName);
 						} else {
 							logger.info(" [Trial Timer] Paid NameSpace, Nothing to do ");

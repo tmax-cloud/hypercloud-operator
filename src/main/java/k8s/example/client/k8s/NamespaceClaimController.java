@@ -141,7 +141,7 @@ public class NamespaceClaimController extends Thread {
 												// namspace-owner rolebinding
 												createTrialRoleBinding ( nsResult );
 												// clusterrole-trial clusterrolebinding
-												createTrialClusterRoleBinding ( nsResult );
+												createTrialClusterRoleBinding ( claim );
 									    		// ingress-nginx-shared namespace read role
 									    		K8sApiCaller.createRoleBindingForIngressNginx(nsResult.getMetadata().getLabels().get("owner"));
 
@@ -160,7 +160,7 @@ public class NamespaceClaimController extends Thread {
 											}			
 											
 											// Send Success confirm Mail
-											sendConfirmMail ( claim, nsResult.getMetadata().getCreationTimestamp(),  true );																			
+//											sendConfirmMail ( claim, nsResult.getMetadata().getCreationTimestamp(),  true );																			
 										}
 										// Create Default NetWork Policy
 										logger.info(" Create Network Policy for new Namespace ["+ nsResult.getMetadata().getName() +" ] Starts");
@@ -172,7 +172,7 @@ public class NamespaceClaimController extends Thread {
 										if ( claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") !=null 
 												&& claim.getMetadata().getLabels().get("owner") !=null  ) {
 											// Send Fail confirm Mail
-											sendConfirmMail ( claim, null, false );										
+//											sendConfirmMail ( claim, null, false );										
 										}
 										K8sApiCaller.patchLabel(claimName, "handled" ,"t", Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM , false, null);// FIXME
 									}				
@@ -181,7 +181,6 @@ public class NamespaceClaimController extends Thread {
 								case Constants.EVENT_TYPE_DELETED : 
 									// Delete ClusterRoleBinding for Trial New User
 //									K8sApiCaller.deleteClusterRoleBinding("trial-" + claim.getMetadata().getName());
-//									K8sApiCaller.deleteClusterRoleBinding(Constants.INGRESS_NGINX_SHARED_READ_ROLE_BINDING + "-" + claim.getMetadata().getLabels().get("owner"));
 									
 									break;
 							}		
@@ -307,13 +306,13 @@ public class NamespaceClaimController extends Thread {
 		}
 	}
 	
-	private void createTrialClusterRoleBinding(V1Namespace nsResult) throws ApiException {
+	private void createTrialClusterRoleBinding(NamespaceClaim claim) throws ApiException {
 		RoleBindingClaim rbcForTrial = new RoleBindingClaim();
 		
 		V1ObjectMeta RoleBindingMeta = new V1ObjectMeta();
-		rbcForTrial.setResourceName("trial-" + nsResult.getMetadata().getName());
-		RoleBindingMeta.setName( "trial-" + nsResult.getMetadata().getName());
-		RoleBindingMeta.setLabels(nsResult.getMetadata().getLabels()); // label 넘겨주기
+		rbcForTrial.setResourceName("trial-" + claim.getResourceName());
+		RoleBindingMeta.setName( "trial-" + claim.getResourceName());
+		RoleBindingMeta.setLabels(claim.getMetadata().getLabels()); // label 넘겨주기
 		rbcForTrial.setMetadata(RoleBindingMeta);
 
 		// RoleRef
@@ -328,7 +327,7 @@ public class NamespaceClaimController extends Thread {
 		V1Subject subject = new V1Subject();
 		subject.setApiGroup(Constants.RBAC_API_GROUP);
 		subject.setKind("User");
-		subject.setName(nsResult.getMetadata().getLabels().get("owner"));
+		subject.setName(claim.getMetadata().getLabels().get("owner"));
 		subjectList.add(subject);
 		rbcForTrial.setSubjects(subjectList);
 		
