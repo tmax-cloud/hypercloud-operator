@@ -3,7 +3,7 @@ kind: ClusterTask
 metadata:
   name: generate-and-deploy-using-kubectl
   annotations:
-    template-version: 1.0.1
+    template-version: 1.0.2
     tested-operator-version: 4.1.0.23
 spec:
   params:
@@ -24,7 +24,7 @@ spec:
       type: image
   steps:
   - name: create-yaml
-    image: 192.168.6.110:5000/cicd-util:1.0.1
+    image: tmaxcloudck/cicd-util:1.0.2
     imagePullPolicy: Always
     command:
     - "make-deployment"
@@ -40,7 +40,7 @@ spec:
     - name: DEPLOY_ENV_JSON
       value: $(inputs.params.deploy-env-json)
   - name: run-kubectl
-    image: 192.168.6.110:5000/cicd-util:1.0.1
+    image: tmaxcloudck/cicd-util:1.0.2
     command:
     - "kubectl"
     args:

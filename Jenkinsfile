@@ -6,7 +6,7 @@ node {
 	def imageBuildHome = "/root/HyperCloud-image-build/hypercloud4-operator"
 
 	def version = "${params.majorVersion}.${params.minorVersion}.${params.tinyVersion}.${params.hotfixVersion}"
-	def preVersion = "${params.majorVersion}.${params.minorVersion}.${params.tinyVersion}.${params.preHotfixVersion}"
+	def preVersion = "${params.preVersion}"
 	def imageTag = "b${version}"
 	def binaryHome = "${hcBuildDir}/build"
 	def scriptHome = "${hcBuildDir}/scripts"

@@ -5,10 +5,6 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.JWTVerifier;
-import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
@@ -29,7 +25,6 @@ import k8s.example.client.ErrorCode;
 import k8s.example.client.Main;
 import k8s.example.client.Util;
 import k8s.example.client.k8s.K8sApiCaller;
-import k8s.example.client.k8s.OAuthApiCaller;
 import k8s.example.client.metering.util.SimpleUtil;
 
 public class NameSpaceHandler extends GeneralHandler {
@@ -40,18 +35,18 @@ public class NameSpaceHandler extends GeneralHandler {
 		logger.info("***** GET /nameSpace");
 		
 		IStatus status = null;
-		String accessToken = null;
 		V1NamespaceList nsList = null;
 		String outDO = null; 
-		String issuer = null;
-		String userId = null;
+		String accessToken = null;
+		String userId = SimpleUtil.getQueryParameter( session.getParameters(), Constants.QUERY_PARAMETER_USER_ID );
+//		String userId = "admin-tmax.co.kr";
 		// if limit exists
 		String limit = SimpleUtil.getQueryParameter( session.getParameters(), Constants.QUERY_PARAMETER_LIMIT );
 		
 		//if label selector exists
 		String labelSelector = SimpleUtil.getQueryParameter( session.getParameters(), Constants.QUERY_PARAMETER_LABEL_SELECTOR );
 		
-		try {
+		try {			
 			// Read AccessToken from Header
 			if(!session.getHeaders().get("authorization").isEmpty()) {
 				accessToken = session.getHeaders().get("authorization");
@@ -59,63 +54,17 @@ public class NameSpaceHandler extends GeneralHandler {
 				status = Status.BAD_REQUEST;
 				throw new Exception(ErrorCode.TOKEN_EMPTY);
 			}
-    		logger.debug( "  Token: " + accessToken );
+    		logger.debug( "  Token: " + accessToken );	
     		
-    		if (System.getenv( "PROAUTH_EXIST" ) != null) { 
-        		if( System.getenv( "PROAUTH_EXIST" ).equalsIgnoreCase("1")) {
-        			logger.info( "  [[ Integrated OAuth System! ]] " );
-    	    		JsonObject webHookOutDO = OAuthApiCaller.webHookAuthenticate(accessToken);
-    	    		if( webHookOutDO.get("status").getAsJsonObject().get("authenticated").toString().equalsIgnoreCase("true") ) {
-    	    			userId = webHookOutDO.get("status").getAsJsonObject().get("user").getAsJsonObject().get("username").toString().replaceAll("\"", "");
-    	    			logger.info( "  Token Validated " );
-    	    			    			
-        				nsList = K8sApiCaller.getAccessibleNS(userId, labelSelector);
-        				status = Status.OK;
+			nsList = K8sApiCaller.getAccessibleNS(userId, labelSelector);
+			status = Status.OK;
 
-        				// Limit 
-        				if( nsList!= null) {
-        					if( limit != null ) {
-            					nsList.setItems( nsList.getItems().stream().limit(Integer.parseInt(limit)).collect(Collectors.toList()));		
-            				}
-        				}				
-    	    		} else {
-    	    			logger.info( "  Authentication fail" );
-    	    			logger.info( "  Token is not valid" );
-        				status = Status.UNAUTHORIZED;
-        				outDO = "Get NameSpace List failed. Token is not valid.";
-    	    		}
-        		}
-    		}
-    		if (System.getenv( "PROAUTH_EXIST" ) == null || !System.getenv( "PROAUTH_EXIST" ).equalsIgnoreCase("1") ){	
-        		logger.info( "  [[ OpenAuth System! ]]" );  			
-        		// Verify access token	
-    			JWTVerifier verifier = JWT.require(Algorithm.HMAC256(Constants.ACCESS_TOKEN_SECRET_KEY)).build();
-    			DecodedJWT jwt = verifier.verify(accessToken);
-    			
-    			issuer = jwt.getIssuer();
-    			userId = jwt.getClaims().get(Constants.CLAIM_USER_ID).asString();
-    			String tokenId = jwt.getClaims().get(Constants.CLAIM_TOKEN_ID).asString();
-    			logger.debug( "  Issuer: " + issuer );
-    			logger.info( "  User ID: " + userId );
-    			logger.debug( "  Token ID: " + tokenId );
-    			
-    			if(verifyAccessToken(accessToken, userId, tokenId, issuer)) {		
-    				logger.info( "  Token Validated " );
-    				nsList = K8sApiCaller.getAccessibleNS(userId, labelSelector);
-    				status = Status.OK;
-
-    				// Limit
-    				if( nsList!= null) {
-    					if( limit != null ) {
-        					nsList.setItems( nsList.getItems().stream().limit(Integer.parseInt(limit)).collect(Collectors.toList()));		
-        				}
-    				} 
-    			} else {
-    				logger.info( "  Token is not valid" );
-    				status = Status.UNAUTHORIZED;
-    				outDO = "Get NameSpace List failed. Token is not valid.";
-    			}
-    		}
+			// Limit
+			if( nsList!= null) {
+				if( limit != null ) {
+					nsList.setItems( nsList.getItems().stream().limit(Integer.parseInt(limit)).collect(Collectors.toList()));		
+				}
+			}			   	
 
 			// Make outDO					
     		if( (nsList!=null && nsList.getItems() != null && nsList.getItems().size() > 0) || nsList.getMetadata().getContinue().equalsIgnoreCase("wrongLabelorNoResource")) {
@@ -219,21 +168,4 @@ public class NameSpaceHandler extends GeneralHandler {
 		return Util.setCors(NanoHTTPD.newFixedLengthResponse(""));
     }
 	
-	private boolean verifyAccessToken (String accessToken, String userId, String tokenId, String issuer) throws Exception {
-		boolean result = false;		
-	
-		// for master token
-		if(accessToken.equalsIgnoreCase(Constants.MASTER_TOKEN)) return true;
-		
-		String tokenName = userId.replace("@", "-") + "-" + tokenId;
-		TokenCR token = K8sApiCaller.getToken(tokenName);
-		
-		accessToken = Util.Crypto.encryptSHA256(accessToken);
-		
-		if(issuer.equals(Constants.ISSUER) &&
-				accessToken.equals(token.getAccessToken()))
-			result = true;		
-		
-		return result;
-	}
 }

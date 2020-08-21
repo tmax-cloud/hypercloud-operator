@@ -137,8 +137,12 @@ public class NamespaceClaimController extends Thread {
 												&& nsResult.getMetadata().getLabels().get("owner") !=null) {
 											// Make RoleBinding for Trial User
 											try{ 
+												// namspace-owner rolebinding
 												createTrialRoleBinding ( nsResult );
+												// clusterrole-trial clusterrolebinding
 												createTrialClusterRoleBinding ( nsResult );
+									    		// ingress-nginx-shared namespace read role
+									    		K8sApiCaller.createRoleBindingForIngressNginx(nsResult.getMetadata().getLabels().get("owner"));
 
 											} catch (ApiException e) {
 												logger.info(" TrialRoleBinding for Trial NameSpace [ " + nsResult.getMetadata().getName() + " ] Already Exists ");
