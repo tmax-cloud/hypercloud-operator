@@ -37,13 +37,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.github.fge.jsonpatch.diff.JsonDiff;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import fi.iki.elonen.NanoHTTPD.Response;
 import io.kubernetes.client.openapi.models.V1Namespace;
-import k8s.example.client.DataObject.UserCR;
+import k8s.example.client.k8s.HyperAuthCaller;
 import k8s.example.client.k8s.K8sApiCaller;
 import k8s.example.client.metering.TimerMap;
 
@@ -303,13 +304,20 @@ public class Util {
 						if ( nameSpace.getMetadata().getLabels() != null && nameSpace.getMetadata().getLabels().get("trial") != null
 								&& nameSpace.getMetadata().getLabels().get("owner") != null) {
 							logger.info(" [Trial Timer] Still Trial NameSpace, Send Info Mail to User [ " + userId + " ]");
-//							UserCR user = K8sApiCaller.getUser( userId );
-//							String email = user.getUserInfo().getEmail();
-//							logger.info(" [Trial Timer] Email : " + email );
-//							String subject = " 신청해주신 Trial NameSpace [ " + nameSpace.getMetadata().getName() + " ] 만료 안내 ";
-//							String body = Constants.TRIAL_TIME_OUT_CONTENTS;
-//							body = body.replaceAll("%%TRIAL_END_TIME%%", deleteTime);
-//							Util.sendMail(email, subject, body, "/home/tmax/hypercloud4-operator/_html/img/service-timeout.png", "service-timeout");
+							String email = null;
+							String accessToken = HyperAuthCaller.loginAsAdmin();
+							JsonArray userListJsonArray = HyperAuthCaller.getUserList( accessToken.replaceAll("\"",""));
+				    		for(JsonElement userJson : userListJsonArray) {
+				    			if(userJson.getAsJsonObject().get("username").toString().replaceAll("\"","").equalsIgnoreCase( userId )) {
+				    				email = userJson.getAsJsonObject().get("email").toString().replaceAll("\"","");
+				    				break;
+				    			}
+				    		}
+							logger.info(" [Trial Timer] Email : " + email );
+							String subject = " 신청해주신 Trial NameSpace [ " + nameSpace.getMetadata().getName() + " ] 만료 안내 ";
+							String body = Constants.TRIAL_TIME_OUT_CONTENTS;
+							body = body.replaceAll("%%TRIAL_END_TIME%%", deleteTime);
+							Util.sendMail(email, subject, body, "/home/tmax/hypercloud4-operator/_html/img/service-timeout.png", "service-timeout");
 						} else {
 							logger.info(" [Trial Timer] Paid NameSpace, Nothing to do ");
 						}

@@ -231,6 +231,12 @@ public class Constants {
 	public static final String DEFAULT_PROVIDER = "tmax";
 	public static final String DEFAULT_TAGS = "etc";
 	
+	
+	// hyperauth
+	public static final String SERVICE_NAME_LOGIN_AS_ADMIN = "auth/realms/master/protocol/openid-connect/token";
+	public static final String SERVICE_NAME_USER_DETAIL = "auth/admin/realms/tmax/users/";	
+	public static final String HYPERAUTH_URL = "http://hyperauth.hyperauth";
+	
 	// Oauth 
 	public static final String OAUTH_URL = "http://proauth-server-service.proauth-system";
 	public static final String USER_NEW_ROLE_CREATE_SUCCESS = "User New Role Create Success";

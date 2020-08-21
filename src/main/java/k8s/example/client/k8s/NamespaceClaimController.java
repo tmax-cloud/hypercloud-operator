@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
@@ -160,7 +161,7 @@ public class NamespaceClaimController extends Thread {
 											}			
 											
 											// Send Success confirm Mail
-//											sendConfirmMail ( claim, nsResult.getMetadata().getCreationTimestamp(),  true );																			
+											sendConfirmMail ( claim, nsResult.getMetadata().getCreationTimestamp(),  true );																			
 										}
 										// Create Default NetWork Policy
 										logger.info(" Create Network Policy for new Namespace ["+ nsResult.getMetadata().getName() +" ] Starts");
@@ -172,7 +173,7 @@ public class NamespaceClaimController extends Thread {
 										if ( claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") !=null 
 												&& claim.getMetadata().getLabels().get("owner") !=null  ) {
 											// Send Fail confirm Mail
-//											sendConfirmMail ( claim, null, false );										
+											sendConfirmMail ( claim, null, false );										
 										}
 										K8sApiCaller.patchLabel(claimName, "handled" ,"t", Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM , false, null);// FIXME
 									}				
@@ -224,8 +225,19 @@ public class NamespaceClaimController extends Thread {
 		String body = null;
 		String imgPath = null;
 		String imgCid = null;
+		String email = null;
+		
 		try {
-			user = K8sApiCaller.getUser(claim.getMetadata().getLabels().get("owner"));
+			String accessToken = HyperAuthCaller.loginAsAdmin();
+			JsonArray userListJsonArray = HyperAuthCaller.getUserList( accessToken.replaceAll("\"",""));
+    		for(JsonElement userJson : userListJsonArray) {
+    			if(userJson.getAsJsonObject().get("username").toString().equalsIgnoreCase("\"" + claim.getMetadata().getLabels().get("owner") + "\"" )) {
+    				email = userJson.getAsJsonObject().get("email").toString().replaceAll("\"","");
+    				break;
+    			}
+    		}
+			logger.info("email : " + email);
+
 			if (flag) {
 				subject = " HyperCloud 서비스 신청 승인 완료 ";
 				body = Constants.TRIAL_SUCCESS_CONFIRM_MAIL_CONTENTS;
@@ -247,7 +259,7 @@ public class NamespaceClaimController extends Thread {
 				imgCid = "trial-disapproval";
 
 			}
-			Util.sendMail(user.getUserInfo().getEmail(), subject, body, imgPath, imgCid);
+			Util.sendMail(email, subject, body, imgPath, imgCid);
 		} catch (Throwable e) {
 			if (e.getMessage().contains("Not Found") || e.getMessage().contains("404")) {
 				logger.info("This Trial NSC was made by Unknown user or System admin, Will not Send Email");
