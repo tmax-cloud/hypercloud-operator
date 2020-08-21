@@ -6545,7 +6545,7 @@ public class K8sApiCaller {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static void patchLabel( String resourceName, String label, String value ) throws ApiException {
+	public static void patchLabel( String resourceName, String label, String value, String cumtomObjectResource ) throws ApiException {
 		JsonArray patchArray = new JsonArray();
 		JsonObject patch = new JsonObject();
 		patch.addProperty("op", "replace");
@@ -6559,7 +6559,7 @@ public class K8sApiCaller {
 			customObjectApi.patchClusterCustomObject(
 					Constants.CUSTOM_OBJECT_GROUP, 
 					Constants.CUSTOM_OBJECT_VERSION, 
-					Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, 
+					cumtomObjectResource, 
 					resourceName, 
 					patchArray );
 		} catch (ApiException e) {

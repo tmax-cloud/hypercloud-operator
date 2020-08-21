@@ -17,7 +17,6 @@ import io.kubernetes.client.openapi.apis.CustomObjectsApi;
 import io.kubernetes.client.util.Watch;
 import k8s.example.client.Constants;
 import k8s.example.client.Main;
-import k8s.example.client.models.NamespaceClaim;
 import k8s.example.client.models.RoleBindingClaim;
 import k8s.example.client.models.StateCheckInfo;
 
@@ -82,7 +81,7 @@ public class RoleBindingClaimController extends Thread {
 									} else if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && !K8sApiCaller.roleBindingAlreadyExist( resourceName, claimNamespace ) ) {
 										K8sApiCaller.createRoleBinding( claim );
 										replaceRbcStatus( claimName, Constants.CLAIM_STATUS_SUCCESS, "rolebinding create success.", claimNamespace );
-										K8sApiCaller.patchLabel(claimName, "handled" ,"t");
+										K8sApiCaller.patchLabel(claimName, "handled" ,"t", Constants.CUSTOM_OBJECT_PLURAL_RESOURCEQUOTACLAIM);
 									} 
 									break;
 								case Constants.EVENT_TYPE_DELETED : 

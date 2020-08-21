@@ -104,7 +104,7 @@ public class CatalogServiceClaimController extends Thread {
 									} else if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && !K8sApiCaller.templateAlreadyExist( resourceName, catalogNamespace ) ) {
 										K8sApiCaller.createTemplate( claim, catalogNamespace );
 										replaceCscStatus( claimName, Constants.CLAIM_STATUS_SUCCESS, "template create success.", claimNamespace );
-										K8sApiCaller.patchLabel(claimName, "handled" ,"t");
+										K8sApiCaller.patchLabel(claimName, "handled" ,"t", Constants.CUSTOM_OBJECT_PLURAL_CATALOGSERVICECLAIM);
 									}
 									break;
 								case Constants.EVENT_TYPE_DELETED : 
