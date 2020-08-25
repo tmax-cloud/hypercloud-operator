@@ -31,9 +31,9 @@ public class WebHookServer extends RouterNanoHTTPD {
     public void addMappings() {
     	addRoute("/user", UserHandler.class);
     	addRoute("/email", EmailHandler.class);
-    	addRoute("/v2/catalog", CatalogHandler.class);
+        addRoute("/v2/catalog", CatalogHandler.class);
+        addRoute("/v2/service_instances/:instance_id/service_bindings/:binding_id", ServiceBindingHandler.class);
     	addRoute("/v2/service_instances/:instance_id", ServiceInstanceHandler.class);
-    	addRoute("/v2/service_instances/:instance_id/service_bindings/:binding_id", ServiceBindingHandler.class);
     	addRoute("/metering", MeteringHandler.class);
     	addRoute("/nameSpace", NameSpaceHandler.class);
     	addRoute("/nameSpaceClaim", NameSpaceClaimHandler.class);

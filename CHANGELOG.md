@@ -1,6 +1,31 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.2.0 start -------------------->
+
+## HyperCloudServer_4.1.2.0 (Fri Aug 21 18:30:53 KST 2020)
+
+### Added
+  - [feat] userMigrationGuide 작성 by taegeon_woo
+  - [feat] scripts 추가 by taegeon_woo
+
+### Changed
+  - [mod] hyperauth 로 부터 유저 이메일 가져오는 로직 구현 by taegeon_woo
+  - [mod] nsc 메일보내는 부분 잠정적 주석처리 by taegeon_woo
+  - [mod] nginx-ingress-controller, storageclass 권한 trial 승인시 주는 것으로 변경 by taegeon_woo
+  - [mod] userMigrationGuide 추가 by taegeon_woo
+  - [mod] 유저 제거시 유저에게 주어진 기본 role을 지워주는 api 추가 by taegeon_woo
+
+### Fixed
+  - [ims][236639] nsc를 제외한  claim 류 patch 시 발생하던 버그 픽스 [ims][236117] Trial 만료 & 삭제시 만들어줬던 ClusterRoleBinding 삭제 하는 로직 추가 by taegeon_woo
+  - [ims][230842] registry volumemode default 값 설정 by sukhee_yun
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.2.0 end --------------------->
+
 <!-------------------- v4.1.1.0 start -------------------->
 
 ## HyperCloudServer_4.1.1.0 (Thu Aug 13 17:39:38 KST 2020)
