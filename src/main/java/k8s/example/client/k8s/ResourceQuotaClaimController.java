@@ -83,7 +83,9 @@ public class ResourceQuotaClaimController extends Thread {
 										K8sApiCaller.createResourceQuota( claim );
 										replaceRqcStatus( claimName, Constants.CLAIM_STATUS_SUCCESS, "resource quota create success.", claimNamespace );
 										K8sApiCaller.patchLabel(claimName, "handled" ,"t", Constants.CUSTOM_OBJECT_PLURAL_RESOURCEQUOTACLAIM, true, claimNamespace);
-									} 
+									} else if ( status.equals( Constants.CLAIM_STATUS_REJECT )) {
+										K8sApiCaller.patchLabel(claimName, "handled" ,"t", Constants.CUSTOM_OBJECT_PLURAL_RESOURCEQUOTACLAIM , true, claimNamespace);
+									}
 									break;
 								case Constants.EVENT_TYPE_DELETED : 
 									// Nothing to do
