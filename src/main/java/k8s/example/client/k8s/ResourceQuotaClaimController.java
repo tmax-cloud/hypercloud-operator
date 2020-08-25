@@ -92,9 +92,6 @@ public class ResourceQuotaClaimController extends Thread {
 									break;
 							}
 						}
-						
-//						logger.info("[ResourceQuotaClaim Controller] Save latestHandledResourceVersion of ResourceQuotaClaim Controller [" + response.object.getMetadata().getName() + "]");
-//						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_RESOURCEQUOTACLAIM, response.object.getMetadata().getResourceVersion());
 
 					} catch (Exception e) {
 						logger.error("Exception: " + e.getMessage());

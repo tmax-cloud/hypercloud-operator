@@ -93,8 +93,6 @@ public class RoleBindingClaimController extends Thread {
 									break;
 							}
 						}
-//						logger.info("[RoleBindingClaim Controller] Save latestHandledResourceVersion of RoleBindingClaim Controller [" + response.object.getMetadata().getName() + "]");
-//						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_ROLEBINDINGCLAIM, response.object.getMetadata().getResourceVersion());
 						
 					} catch (Exception e) {
 						logger.error("Exception: " + e.getMessage());
