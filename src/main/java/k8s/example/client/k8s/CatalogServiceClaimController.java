@@ -81,11 +81,6 @@ public class CatalogServiceClaimController extends Thread {
 							claimName = claim.get("metadata").get("name").asText();
 							claimNamespace = claim.get("metadata").get("namespace").asText();
 							resourceName = claim.get("spec").get("metadata").get("name").asText();
-							catalogNamespace = Constants.DEFAULT_NAMESPACE;
-    						if ( System.getenv(Constants.SYSTEM_ENV_CATALOG_NAMESPACE) != null && !System.getenv(Constants.SYSTEM_ENV_CATALOG_NAMESPACE).isEmpty() ) {
-    							catalogNamespace = System.getenv(Constants.SYSTEM_ENV_CATALOG_NAMESPACE);
-    						}
-							
 							logger.debug("[CatalogServiceClaim Controller] Claim Name : " + claimName );
 							logger.debug("[CatalogServiceClaim Controller] Claim Namespace : " + claimNamespace );
 							logger.debug("[CatalogServiceClaim Controller] Template Name : " + resourceName );
@@ -98,13 +93,13 @@ public class CatalogServiceClaimController extends Thread {
 									break;
 								case Constants.EVENT_TYPE_MODIFIED : 
 									String status = getClaimStatus( claimName, claimNamespace );
-									if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && K8sApiCaller.templateAlreadyExist( resourceName, catalogNamespace ) ) {
+									if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && K8sApiCaller.templateAlreadyExist( resourceName, Constants.DEFAULT_NAMESPACE ) ) {
 										//K8sApiCaller.updateTemplate( claim );
 										replaceCscStatus( claimName, Constants.CLAIM_STATUS_SUCCESS, "template update success.", claimNamespace );
 										K8sApiCaller.patchLabel(claimName, "handled" ,"t", Constants.CUSTOM_OBJECT_PLURAL_CATALOGSERVICECLAIM, true, claimNamespace);
 
-									} else if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && !K8sApiCaller.templateAlreadyExist( resourceName, catalogNamespace ) ) {
-										K8sApiCaller.createTemplate( claim, catalogNamespace );
+									} else if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && !K8sApiCaller.templateAlreadyExist( resourceName, Constants.DEFAULT_NAMESPACE ) ) {
+										K8sApiCaller.createTemplate( claim, Constants.DEFAULT_NAMESPACE );
 										replaceCscStatus( claimName, Constants.CLAIM_STATUS_SUCCESS, "template create success.", claimNamespace );
 										K8sApiCaller.patchLabel(claimName, "handled" ,"t", Constants.CUSTOM_OBJECT_PLURAL_CATALOGSERVICECLAIM, true, claimNamespace);
 									} else if (status.equals(Constants.CLAIM_STATUS_REJECT)) {
