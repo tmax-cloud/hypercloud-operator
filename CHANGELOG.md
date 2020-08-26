@@ -1,6 +1,23 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.2.2 start -------------------->
+
+## HyperCloudServer_4.1.2.2 (Wed Aug 26 17:17:34 KST 2020)
+
+### Added
+
+### Changed
+  - [mod] _install-guide 오타 수정 by sukhee_yun
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.2.2 end --------------------->
+
 <!-------------------- v4.1.2.1 start -------------------->
 
 ## HyperCloudServer_4.1.2.1 (Wed Aug 26 11:16:41 KST 2020)
