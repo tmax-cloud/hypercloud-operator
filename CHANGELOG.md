@@ -1,6 +1,24 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.2.1 start -------------------->
+
+## HyperCloudServer_4.1.2.1 (Wed Aug 26 11:16:41 KST 2020)
+
+### Added
+
+### Changed
+  - [mod] rbc, rqc Controller Reject 시 handled=t로 처리하는 로직 추가 by taegeon_woo
+
+### Fixed
+  - [ims][230023] 서비스 바인딩 생성 실패 문제 버그 픽스 by jitae_yun
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.2.1 end --------------------->
+
 <!-------------------- v4.1.2.0 start -------------------->
 
 ## HyperCloudServer_4.1.2.0 (Fri Aug 21 18:30:53 KST 2020)
