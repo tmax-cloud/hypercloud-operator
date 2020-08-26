@@ -107,6 +107,9 @@ public class CatalogServiceClaimController extends Thread {
 										K8sApiCaller.createTemplate( claim, catalogNamespace );
 										replaceCscStatus( claimName, Constants.CLAIM_STATUS_SUCCESS, "template create success.", claimNamespace );
 										K8sApiCaller.patchLabel(claimName, "handled" ,"t", Constants.CUSTOM_OBJECT_PLURAL_CATALOGSERVICECLAIM, true, claimNamespace);
+									} else if (status.equals(Constants.CLAIM_STATUS_REJECT)) {
+										replaceCscStatus( claimName, Constants.CLAIM_STATUS_REJECT, "reject from admin.", claimNamespace );
+										K8sApiCaller.patchLabel(claimName, "handled" ,"t", Constants.CUSTOM_OBJECT_PLURAL_CATALOGSERVICECLAIM , true, claimNamespace);
 									}
 									break;
 								case Constants.EVENT_TYPE_DELETED : 
