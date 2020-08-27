@@ -968,41 +968,25 @@ public class K8sApiCaller {
 				JsonArray jArrayPatchPvc = new JsonArray();
 				Map<String, String> labelsMap = null;
 
-				// labels field is not exist
-				if( (labelsMap = existPvc.getMetadata().getLabels()) == null ) {
-					JsonArray labels = new JsonArray();
-					JsonObject label1 = new JsonObject();
-					JsonObject label2 = new JsonObject();
-					JsonObject label3 = new JsonObject();
-
-					label1.addProperty("registryUid", registry.getMetadata().getUid());
-					labels.add(label1);
-
-					label2.addProperty("app", "registry");
-					labels.add(label2);
-
-					label3.addProperty("apps", registry.getMetadata().getName());
-					labels.add(label3);
-
-					jArrayPatchPvc.add(Util.makePatchJsonObject("add", "/metadata", labels));
-				}
-				else {	// labels field is exist
-					JsonObject label = new JsonObject();
-
+				JsonObject label = new JsonObject();
+				labelsMap = existPvc.getMetadata().getLabels();
+				if(labelsMap == null) {
+					labelsMap = new HashMap<>();
+				} else {
 					labelsMap.remove("registryUid");
 					labelsMap.remove("app");
 					labelsMap.remove("apps");
-
-					for(String key : labelsMap.keySet()) {
-						label.addProperty(key, labelsMap.get(key));
-					}
-
-					label.addProperty("registryUid", registry.getMetadata().getUid());
-					label.addProperty("app", "registry");
-					label.addProperty("apps", registry.getMetadata().getName());
-
-					jArrayPatchPvc.add(Util.makePatchJsonObject("add", "/metadata/labels", label));
 				}
+
+				for(String key : labelsMap.keySet()) {
+					label.addProperty(key, labelsMap.get(key));
+				}
+
+				label.addProperty("registryUid", registry.getMetadata().getUid());
+				label.addProperty("app", "registry");
+				label.addProperty("apps", registry.getMetadata().getName());
+
+				jArrayPatchPvc.add(Util.makePatchJsonObject("add", "/metadata/labels", label));
 
 				try {
 					V1PersistentVolumeClaim  result = api.patchNamespacedPersistentVolumeClaim(existPvc.getMetadata().getName(), namespace, new V1Patch(jArrayPatchPvc.toString()), null, null, null, null);
