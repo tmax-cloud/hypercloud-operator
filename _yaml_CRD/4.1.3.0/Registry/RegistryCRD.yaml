@@ -104,7 +104,7 @@ spec:
                 ingress:
                   type: object
                   description: "use ingress service type"
-                  required: [domainName, port]
+                  required: [domainName]
                   properties:
                     domainName: 
                       type: string
