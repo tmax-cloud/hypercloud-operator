@@ -181,11 +181,17 @@ public class InstanceOperator extends Thread {
 	    					JSONObject tpObj = new JSONObject();
 	    					JSONObject obj = new JSONObject();
 	    					
-	    					JSONArray objArr = new JSONArray();
+							JSONArray objArr = new JSONArray();
+							
 		        			
 	    					JSONObject parmPatch = null;
 	    					JSONArray parmPatchArray = null;
-	    					List<String> existParm = new ArrayList<>();
+							List<String> existParm = new ArrayList<>();
+
+							List<String> apiGroupList = new ArrayList<>();
+							List<String> apiVersionList = new ArrayList<>();
+							List<String> namespaceList = new ArrayList<>();
+							List<String> kindList = new ArrayList<>();
 	    					
 	    					Map<String,String> defaultValueMap = new HashMap<>();
 	    					if ( objectToJsonNode(template).get("parameters") != null ) {
@@ -205,6 +211,7 @@ public class InstanceOperator extends Thread {
 	    					}
         							
 		        			if(templateObjs.isArray()) {
+								boolean checkMakeInstance = true;
 		        				for(JsonNode object : templateObjs) {
 			        				String objStr = object.toString();
 			        				//logger.debug("[Instance Operator] Template Object : " + objStr);
@@ -353,116 +360,98 @@ public class InstanceOperator extends Thread {
 			        					}
 			        								        					
 			        					JSONParser parser = new JSONParser();
-			        					JSONObject bodyObj = (JSONObject) parser.parse(replacedObject.toString());
-			        					objArr.add(bodyObj);
-			        							        							        					
-			        					try {
-			        						Object result = tpApi.createNamespacedCustomObject(apiGroup, apiVersion, namespace, kind, bodyObj, null);
-			        						logger.debug(result.toString());
-			        						patchStatus(instanceObj.get("metadata").get("name").asText(), Constants.STATUS_RUNNING, instanceNamespace);
-			        					} catch (ApiException e) {
-			        						logger.debug("[Instance Operator] ApiException: " + e.getMessage());
-			        						logger.debug(e.getResponseBody());
-			        						patchStatus(instanceObj.get("metadata").get("name").asText(), Constants.STATUS_ERROR, e.getResponseBody(), instanceNamespace);
-			        						throw e;
-			        					} catch (Exception e) {
-			        						logger.debug("[Instance Operator] Exception: " + e.getMessage());
-			        						StringWriter sw = new StringWriter();
-			        						e.printStackTrace(new PrintWriter(sw));
-			        						logger.debug(sw.toString());
-			        						patchStatus(instanceObj.get("metadata").get("name").asText(), Constants.STATUS_ERROR, e.getMessage(), instanceNamespace);
-			        						throw e;
-			        					}
+										JSONObject bodyObj = (JSONObject) parser.parse(replacedObject.toString());
+										
+										try {
+											if (existObject(apiGroup, apiVersion, namespace, kind.toLowerCase()+"s", replacedObject.get("metadata").get("name").asText())) {
+												logger.debug("[Instance Operator] kind: "  + kind + "  name: " + replacedObject.get("metadata").get("name").asText() + " is already exist");
+												checkMakeInstance = false;
+												break;
+											} else {
+												apiGroupList.add(apiGroup);
+												apiVersionList.add(apiVersion);
+												namespaceList.add(namespace);
+												kindList.add(kind);
+												objArr.add(bodyObj);
+											}
+										} catch (Exception e) {
+											logger.debug("[Instance Operator] Exception: " + e.getMessage());
+										} catch (Throwable e) {
+											e.printStackTrace();
+										}	        							        					
 			        				//} else {
 			        				//	throw new Exception("Some non-replaced parameters or invaild values exist");
 			        				//}
-			        			}
+								}
+								if(checkMakeInstance){
+									for (int i=0; i<objArr.size(); ++i){
+										try {
+											Object result = tpApi.createNamespacedCustomObject(apiGroupList.get(i), apiVersionList.get(i), namespaceList.get(i), kindList.get(i), objArr.get(i), null);
+											logger.debug(result.toString());
+											patchStatus(instanceObj.get("metadata").get("name").asText(), Constants.STATUS_RUNNING, instanceNamespace);
+										} catch (ApiException e) {
+											logger.debug("[Instance Operator] ApiException: " + e.getMessage());
+											logger.debug(e.getResponseBody());
+											patchStatus(instanceObj.get("metadata").get("name").asText(), Constants.STATUS_ERROR, e.getResponseBody(), instanceNamespace);
+											throw e;
+										} catch (Exception e) {
+											logger.debug("[Instance Operator] Exception: " + e.getMessage());
+											StringWriter sw = new StringWriter();
+											e.printStackTrace(new PrintWriter(sw));
+											logger.debug(sw.toString());
+											patchStatus(instanceObj.get("metadata").get("name").asText(), Constants.STATUS_ERROR, e.getMessage(), instanceNamespace);
+											throw e;
+										}
+									}
+									obj.put("objects", objArr);
+									tpObj.put("template", obj);
+									specObj.put("spec", tpObj);
+									logger.debug("[Instance Operator] Object to be patched : " + specObj.toString());
+									
+									JSONObject patch = new JSONObject();
+									JSONArray patchArray = new JSONArray();
+									patch.put("op", "add");
+									patch.put("path", "/spec/template/objects");
+									patch.put("value", objArr);
+									patchArray.add(patch);
+									
+									try{
+										Object result = tpApi.patchNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, instanceNamespace, Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, instanceObj.get("metadata").get("name").asText(), patchArray);
+										logger.debug(result.toString());
+									} catch (ApiException e) {
+										throw new Exception(e.getResponseBody());
+									}
+									
+									if ( parmPatchArray != null ) {
+										for ( int i = 0; i < parmPatchArray.size(); i++ ) {
+											parmPatchArray.get(i).toString();
+										}
+										JSONObject parmPatchInput = new JSONObject();
+										JSONArray parmPatchArrayInput = new JSONArray();
+										parmPatchInput.put("op", "replace");
+										parmPatchInput.put("path", "/spec/template/parameters");
+										parmPatchInput.put("value", parmPatchArray);
+										parmPatchArrayInput.add(parmPatchInput);
+										
+										try{
+											Object result = tpApi.patchNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, instanceNamespace, Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, instanceObj.get("metadata").get("name").asText(), parmPatchArrayInput);
+											logger.debug(result.toString());
+										} catch (ApiException e) {
+											throw new Exception(e.getResponseBody());
+										}
+									}
+								}
+								else {
+									patchStatus(instanceObj.get("metadata").get("name").asText(), Constants.STATUS_ERROR, "already exist resource in templateinstance", instanceNamespace);
+								}
 		        			}
-		        			
-		        			obj.put("objects", objArr);
-	    					tpObj.put("template", obj);
-	    					specObj.put("spec", tpObj);
-	    					logger.debug("[Instance Operator] Object to be patched : " + specObj.toString());
-	    					
-	    					JSONObject patch = new JSONObject();
-	    					JSONArray patchArray = new JSONArray();
-	    					patch.put("op", "add");
-	    					patch.put("path", "/spec/template/objects");
-	    					patch.put("value", objArr);
-	    					patchArray.add(patch);
-	    					
-	    					try{
-	    						Object result = tpApi.patchNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, instanceNamespace, Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, instanceObj.get("metadata").get("name").asText(), patchArray);
-	    						logger.debug(result.toString());
-	    					} catch (ApiException e) {
-	    						throw new Exception(e.getResponseBody());
-	    					}
-	    					
-	    					if ( parmPatchArray != null ) {
-	    						for ( int i = 0; i < parmPatchArray.size(); i++ ) {
-	    							parmPatchArray.get(i).toString();
-	    						}
-	    						JSONObject parmPatchInput = new JSONObject();
-		    					JSONArray parmPatchArrayInput = new JSONArray();
-		    					parmPatchInput.put("op", "replace");
-		    					parmPatchInput.put("path", "/spec/template/parameters");
-		    					parmPatchInput.put("value", parmPatchArray);
-		    					parmPatchArrayInput.add(parmPatchInput);
-		    					
-		    					try{
-		    						Object result = tpApi.patchNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, instanceNamespace, Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, instanceObj.get("metadata").get("name").asText(), parmPatchArrayInput);
-		    						logger.debug(result.toString());
-		    					} catch (ApiException e) {
-		    						throw new Exception(e.getResponseBody());
-		    					}
-	    					}
 	    					
 		        		} else if(response.type.toString().equals("DELETED")) {
 		        			V1DeleteOptions body = new V1DeleteOptions();
 		        			logger.debug("[Instance Operator] Template Instance " + instanceObj.get("metadata").get("name") + " is DELETED");
 		        			JsonNode instanceObjs = instanceObj.get("spec").get("template").get("objects");
-		        			
-		        			/*if(instanceObjs.isArray()) {
-		        				for(JsonNode object : instanceObjs) {
-		        					String apiGroup = null;
-		        					String apiVersion = null;
-		        					String kind = null;
-		        					String namespace = null;
-		        					String name = object.get("metadata").get("name").asText();
-		        					
-		        					if(object.has("apiVersion")) {
-		        						if(object.get("apiVersion").asText().contains("/")) {
-		        							apiGroup = object.get("apiVersion").asText().split("/")[0];
-		        							apiVersion = object.get("apiVersion").asText().split("/")[1];
-		        						} else {
-		        							apiGroup = "core";
-		        							apiVersion = object.get("apiVersion").asText();
-		        						}
-		        					}
-		        					
-		        					if(object.get("metadata").has("namespace")) {
-		        						namespace = object.get("metadata").get("namespace").asText();
-		        					} else {
-		        						namespace = "default";
-		        					}
-		        					
-		        					if(object.has("kind")) {
-		        						kind = object.get("kind").asText();
-		        					}
-		        					
-		        					logger.debug(apiVersion + "/" + kind + " \"" + name + "\" deleted");
-		        					try {
-		        						Object result = tpApi.deleteNamespacedCustomObject(apiGroup, apiVersion, namespace, kind, name, body, 0, null, null);
-		        						logger.debug(result.toString());
-		        					} catch (ApiException e) {
-		        						throw new Exception(e.getResponseBody());
-		        					}
-		        				}
-		        			}*/
 		        		}
 		        		
-//		        		logger.debug("[Instance Operator] Save latestHandledResourceVersion of Instance Operator [" + instanceObj.get("metadata").get("name").asText() + "]");
-//						K8sApiCaller.updateLatestHandledResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, instanceObj.get("metadata").get("resourceVersion").asText());
 		        		
 					} catch(Exception e) {
 						logger.debug("[Instance Operator] Instance Operator Exception: " + e.getMessage());
@@ -648,5 +637,19 @@ public class InstanceOperator extends Thread {
 			}
 		}
 		return dataType;
+	}
+
+	private boolean existObject(String apiGroup, String apiVersion, String namespace, String plural, String name) throws Throwable{
+		Object obj;
+		try {
+			obj = tpApi.getNamespacedCustomObject(apiGroup, apiVersion, namespace, plural, name);
+		} catch (ApiException e) {
+			return false;
+		}
+		if (obj == null) {
+			return false;
+		} else {
+			return true;
+		}
 	}
 }
