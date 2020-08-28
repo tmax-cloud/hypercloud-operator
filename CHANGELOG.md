@@ -1,6 +1,25 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.3.0 start -------------------->
+
+## HyperCloudServer_4.1.3.0 (Fri Aug 28 15:38:07 KST 2020)
+
+### Added
+
+### Changed
+  - [mod] java client version 8.0.0 --> 9.0.0 by taegeon_woo
+
+### Fixed
+  - [ims][237459] 존재하는 pvc로 registry 생성 시 status update 안되는 버그 수정 by sukhee_yun
+
+### CRD yaml
+  - [crd] Registry CRD의 Ingress port 필드 제거 by sukhee_yun
+
+### Etc
+
+<!--------------------- v4.1.3.0 end --------------------->
+
 <!-------------------- v4.1.2.2 start -------------------->
 
 ## HyperCloudServer_4.1.2.2 (Wed Aug 26 17:17:34 KST 2020)
