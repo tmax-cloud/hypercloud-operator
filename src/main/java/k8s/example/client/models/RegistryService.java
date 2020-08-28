@@ -35,6 +35,7 @@ public class RegistryService {
 	public static final String SVC_TYPE_LOAD_BALANCER = "LoadBalancer";
 	public static final String SVC_TYPE_INGRESS = "Ingress";
 	public static final int REGISTRY_TARGET_PORT = 443;
+	public static final int REGISTRY_INGRESS_PORT = 443;
 	public static final String REGISTRY_PORT_NAME = "tls";
 	public static final String REGISTRY_PORT_PROTOCOL = "TCP";
 	public static final String REGISTRY_DEFAULT_INGRESS_CLASS = "nginx-shd";

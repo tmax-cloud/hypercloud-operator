@@ -768,10 +768,8 @@ public class K8sApiCaller {
 			logger.debug("registrySVCPort: " + registrySVCPort);
 
 			if( serviceType.equals(RegistryService.SVC_TYPE_INGRESS) ) {
-				if( registryService.getIngress().getPort() != 0 ) {
-					registrySVCPort = registryService.getIngress().getPort();
-					logger.debug("[Ingress]registrySVCPort: " + registrySVCPort);
-				}
+				registrySVCPort = RegistryService.REGISTRY_INGRESS_PORT;
+				logger.debug("[Ingress]registrySVCPort: " + registrySVCPort);
 			}
 			else if( serviceType.equals(RegistryService.SVC_TYPE_LOAD_BALANCER) 
 					&& registryService.getLoadBalancer().getPort() != 0) {
@@ -927,41 +925,25 @@ public class K8sApiCaller {
 				JsonArray jArrayPatchPvc = new JsonArray();
 				Map<String, String> labelsMap = null;
 
-				// labels field is not exist
-				if( (labelsMap = existPvc.getMetadata().getLabels()) == null ) {
-					JsonArray labels = new JsonArray();
-					JsonObject label1 = new JsonObject();
-					JsonObject label2 = new JsonObject();
-					JsonObject label3 = new JsonObject();
-
-					label1.addProperty("registryUid", registry.getMetadata().getUid());
-					labels.add(label1);
-
-					label2.addProperty("app", "registry");
-					labels.add(label2);
-
-					label3.addProperty("apps", registry.getMetadata().getName());
-					labels.add(label3);
-
-					jArrayPatchPvc.add(Util.makePatchJsonObject("add", "/metadata", labels));
-				}
-				else {	// labels field is exist
-					JsonObject label = new JsonObject();
-
+				JsonObject label = new JsonObject();
+				labelsMap = existPvc.getMetadata().getLabels();
+				if(labelsMap == null) {
+					labelsMap = new HashMap<>();
+				} else {
 					labelsMap.remove("registryUid");
 					labelsMap.remove("app");
 					labelsMap.remove("apps");
-
-					for(String key : labelsMap.keySet()) {
-						label.addProperty(key, labelsMap.get(key));
-					}
-
-					label.addProperty("registryUid", registry.getMetadata().getUid());
-					label.addProperty("app", "registry");
-					label.addProperty("apps", registry.getMetadata().getName());
-
-					jArrayPatchPvc.add(Util.makePatchJsonObject("add", "/metadata/labels", label));
 				}
+
+				for(String key : labelsMap.keySet()) {
+					label.addProperty(key, labelsMap.get(key));
+				}
+
+				label.addProperty("registryUid", registry.getMetadata().getUid());
+				label.addProperty("app", "registry");
+				label.addProperty("apps", registry.getMetadata().getName());
+
+				jArrayPatchPvc.add(Util.makePatchJsonObject("add", "/metadata/labels", label));
 
 				try {
 					V1PersistentVolumeClaim  result = api.patchNamespacedPersistentVolumeClaim(existPvc.getMetadata().getName(), namespace, new V1Patch(jArrayPatchPvc.toString()), null, null, null, null);
@@ -1086,10 +1068,8 @@ public class K8sApiCaller {
 			if( serviceType.equals(RegistryService.SVC_TYPE_INGRESS) ) {
 				ingressDomain = registryService.getIngress().getDomainName();
 
-				if( registryService.getIngress().getPort() != 0 ) {
-					registrySVCPort = registryService.getIngress().getPort();
-					logger.debug("[Ingress]registrySVCPort: " + registrySVCPort);
-				}
+				registrySVCPort = registryService.REGISTRY_INGRESS_PORT;
+				logger.debug("[Ingress]registrySVCPort: " + registrySVCPort);
 			}
 			else if( serviceType.equals(RegistryService.SVC_TYPE_LOAD_BALANCER) 
 					&& registryService.getLoadBalancer().getPort() != 0) {
@@ -1098,8 +1078,6 @@ public class K8sApiCaller {
 			}
 
 			if(serviceType.equals(RegistryService.SVC_TYPE_INGRESS)) {
-
-
 				registryDomain = registryName + "." + ingressDomain;
 				logger.debug("[registryDomain]:" + registryDomain);
 			}
@@ -1295,10 +1273,8 @@ public class K8sApiCaller {
 			if( serviceType.equals(RegistryService.SVC_TYPE_INGRESS) ) {
 				ingressDomain = registryService.getIngress().getDomainName();
 
-				if( registryService.getIngress().getPort() != 0 ) {
-					registrySVCPort = registryService.getIngress().getPort();
-					logger.debug("[Ingress]registrySVCPort: " + registrySVCPort);
-				}
+				registrySVCPort = registryService.REGISTRY_INGRESS_PORT;
+				logger.debug("[Ingress]registrySVCPort: " + registrySVCPort);
 			} else if( serviceType.equals(RegistryService.SVC_TYPE_LOAD_BALANCER) 
 					&& registryService.getLoadBalancer().getPort() != 0) {
 				registrySVCPort = registryService.getLoadBalancer().getPort();
@@ -1490,10 +1466,8 @@ public class K8sApiCaller {
 			registryDomain = registryName + "." + ingressDomain;
 			logger.debug("[registryDomain]:" + registryDomain);
 
-			if( registryService.getIngress().getPort() != 0 ) {
-				registrySVCPort = registryService.getIngress().getPort();
-				logger.debug("[Ingress]registrySVCPort: " + registrySVCPort);
-			}
+			registrySVCPort = registryService.REGISTRY_INGRESS_PORT;
+			logger.debug("[Ingress]registrySVCPort: " + registrySVCPort);
 
 			metadata.setName(Constants.K8S_PREFIX + registryName);
 			metadata.setNamespace(namespace);
@@ -2593,19 +2567,21 @@ public class K8sApiCaller {
 						Registry registry = mapper.treeToValue(mapper.valueToTree(registryObj), Registry.class);
 						String registryName = registry.getMetadata().getName();
 						String namespace = registry.getMetadata().getNamespace();
-						Integer ingressPort = null;
+//						Integer ingressPort = null;
 						Integer lbPort = null;
-						if(registry.getSpec().getService().getIngress() != null) {
-							if(registry.getSpec().getService().getIngress().getPort() < 1
-									|| registry.getSpec().getService().getIngress().getPort() > 65535)
-								ingressPort = registry.getSpec().getService().getIngress().getPort();
-							patchArray.add(Util.makePatchJsonObject("replace", "/spec/service/ingress/port", 443));
-							
-//							// Patch: 4.1.0.46- => 4.1.0.47+
-//							if (registry.getSpec().getService().getIngress().getIngressClass() == null) {
-//								patchArray.add(Util.makePatchJsonObject("add", "/spec/service/ingress/ingressClass", "nginx"));
-//							}
-						}
+						
+						// Delete Ingress Port Patch: version(4.1.2.3)
+//						if(registry.getSpec().getService().getIngress() != null) {
+//							if(registry.getSpec().getService().getIngress().getPort() < 1
+//									|| registry.getSpec().getService().getIngress().getPort() > 65535)
+//								ingressPort = registry.getSpec().getService().getIngress().getPort();
+//							patchArray.add(Util.makePatchJsonObject("replace", "/spec/service/ingress/port", 443));
+//							
+////							// Patch: 4.1.0.46- => 4.1.0.47+
+////							if (registry.getSpec().getService().getIngress().getIngressClass() == null) {
+////								patchArray.add(Util.makePatchJsonObject("add", "/spec/service/ingress/ingressClass", "nginx"));
+////							}
+//						}
 
 						if(registry.getSpec().getService().getLoadBalancer() != null) {
 							if(registry.getSpec().getService().getLoadBalancer().getPort() < 1
@@ -2625,8 +2601,8 @@ public class K8sApiCaller {
 									Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registryName,
 									patchArray, null, null, null);
 							logger.debug("registry spec is patched: " + namespace + "/" + registryName);
-							if( ingressPort != null )
-								logger.debug("\tspec.service.ingress:" + ingressPort + " -> 443");
+//							if( ingressPort != null )
+//								logger.debug("\tspec.service.ingress:" + ingressPort + " -> 443");
 							if( lbPort != null )
 								logger.debug("\tspec.service.loadBalancer:" + lbPort + " -> 443");
 						} catch (ApiException e) {

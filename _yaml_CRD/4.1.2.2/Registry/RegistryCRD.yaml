@@ -3,7 +3,7 @@ kind: CustomResourceDefinition
 metadata:
   name: registries.tmax.io
   annotations:
-    operator.version: %latest%
+    operator.version: 4.1.2.2
 spec:
   group: tmax.io
   versions:
@@ -109,6 +109,11 @@ spec:
                     domainName: 
                       type: string
                       description: "(example: 192.168.6.110.nip.io)"
+                    port:
+                      type: integer
+                      description: "external port. Generally use 443 port"
+                      minimum: 1
+                      maximum: 65535
                 loadBalancer:
                   type: object
                   description: "use loadBalancer service type"

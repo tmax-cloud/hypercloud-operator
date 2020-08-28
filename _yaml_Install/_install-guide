@@ -32,10 +32,10 @@
 		# export INGRESS_CLASS=nginx-shd
 		# export NGINX_INGRESS_VERSION=0.33.0
 		# export KUBE_WEBHOOK_CERTGEN_VERSION=v1.2.2
-		# sed -i 's/ingress-nginx/'${INGRESS_NGINX_NAME}'/g' 9.nginx-controller.yaml
-		# sed -i 's/--ingress-class=nginx/--ingress-class='${INGRESS_CLASS}'/g' 9.nginx-controller.yaml
-		# sed -i 's/ingress-controller-leader-nginx/ingress-controller-leader-'${INGRESS_CLASS}'/g' 9.nginx-controller.yaml
-		# sed -i 's/{nginx_ingress_version}/'${NGINX_INGRESS_VERSION}'/g' 9.nginx-controller.yaml
- 		# sed -i 's/{kube_webhook_certgen_version}/'${KUBE_WEBHOOK_CERTGEN_VERSION}'/g' 9.nginx-controller.yaml
+		# sed -i 's/ingress-nginx/'${INGRESS_NGINX_NAME}'/g' 7.nginx-controller.yaml
+		# sed -i 's/--ingress-class=nginx/--ingress-class='${INGRESS_CLASS}'/g' 7.nginx-controller.yaml
+		# sed -i 's/ingress-controller-leader-nginx/ingress-controller-leader-'${INGRESS_CLASS}'/g' 7.nginx-controller.yaml
+		# sed -i 's/{nginx_ingress_version}/'${NGINX_INGRESS_VERSION}'/g' 7.nginx-controller.yaml
+ 		# sed -i 's/{kube_webhook_certgen_version}/'${KUBE_WEBHOOK_CERTGEN_VERSION}'/g' 7.nginx-controller.yaml
  		
    https://github.com/tmax-cloud/hypercloud-operator/blob/master/_yaml_Install/7.nginx-controller.yaml 실행
