@@ -28,9 +28,9 @@ dependencies {
 
     // This dependency is used internally, and not exposed to consumers on their own compile classpath.
     compile 'com.google.guava:guava:27.0.1-jre'
-	compile 'io.kubernetes:client-java-api:8.0.0'
-    compile 'io.kubernetes:client-java:8.0.0'
-    compile 'io.kubernetes:client-java-proto:8.0.0'
+	compile 'io.kubernetes:client-java-api:9.0.0'
+    compile 'io.kubernetes:client-java:9.0.0'
+    compile 'io.kubernetes:client-java-proto:9.0.0'
 	compile 'org.nanohttpd:nanohttpd:2.3.1'
 	compile 'org.nanohttpd:nanohttpd-nanolets:2.3.1'
 	compile 'com.auth0:java-jwt:3.9.0'

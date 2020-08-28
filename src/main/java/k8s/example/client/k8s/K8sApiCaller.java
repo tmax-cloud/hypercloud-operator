@@ -142,7 +142,6 @@ import io.kubernetes.client.openapi.models.V1VolumeMount;
 import io.kubernetes.client.util.Config;
 import k8s.example.client.Constants;
 import k8s.example.client.DataObject.RegistryEvent;
-import k8s.example.client.DataObject.TokenCR;
 import k8s.example.client.DataObject.UserCR;
 import k8s.example.client.DataObject.UserSecurityPolicyCR;
 import k8s.example.client.Main;
@@ -353,21 +352,6 @@ public class K8sApiCaller {
 		CatalogServiceClaimController cscOperator = new CatalogServiceClaimController(k8sClient, customObjectApi, 0);
 		cscOperator.start();
 
-		// start JoinFed Controller
-		logger.info("Start JoinFed Controller");
-		JoinFedController jfOperator = new JoinFedController(k8sClient, customObjectApi, api, 0);
-		jfOperator.start();
-
-		// start CapiCluster Controller
-		logger.info("Start CapiCluster Controller");
-		CapiClusterController ccOperator = new CapiClusterController(k8sClient, customObjectApi, api, 0);
-		ccOperator.start();
-
-		// start FederatedService Controller
-		logger.info("Start FederatedService Controller");
-		FederatedServiceController fsOperator = new FederatedServiceController(k8sClient, customObjectApi, 0);
-		fsOperator.start();
-
 		while (true) { // Infinity Loop for keep alive Main Thread
 			try {
 				if (!registryWatcher.isAlive()) {
@@ -552,32 +536,6 @@ public class K8sApiCaller {
 					cscOperator.start();
 				}
 
-				if (!jfOperator.isAlive()) {
-					jfLatestResourceVersion = JoinFedController.getLatestResourceVersion();
-					logger.info(
-							("JoinFed Controller is not Alive. Restart Controller! (Latest Resource Version: "
-									+ jfLatestResourceVersion + ")"));
-					jfOperator.interrupt();
-					jfOperator = new JoinFedController(k8sClient, customObjectApi, api, jfLatestResourceVersion);
-					jfOperator.start();
-				}
-
-				if (!ccOperator.isAlive()) {
-					ccLatestResourceVersion = CapiClusterController.getLatestResourceVersion();
-					logger.info(
-							("CapiCluster Controller is not Alive. Restart Controller! (Latest Resource Version: "
-									+ ccLatestResourceVersion + ")"));
-					ccOperator.interrupt();
-					ccOperator = new CapiClusterController(k8sClient, customObjectApi, api, ccLatestResourceVersion);
-					ccOperator.start();
-				}
-
-				if (!fsOperator.isAlive()) {
-					logger.info("FederatedService Controller is not Alive. Restart Controller! (Latest Resource Version: 0)");
-					fsOperator.interrupt();
-					fsOperator = new FederatedServiceController(k8sClient, customObjectApi, 0);
-					fsOperator.start();
-				}
 			} catch (Exception e) {
 				StringWriter sw = new StringWriter();
 				e.printStackTrace(new PrintWriter(sw));
@@ -654,9 +612,8 @@ public class K8sApiCaller {
 	public static void deleteUserSecurityPolicy (String uspName) throws Exception {
 		try {
 			V1DeleteOptions body = new V1DeleteOptions();
-
 			customObjectApi.deleteClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION,
-					Constants.CUSTOM_OBJECT_PLURAL_USER_SECURITY_POLICY, uspName, 0, null, null, body);
+					Constants.CUSTOM_OBJECT_PLURAL_USER_SECURITY_POLICY, uspName, 0, null, null, null, body);
 		} catch (ApiException e) {
 			logger.error("Response body: " + e.getResponseBody());
 			e.printStackTrace();
@@ -754,7 +711,7 @@ public class K8sApiCaller {
 		try {
 			customObjectApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP,
 					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY,
-					registry.getMetadata().getName(), patchStatusArray);
+					registry.getMetadata().getName(), patchStatusArray, null, null, null);
 			
 			logger.debug("CRD Status is patched: " + namespace + "/" + registryName);
 			logger.debug("\tphase(" + phase + ")");
@@ -2502,7 +2459,7 @@ public class K8sApiCaller {
 		try {
 			Object result = customObjectApi.replaceNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
 					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registryName,
-					registry);
+					registry, null, null);
 			logger.debug("replaceNamespacedCustomObject result: " + result.toString() + "\n");
 
 		} catch (ApiException e) {
@@ -2535,7 +2492,7 @@ public class K8sApiCaller {
 		try {
 			Object result = customObjectApi.replaceNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
 					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registryName,
-					registry);
+					registry, null, null);
 
 			logger.debug("replaceNamespacedCustomObject result: " + result.toString() + "\n");
 		} catch (ApiException e) {
@@ -2580,7 +2537,7 @@ public class K8sApiCaller {
 		try {
 			Object result = customObjectApi.replaceNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
 					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registryName,
-					registry);
+					registry, null, null);
 
 			logger.debug("replaceNamespacedCustomObject result: " + result.toString() + "\n");
 		} catch (ApiException e) {
@@ -2606,7 +2563,7 @@ public class K8sApiCaller {
 		try {
 			Object result = customObjectApi.replaceNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
 					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registryName,
-					registry);
+					registry, null, null);
 
 			logger.debug("replaceNamespacedCustomObject result: " + result.toString() + "\n");
 		} catch (ApiException e) {
@@ -2666,7 +2623,7 @@ public class K8sApiCaller {
 						try { 
 							customObjectApi.patchNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
 									Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registryName,
-									patchArray);
+									patchArray, null, null, null);
 							logger.debug("registry spec is patched: " + namespace + "/" + registryName);
 							if( ingressPort != null )
 								logger.debug("\tspec.service.ingress:" + ingressPort + " -> 443");
@@ -2709,7 +2666,7 @@ public class K8sApiCaller {
 			try {
 				customObjectApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP,
 						Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY,
-						registryName, patchStatusArray);
+						registryName, patchStatusArray, null, null, null);
 				logger.debug("CRD Status is patched: " + namespace + "/" + registryName);
 				logger.debug("\tphase(" + phase + ")");
 				logger.debug("\tmessage(" + message + ")");
@@ -2733,7 +2690,7 @@ public class K8sApiCaller {
 			try {
 				customObjectApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP,
 						Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY,
-						registryName, patchStatusArray);
+						registryName, patchStatusArray, null, null, null);
 				logger.debug("CRD Status is patched: " + namespace + "/" + registryName);
 				logger.debug("\tphase(" + phase + ")");
 				logger.debug("\tmessage(" + message + ")");
@@ -2763,7 +2720,7 @@ public class K8sApiCaller {
 			try {
 				customObjectApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP,
 						Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY,
-						registryName, patchStatusArray);
+						registryName, patchStatusArray, null, null, null);
 				logger.debug("CRD Status is Patched: " + namespace + "/" + registryName + " : " + condition.get("type").getAsString() + "(" + condition.get("status").getAsString() + ")\n");
 			} catch (ApiException e) {
 				logger.error(e.getResponseBody());
@@ -2834,7 +2791,7 @@ public class K8sApiCaller {
 		try {
 			customObjectApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP,
 					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registryName,
-					patchStatusArray);
+					patchStatusArray, null, null, null);
 			logger.debug("patchNamespacedCustomObjectStatus result: " + condition.get("type").getAsString() + "(" + condition.get("status").getAsString() + ")\n");
 		} catch (ApiException e) {
 			if(e.getCode() == 404) {
@@ -2986,7 +2943,7 @@ public class K8sApiCaller {
 		try {
 			customObjectApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP,
 					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY,
-					registryName, patchStatusArray);
+					registryName, patchStatusArray, null, null, null);
 			logger.debug("patchNamespacedCustomObjectStatus result: "
 					+ condition.get("type").getAsString() + "(" + condition.get("status").getAsString() + ") / "
 					+ condition2.get("type").getAsString() + "(" + condition2.get("status").getAsString() + ")\n");
@@ -3056,7 +3013,7 @@ public class K8sApiCaller {
 		try {
 			customObjectApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP,
 					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registryName,
-					patchStatusArray);
+					patchStatusArray, null, null, null);
 			logger.debug("patchNamespacedCustomObjectStatus result: " + condition.get("type").getAsString() + "(" + condition.get("status").getAsString() + ")\n");
 		} catch (ApiException e) {
 			if(e.getCode() == 404) {
@@ -3217,7 +3174,7 @@ public class K8sApiCaller {
 		try {
 			customObjectApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP,
 					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY,
-					registryName, patchStatusArray);
+					registryName, patchStatusArray, null, null, null);
 			logger.debug("patchNamespacedCustomObjectStatus result: " + condition.get("type").getAsString() + "(" + condition.get("status").getAsString() + ")\n");
 		} catch (ApiException e) {
 			if(e.getCode() == 404) {
@@ -3338,7 +3295,7 @@ public class K8sApiCaller {
 		try {
 			customObjectApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP,
 					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registryName,
-					patchStatusArray);
+					patchStatusArray, null, null, null);
 			logger.debug("patchNamespacedCustomObjectStatus result: " + condition.get("type").getAsString() + "(" + condition.get("status").getAsString() + ")\n");
 		} catch (ApiException e) {
 			if(e.getCode() == 404) {
@@ -3434,7 +3391,7 @@ public class K8sApiCaller {
 		try {
 			customObjectApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP,
 					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registryName,
-					patchStatusArray);
+					patchStatusArray, null, null, null);
 			logger.debug("patchNamespacedCustomObjectStatus result: " + condition.get("type").getAsString() + "(" + condition.get("status").getAsString() + ")\n");
 		} catch (ApiException e) {
 			if(e.getCode() == 404) {
@@ -3511,7 +3468,7 @@ public class K8sApiCaller {
 		try {
 			customObjectApi.patchNamespacedCustomObjectStatus(Constants.CUSTOM_OBJECT_GROUP,
 					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, registryName,
-					patchStatusArray);
+					patchStatusArray, null, null, null);
 			logger.debug("patchNamespacedCustomObjectStatus result: " + condition.get("type").getAsString() + "(" + condition.get("status").getAsString() + ")\n");
 		} catch (ApiException e) {
 			if(e.getCode() == 404) {
@@ -4029,7 +3986,7 @@ public class K8sApiCaller {
 			try {
 				Object result = customObjectApi.patchNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
 						Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_IMAGE, imageCRName,
-						patchArray);
+						patchArray, null, null, null);
 				logger.debug("patchNamespacedCustomObject result: " + result.toString() + "\n");
 			} catch (ApiException e) {
 				logger.error(e.getResponseBody());
@@ -4093,7 +4050,7 @@ public class K8sApiCaller {
 		try {
 			Object result = customObjectApi.patchNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
 					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_IMAGE, imageCRName,
-					patchArray);
+					patchArray, null, null, null);
 			logger.debug("patchNamespacedCustomObject result: " + result.toString() + "\n");
 		} catch (ApiException e) {
 			logger.error(e.getResponseBody());
@@ -4113,7 +4070,7 @@ public class K8sApiCaller {
 		try {
 			Object result = customObjectApi.deleteNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
 					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_IMAGE, imageCRName,
-					0, null, null, null);
+					0, null, null, null, null);
 			logger.debug("deleteNamespacedCustomObject result: " + result.toString() + "\n");
 		} catch (ApiException e) {
 			logger.error(e.getResponseBody());
@@ -4145,7 +4102,7 @@ public class K8sApiCaller {
 				try {
 					Object result = customObjectApi.deleteNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
 							Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_IMAGE, imageCRName,
-							0, null, null, null);
+							0, null, null, null, null);
 					logger.debug(imageCRName + " image is deleted!!");
 				} catch (ApiException e) {
 					logger.error("customObjectApi.deleteNamespacedCustomObject API error: " + e.getResponseBody());
@@ -4202,7 +4159,7 @@ public class K8sApiCaller {
 			image.setSpec(spec);
 
 			Object result = customObjectApi.createNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
-					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_IMAGE, image, null);
+					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_IMAGE, image, null, null, null);
 			logger.debug("createNamespacedCustomObject result: " + result.toString() + "\n");
 		} catch (ApiException e) {
 			logger.error(e.getResponseBody());
@@ -4274,7 +4231,7 @@ public class K8sApiCaller {
 				try {
 					Object result = customObjectApi.patchNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
 							Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_IMAGE,
-							imageCRName, patchArray);
+							imageCRName, patchArray, null, null, null);
 					logger.debug("patchNamespacedCustomObject result: " + result.toString() + "\n");
 				} catch (ApiException e) {
 					logger.error(e.getResponseBody());
@@ -4320,7 +4277,7 @@ public class K8sApiCaller {
 				image.setSpec(spec);
 
 				Object result = customObjectApi.createNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
-						Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_IMAGE, image, null);
+						Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_IMAGE, image, null, null, null);
 				
 				logger.debug("createNamespacedCustomObject result: " + result.toString() + "\n");
 			} catch (ApiException e) {
@@ -4349,7 +4306,7 @@ public class K8sApiCaller {
 		try {
 			Object result = customObjectApi.deleteNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
 					Constants.CUSTOM_OBJECT_VERSION, namespace, Constants.CUSTOM_OBJECT_PLURAL_IMAGE, imageCRName,
-					0, null, null, null);
+					0, null, null, null, null);
 			logger.debug("deleteNamespacedCustomObject result: " + result.toString() + "\n");
 
 		} catch (ApiException e) {
@@ -5015,7 +4972,7 @@ public class K8sApiCaller {
 
 			response = customObjectApi.createNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
 					Constants.CUSTOM_OBJECT_VERSION, inDO.getContext().getNamespace(),
-					Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, bodyObj, null);
+					Constants.CUSTOM_OBJECT_PLURAL_TEMPLATE_INSTANCE, bodyObj, null, null, null);
 		} catch (ApiException e) {
 			logger.error("Response body: " + e.getResponseBody());
 			e.printStackTrace();
@@ -5340,7 +5297,7 @@ public class K8sApiCaller {
 
 		try {
 			customObjectApi.replaceClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION,
-					Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, namespaceClaim.getMetadata().getName(), namespaceClaim);
+					Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, namespaceClaim.getMetadata().getName(), namespaceClaim, null, null);
 			logger.debug(" Update Namespace [ " + namespaceClaim.getMetadata().getName() + " ] Success");
 		} catch (ApiException e) {
 			logger.error(e.getResponseBody());
@@ -6123,7 +6080,7 @@ public class K8sApiCaller {
 		Object response = null;
 		try {
 			response = customObjectApi.patchNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
-					Constants.CUSTOM_OBJECT_VERSION, namespace, plural, name, patchArray);
+					Constants.CUSTOM_OBJECT_VERSION, namespace, plural, name, patchArray, null, null, null);
 		} catch (ApiException e) {
 			logger.error(e.getResponseBody());
 			logger.error("ApiException Code: " + e.getCode());
@@ -6152,7 +6109,7 @@ public class K8sApiCaller {
 		Object response = null;
 		try {
 			response = customObjectApi.patchClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP,
-					Constants.CUSTOM_OBJECT_VERSION, plural, name, patchArray);
+					Constants.CUSTOM_OBJECT_VERSION, plural, name, patchArray, null, null, null);
 		} catch (ApiException e) {
 			logger.error(e.getResponseBody());
 			logger.error("ApiException Code: " + e.getCode());
@@ -6440,7 +6397,7 @@ public class K8sApiCaller {
 			JSONObject bodyObj = (JSONObject) parser.parse(new Gson().toJson(uspCR));
 
 			customObjectApi.createClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION,
-					Constants.CUSTOM_OBJECT_PLURAL_USER_SECURITY_POLICY, bodyObj, null);
+					Constants.CUSTOM_OBJECT_PLURAL_USER_SECURITY_POLICY, bodyObj, null, null, null);
 		} catch (ApiException e) {
 			logger.error("Response body: " + e.getResponseBody());
 			e.printStackTrace();
@@ -6466,7 +6423,8 @@ public class K8sApiCaller {
 			logger.debug("JsonPatchStr: " + jsonPatchStr);
 
 			JsonElement jsonPatch = (JsonElement) new JsonParser().parse(jsonPatchStr);
-			customObjectApi.patchClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, Constants.CUSTOM_OBJECT_PLURAL_USER_SECURITY_POLICY, uspName, jsonPatch);
+			customObjectApi.patchClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION,
+					Constants.CUSTOM_OBJECT_PLURAL_USER_SECURITY_POLICY, uspName, jsonPatch, null, null, null);
 		
 		} catch (ApiException e) {
 			logger.error(e.getResponseBody());
@@ -6490,7 +6448,8 @@ public class K8sApiCaller {
 			logger.debug("JsonPatchStr: " + jsonPatchStr);
 
 			JsonElement jsonPatch = (JsonElement) new JsonParser().parse(jsonPatchStr);
-			customObjectApi.patchClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION, Constants.CUSTOM_OBJECT_PLURAL_USER, userId, jsonPatch);
+			customObjectApi.patchClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP, Constants.CUSTOM_OBJECT_VERSION,
+					Constants.CUSTOM_OBJECT_PLURAL_USER, userId, jsonPatch, null, null, null);
 		
 		} catch (ApiException e) {
 			logger.error(e.getResponseBody());
@@ -6568,10 +6527,10 @@ public class K8sApiCaller {
 						Constants.CUSTOM_OBJECT_VERSION, 
 						cumtomObjectResource, 
 						resourceName, 
-						patchArray );
+						patchArray, null, null, null);
 			} else {
 				customObjectApi.patchNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP, 
-						Constants.CUSTOM_OBJECT_VERSION, namespace, cumtomObjectResource, resourceName, patchArray);
+						Constants.CUSTOM_OBJECT_VERSION, namespace, cumtomObjectResource, resourceName, patchArray, null, null, null);
 			}		
 		} catch (ApiException e) {
 			logger.error(e.getResponseBody());

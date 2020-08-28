@@ -153,7 +153,7 @@ public class ResourceQuotaClaimController extends Thread {
 					namespace, 
 					Constants.CUSTOM_OBJECT_PLURAL_RESOURCEQUOTACLAIM,  
 					name, 
-					patchStatusArray );
+					patchStatusArray, null, null, null );
 		} catch (ApiException e) {
 			logger.error(e.getResponseBody());
 			logger.error("ApiException Code: " + e.getCode());
