@@ -3,15 +3,17 @@ All notable changes to this project will be documented in this file.
 
 <!-------------------- v4.1.3.1 start -------------------->
 
-## HyperCloudServer_4.1.3.1 (Mon Aug 31 14:13:20 KST 2020)
+## HyperCloudServer_4.1.3.1 (2020년 08월 31일 월 오후  3:47:04)
 
 ### Added
 
 ### Changed
 
 ### Fixed
+  - [ims][237838] template instance의 상태가 error로 변경되는 문제 버그 픽스 by jitae_yun
 
 ### CRD yaml
+  - [crd] RegistryCRD.yaml required 수정 by sukhee_yun
 
 ### Etc
 
