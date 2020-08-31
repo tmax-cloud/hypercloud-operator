@@ -84,7 +84,7 @@ public class CatalogServiceClaimController extends Thread {
 							logger.debug("[CatalogServiceClaim Controller] Claim Name : " + claimName );
 							logger.debug("[CatalogServiceClaim Controller] Claim Namespace : " + claimNamespace );
 							logger.debug("[CatalogServiceClaim Controller] Template Name : " + resourceName );
-							logger.debug("[CatalogServiceClaim Controller] Catalog Namespace : " + catalogNamespace );
+							logger.debug("[CatalogServiceClaim Controller] Catalog Namespace : " + Constants.DEFAULT_NAMESPACE );
 
 							switch( eventType ) {
 								case Constants.EVENT_TYPE_ADDED : 

@@ -5415,6 +5415,10 @@ public class K8sApiCaller {
 		
 		JSONParser parser = new JSONParser();
 		JSONObject bodyObj = (JSONObject) parser.parse(claim.get("spec").toString());
+		JSONObject metadata = (JSONObject) bodyObj.get("metadata");
+		if(metadata.get("namespace")!=null){
+			metadata.put("namespace",namespace);
+		}
 		
 		try {
 			templateApi.createNamespacedCustomObject("tmax.io", "v1", namespace, "Template", bodyObj, null);
