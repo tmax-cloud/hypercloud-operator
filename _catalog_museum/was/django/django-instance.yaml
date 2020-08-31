@@ -4,7 +4,7 @@ metadata:
   name: django-cicd-template-instance
   namespace: default
   annotations:
-    template-version: 1.0.2
+    template-version: 1.1.0
     tested-operator-version: 4.1.0.23
   labels:
     cicd-template-was: django
@@ -24,7 +24,7 @@ spec:
     - name: GIT_REV
       value: master
     - name: IMAGE_URL
-      value: <이미지 주소>
+      value: '<이미지 주소>'
     - name: REGISTRY_SECRET_NAME
       value: ''
     - name: WAS_PORT

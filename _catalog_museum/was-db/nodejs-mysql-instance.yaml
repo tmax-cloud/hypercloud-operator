@@ -4,7 +4,7 @@ metadata:
   name: nodejs-mysql-template-instance
   namespace: default
   annotations:
-    template-version: 1.0.2
+    template-version: 1.1.0
     tested-operator-version: 4.1.0.23
 spec:
   template:
@@ -45,4 +45,3 @@ spec:
       value: ''
     - name: PACKAGE_SERVER_URL
       value: ''
-

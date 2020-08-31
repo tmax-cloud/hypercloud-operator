@@ -4,7 +4,7 @@ metadata:
   name: nodejs-mysql-template
   namespace: default
   annotations:
-    template-version: 1.0.2
+    template-version: 1.1.0
     tested-operator-version: 4.1.0.23
 imageUrl: https://i.imgur.com/ImDhuQF.png
 provider: tmax
@@ -263,49 +263,46 @@ objects:
               ports:
               - containerPort: ${WAS_PORT}
 - apiVersion: tekton.dev/v1alpha1
-  kind: PipelineResource
-  metadata:
-    name: ${APP_NAME}-input-git
-    namespace: ${NAMESPACE}
-  spec:
-    type: git
-    params:
-    - name: revision
-      value: ${GIT_REV}
-    - name: url
-      value: ${GIT_URL}
-- apiVersion: tekton.dev/v1alpha1
-  kind: PipelineResource
-  metadata:
-    name: ${APP_NAME}-output-image
-    namespace: ${NAMESPACE}
-  spec:
-    type: image
-    params:
-    - name: url
-      value: ${IMAGE_URL}
-- apiVersion: tekton.dev/v1alpha1
   kind: Pipeline
   metadata:
     name: ${APP_NAME}-pipeline
     namespace: ${NAMESPACE}
   spec:
-    resources:
-    - name: source-repo
-      type: git
-    - name: image
-      type: image
     params:
     - name: app-name
       type: string
       description: Application name
     - name: deploy-cfg-name
       description: Configmap name for description
+    - name: git-url
+      description: Git url
+    - name: git-rev
+      description: Git revision
+    workspaces:
+      - name: git-source
+        description: The git repo will be cloned onto the volume backing this workspace
     tasks:
+    - name: git-clone
+      taskRef:
+        name: git-clone
+        kind: ClusterTask
+      workspaces:
+        - name: output
+          workspace: git-source
+      params:
+        - name: url
+          value: $(params.git-url)
+        - name: revision
+          value: $(params.git-rev)
     - name: build-source
       taskRef:
         name: s2i
         kind: ClusterTask
+      runAfter:
+        - git-clone
+      workspaces:
+        - name: git-source
+          workspace: git-source
       params:
       - name: BUILDER_IMAGE
         value: tmaxcloudck/s2i-nodejs:12
@@ -313,36 +310,14 @@ objects:
         value: ${PACKAGE_SERVER_URL}
       - name: REGISTRY_SECRET_NAME
         value: ${REGISTRY_SECRET_NAME}
-      resources:
-        inputs:
-        - name: source
-          resource: source-repo
-        outputs:
-        - name: image
-          resource: image
-    - name: scan-and-sign-image
-      taskRef:
-        name: analyze-image-vulnerabilities
-        kind: ClusterTask
-      resources:
-        inputs:
-        - name: scanned-image
-          resource: image
-          from:
-          - build-source
-      params:
-      - name: image-url
-        value: $(tasks.build-source.results.image-url)
+      - name: IMAGE_URL
+        value: ${IMAGE_URL}
     - name: deploy
       taskRef:
         name: generate-and-deploy-using-kubectl
         kind: ClusterTask
       runAfter:
-      - scan-and-sign-image
-      resources:
-        inputs:
-        - name: image
-          resource: image
+        - build-source
       params:
       - name: app-name
         value: $(params.app-name)
@@ -359,16 +334,22 @@ objects:
     serviceAccountName: ${SERVICE_ACCOUNT_NAME}
     pipelineRef:
       name: ${APP_NAME}-pipeline
-    resources:
-    - name: source-repo
-      resourceRef:
-        name: ${APP_NAME}-input-git
-    - name: image
-      resourceRef:
-        name: ${APP_NAME}-output-image
     params:
     - name: app-name
       value: ${APP_NAME}
     - name: deploy-cfg-name
       value: ${APP_NAME}-deploy-cfg
-
+    - name: git-url
+      value: ${GIT_URL}
+    - name: git-rev
+      value: ${GIT_REV}
+    workspaces:
+      - name: git-source
+        volumeClaimTemplate:
+          spec:
+            accessModes:
+            - ReadWriteOnce
+            storageClassName: csi-cephfs-sc
+            resources:
+              requests:
+                storage: 500Mi

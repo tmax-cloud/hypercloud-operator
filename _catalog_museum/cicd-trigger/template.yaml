@@ -4,7 +4,7 @@ metadata:
   name: cicd-trigger-template
   namespace: default
   annotations:
-    template-version: 1.0.2
+    template-version: 1.1.0
     tested-operator-version: 4.1.0.23
 imageUrl: 'https://raw.githubusercontent.com/tektoncd/triggers/master/tekton-triggers.png'
 provider: tmax
@@ -54,23 +54,27 @@ objects:
         serviceAccountName: ${SERVICE_ACCOUNT_NAME}
         pipelineRef:
           name: ${APP_NAME}-pipeline
+        workspaces:
+          - name: git-source
+            volumeClaimTemplate:
+              spec:
+                accessModes:
+                - ReadWriteOnce
+                storageClassName: csi-cephfs-sc
+                resources:
+                  requests:
+                    storage: 500Mi
         params:
         - name: app-name
           value: ${APP_NAME}
         - name: deploy-cfg-name
           value: ${APP_NAME}-deploy-cfg
-        resources:
-        - name: source-repo
-          resourceSpec:
-            type: git
-            params:
-            - name: revision
-              value: $(params.gitrevision)
-            - name: url
-              value: $(params.gitrepositoryurl)
-        - name: image
-          resourceRef:
-            name: ${APP_NAME}-output-image
+        - name: deploy-env-json
+          value: "{}"
+        - name: git-url
+          value: $(params.gitrepositoryurl)
+        - name: git-rev
+          value: $(params.gitrevision)
 - apiVersion: triggers.tekton.dev/v1alpha1
   kind: TriggerBinding
   metadata:
