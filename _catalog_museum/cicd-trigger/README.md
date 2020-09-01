@@ -4,7 +4,7 @@ CI/CD Trigger Template은 WAS CI/CD Template과 함께 쓰는 템플릿으로, G
 
 ## Step.0 - Prerequisites
 1. Tekton Pipeline 및 Tekton Trigger 설치  
-: [링크](http://192.168.1.150:10080/hypercloud/hypercloud/wikis/Tekton-Pipeline-Installation-Guide) 참조
+: [링크](https://github.com/tmax-cloud/hypercloud-install-guide/blob/master/Tekton_CI_CD/trigger.md) 참조
 
 2. ServiceAccount/Role/RoleBinding 생성
 ```yaml
