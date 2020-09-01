@@ -378,7 +378,7 @@ public class NamespaceClaimController extends Thread {
 					Constants.CUSTOM_OBJECT_VERSION, 
 					Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, 
 					name, 
-					patchStatusArray, null, null, null );
+					patchStatusArray);
 		} catch (ApiException e) {
 			logger.error(e.getResponseBody());
 			logger.error("ApiException Code: " + e.getCode());

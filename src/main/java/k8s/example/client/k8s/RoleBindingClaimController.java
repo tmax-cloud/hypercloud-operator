@@ -153,7 +153,7 @@ public class RoleBindingClaimController extends Thread {
 					namespace, 
 					Constants.CUSTOM_OBJECT_PLURAL_ROLEBINDINGCLAIM, 
 					name, 
-					patchStatusArray, null, null, null);
+					patchStatusArray);
 		} catch (ApiException e) {
 			logger.error(e.getResponseBody());
 			logger.error("ApiException Code: " + e.getCode());
