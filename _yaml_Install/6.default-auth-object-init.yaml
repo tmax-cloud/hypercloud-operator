@@ -149,8 +149,8 @@ metadata:
     madeby: tmax
 rules:
 - apiGroups: ['servicecatalog.k8s.io']
-  resources: ['*']
-  verbs: ['*']
+  resources: ['clusterserviceclasses', 'clusterserviceplans']
+  verbs: ['list', 'get']
 - apiGroups: ['storage.k8s.io']
   resources: ['storageclasses']
   verbs: ['get', 'list']
