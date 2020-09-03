@@ -1,6 +1,23 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.3.3 start -------------------->
+
+## HyperCloudServer_4.1.3.3 (Thu Sep  3 20:42:43 KST 2020)
+
+### Added
+
+### Changed
+  - [mod] nsListGet에 userGroup 정보 추가 by taegeon_woo
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.3.3 end --------------------->
+
 <!-------------------- v4.1.3.2 start -------------------->
 
 ## HyperCloudServer_4.1.3.2 (Wed Sep  2 13:53:12 KST 2020)
