@@ -46,19 +46,19 @@ public class HyperAuthCaller {
 	       
 		Response response = client.newCall(request).execute();
 		String result = response.body().string();
-		System.out.println(" Login As Admin result : " + result);
+		logger.debug(" Login As Admin result : " + result);
 		
 		Gson gson = new Gson();
 	    JsonObject resultJson = gson.fromJson(result, JsonObject.class);
 	    
-		System.out.println(" accessToken : " + resultJson.get("access_token").toString());
+	    logger.debug(" accessToken : " + resultJson.get("access_token").toString());
 
 	    return resultJson.get("access_token").toString();	
 	}
 
 	
 	public static JsonObject getUser(String userId, String token) throws IOException {
-		System.out.println(" [HyperAuth] HyperAuth Get User Detail Service" );
+		logger.info(" [HyperAuth] HyperAuth Get User Detail Service" );
 
 	    Request request = null;
 
@@ -68,11 +68,11 @@ public class HyperAuthCaller {
 	    String url = urlBuilder.build().toString();
 	    request = new Request.Builder().url(url).addHeader("Authorization", "Bearer " + token).get().build();
 	    
-		System.out.println(" request" + request.toString() );
+	    logger.debug(" request" + request.toString() );
 
 		Response response = client.newCall(request).execute();
 		String result = response.body().string();
-		System.out.println(" UserDetailResult : " + result);
+		logger.debug(" UserDetailResult : " + result);
 		
 		Gson gson = new Gson();
 	    JsonObject resultJson = gson.fromJson(result, JsonObject.class);
@@ -81,7 +81,7 @@ public class HyperAuthCaller {
 	}	
 	
 	public static JsonArray getUserList( String token) throws IOException {
-		System.out.println(" [HyperAuth] HyperAuth Get User Detail Service" );
+		logger.info(" [HyperAuth] HyperAuth Get User List Service" );
 
 	    Request request = null;
 
@@ -91,11 +91,11 @@ public class HyperAuthCaller {
 	    String url = urlBuilder.build().toString();
 	    request = new Request.Builder().url(url).addHeader("Authorization", "Bearer " + token).get().build();
 	    
-		System.out.println(" request" + request.toString() );
+	    logger.debug(" request" + request.toString() );
 
 		Response response = client.newCall(request).execute();
 		String result = response.body().string();
-		System.out.println(" UserListResult : " + result);
+		logger.debug(" UserListResult : " + result);
 		
 		Gson gson = new Gson();
 	    JsonArray resultJson = gson.fromJson(result, JsonArray.class);
@@ -104,7 +104,7 @@ public class HyperAuthCaller {
 	}	
 	
 	public static JsonObject getUserDetailWithoutToken(String userId) throws IOException {
-		System.out.println(" [HyperAuth] HyperAuth Get User Detail Without Token Service" );
+		logger.info(" [HyperAuth] HyperAuth Get User Detail Without Token Service" );
 
 	    Request request = null;
 
@@ -112,13 +112,13 @@ public class HyperAuthCaller {
 	    HttpUrl.Builder urlBuilder = HttpUrl.parse(setHyperAuthURL( Constants.SERVICE_NAME_USER_DETAIL_WITHOUT_TOKEN ) + userId).newBuilder();
 
 	    String url = urlBuilder.build().toString();
-	    request = new Request.Builder().get().build();
+	    request = new Request.Builder().url(url).get().build();
 	    
-		System.out.println(" request" + request.toString() );
+	    logger.debug(" request" + request.toString() );
 
 		Response response = client.newCall(request).execute();
 		String result = response.body().string();
-		System.out.println(" UserDetailResult : " + result);
+		logger.debug(" UserDetailResult : " + result);
 		
 		Gson gson = new Gson();
 	    JsonObject resultJson = gson.fromJson(result, JsonObject.class);

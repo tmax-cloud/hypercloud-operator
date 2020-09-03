@@ -5755,8 +5755,7 @@ public class K8sApiCaller {
 			JsonArray userGroups = HyperAuthCaller.getUserDetailWithoutToken(userId).get("groups").getAsJsonArray();
 			for (JsonElement userGroupName : userGroups) {
 				if (userGroupList == null) userGroupList = new ArrayList<>();
-				logger.debug(" userGroupName :" + userGroupName.toString());
-				logger.debug(" userGroupName dealt :" + userGroupName.toString().replaceAll("\"", ""));
+				logger.debug(" userGroupName :" + userGroupName.toString().replaceAll("\"", ""));
 				userGroupList.add(userGroupName.toString().replaceAll("\"", ""));
 			}
 			
