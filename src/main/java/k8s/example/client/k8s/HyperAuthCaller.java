@@ -64,7 +64,6 @@ public class HyperAuthCaller {
 
 		 //GET svc
 	    HttpUrl.Builder urlBuilder = HttpUrl.parse(setHyperAuthURL( Constants.SERVICE_NAME_USER_DETAIL ) + userId).newBuilder();
-		System.out.println(" setHyperAuthURL(Constants.SERVICE_NAME_USER_DETAIL ) + userId" + setHyperAuthURL(Constants.SERVICE_NAME_USER_DETAIL ) + userId );
 
 	    String url = urlBuilder.build().toString();
 	    request = new Request.Builder().url(url).addHeader("Authorization", "Bearer " + token).get().build();
@@ -88,7 +87,6 @@ public class HyperAuthCaller {
 
 		 //GET svc
 	    HttpUrl.Builder urlBuilder = HttpUrl.parse(setHyperAuthURL( Constants.SERVICE_NAME_USER_DETAIL )).newBuilder();
-		System.out.println(" setHyperAuthURL(Constants.SERVICE_NAME_USER_DETAIL ) " + setHyperAuthURL(Constants.SERVICE_NAME_USER_DETAIL ) );
 
 	    String url = urlBuilder.build().toString();
 	    request = new Request.Builder().url(url).addHeader("Authorization", "Bearer " + token).get().build();
@@ -101,6 +99,29 @@ public class HyperAuthCaller {
 		
 		Gson gson = new Gson();
 	    JsonArray resultJson = gson.fromJson(result, JsonArray.class);
+	    
+	    return resultJson; 
+	}	
+	
+	public static JsonObject getUserDetailWithoutToken(String userId) throws IOException {
+		System.out.println(" [HyperAuth] HyperAuth Get User Detail Without Token Service" );
+
+	    Request request = null;
+
+		 //GET svc
+	    HttpUrl.Builder urlBuilder = HttpUrl.parse(setHyperAuthURL( Constants.SERVICE_NAME_USER_DETAIL_WITHOUT_TOKEN ) + userId).newBuilder();
+
+	    String url = urlBuilder.build().toString();
+	    request = new Request.Builder().get().build();
+	    
+		System.out.println(" request" + request.toString() );
+
+		Response response = client.newCall(request).execute();
+		String result = response.body().string();
+		System.out.println(" UserDetailResult : " + result);
+		
+		Gson gson = new Gson();
+	    JsonObject resultJson = gson.fromJson(result, JsonObject.class);
 	    
 	    return resultJson; 
 	}	

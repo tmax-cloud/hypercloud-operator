@@ -5752,8 +5752,14 @@ public class K8sApiCaller {
 		try {
 			// 1. Get UserGroup List if Exists
 			logger.debug(" userId :" + userId);
+			JsonArray userGroups = HyperAuthCaller.getUserDetailWithoutToken(userId).get("groups").getAsJsonArray();
+			for (JsonElement userGroupName : userGroups) {
+				if (userGroupList == null) userGroupList = new ArrayList<>();
+				logger.debug(" userGroupName :" + userGroupName.toString());
+				logger.debug(" userGroupName dealt :" + userGroupName.toString().replaceAll("\"", ""));
+				userGroupList.add(userGroupName.toString().replaceAll("\"", ""));
+			}
 			
-			// TODO : keycloak에서의 user Group 고려 추가해야함
 			// 2. List of ClusterRoleBinding
 			crbList = rbacApi.listClusterRoleBinding("true", false, null, null, null, 1000, null, 60, false);
 			for (V1ClusterRoleBinding item : crbList.getItems()) {
