@@ -1,6 +1,25 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.3.2 start -------------------->
+
+## HyperCloudServer_4.1.3.2 (Wed Sep  2 13:53:12 KST 2020)
+
+### Added
+
+### Changed
+  - [mod] trial 시 주는 role 수정 by taegeon_woo
+  - [mod] k8s java client version 9.00-->8.00 (버그) by taegeon_woo
+
+### Fixed
+  - [ims][237725] catalog service claim 으로 template 생성시 에러 발생하는 문제 해결 by jitae_yun
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.3.2 end --------------------->
+
 <!-------------------- v4.1.3.1 start -------------------->
 
 ## HyperCloudServer_4.1.3.1 (2020년 08월 31일 월 오후  3:47:04)
