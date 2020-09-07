@@ -1,6 +1,26 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.4.1 start -------------------->
+
+## HyperCloudServer_4.1.4.1 (Mon Sep  7 16:40:50 KST 2020)
+
+### Added
+
+### Changed
+  - [mod] 유저 최초 생성시 주는 권한 설계 및 수정 [mod] non-trial 승인시 유저에게 부여할 권한 설계 및 수정 by taegeon_woo
+  - [mod] install guide 수정 namespace-owner cluster role에 images 추가 by sukhee_yun
+
+### Fixed
+  - [ims][233909] code 필터링 기능 추가 by sangwon_cho
+  - [ims][237133] template 의 urlDescription 필수값으로 수정 by jitae_yun
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.4.1 end --------------------->
+
 <!-------------------- v4.1.4.0 start -------------------->
 
 ## HyperCloudServer_4.1.4.0 (Fri Sep  4 16:20:47 KST 2020)
