@@ -2,15 +2,15 @@ apiVersion: tmax.io/v1
 kind: Template
 metadata:
   name: cicd-trigger-template
-  namespace: default
   annotations:
-    template-version: 1.1.0
+    template-version: 1.1.1
     tested-operator-version: 4.1.0.23
 imageUrl: 'https://raw.githubusercontent.com/tektoncd/triggers/master/tekton-triggers.png'
 provider: tmax
 recommend: false
 shortDescription: Tekton Trigger for WAS CI/CD
 longDescription: Tekton Trigger for WAS CI/CD, which should be bound to the pre-instantiated WAS template instance
+urlDescription: https://github.com/tektoncd/triggers
 tags:
 - was
 - trigger
@@ -18,10 +18,6 @@ parameters:
 - name: APP_NAME
   displayName: AppName
   description: Application name specified in WAS service instance
-  required: true
-- name: NAMESPACE
-  displayName: Namespace
-  description: Namespace
   required: true
 - name: SERVICE_ACCOUNT_NAME
   displayName: serviceAccountName
@@ -36,7 +32,6 @@ objects:
   kind: TriggerTemplate
   metadata:
     name: ${APP_NAME}-template
-    namespace: ${NAMESPACE}
   spec:
     params:
     - name: gitrevision
@@ -49,7 +44,6 @@ objects:
       kind: PipelineRun
       metadata:
         generateName: ${APP_NAME}-run-
-        namespace: ${NAMESPACE}
       spec:
         serviceAccountName: ${SERVICE_ACCOUNT_NAME}
         pipelineRef:

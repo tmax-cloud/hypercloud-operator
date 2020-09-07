@@ -2,9 +2,8 @@ apiVersion: tmax.io/v1
 kind: TemplateInstance
 metadata:
   name: postgresql-template-instance
-  namespace: default
   annotations:
-    template-version: 1.1.0
+    template-version: 1.1.1
     tested-operator-version: 4.1.0.23
 spec:
   template:
@@ -13,9 +12,6 @@ spec:
     parameters:
     - name: APP_NAME
       value: postgresql-sample-app
-    - name: NAMESPACE
-      description: A Namespace Name
-      value: default
     - name: DB_STORAGE
       value: "10Gi"
     - name: SERVICE_TYPE

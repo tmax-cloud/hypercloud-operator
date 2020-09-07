@@ -23,6 +23,7 @@ spec:
       type: object
       required:
       - parameters
+      - urlDescription
       properties:
         operatorStartTime:
           type: string

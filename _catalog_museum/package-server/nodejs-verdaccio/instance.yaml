@@ -2,9 +2,8 @@ apiVersion: tmax.io/v1
 kind: TemplateInstance
 metadata:
   name: verdaccio-package-server-instance
-  namespace: default
   annotations:
-    template-version: 1.1.0
+    template-version: 1.1.1
     tested-operator-version: 4.1.0.23
 spec:
   template:
@@ -13,8 +12,6 @@ spec:
     parameters:
     - name: DEPLOY_NAME
       value: verdaccio-private-1
-    - name: NAMESPACE
-      value: default
     - name: STORAGE
       value: 10Gi
 
