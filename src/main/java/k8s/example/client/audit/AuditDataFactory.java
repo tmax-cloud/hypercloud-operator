@@ -80,6 +80,7 @@ public class AuditDataFactory {
 		String namespace = SimpleUtil.getQueryParameter(query, Constants.QUERY_PARAMETER_NAMESPACE);
 		List<String> sort = SimpleUtil.getQueryParameterArray(query, Constants.QUERY_PARAMETER_SORT);
 		String resource = SimpleUtil.getQueryParameter(query, Constants.QUERY_PARAMETER_RESOURCE);
+		String code = SimpleUtil.getQueryParameter(query, Constants.QUERY_PARAMETER_CODE);
 		query.remove(Constants.QUERY_PARAMETER_OFFSET);
 		query.remove(Constants.QUERY_PARAMETER_LIMIT);
 		query.remove(Constants.QUERY_PARAMETER_STARTTIME);
@@ -87,6 +88,7 @@ public class AuditDataFactory {
 		query.remove(Constants.QUERY_PARAMETER_NAMESPACE);
 		query.remove(Constants.QUERY_PARAMETER_SORT);
 		query.remove(Constants.QUERY_PARAMETER_RESOURCE);
+		query.remove(Constants.QUERY_PARAMETER_CODE);
 
 		
 		StringBuilder sb = new StringBuilder(AUDIT_SELECT_QUERY);
@@ -102,6 +104,13 @@ public class AuditDataFactory {
 		
 		if(StringUtil.isNotEmpty(resource)) {
 			sb.append("and resource = '").append(resource).append("' ");
+		}
+		
+		if(StringUtil.isNotEmpty(code)) {
+			 int codeInt = Integer.parseInt(code);
+			 int lowerBound = (codeInt / 100) * 100;
+			 int upperBound = lowerBound + 99;
+			 sb.append("and code between '").append(lowerBound).append("' and '").append(upperBound).append("' ");
 		}
 		
 		if(sort != null && sort.size() > 0){
