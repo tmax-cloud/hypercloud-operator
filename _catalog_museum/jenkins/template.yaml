@@ -2,12 +2,12 @@ apiVersion: tmax.io/v1
 kind: Template
 metadata:
   name: jenkins-template
-  namespace: default
   annotations:
-    template-version: 1.1.0
+    template-version: 1.1.1
     tested-operator-version: 4.1.0.23
 shortDescription: "Jenkins Deployment"
 longDescription: "Jenkins Deployment"
+urlDescription: https://www.jenkins.io/
 imageUrl: "https://upload.wikimedia.org/wikipedia/commons/e/e3/Jenkins_logo_with_title.svg"
 provider: tmax
 tags:
@@ -18,7 +18,6 @@ objects:
   kind: Service
   metadata:
     name: ${APP_NAME}-service
-    namespace: ${NAMESPACE}
     labels:
       app: ${APP_NAME}
   spec:
@@ -34,7 +33,6 @@ objects:
   kind: PersistentVolumeClaim
   metadata:
     name: ${APP_NAME}-pvc
-    namespace: ${NAMESPACE}
     labels:
       app: ${APP_NAME}
   spec:
@@ -48,7 +46,6 @@ objects:
   kind: Deployment
   metadata:
     name: ${APP_NAME}
-    namespace: ${NAMESPACE}
     labels:
       app: ${APP_NAME}
   spec:
@@ -82,10 +79,6 @@ parameters:
   displayName: AppName
   description: A Jenkins Deployment Name
   required: true
-- name: NAMESPACE
-  displayName: Namespace
-  description: Application namespace
-  required: true
 - name: STORAGE
   displayName: Storage
   description: Storage size
@@ -111,6 +104,5 @@ plans:
       create:
         parameters:
           APP_NAME: jenkins-deploy
-          NAMESPACE: default
           STORAGE: 10Gi
 

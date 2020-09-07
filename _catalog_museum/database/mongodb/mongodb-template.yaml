@@ -2,12 +2,12 @@ apiVersion: tmax.io/v1
 kind: Template
 metadata:
   name: mongodb-template
-  namespace: default
   annotations:
-    template-version: 1.1.0
+    template-version: 1.1.1
     tested-operator-version: 4.1.0.23
 shortDescription: MongoDB Deployment
 longDescription: MongoDB Deployment
+urlDescription: https://www.mongodb.com/
 imageUrl: https://upload.wikimedia.org/wikipedia/en/4/45/MongoDB-Logo.svg
 provider: tmax
 tags:
@@ -18,7 +18,6 @@ objects:
   kind: Service
   metadata:
     name: ${APP_NAME}-service
-    namespace: ${NAMESPACE}
     labels:
       app: ${APP_NAME}
   spec:
@@ -32,7 +31,6 @@ objects:
   kind: PersistentVolumeClaim
   metadata:
     name: ${APP_NAME}-pvc
-    namespace: ${NAMESPACE}
     labels:
       app: ${APP_NAME}
   spec:
@@ -46,7 +44,6 @@ objects:
   kind: Secret
   metadata:
     name: ${APP_NAME}-secret
-    namespace: ${NAMESPACE}
   type: Opaque
   stringData:
     MONGODB_USER: ${MONGODB_USER}
@@ -57,7 +54,6 @@ objects:
   kind: Deployment
   metadata:
     name: ${APP_NAME}-mongodb
-    namespace: ${NAMESPACE}
     labels:
       app: ${APP_NAME}
   spec:
@@ -121,10 +117,6 @@ parameters:
   displayName: AppName
   description: Application name
   required: true
-- name: NAMESPACE
-  displayName: Namespace
-  required: true
-  description: Application namespace
 - name: DB_STORAGE
   displayName: DBStorage
   description: Storage size for DB
@@ -165,7 +157,6 @@ plans:
     service_instance:
       create:
         parameters:
-          NAMESPACE: default
           DB_STORAGE: 5Gi
           APP_NAME: mongodb-deploy
           MONGODB_USER: root
@@ -187,7 +178,6 @@ plans:
     service_instance:
       create:
         parameters:
-          NAMESPACE: default
           DB_STORAGE: 30Gi
           APP_NAME: mongodb-deploy
           MONGODB_USER: root

@@ -2,15 +2,15 @@ apiVersion: tmax.io/v1
 kind: Template
 metadata:
   name: nexus-package-server
-  namespace: default
   annotations:
-    template-version: 1.1.0
+    template-version: 1.1.1
     tested-operator-version: 4.1.0.23
 imageUrl: https://avatars0.githubusercontent.com/u/44938?s=200&v=4
 provider: tmax
 recommend: false
 shortDescription: Nexus package server for Java Maven
 longDescription: Nexus package server for Java Maven
+urlDescription: https://www.sonatype.com/product-nexus-repository
 tags:
 - nexus
 - package-server
@@ -20,10 +20,6 @@ parameters:
 - name: DEPLOY_NAME
   displayName: DeploymentName
   description: Deployment name
-  required: true
-- name: NAMESPACE
-  displayName: Namespace
-  description: Namespace
   required: true
 - name: STORAGE
   displayName: StorageSize
@@ -38,7 +34,6 @@ objects:
   kind: Service
   metadata:
     name: ${DEPLOY_NAME}-svc
-    namespace: ${NAMESPACE}
     labels:
       app: ${DEPLOY_NAME}
   spec:
@@ -52,7 +47,6 @@ objects:
   kind: PersistentVolumeClaim
   metadata:
     name: ${DEPLOY_NAME}-pvc
-    namespace: ${NAMESPACE}
     labels:
       app: ${DEPLOY_NAME}
   spec:
@@ -66,7 +60,6 @@ objects:
   kind: Deployment
   metadata:
     name: ${DEPLOY_NAME}
-    namespace: ${NAMESPACE}
     labels:
       app: ${DEPLOY_NAME}
   spec:

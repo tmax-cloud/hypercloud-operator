@@ -2,12 +2,12 @@ apiVersion: tmax.io/v1
 kind: Template
 metadata:
   name: mysql-ha-template
-  namespace: default
   annotations:
-    template-version: 1.1.0
+    template-version: 1.1.1
     tested-operator-version: 4.1.0.23
 shortDescription: "MySQL HA Deployment"
 longDescription: "MySQL High Availability Deployment"
+urlDescription: https://www.mysql.com/
 imageUrl: "https://upload.wikimedia.org/wikipedia/en/6/62/MySQL.svg"
 provider: tmax
 tags:
@@ -21,7 +21,6 @@ objects:
     name: ${APP_NAME}
     labels:
       app: ${APP_NAME}
-    namespace: ${NAMESPACE}
   data:
     master.cnf: |
       # Apply this config only on the master.
@@ -37,7 +36,6 @@ objects:
     name: ${APP_NAME}
     labels:
       app: ${APP_NAME}
-    namespace: ${NAMESPACE}
   spec:
     ports:
     - name: mysql
@@ -51,7 +49,6 @@ objects:
     name: ${APP_NAME}-read
     labels:
       app: ${APP_NAME}
-    namespace: ${NAMESPACE}
   spec:
     ports:
     - name: mysql
@@ -62,7 +59,6 @@ objects:
   kind: StatefulSet
   metadata:
     name: ${APP_NAME}
-    namespace: ${NAMESPACE}
   spec:
     selector:
       matchLabels:
@@ -232,10 +228,6 @@ parameters:
   displayName: AppName
   description: A MySQL HA Deployment Name
   required: true
-- name: NAMESPACE
-  displayName: Namespace
-  description: Application namespace
-  required: true
 - name: REPLICA
   displayName: Replica
   description: Replication count
@@ -258,7 +250,6 @@ plans:
       create:
         parameters:
           APP_NAME: mysql-ha-deploy
-          NAMESPACE: default
           REPLICA: 1
 - name: mysql-ha-plan2
   description: "MySQL HA Plan (2 replica)"
@@ -276,7 +267,6 @@ plans:
       create:
         parameters:
           APP_NAME: mysql-ha-deploy
-          NAMESPACE: default
           REPLICA: 2
 - name: mysql-ha-plan3
   description: "MySQL HA Plan (3 replica)"
@@ -294,6 +284,5 @@ plans:
       create:
         parameters:
           APP_NAME: mysql-ha-deploy
-          NAMESPACE: default
           REPLICA: 3
 
