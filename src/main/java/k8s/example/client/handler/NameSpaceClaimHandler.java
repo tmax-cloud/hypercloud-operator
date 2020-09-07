@@ -60,7 +60,6 @@ public class NameSpaceClaimHandler extends GeneralHandler {
 		String _continue = SimpleUtil.getQueryParameter( session.getParameters(), Constants.QUERY_PARAMETER_CONTINUE ); // 
 
 		try {
-			
 			// Read AccessToken from Header
 			if(!session.getHeaders().get("authorization").isEmpty()) {
 				accessToken = session.getHeaders().get("authorization");
@@ -69,12 +68,12 @@ public class NameSpaceClaimHandler extends GeneralHandler {
 				throw new Exception(ErrorCode.TOKEN_EMPTY);
 			}
     		logger.debug( "  Token: " + accessToken );
-			
 			nscList = K8sApiCaller.getAccessibleNSC(accessToken, userId, labelSelector, _continue);
 			status = Status.OK;
 
 			// Limit 
 			if( nscList!= null && nscList.getItems() != null) {
+
 				if( limit != null ) {
 					nscItems = nscList.getItems();
 					nscItems =  nscItems.stream().limit(Integer.parseInt(limit)).collect(Collectors.toList());		
@@ -82,12 +81,13 @@ public class NameSpaceClaimHandler extends GeneralHandler {
 				}
 			}	
     			
-			// Make outDO					
-    		if( (nscList!=null && nscList.getItems() != null && nscList.getItems().size() > 0) || nscList.getMetadata().getContinue().equalsIgnoreCase("wrongLabelorNoResource")) {
-    			Gson gson = new GsonBuilder().setPrettyPrinting().create();
-    			nscList.getMetadata().setContinue(null);
-    			outDO = gson.toJson( nscList ).toString();
-    		} else {
+			// Make outDO
+			if( (nscList!=null && nscList.getItems() != null && nscList.getItems().size() > 0)
+					|| nscList.getMetadata().getContinue().equalsIgnoreCase("wrongLabelorNoResource")) {
+				Gson gson = new GsonBuilder().setPrettyPrinting().create();
+				nscList.getMetadata().setContinue(null);
+				outDO = gson.toJson( nscList ).toString();
+			} else {
     			status = Status.FORBIDDEN;
     			JsonObject result = new JsonObject();
     			outDO = "Cannot Access Any NameSpaceClaim";
