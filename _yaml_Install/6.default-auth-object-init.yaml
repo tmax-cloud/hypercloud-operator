@@ -1,5 +1,4 @@
 apiVersion: rbac.authorization.k8s.io/v1
-# This role binding allows "jane" to read pods in the "default" namespace.
 kind: ClusterRoleBinding
 metadata:
   name: admin
@@ -70,7 +69,7 @@ rules:
   resources: ['*']
   verbs: ['*']
 - apiGroups: ['tmax.io']
-  resources: ['templates','templateinstances','images','registries','namespaceclaims','resourcequotaclaims','users']
+  resources: ['templates','templateinstances','images','registries','namespaceclaims','resourcequotaclaims']
   verbs: ['*']
 - apiGroups: ['rbac.authorization.k8s.io']
   resources: ['roles','rolebindings']
@@ -135,7 +134,7 @@ rules:
   resources: ['*']
   verbs: ['*']
 - apiGroups: ['tmax.io']
-  resources: ['template','templateinstances','registries','namespaceclaims','users']
+  resources: ['template','templateinstances','registries','namespaceclaims']
   verbs: ['*']
   
 ---
@@ -168,4 +167,41 @@ rules:
 - apiGroups: ['*']
   resources: ['*']
   verbs: ['list', 'get']
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: clusterrole-new-user
+  labels:
+    purpose: for-new-user
+    madeby: tmax
+rules:
+  - apiGroups: ['tmax.io']
+    resources: ['namespaceclaims']
+    verbs: ['create', 'get']
+  - apiGroups: ['tmax.io']
+    resources: ['rolebindingclaims', 'resourcequotaclaims', 'catalogserviceclaims']
+    verbs: ['create', 'get', 'list']
+  - apiGroups: ['ui.tmax.io']
+    resources: ['clustermenupolicies']
+    verbs: ['get']
+  - apiGroups: ['rbac.authorization.k8s.io']
+    resources: ['roles', 'clusterroles', 'rolebindings']
+    verbs: ['get', 'list']
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: namespace-listget
+  labels:
+    purpose: for-nsc
+    madeby: tmax
+rules:
+  - apiGroups: ['']
+    resources: ['namespaces']
+    verbs: ['list', 'get']
 

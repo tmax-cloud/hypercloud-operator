@@ -5,6 +5,7 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.kubernetes.client.openapi.models.*;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 
@@ -18,12 +19,6 @@ import com.google.gson.reflect.TypeToken;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CustomObjectsApi;
-import io.kubernetes.client.openapi.models.V1ClusterRole;
-import io.kubernetes.client.openapi.models.V1Namespace;
-import io.kubernetes.client.openapi.models.V1ObjectMeta;
-import io.kubernetes.client.openapi.models.V1PolicyRule;
-import io.kubernetes.client.openapi.models.V1RoleRef;
-import io.kubernetes.client.openapi.models.V1Subject;
 import io.kubernetes.client.util.Watch;
 import k8s.example.client.Constants;
 import k8s.example.client.DataObject.UserCR;
@@ -162,6 +157,14 @@ public class NamespaceClaimController extends Thread {
 											
 											// Send Success confirm Mail
 											sendConfirmMail ( claim, nsResult.getMetadata().getCreationTimestamp(),  true );																			
+										} else {
+											// Make Namespaced RoleBinding for non-trial User
+											try{
+												// namspace-owner rolebinding
+												createNSCRoleBinding ( nsResult );
+											} catch (ApiException e) {
+												logger.info(" RoleBinding for NameSpace [ " + nsResult.getMetadata().getName() + " ] Already Exists ");
+											}
 										}
 										// Create Default NetWork Policy
 										logger.info(" Create Network Policy for new Namespace ["+ nsResult.getMetadata().getName() +" ] Starts");
@@ -286,11 +289,11 @@ public class NamespaceClaimController extends Thread {
 
 	private void createTrialRoleBinding(V1Namespace nsResult) throws ApiException {
 		RoleBindingClaim rbcForTrial = new RoleBindingClaim();
-		
+
 		V1ObjectMeta RoleBindingMeta = new V1ObjectMeta();
 		rbcForTrial.setResourceName("trial-" + nsResult.getMetadata().getName());
-		RoleBindingMeta.setName( "trial-" + nsResult.getMetadata().getName());
-		RoleBindingMeta.setNamespace( nsResult.getMetadata().getName());
+		RoleBindingMeta.setName("trial-" + nsResult.getMetadata().getName());
+		RoleBindingMeta.setNamespace(nsResult.getMetadata().getName());
 		RoleBindingMeta.setLabels(nsResult.getMetadata().getLabels()); // label 넘겨주기
 		rbcForTrial.setMetadata(RoleBindingMeta);
 
@@ -302,16 +305,47 @@ public class NamespaceClaimController extends Thread {
 		rbcForTrial.setRoleRef(roleRef);
 
 		// subject
-		List< V1Subject > subjectList = new ArrayList<>();
+		List<V1Subject> subjectList = new ArrayList<>();
 		V1Subject subject = new V1Subject();
 		subject.setApiGroup(Constants.RBAC_API_GROUP);
 		subject.setKind("User");
 		subject.setName(nsResult.getMetadata().getLabels().get("owner"));
 		subjectList.add(subject);
 		rbcForTrial.setSubjects(subjectList);
-		
+
 		try {
-			K8sApiCaller.createRoleBinding(rbcForTrial);	
+			K8sApiCaller.createRoleBinding(rbcForTrial);
+		} catch (ApiException e) {
+			logger.info(e.getResponseBody());
+			throw e;
+		}
+	}
+
+	private void createNSCRoleBinding(V1Namespace nsResult) throws ApiException {
+
+		V1RoleBinding roleBinding = new V1RoleBinding();
+		V1ObjectMeta RoleBindingMeta = new V1ObjectMeta();
+		RoleBindingMeta.setName( nsResult.getMetadata().getName()+"-ns-listget");
+		RoleBindingMeta.setNamespace(nsResult.getMetadata().getName());
+		RoleBindingMeta.setLabels(nsResult.getMetadata().getLabels()); // label 넘겨주기
+		roleBinding.setMetadata(RoleBindingMeta);
+
+		// RoleRef
+		V1RoleRef roleRef = new V1RoleRef();
+		roleRef.setApiGroup(Constants.RBAC_API_GROUP);
+		roleRef.setKind("ClusterRole");
+		roleRef.setName("namespace-listget");  //FIXME : policy 에 따라 변화해 줄 예정
+		roleBinding.setRoleRef(roleRef);
+
+		// subject
+		V1Subject subject = new V1Subject();
+		subject.setApiGroup(Constants.RBAC_API_GROUP);
+		subject.setKind("User");
+		subject.setName(nsResult.getMetadata().getLabels().get("owner"));
+		roleBinding.addSubjectsItem(subject);
+
+		try {
+			K8sApiCaller.createGeneralRoleBinding(roleBinding);
 		} catch (ApiException e) {
 			logger.info(e.getResponseBody());
 			throw e;

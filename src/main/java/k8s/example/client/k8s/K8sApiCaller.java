@@ -5153,7 +5153,8 @@ public class K8sApiCaller {
 		V1ObjectMeta namespaceMeta = new V1ObjectMeta();
 		Map<String, String> labels = new HashMap<>();
 		labels.put("fromClaim", claim.getMetadata().getName());
-		
+		labels.put("owner", claim.getMetadata().getLabels().get("owner"));
+
 		//Add Trial Label if exists
 		if (claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") != null
 				 && claim.getMetadata().getLabels().get("owner") != null) {
@@ -5491,70 +5492,6 @@ public class K8sApiCaller {
 		}
 	}
 
-	public static void createClusterRoleForNewUser(String userId) throws ApiException {
-		logger.info("[K8S ApiCaller] Create Temporary ClusterRole for New User Start");
-
-		V1ClusterRole clusterRole = new V1ClusterRole();
-		V1ObjectMeta clusterRoleMeta = new V1ObjectMeta();
-		clusterRoleMeta.setName(userId);
-		clusterRole.setMetadata(clusterRoleMeta);
-		List<V1PolicyRule> rules = new ArrayList<>();
-
-		V1PolicyRule rule = new V1PolicyRule();
-
-		// ClusterRole & ClusterRoleBinding Rule
-		rule = new V1PolicyRule();
-		rule.addApiGroupsItem(Constants.RBAC_API_GROUP);
-		rule.addResourcesItem("clusterroles");
-		rule.addResourcesItem("clusterrolebindings");
-		rule.addResourceNamesItem(userId);
-		rule.addVerbsItem("*");
-		rules.add(rule);
-		
-		// NameSpace Rule
-		rule = new V1PolicyRule();
-		rule.addApiGroupsItem(Constants.CORE_API_GROUP);
-		rule.addResourcesItem("namespaces");
-		rule.addVerbsItem("get");
-		rules.add(rule);
-	
-		// Claims Rule
-		rule = new V1PolicyRule();
-		rule.addApiGroupsItem(Constants.CUSTOM_OBJECT_GROUP);
-//		rule.addResourcesItem("rolebindingclaims");
-//		rule.addResourcesItem("resourcequotaclaims");
-		rule.addResourcesItem("namespaceclaims");
-		rule.addVerbsItem("create");
-		rule.addVerbsItem("get");		
-		rules.add(rule);
-		
-		rule = new V1PolicyRule();
-		rule.addApiGroupsItem(Constants.CUSTOM_OBJECT_GROUP);
-		rule.addResourcesItem("rolebindingclaims");
-		rule.addResourcesItem("resourcequotaclaims");
-		rule.addResourcesItem("catalogserviceclaims");
-		rule.addVerbsItem("create");
-		rule.addVerbsItem("get");		
-		rule.addVerbsItem("list");		
-		rules.add(rule);
-		
-		// CMP Rule
-		rule = new V1PolicyRule();
-		rule.addApiGroupsItem(Constants.UI_CUSTOM_OBJECT_GROUP);
-		rule.addResourcesItem("clustermenupolicies");
-		rule.addVerbsItem("get");		
-		rules.add(rule);
-		
-		clusterRole.setRules(rules);
-
-		try {
-			rbacApi.createClusterRole(clusterRole, null, null, null);
-		} catch (ApiException e) {
-			logger.error(e.getResponseBody());
-			throw e;
-		}
-	}
-
 	public static void createClusterRoleBindingForNewUser(String userId) throws ApiException {
 		logger.info("[K8S ApiCaller] Create Temporary ClusterRoleBinding for New User Start");
 
@@ -5567,7 +5504,7 @@ public class K8sApiCaller {
 		V1RoleRef roleRef = new V1RoleRef();
 		roleRef.setApiGroup(Constants.RBAC_API_GROUP);
 		roleRef.setKind("ClusterRole");
-		roleRef.setName(userId);
+		roleRef.setName("clusterrole-new-user");
 		clusterRoleBinding.setRoleRef(roleRef);
 
 		// subject
@@ -5613,6 +5550,20 @@ public class K8sApiCaller {
 		} catch (ApiException e) {
 			if(e.getResponseBody().contains("Not Found") || e.getResponseBody().contains("404")) {
 				logger.info(Constants.INGRESS_NGINX_SHARED_NAMESPACE + " does not exist, Do nothing ");
+			} else {
+				logger.error(e.getResponseBody());
+				throw e;
+			}
+		}
+	}
+
+	public static void createGeneralRoleBinding(V1RoleBinding roleBinding) throws ApiException {
+		logger.info("[K8S ApiCaller] Create General roleBinding for New User Start");
+		try {
+			rbacApi.createNamespacedRoleBinding(roleBinding.getMetadata().getNamespace(), roleBinding, null, null, null);
+		} catch (ApiException e) {
+			if(e.getResponseBody().contains("Not Found") || e.getResponseBody().contains("404")) {
+				logger.info("Namespace [ " + roleBinding.getMetadata().getNamespace() + " ] does not exist, Do nothing ");
 			} else {
 				logger.error(e.getResponseBody());
 				throw e;
@@ -5855,7 +5806,7 @@ public class K8sApiCaller {
 									// 5. Check if Role has NameSpace GET rule
 									if (roleRef.getKind().equalsIgnoreCase("Role")) {
 										logger.info(
-												"User [ " + userId + " ] has Role [" + roleRef.getName() + " ]");
+												"User [ " + userId + " ] has Role [ " + roleRef.getName() + " ]");
 										V1Role role = null;
 										List<V1PolicyRule> rules = null;
 										try{

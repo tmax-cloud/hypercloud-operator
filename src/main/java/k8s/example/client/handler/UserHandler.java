@@ -40,7 +40,6 @@ public class UserHandler extends GeneralHandler {
 
 		try {
     		// Create Role & RoleBinding 
-    		K8sApiCaller.createClusterRoleForNewUser(userId);  		
     		K8sApiCaller.createClusterRoleBindingForNewUser(userId);
     		
 			status = Status.OK;
@@ -85,17 +84,7 @@ public class UserHandler extends GeneralHandler {
 		String userId = SimpleUtil.getQueryParameter( session.getParameters(), Constants.QUERY_PARAMETER_USER_ID );
 
 		try {
-    		// Delete Role & RoleBinding 
-			try {
-				K8sApiCaller.deleteClusterRole(userId);
-			} catch (ApiException e) {
-				if ( e.getResponseBody().contains("404")) {
-					logger.info("Nothing to do");
-				}else {
-					throw e;
-				}
-			}
-			
+    		// Delete ClusterRoleBinding
 			try {
 				K8sApiCaller.deleteClusterRoleBinding(userId);
 			} catch (ApiException e) {
