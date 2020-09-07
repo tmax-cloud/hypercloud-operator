@@ -70,7 +70,7 @@ rules:
   resources: ['*']
   verbs: ['*']
 - apiGroups: ['tmax.io']
-  resources: ['templates','templateinstances','registries','namespaceclaims','resourcequotaclaims','users']
+  resources: ['templates','templateinstances','images','registries','namespaceclaims','resourcequotaclaims','users']
   verbs: ['*']
 - apiGroups: ['rbac.authorization.k8s.io']
   resources: ['roles','rolebindings']
