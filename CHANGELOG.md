@@ -1,6 +1,24 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.4.2 start -------------------->
+
+## HyperCloudServer_4.1.4.2 (Tue Sep  8 14:15:17 KST 2020)
+
+### Added
+
+### Changed
+  - [mod] nsc 승인시 trial 아닐때도, storageclass, catalog에 대한 권한 부여 by dnxorjs1
+
+### Fixed
+  - [ims][237725] template, claim에 urlDescription 필수 인자 반영 by jitae_yun
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.4.2 end --------------------->
+
 <!-------------------- v4.1.4.1 start -------------------->
 
 ## HyperCloudServer_4.1.4.1 (Mon Sep  7 16:40:50 KST 2020)
