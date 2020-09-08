@@ -5465,9 +5465,13 @@ public class K8sApiCaller {
 		try {
 			rbacApi.createClusterRoleBinding( clusterRoleBinding, null, null, null);
 		} catch (ApiException e) {
-			logger.info(e.getResponseBody());
-			e.printStackTrace();
-			throw e;
+			if(e.getResponseBody().contains("already")) {
+				logger.info( "Clusterrole " + claim.getResourceName() + " Already exist, Do nothing ");
+			} else {
+				logger.error(e.getResponseBody());
+				e.printStackTrace();
+				throw e;
+			}
 		}
 	}
 	
@@ -5523,7 +5527,7 @@ public class K8sApiCaller {
 	}
 	
 	public static void createRoleBindingForIngressNginx(String userId) throws ApiException {
-		logger.info("[K8S ApiCaller] Create roleBinding for New User Start");
+		logger.info("[K8S ApiCaller] Create roleBinding IngressNginx for New User Start");
 
 		V1RoleBinding roleBinding = new V1RoleBinding();
 		V1ObjectMeta roleBindingMeta = new V1ObjectMeta();
@@ -5550,6 +5554,8 @@ public class K8sApiCaller {
 		} catch (ApiException e) {
 			if(e.getResponseBody().contains("Not Found") || e.getResponseBody().contains("404")) {
 				logger.info(Constants.INGRESS_NGINX_SHARED_NAMESPACE + " does not exist, Do nothing ");
+			}else if(e.getResponseBody().contains("already")) {
+				logger.info( "Clusterrole " + Constants.INGRESS_NGINX_SHARED_READ_ROLE_BINDING + "-" + userId + " Already exist, Do nothing ");
 			} else {
 				logger.error(e.getResponseBody());
 				throw e;

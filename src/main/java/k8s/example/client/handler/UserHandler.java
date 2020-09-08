@@ -135,7 +135,6 @@ public class UserHandler extends GeneralHandler {
 	@Override
 	public Response other(String method, UriResource uriResource, Map<String, String> urlParams, IHTTPSession session) {
 		logger.info("***** OPTIONS /User");
-
 		return Util.setCors(NanoHTTPD.newFixedLengthResponse(""));
 	}
 }
