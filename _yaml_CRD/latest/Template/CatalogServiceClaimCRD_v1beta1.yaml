@@ -53,6 +53,7 @@ spec:
           - metadata
           - objects
           - parameters
+          - urlDescription
           properties:
             apiVersion:
               type: string
