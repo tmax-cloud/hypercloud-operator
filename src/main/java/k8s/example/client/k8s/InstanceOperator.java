@@ -123,7 +123,7 @@ public class InstanceOperator extends Thread {
 		        		logger.debug("[Instance Operator] Instance Namespace : " + instanceObj.get("metadata").get("namespace").asText());
 		        		logger.debug("[Instance Operator] ResourceVersion : " + latestResourceVersion);
 		        		
-		        		if(response.type.toString().equals("ADDED")) {
+		        		if(response.type.toString().equals("ADDED")&&instanceObj.get("status")==null) {
 		        			String templateName = instanceObj.get("spec").get("template").get("metadata").get("name").asText();
 		        			
 		        			logger.debug("[Instance Operator] Template Name : " + templateName);
