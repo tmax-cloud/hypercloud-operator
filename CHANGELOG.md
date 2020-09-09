@@ -1,6 +1,23 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.4.3 start -------------------->
+
+## HyperCloudServer_4.1.4.3 (Wed Sep  9 11:13:33 KST 2020)
+
+### Added
+
+### Changed
+  - [mod] instance operator ADDED시 방어로직 추가 by jitae_yun
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.4.3 end --------------------->
+
 <!-------------------- v4.1.4.2 start -------------------->
 
 ## HyperCloudServer_4.1.4.2 (Tue Sep  8 14:15:17 KST 2020)
