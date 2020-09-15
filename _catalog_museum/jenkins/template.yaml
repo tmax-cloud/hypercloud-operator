@@ -2,8 +2,9 @@ apiVersion: tmax.io/v1
 kind: Template
 metadata:
   name: jenkins-template
+  namespace: default
   annotations:
-    template-version: 1.1.1
+    template-version: 1.1.2
     tested-operator-version: 4.1.0.23
 shortDescription: "Jenkins Deployment"
 longDescription: "Jenkins Deployment"
