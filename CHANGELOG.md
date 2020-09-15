@@ -1,6 +1,25 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.4.4 start -------------------->
+
+## HyperCloudServer_4.1.4.4 (Wed Sep 16 06:30:53 KST 2020)
+
+### Added
+
+### Changed
+  - [mod] ns-listget role 수정 [mod] namespaceListGet Hyperauth call 방어로직 추가 [mod] nsc 승인시 생기는 Clusterrole 중복생성시 update 될수 있게끔 로직 수정 by dnxorjs1
+  - [mod] namespace-listget clusterrole 수정 by dnxorjs1
+  - [mod] NamespaceClaimCRD.yaml, ResourceQuotaClaimCRD.yaml Spec Validation 정규표현식에서 Ei 단위 생성 불가능 하게 수정 by dnxorjs1
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.4.4 end --------------------->
+
 <!-------------------- v4.1.4.3 start -------------------->
 
 ## HyperCloudServer_4.1.4.3 (Wed Sep  9 11:13:33 KST 2020)
