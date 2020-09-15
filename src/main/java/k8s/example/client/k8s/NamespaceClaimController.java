@@ -158,7 +158,7 @@ public class NamespaceClaimController extends Thread {
 										} else {
 											// Make Namespaced RoleBinding for non-trial User
 											try{
-												// namspace-owner rolebinding
+												// namspace-listget rolebinding
 												createNSCRoleBinding ( nsResult );
 											} catch (ApiException e) {
 												logger.info(" RoleBinding for NameSpace [ " + nsResult.getMetadata().getName() + " ] Already Exists ");
