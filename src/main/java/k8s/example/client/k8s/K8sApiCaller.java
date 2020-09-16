@@ -5637,7 +5637,7 @@ public class K8sApiCaller {
 		}		
 	}
 	
-	public static V1ClusterRole readClusterRole(String clusterRoleName) {
+	public static V1ClusterRole readClusterRole(String clusterRoleName) throws Exception{
 		V1ClusterRole clusterRole = null;
 		try {
 			clusterRole = rbacApi.readClusterRole(clusterRoleName, "true"); 
@@ -5645,12 +5645,30 @@ public class K8sApiCaller {
 		} catch (ApiException e) {
 			logger.error("Response body: " + e.getResponseBody());
 			e.printStackTrace();
+
 		} catch (Exception e) {
 			logger.error("Exception: " + e.getMessage());
 			e.printStackTrace();
 			throw e;
 		}
 		return clusterRole;
+	}
+
+	public static V1ClusterRoleBinding readClusterRoleBinding(String clusterRoleBindingName) throws Exception{
+		V1ClusterRoleBinding clusterRoleBinding = null;
+		try {
+			clusterRoleBinding = rbacApi.readClusterRoleBinding( clusterRoleBindingName, "true");
+
+		} catch (ApiException e) {
+			logger.error("Response body: " + e.getResponseBody());
+			e.printStackTrace();
+
+		} catch (Exception e) {
+			logger.error("Exception: " + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		}
+		return clusterRoleBinding;
 	}
 	
 	public static V1ClusterRole replaceClusterRole(V1ClusterRole clusterRole) {

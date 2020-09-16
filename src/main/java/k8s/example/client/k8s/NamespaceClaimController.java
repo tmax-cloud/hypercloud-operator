@@ -271,7 +271,7 @@ public class NamespaceClaimController extends Thread {
 		}			
 	}
 
-	private void patchUserRole(String clusterRoleName, String claimName ) {
+	private void patchUserRole(String clusterRoleName, String claimName ) throws Exception {
 		V1ClusterRole clusterRole = null;
 		clusterRole = K8sApiCaller.readClusterRole(clusterRoleName);
 		V1PolicyRule rule = new V1PolicyRule();
@@ -349,9 +349,9 @@ public class NamespaceClaimController extends Thread {
 		}
 	}
 	
-	private void createNSCClusterRoleBinding(NamespaceClaim claim) throws ApiException {
+	private void createNSCClusterRoleBinding(NamespaceClaim claim) throws Exception {
 		RoleBindingClaim rbcForNSC = new RoleBindingClaim();
-		
+
 		V1ObjectMeta RoleBindingMeta = new V1ObjectMeta();
 		rbcForNSC.setResourceName("CRB-" + claim.getResourceName());
 		RoleBindingMeta.setName( "CRB-" + claim.getResourceName());
@@ -373,12 +373,32 @@ public class NamespaceClaimController extends Thread {
 		subject.setName(claim.getMetadata().getLabels().get("owner"));
 		subjectList.add(subject);
 		rbcForNSC.setSubjects(subjectList);
-		
-		try {
-			K8sApiCaller.createClusterRoleBinding(rbcForNSC);
-		} catch (ApiException e) {
-			logger.info(e.getResponseBody());
-			throw e;
+
+		//Check if ClusterroleBinding "CRB-{nsName}" Already Exists
+		try{
+			K8sApiCaller.readClusterRoleBinding("CRB-" + claim.getResourceName());
+
+			try {
+				// Replace ClusterroleBinding
+				K8sApiCaller.deleteClusterRoleBinding("CRB-" + claim.getResourceName());
+				K8sApiCaller.createClusterRoleBinding(rbcForNSC);
+			} catch (ApiException e2) {
+				logger.info(e2.getResponseBody());
+				throw e2;
+			}
+		}catch(ApiException e) {
+			if (e.getMessage().contains("Not Found")) {
+				try {
+					// Create New ClusterroleBinding
+					K8sApiCaller.createClusterRoleBinding(rbcForNSC);
+				} catch (ApiException e2) {
+					logger.info(e2.getResponseBody());
+					throw e2;
+				}
+			} else{
+				logger.info(e.getResponseBody());
+				throw e;
+			}
 		}
 	}
 

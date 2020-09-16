@@ -103,25 +103,31 @@ public class HyperAuthCaller {
 	    return resultJson; 
 	}	
 	
-	public static JsonObject getUserDetailWithoutToken(String userId) throws IOException {
+	public static JsonObject getUserDetailWithoutToken(String userId) {
 		logger.info(" [HyperAuth] HyperAuth Get User Detail Without Token Service" );
 
 	    Request request = null;
+		JsonObject resultJson = null;
+		try{
+			//GET svc
+			HttpUrl.Builder urlBuilder = HttpUrl.parse(setHyperAuthURL( Constants.SERVICE_NAME_USER_DETAIL_WITHOUT_TOKEN ) + userId).newBuilder();
 
-		 //GET svc
-	    HttpUrl.Builder urlBuilder = HttpUrl.parse(setHyperAuthURL( Constants.SERVICE_NAME_USER_DETAIL_WITHOUT_TOKEN ) + userId).newBuilder();
+			String url = urlBuilder.build().toString();
+			request = new Request.Builder().url(url).get().build();
 
-	    String url = urlBuilder.build().toString();
-	    request = new Request.Builder().url(url).get().build();
-	    
-	    logger.debug(" request" + request.toString() );
+			logger.debug(" request" + request.toString() );
 
-		Response response = client.newCall(request).execute();
-		String result = response.body().string();
-		logger.debug(" UserDetailResult : " + result);
-		
-		Gson gson = new Gson();
-	    JsonObject resultJson = gson.fromJson(result, JsonObject.class);
+			Response response = client.newCall(request).execute();
+			String result = response.body().string();
+			logger.debug(" UserDetailResult : " + result);
+
+			Gson gson = new Gson();
+			resultJson = gson.fromJson(result, JsonObject.class);
+		} catch (Exception e){
+			logger.debug("Error Occured while Get UserGroup Data from Hyperauth, " +
+					"Just Pretend user [ " + userId + " ] has no User Group" );
+			e.printStackTrace();
+		}
 	    
 	    return resultJson; 
 	}	
