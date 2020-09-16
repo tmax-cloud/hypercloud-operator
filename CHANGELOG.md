@@ -1,6 +1,25 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.4.5 start -------------------->
+
+## HyperCloudServer_4.1.4.5 (Thu Sep 17 05:47:06 KST 2020)
+
+### Added
+  - [feat] adminCMP, defaultCMP 추가 by miri_jo
+
+### Changed
+  - [mod] example_user_security_policy.yaml, default_user_security_policy.yaml 삭제 by dnxorjs1
+
+### Fixed
+  - [ims][239636] nsc 승인시 유저에게 부여하는 권한 재 설계 by dnxorjs1
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.4.5 end --------------------->
+
 <!-------------------- v4.1.4.4 start -------------------->
 
 ## HyperCloudServer_4.1.4.4 (Wed Sep 16 06:30:53 KST 2020)
