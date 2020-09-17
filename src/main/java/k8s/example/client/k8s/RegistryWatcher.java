@@ -77,6 +77,7 @@ public class RegistryWatcher extends Thread {
 						if( registry != null) {
 							String eventType = response.type.toString();
 							String serviceType = registry.getSpec().getService().getServiceType();
+							logger.debug("[YSH]serviceType=" + serviceType);
 							
 							logger.debug("====================== Registry " + eventType + " ====================== \n");
 							logger.debug("\t[" + registry.getMetadata().getResourceVersion() + "] " 
@@ -252,6 +253,15 @@ public class RegistryWatcher extends Thread {
 										}
 									// Registry Is NotReady or Error.
 									else {
+										JsonNode diff = Util.jsonDiff(beforeJsonStr, Util.toJson(registry).toString());
+										if(diff.size() > 0) {
+											logger.debug("[Updated Registry Spec]\ndiff: " + diff.toString() + "\n");
+											logger.debug("Change Status: "+ phase +" -> Updating");
+											changePhase = RegistryStatus.StatusPhase.UPDATING.getStatus();
+											changeMessage = "Registry is Updating";
+											changeReason = "Updating";
+										}
+										
 										if(!phase.equals(RegistryStatus.StatusPhase.NOT_READY.getStatus()) 
 												&& conditionsNotReady(statusMap, serviceType)) {
 											changePhase = RegistryStatus.StatusPhase.NOT_READY.getStatus();
