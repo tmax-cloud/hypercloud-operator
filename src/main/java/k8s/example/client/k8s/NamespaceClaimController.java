@@ -130,8 +130,6 @@ public class NamespaceClaimController extends Thread {
 
 										// clusterrole-NSC clusterrolebinding
 										createNSCClusterRoleBinding ( claim );
-										// ingress-nginx-shared namespace read role
-										K8sApiCaller.createRoleBindingForIngressNginx(nsResult.getMetadata().getLabels().get("owner"));
 
 										// If Trial Type 
 										if ( nsResult.getMetadata().getLabels() != null && nsResult.getMetadata().getLabels().get("trial") !=null 

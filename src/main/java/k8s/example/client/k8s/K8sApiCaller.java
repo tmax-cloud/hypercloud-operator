@@ -5525,43 +5525,6 @@ public class K8sApiCaller {
 			throw e;
 		}
 	}
-	
-	public static void createRoleBindingForIngressNginx(String userId) throws ApiException {
-		logger.info("[K8S ApiCaller] Create roleBinding IngressNginx for New User Start");
-
-		V1RoleBinding roleBinding = new V1RoleBinding();
-		V1ObjectMeta roleBindingMeta = new V1ObjectMeta();
-		roleBindingMeta.setName(Constants.INGRESS_NGINX_SHARED_READ_ROLE_BINDING + "-" + userId);
-		roleBindingMeta.setNamespace(Constants.INGRESS_NGINX_SHARED_NAMESPACE);
-		roleBinding.setMetadata(roleBindingMeta);
-
-		// RoleRef
-		V1RoleRef roleRef = new V1RoleRef();
-		roleRef.setApiGroup(Constants.RBAC_API_GROUP);
-		roleRef.setKind("ClusterRole");
-		roleRef.setName(Constants.INGRESS_NGINX_SHARED_READ_CLUSTER_ROLE);
-		roleBinding.setRoleRef(roleRef);
-
-		// subject
-		V1Subject subject = new V1Subject();
-		subject.setApiGroup(Constants.RBAC_API_GROUP);
-		subject.setKind("User");
-		subject.setName(userId);
-		roleBinding.addSubjectsItem(subject);
-
-		try {
-			rbacApi.createNamespacedRoleBinding(Constants.INGRESS_NGINX_SHARED_NAMESPACE, roleBinding, null, null, null);
-		} catch (ApiException e) {
-			if(e.getResponseBody().contains("Not Found") || e.getResponseBody().contains("404")) {
-				logger.info(Constants.INGRESS_NGINX_SHARED_NAMESPACE + " does not exist, Do nothing ");
-			}else if(e.getResponseBody().contains("already")) {
-				logger.info( "Clusterrole " + Constants.INGRESS_NGINX_SHARED_READ_ROLE_BINDING + "-" + userId + " Already exist, Do nothing ");
-			} else {
-				logger.error(e.getResponseBody());
-				throw e;
-			}
-		}
-	}
 
 	public static void createGeneralRoleBinding(V1RoleBinding roleBinding) throws ApiException {
 		logger.info("[K8S ApiCaller] Create General roleBinding for New User Start");
