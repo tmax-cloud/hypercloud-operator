@@ -42,6 +42,8 @@ public class RegistryService {
 	
 	private Ingress ingress = null;
 	private LoadBalancer loadBalancer = null;
+	private String serviceType = null;
+	
 	
 	public Ingress getIngress() {
 		return ingress;
@@ -54,6 +56,12 @@ public class RegistryService {
 	}
 	public void setLoadBalancer(LoadBalancer loadBalancer) {
 		this.loadBalancer = loadBalancer;
+	}
+	public String getServiceType() {
+		return serviceType;
+	}
+	public void setServiceType(String serviceType) {
+		this.serviceType = serviceType;
 	}
 	
 	

@@ -12,7 +12,7 @@ spec:
     nodeSelector:
       kubernetes.io/hostname: ck-2
   service:
-     type: LoadBalancer
+    serviceType: Ingress
   persistentVolumeClaim:
      accessModes: [ReadWriteMany]
      storageSize: 10Gi
