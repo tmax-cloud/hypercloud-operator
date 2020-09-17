@@ -4,8 +4,8 @@ metadata:
   name: nodejs-cicd-template
   namespace: default
   annotations:
-    template-version: 1.1.3
-    tested-operator-version: 4.1.0.23
+    template-version: 1.1.4
+    tested-operator-version: 4.1.3.2
   labels:
     cicd-template-was: nodejs
 imageUrl: https://upload.wikimedia.org/wikipedia/commons/d/d9/Node.js_logo.svg
@@ -187,7 +187,7 @@ objects:
 - apiVersion: tekton.dev/v1beta1
   kind: PipelineRun
   metadata:
-    generateName: ${APP_NAME}-pipeline-run-
+    name: ${APP_NAME}-pipeline-run-first
     labels:
       app: ${APP_NAME}
   spec:

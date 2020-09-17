@@ -171,7 +171,7 @@ rules:
     resources: ['clustermenupolicies']
     verbs: ['get']
   - apiGroups: ['rbac.authorization.k8s.io']
-    resources: ['roles', 'clusterroles', 'rolebindings']
+    resources: ['roles', 'clusterroles']
     verbs: ['get', 'list']
 
 ---
@@ -190,5 +190,8 @@ rules:
   - apiGroups: ['tmax.io']
     resources: ['rolebindingclaims', 'resourcequotaclaims', 'catalogserviceclaims']
     verbs: ['create', 'get', 'list']
+  - apiGroups: ['rbac.authorization.k8s.io']
+    resources: ['rolebindings']
+    verbs: ['get', 'list']
 
 
