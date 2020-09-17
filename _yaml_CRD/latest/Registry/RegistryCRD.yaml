@@ -97,18 +97,19 @@ spec:
             service:
               type: object
               description: "supported service types are ingress and loadBalancer."
-              oneOf:
-              - required: [ingress]
-              - required: [loadBalancer]
+              required: [serviceType]
               properties:
+                serviceType:
+                  type: string
+                  enum: [Ingress, LoadBalancer]
                 ingress:
                   type: object
-                  description: "use ingress service type"
+                  description: "(deprecated) use ingress service type"
                   required: [domainName]
                   properties:
                     domainName: 
                       type: string
-                      description: "(example: 192.168.6.110.nip.io)"
+                      description: "(deprecated) (example: 192.168.6.110.nip.io)"
                 loadBalancer:
                   type: object
                   description: "use loadBalancer service type"
