@@ -218,18 +218,20 @@ public class Util {
     public static JsonObject makePatchJsonObject(String op, String path, Object value) {
     	JsonObject res = new JsonObject();
     	
-    	if(value instanceof JsonElement){
-    		res.add("value", (JsonElement) value);
-    	} else if(value instanceof String) {
-    		res.addProperty("value", (String) value);
-    	} else if(value instanceof Boolean) {
-    		res.addProperty("value", (Boolean) value);
-    	} else if(value instanceof Number) {
-    		res.addProperty("value", (Number) value);
-    	} else if(value instanceof Character) {
-    		res.addProperty("value", (Character) value);
-    	} else {
-    		return res;
+    	if(value != null) {
+    		if(value instanceof JsonElement){
+    			res.add("value", (JsonElement) value);
+    		} else if(value instanceof String) {
+    			res.addProperty("value", (String) value);
+    		} else if(value instanceof Boolean) {
+    			res.addProperty("value", (Boolean) value);
+    		} else if(value instanceof Number) {
+    			res.addProperty("value", (Number) value);
+    		} else if(value instanceof Character) {
+    			res.addProperty("value", (Character) value);
+    		} else {
+    			return res;
+    		}
     	}
     	
     	res.addProperty("op", op);
@@ -253,6 +255,7 @@ public class Util {
     public static JsonElement toJson(Object o) {
 		JsonObject json = (JsonObject) new JsonParser().parse(new Gson().toJson(o));
 		json.remove("status");
+		json.remove("operatorStartTime");
 		JsonObject metadata = json.getAsJsonObject("metadata");
 		if( metadata != null ) {
 			metadata.remove("annotations");

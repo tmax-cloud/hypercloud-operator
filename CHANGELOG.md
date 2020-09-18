@@ -1,6 +1,42 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.4.7 start -------------------->
+
+## HyperCloudServer_4.1.4.7 (Thu Sep 17 10:53:26 KST 2020)
+
+### Added
+
+### Changed
+  - [mod] registry serviceType 변경시 error 상태에 빠지는 버그 수정 by sukhee_yun
+  - [mod] registry 생성시 domainName 입력받지 않게 수정 by sukhee_yun
+
+### Fixed
+
+### CRD yaml
+  - [crd] RegistryCRD 수정 by sukhee_yun
+
+### Etc
+
+<!--------------------- v4.1.4.7 end --------------------->
+
+<!-------------------- v4.1.4.6 start -------------------->
+
+## HyperCloudServer_4.1.4.6 (Thu Sep 17 06:47:29 KST 2020)
+
+### Added
+
+### Changed
+  - [mod] rolebinding list, get 권한 namespace-listget role로 이동 by dnxorjs1
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.4.6 end --------------------->
+
 <!-------------------- v4.1.4.5 start -------------------->
 
 ## HyperCloudServer_4.1.4.5 (Thu Sep 17 05:47:06 KST 2020)

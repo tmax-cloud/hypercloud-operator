@@ -32,6 +32,7 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
 
 import org.apache.commons.codec.binary.Base64;
+import org.bouncycastle.asn1.dvcs.ServiceType;
 import org.joda.time.DateTime;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
@@ -624,14 +625,35 @@ public class K8sApiCaller {
 			throw e;
 		}
 	}
+	
+	public static String getIngressControllerIP() throws ApiException {
+		String serviceIP = "";
+		final String INGRESS_CONTROLLER_SVC_NAME = "ingress-nginx-shared-controller";
+		final String INGRESS_CONTROLLER_SVC_NAMESPACE = "ingress-nginx-shared";
+				
+		try {
+			V1Service ingCtlSvc = api.readNamespacedService(INGRESS_CONTROLLER_SVC_NAME, INGRESS_CONTROLLER_SVC_NAMESPACE, null, null, null);
+			serviceIP = ingCtlSvc.getStatus().getLoadBalancer().getIngress().get(0).getIp();
+			logger.debug("Ingress Controller Service IP: " + serviceIP);
+			
+		} catch (ApiException e) {
+			logger.error(e.getResponseBody());
+			throw e;
+		}
+		
+		return serviceIP;
+	}
+	
+	public static String getRegistryIngressDomain(String serviceIP) {
+		return serviceIP + ".nip.io";
+	}
 
 	public static void initRegistry(String registryId, Registry registry) throws ApiException {
 		logger.debug("[K8S ApiCaller] initRegistry(String, Registry) Start");
 
 		String registryName = registry.getMetadata().getName();
 		String namespace = registry.getMetadata().getNamespace();
-		String serviceType = registry.getSpec().getService().getIngress() != null ? 
-				RegistryService.SVC_TYPE_INGRESS : RegistryService.SVC_TYPE_LOAD_BALANCER;
+		String serviceType = registry.getSpec().getService().getServiceType();
 		JsonObject status = new JsonObject();
 		JsonArray conditions = new JsonArray();
 		JsonObject condition1 = new JsonObject();
@@ -727,8 +749,7 @@ public class K8sApiCaller {
 		logger.debug("[K8S ApiCaller] createRegistry(Registry) Start");
 
 		try {
-			String serviceType = registry.getSpec().getService().getIngress() != null 
-				? RegistryService.SVC_TYPE_INGRESS : RegistryService.SVC_TYPE_LOAD_BALANCER;
+			String serviceType = registry.getSpec().getService().getServiceType();
 
 			createRegistryService(registry);
 			createRegistryPvc(registry);
@@ -756,9 +777,7 @@ public class K8sApiCaller {
 			RegistryService registryService = registry.getSpec().getService();
 			String clusterIP = null;
 			String lbIP = null;
-			String serviceType 
-			= registry.getSpec().getService().getIngress() != null 
-			? RegistryService.SVC_TYPE_INGRESS : RegistryService.SVC_TYPE_LOAD_BALANCER;
+			String serviceType = registry.getSpec().getService().getServiceType();
 
 			logger.info(namespace + "/" + registryName + " registry's service is creating...");
 			
@@ -1054,9 +1073,7 @@ public class K8sApiCaller {
 			String lbIP = null;
 			String ingressDomain = null;
 			String registryDomain = null;
-			String serviceType 
-			= registry.getSpec().getService().getIngress() != null 
-			? RegistryService.SVC_TYPE_INGRESS : RegistryService.SVC_TYPE_LOAD_BALANCER;
+			String serviceType = registry.getSpec().getService().getServiceType();
 
 			logger.info(namespace + "/" + registryName + " registry's cert secret is creating...");
 
@@ -1066,7 +1083,19 @@ public class K8sApiCaller {
 			logger.debug("registrySVCPort: " + registrySVCPort);
 
 			if( serviceType.equals(RegistryService.SVC_TYPE_INGRESS) ) {
-				ingressDomain = registryService.getIngress().getDomainName();
+				String ingCtlIP = getIngressControllerIP();
+				if(ingCtlIP.length() == 0) {
+					try {
+						patchRegistryStatus(registry, RegistryCondition.Condition.SECRET_OPAQUE, 
+								RegistryStatus.Status.FALSE.getStatus(), "Creating a registry is failed. Ingress Controller IP is not found", "IngressControllerNotFound");
+					} catch (ApiException e) {
+						logger.error(e.getResponseBody());
+						throw e;
+					}
+					
+					throw new Exception("Ingress Controller Not Found");
+				}
+				ingressDomain = getRegistryIngressDomain(ingCtlIP);
 
 				registrySVCPort = registryService.REGISTRY_INGRESS_PORT;
 				logger.debug("[Ingress]registrySVCPort: " + registrySVCPort);
@@ -1259,9 +1288,7 @@ public class K8sApiCaller {
 			String lbIP = null;
 			String ingressDomain = null;
 			String registryDomain = null;
-			String serviceType 
-			= registry.getSpec().getService().getIngress() != null 
-			? RegistryService.SVC_TYPE_INGRESS : RegistryService.SVC_TYPE_LOAD_BALANCER;
+			String serviceType = registry.getSpec().getService().getServiceType();
 
 			logger.info(namespace + "/" + registryName + "registry docker-config-json secret is creating...");
 
@@ -1271,7 +1298,19 @@ public class K8sApiCaller {
 			logger.debug("registrySVCPort: " + registrySVCPort);
 
 			if( serviceType.equals(RegistryService.SVC_TYPE_INGRESS) ) {
-				ingressDomain = registryService.getIngress().getDomainName();
+				String ingCtlIP = getIngressControllerIP();
+				if(ingCtlIP.length() == 0) {
+					try {
+						patchRegistryStatus(registry, RegistryCondition.Condition.SECRET_DOCKER_CONFIG_JSON, 
+								RegistryStatus.Status.FALSE.getStatus(), "Creating a registry is failed. Ingress Controller IP is not found", "IngressControllerNotFound");
+					} catch (ApiException e) {
+						logger.error(e.getResponseBody());
+						throw e;
+					}
+					
+					throw new Exception("Ingress Controller Not Found");
+				}
+				ingressDomain = getRegistryIngressDomain(ingCtlIP);
 
 				registrySVCPort = registryService.REGISTRY_INGRESS_PORT;
 				logger.debug("[Ingress]registrySVCPort: " + registrySVCPort);
@@ -1461,8 +1500,20 @@ public class K8sApiCaller {
 
 			String ingressDomain = null;
 			String registryDomain = null;
-
-			ingressDomain = registryService.getIngress().getDomainName();
+			String ingCtlIP = getIngressControllerIP();
+			if(ingCtlIP.length() == 0) {
+				try {
+					patchRegistryStatus(registry, RegistryCondition.Condition.INGRESS, 
+							RegistryStatus.Status.FALSE.getStatus(), "Creating a registry is failed. Ingress Controller IP is not found", "IngressControllerNotFound");
+				} catch (ApiException e) {
+					logger.error(e.getResponseBody());
+					throw e;
+				}
+				
+				throw new Exception("Ingress Controller Not Found");
+			}
+			ingressDomain = getRegistryIngressDomain(ingCtlIP);
+			
 			registryDomain = registryName + "." + ingressDomain;
 			logger.debug("[registryDomain]:" + registryDomain);
 
@@ -2218,8 +2269,8 @@ public class K8sApiCaller {
 				recreateSubresources.add(RegistryCondition.Condition.REPLICA_SET);
 				recreateSubresources.add(RegistryCondition.Condition.SECRET_OPAQUE);
 				recreateSubresources.add(RegistryCondition.Condition.SECRET_DOCKER_CONFIG_JSON);
-				if(path.equals("/spec/service/ingress") 
-						&& op.equals("add")) {
+				if(path.equals("/spec/service/serviceType") 
+						&& registry.getSpec().getService().getServiceType().equals(RegistryService.SVC_TYPE_INGRESS)) {
 					try {
 						createRegistryTlsSecret(registry);
 						createRegistryIngress(registry);
@@ -2582,6 +2633,34 @@ public class K8sApiCaller {
 ////								patchArray.add(Util.makePatchJsonObject("add", "/spec/service/ingress/ingressClass", "nginx"));
 ////							}
 //						}
+						if(registry.getSpec().getService().getServiceType() == null) {
+							if(registry.getSpec().getService().getLoadBalancer() == null) {
+								logger.debug("patch " + registryName +"/" + namespace + " registry: " + RegistryService.SVC_TYPE_INGRESS + " added");
+								patchArray.add(Util.makePatchJsonObject("add", "/spec/service/serviceType", RegistryService.SVC_TYPE_INGRESS));
+								patchArray.add(Util.makePatchJsonObject("remove", "/spec/service/ingress", null));
+								registry.getSpec().getService().setServiceType(RegistryService.SVC_TYPE_INGRESS);
+								registry.getSpec().getService().setIngress(null);
+							} else {
+								logger.debug("patch " + registryName +"/" + namespace +" registry: " + RegistryService.SVC_TYPE_LOAD_BALANCER + " added");
+								patchArray.add(Util.makePatchJsonObject("add", "/spec/service/serviceType", RegistryService.SVC_TYPE_LOAD_BALANCER));	
+								registry.getSpec().getService().setServiceType(RegistryService.SVC_TYPE_LOAD_BALANCER);
+							}
+
+							Map<String, String> annotations = registry.getMetadata().getAnnotations() == null ? new HashMap<>()
+									: registry.getMetadata().getAnnotations();
+							JsonObject json = (JsonObject) Util.toJson(registry);
+
+							annotations.put(Constants.LAST_CUSTOM_RESOURCE, json.toString());
+
+							registry.getMetadata().setAnnotations(annotations);
+							JsonObject jo = new JsonObject();
+							for(String key : annotations.keySet()) {
+								logger.debug("[annotations]" + key + "=" + annotations.get(key));
+								jo.addProperty(key, annotations.get(key));
+							}
+
+							patchArray.add(Util.makePatchJsonObject("replace", "/metadata/annotations", jo));	
+						}
 
 						if(registry.getSpec().getService().getLoadBalancer() != null) {
 							if(registry.getSpec().getService().getLoadBalancer().getPort() < 1
@@ -3003,8 +3082,9 @@ public class K8sApiCaller {
 		if(restoreRegistry) {
 			try {
 				Registry registry = getRegistry(registryName, namespace);
+				String serviceType = registry.getSpec().getService().getServiceType();
 				createRegistryService(registry);
-				if(registry.getSpec().getService().getIngress() != null) {
+				if(serviceType.equals(RegistryService.SVC_TYPE_INGRESS)) {
 					deleteRegistrySubresource(registry, RegistryCondition.Condition.SECRET_TLS);
 				}
 				deleteRegistrySubresource(registry, RegistryCondition.Condition.SECRET_OPAQUE);
@@ -3089,10 +3169,8 @@ public class K8sApiCaller {
 			
 			// Check if Service Type is Ingress
 			Registry registry = getRegistry(registryName, namespace);
-			
-			String serviceType 
-			= registry.getSpec().getService().getIngress() != null ? 
-					RegistryService.SVC_TYPE_INGRESS : RegistryService.SVC_TYPE_LOAD_BALANCER;
+
+			String serviceType = registry.getSpec().getService().getServiceType();
 			
 			if( !serviceType.equals(RegistryService.SVC_TYPE_INGRESS)) {
 				logger.debug("tls-secret: Registry service type is not ingress.");
@@ -3164,6 +3242,7 @@ public class K8sApiCaller {
 		if(restoreRegistry) {
 			Registry registry;
 			registry = getRegistry(registryName, namespace);
+			String serviceType = registry.getSpec().getService().getServiceType();
 			
 			if (secret.getType().equals(Constants.K8S_SECRET_TYPE_DOCKER_CONFIG_JSON)) {
 				try {
@@ -3183,7 +3262,7 @@ public class K8sApiCaller {
 				try {
 					createRegistryCertSecret(registry);
 					deleteRegistrySubresource(registry, RegistryCondition.Condition.REPLICA_SET);
-					if(registry.getSpec().getService().getIngress() != null) {
+					if(serviceType.equals(RegistryService.SVC_TYPE_INGRESS)) {
 						deleteRegistrySubresource(registry, RegistryCondition.Condition.SECRET_TLS);
 					}
 				} catch (Exception e) {
@@ -3331,10 +3410,7 @@ public class K8sApiCaller {
 		
 		// Check if Service Type is Ingress
 		Registry registry = getRegistry(registryName, namespace);
-
-		String serviceType 
-		= registry.getSpec().getService().getIngress() != null ? 
-				RegistryService.SVC_TYPE_INGRESS : RegistryService.SVC_TYPE_LOAD_BALANCER;
+		String serviceType = registry.getSpec().getService().getServiceType();
 
 		if( !serviceType.equals(RegistryService.SVC_TYPE_INGRESS)) {
 			logger.debug("ingress: Registry service type is not ingress.");
