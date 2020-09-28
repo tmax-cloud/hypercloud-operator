@@ -161,8 +161,17 @@ public class MeteringHandler extends GeneralHandler {
 			end = Integer.parseInt(endTime);
 		}
 	    
-		Calendar calStart = Calendar.getInstance();calStart.setTime(new Date(start));calStart.set(Calendar.MINUTE, 0);calStart.set(Calendar.SECOND, 0);calStart.set(Calendar.MILLISECOND, 0);
-		Calendar calEnd = Calendar.getInstance();calEnd.setTime(new Date(end));calEnd.set(Calendar.MINUTE, 0);calEnd.set(Calendar.SECOND, 0);calEnd.set(Calendar.MILLISECOND, 0);
+		Calendar calStart = Calendar.getInstance();
+		calStart.setTime(new Date(start));
+		calStart.set(Calendar.MINUTE, 0);
+		calStart.set(Calendar.SECOND, 0);
+		calStart.set(Calendar.MILLISECOND, 0);
+
+		Calendar calEnd = Calendar.getInstance();
+		calEnd.setTime(new Date(end));
+		calEnd.set(Calendar.MINUTE, 0);
+		calEnd.set(Calendar.SECOND, 0);
+		calEnd.set(Calendar.MILLISECOND, 0);
 		
 		switch(unit) {
 		case "hour" : 
@@ -190,7 +199,8 @@ public class MeteringHandler extends GeneralHandler {
 			sb.append("select * from metering.metering_year");
 			break;
 		}
-		sb.append(" where metering_time between '" + new Timestamp(calStart.getTime().getTime()) + "' and '" + new Timestamp(calEnd.getTime().getTime()) + "'");
+		sb.append(" where metering_time between '" + new Timestamp(calStart.getTime().getTime())
+				+ "' and '" + new Timestamp(calEnd.getTime().getTime()) + "'");
 	}
 	
 	private Connection getConnection() throws SQLException, ClassNotFoundException {
