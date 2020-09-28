@@ -160,6 +160,7 @@ spec:
                   - Success
                   - Reject
                   - Error
+                  - Deleted
   additionalPrinterColumns:
   - name: Status
     type: string

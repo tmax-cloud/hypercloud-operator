@@ -32,7 +32,6 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
 
 import org.apache.commons.codec.binary.Base64;
-import org.bouncycastle.asn1.dvcs.ServiceType;
 import org.joda.time.DateTime;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
@@ -202,7 +201,6 @@ public class K8sApiCaller {
 	private static ExtensionsV1beta1Api extentionApi;
 	private static ObjectMapper mapper = new ObjectMapper();
 	private static Gson gson = new GsonBuilder().create();
-
 	private static long time = System.currentTimeMillis();
 
 	private static Logger logger = Main.logger;
@@ -341,8 +339,8 @@ public class K8sApiCaller {
 
 		// Start NamespaceClaim Controller
 		logger.info("Start NamespaceClaimDelete Controller");
-		NamespaceClaimDeleteController nscDeleteOperator = new NamespaceClaimDeleteController(k8sClient, customObjectApi, 0);
-		nscDeleteOperator.start();
+		NamespaceController nsOperator = new NamespaceController(k8sClient, api, customObjectApi, 0);
+		nsOperator.start();
 
 		// Start ResourceQuotaClaim Controller
 		logger.info("Start ResourceQuotaClaim Controller");
@@ -512,14 +510,14 @@ public class K8sApiCaller {
 					nscOperator.start();
 				}
 
-				if (!nscDeleteOperator.isAlive()) {
-					nscLatestResourceVersion = NamespaceClaimDeleteController.getLatestResourceVersion();
+				if (!nsOperator.isAlive()) {
+					long nsResourceVersion = NamespaceController.getLatestResourceVersion();
 					logger.info(
-							("Namespace Claim Delete Controller is not Alive. Restart Controller! (Latest Resource Version: "
-									+ nscLatestResourceVersion + ")"));
-					nscDeleteOperator.interrupt();
-					nscDeleteOperator = new NamespaceClaimDeleteController(k8sClient, customObjectApi, nscLatestResourceVersion);
-					nscDeleteOperator.start();
+							("Namespace Controller is not Alive. Restart Controller! (Latest Resource Version: "
+									+ nsResourceVersion + ")"));
+					nsOperator.interrupt();
+					nsOperator = new NamespaceController(k8sClient, api, customObjectApi, nsResourceVersion);
+					nsOperator.start();
 				}
 
 				if (!rqcOperator.isAlive()) {
@@ -566,7 +564,6 @@ public class K8sApiCaller {
 
 	public static UserCR getUser(String userName) throws Exception {
 		UserCR user = new UserCR();
-
 		try {
 			Object response = customObjectApi.getClusterCustomObject(Constants.CUSTOM_OBJECT_GROUP,
 					Constants.CUSTOM_OBJECT_VERSION, Constants.CUSTOM_OBJECT_PLURAL_USER, userName);
@@ -5255,7 +5252,7 @@ public class K8sApiCaller {
 			labels.put("period", claim.getMetadata().getLabels().get("period"));
 		}
 		
-		//Add Trial Annotations if exists
+		//Add Annotations if exists
 		if (claim.getMetadata().getAnnotations() != null ) {
 			namespaceMeta.setAnnotations(claim.getMetadata().getAnnotations());
 		}
@@ -5301,7 +5298,8 @@ public class K8sApiCaller {
 		V1ObjectMeta namespaceMeta = new V1ObjectMeta();
 		Map<String, String> labels = new HashMap<>();
 		labels.put("fromClaim", claim.getMetadata().getName());
-		
+		labels.put("owner", claim.getMetadata().getLabels().get("owner"));
+
 		//Add Trial Label if exists
 		if (claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") != null 
 				&& claim.getMetadata().getLabels().get("owner") !=null) {

@@ -159,7 +159,8 @@ public class Constants {
 	public static final String CLAIM_STATUS_PENDING = "Pending";
 	public static final String CLAIM_STATUS_REJECT = "Reject";
 	public static final String CLAIM_STATUS_ERROR = "Error";
-	
+	public static final String CLAIM_STATUS_DELETED = "Deleted";
+
 	// Custom Resource Annoatation To Know Modified Fields
 	public static final String LAST_CUSTOM_RESOURCE = CUSTOM_OBJECT_GROUP + "/last-custom-resource";
 	public static final String UPDATING_FIELDS = CUSTOM_OBJECT_GROUP + "/updating-fields";
