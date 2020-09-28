@@ -254,6 +254,7 @@ public class K8sApiCaller {
 		logger.info("Instance Latest resource version: " + instanceLatestResourceVersion);
 		long nscLatestResourceVersion = getLatestResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, false);
 		logger.info("Namespace Claim Latest resource version: " + nscLatestResourceVersion);
+
 		long rqcLatestResourceVersion = getLatestResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_RESOURCEQUOTACLAIM,
 				true);
 		logger.info("ResourceQuota Claim Latest resource version: " + rqcLatestResourceVersion);
@@ -337,6 +338,11 @@ public class K8sApiCaller {
 		logger.info("Start NamespaceClaim Controller");
 		NamespaceClaimController nscOperator = new NamespaceClaimController(k8sClient, customObjectApi, 0);
 		nscOperator.start();
+
+		// Start NamespaceClaim Controller
+		logger.info("Start NamespaceClaimDelete Controller");
+		NamespaceClaimDeleteController nscDeleteOperator = new NamespaceClaimDeleteController(k8sClient, customObjectApi, 0);
+		nscDeleteOperator.start();
 
 		// Start ResourceQuotaClaim Controller
 		logger.info("Start ResourceQuotaClaim Controller");
@@ -504,6 +510,16 @@ public class K8sApiCaller {
 					nscOperator.interrupt();
 					nscOperator = new NamespaceClaimController(k8sClient, customObjectApi, nscLatestResourceVersion);
 					nscOperator.start();
+				}
+
+				if (!nscDeleteOperator.isAlive()) {
+					nscLatestResourceVersion = NamespaceClaimDeleteController.getLatestResourceVersion();
+					logger.info(
+							("Namespace Claim Delete Controller is not Alive. Restart Controller! (Latest Resource Version: "
+									+ nscLatestResourceVersion + ")"));
+					nscDeleteOperator.interrupt();
+					nscDeleteOperator = new NamespaceClaimDeleteController(k8sClient, customObjectApi, nscLatestResourceVersion);
+					nscDeleteOperator.start();
 				}
 
 				if (!rqcOperator.isAlive()) {
@@ -5550,6 +5566,18 @@ public class K8sApiCaller {
 			}
 		}
 	}
+
+	public static V1ClusterRole createClusterRole(V1ClusterRole clusterRole) throws ApiException {
+		logger.info("[K8S ApiCaller] Create ClusterRole Start");
+		V1ClusterRole result = null;
+		try {
+			result = rbacApi.createClusterRole( clusterRole, null, null, null);
+		} catch (ApiException e) {
+			logger.error(e.getResponseBody());
+			throw e;
+		}
+		return result;
+	}
 	
 
 	public static void updateRoleBinding(RoleBindingClaim claim) throws Throwable {
@@ -5613,6 +5641,16 @@ public class K8sApiCaller {
 				logger.error(e.getResponseBody());
 				throw e;
 			}
+		}
+	}
+
+	public static void createGeneralClusterRoleBinding(V1ClusterRoleBinding clusterRoleBinding) throws ApiException {
+		logger.info("[K8S ApiCaller] Create General roleBinding for New User Start");
+		try {
+			rbacApi.createClusterRoleBinding( clusterRoleBinding, null, null, null);
+		} catch (ApiException e) {
+			logger.error(e.getResponseBody());
+			throw e;
 		}
 	}
 
@@ -5714,6 +5752,21 @@ public class K8sApiCaller {
 		V1ClusterRole replaceResult = null;
 		try {
 			replaceResult = rbacApi.replaceClusterRole(clusterRole.getMetadata().getName(), clusterRole, null, null, null);
+		} catch (ApiException e) {
+			logger.error("Response body: " + e.getResponseBody());
+			e.printStackTrace();
+		} catch (Exception e) {
+			logger.error("Exception: " + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		}
+		return replaceResult;
+	}
+
+	public static V1ClusterRoleBinding replaceClusterRoleBinding(V1ClusterRoleBinding clusterRoleBinding) {
+		V1ClusterRoleBinding replaceResult = null;
+		try {
+			replaceResult = rbacApi.replaceClusterRoleBinding(clusterRoleBinding.getMetadata().getName(), clusterRoleBinding, null, null, null);
 		} catch (ApiException e) {
 			logger.error("Response body: " + e.getResponseBody());
 			e.printStackTrace();
