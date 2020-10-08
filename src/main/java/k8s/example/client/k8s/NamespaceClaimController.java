@@ -67,57 +67,50 @@ public class NamespaceClaimController extends Thread {
 					String resourceName = "unknown";
 					try {
 						NamespaceClaim claim = response.object;
-
 						if( claim != null) {
 							latestResourceVersion = Long.parseLong( response.object.getMetadata().getResourceVersion() );
 							String eventType = response.type.toString(); //ADDED, MODIFIED, DELETED
-							logger.info("[NamespaceClaim Controller] Event Type : " + eventType );
-							logger.debug("[NamespaceClaim Controller] == NamespcaeClaim == \n" + claim.toString());
+
 							claimName = claim.getMetadata().getName();
 							resourceName = claim.getResourceName();
 							
 							switch( eventType ) {
-								case Constants.EVENT_TYPE_ADDED : 
-									if ( claim.getStatus() !=null && claim.getStatus().getStatus() != null ) { // Generated And Status has Changed when DownTime 
-										logger.info("[NamespaceClaim Controller] Status of NamespaceClaim [ " + claim.getMetadata().getName() + " ] "
-												+ "Already Exists as [ " + claim.getStatus().getStatus() + " ]" );
-										if ( claim.getStatus().getStatus().equals(Constants.CLAIM_STATUS_SUCCESS) ) {
-											// If Trial Type 
-											if ( claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") !=null 
-													&& claim.getMetadata().getLabels().get("owner") !=null) {
-												// give owner all verbs of NSC ( Except admin-tmax.co.kr)
-												if ( !claim.getMetadata().getLabels().get("owner").equalsIgnoreCase( Constants.MASTER_USER_ID )) {
-													patchUserRole ( claim.getMetadata().getLabels().get("owner"), claim.getMetadata().getName() );
-												}
-											}
-										}
-									}else {
+								case Constants.EVENT_TYPE_ADDED :
+									if(claim.getStatus() == null){
+										// Add Event is called for the First Time
+										logger.info("[NamespaceClaim Controller] Add Event of NamespaceClaim [ " + claim.getMetadata().getName() + " ] "
+												+ "is called for the First Time" );
+
+										logger.info("[NamespaceClaim Controller] Event Type : " + eventType );
+										logger.debug("[NamespaceClaim Controller] == NamespcaeClaim == " + claim.toString());
 										if ( K8sApiCaller.namespaceAlreadyExist( resourceName ) ) {
-											replaceNscStatus( claimName, Constants.CLAIM_STATUS_REJECT, "Duplicated NameSpaceName" ); 
+											replaceNscStatus( claimName, Constants.CLAIM_STATUS_REJECT, "Duplicated NameSpaceName" );
 											K8sApiCaller.patchLabel(claimName, "handled" ,"t", Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM , false, null);// must be after replaceNscStatus for awake watcher once more
 										} else {
 											// Patch Status to Awaiting
 											replaceNscStatus( claimName, Constants.CLAIM_STATUS_AWAITING, "wait for admin permission" );
-											// If Trial Type 
-											if ( claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") !=null 
-													&& claim.getMetadata().getLabels().get("owner") !=null) {
-												// give owner all verbs of NSC ( Except admin-tmax.co.kr)
-												if ( !claim.getMetadata().getLabels().get("owner").equalsIgnoreCase( Constants.MASTER_USER_ID )) {
-													patchUserRole ( claim.getMetadata().getLabels().get("owner"), claim.getMetadata().getName() );
-												}
-											}
-										}		
+										}
 									}
+
 									// Set Owner Label from Annotation 'Creator'
-									if ( claim.getMetadata().getAnnotations() != null && claim.getMetadata().getAnnotations().get("creator") !=null
+									String owner = null;
+									if ( claim.getMetadata().getAnnotations() != null && claim.getMetadata().getAnnotations().get("creator")!=null
 											&& !claim.getMetadata().getAnnotations().get("creator").contains(":")) { // 방어로직
-										logger.info("[NamespaceClaim Controller] Set Owner Label from Annotation 'Creator'" );
-										K8sApiCaller.patchLabel(claimName, "owner" ,claim.getMetadata().getAnnotations()
-												.get("creator"), Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, false, null);// FIXME
-									}								
+										if (claim.getMetadata().getLabels().get("owner") == null){
+											logger.info("[NamespaceClaim Controller] Set Owner Label from Annotation 'Creator'" );
+											K8sApiCaller.patchLabel(claimName, "owner" ,claim.getMetadata().getAnnotations()
+													.get("creator"), Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, false, null);// FIXME
+											owner = claim.getMetadata().getAnnotations().get("creator");
+										} else {
+											owner = claim.getMetadata().getLabels().get("owner");
+										}
+									}
 									break;
-									
-								case Constants.EVENT_TYPE_MODIFIED : 
+
+								case Constants.EVENT_TYPE_MODIFIED :
+									logger.info("[NamespaceClaim Controller] Event Type : " + eventType );
+									logger.debug("[NamespaceClaim Controller] == NamespcaeClaim == " + claim.toString());
+
 									String status = getClaimStatus( claimName );		
 									if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && K8sApiCaller.namespaceAlreadyExist( resourceName ) ) {	
 										K8sApiCaller.updateNamespace( claim );
@@ -162,6 +155,7 @@ public class NamespaceClaimController extends Thread {
 												logger.info(" RoleBinding for NameSpace [ " + nsResult.getMetadata().getName() + " ] Already Exists ");
 											}
 										}
+
 										// Create Default NetWork Policy
 										logger.info(" Create Network Policy for new Namespace ["+ nsResult.getMetadata().getName() +" ] Starts");
 										K8sApiCaller.createDefaultNetPol(claim);
@@ -177,15 +171,11 @@ public class NamespaceClaimController extends Thread {
 										K8sApiCaller.patchLabel(claimName, "handled" ,"t", Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM , false, null);// FIXME
 									}				
 									break;
-									
-								case Constants.EVENT_TYPE_DELETED : 
-									// Delete ClusterRoleBinding for Trial New User
-//									K8sApiCaller.deleteClusterRoleBinding("trial-" + claim.getMetadata().getName());
-									break;
 							}		
 						}							
 					} catch (Exception e) {
 						logger.error("Exception: " + e.getMessage());
+						e.getStackTrace().toString();
 						StringWriter sw = new StringWriter();
 						e.printStackTrace(new PrintWriter(sw));
 						logger.error(sw.toString());
@@ -267,19 +257,6 @@ public class NamespaceClaimController extends Thread {
 				throw e;
 			}
 		}			
-	}
-
-	private void patchUserRole(String clusterRoleName, String claimName ) throws Exception {
-		V1ClusterRole clusterRole = null;
-		clusterRole = K8sApiCaller.readClusterRole(clusterRoleName);
-		V1PolicyRule rule = new V1PolicyRule();
-		rule.addApiGroupsItem(Constants.CUSTOM_OBJECT_GROUP);
-		rule.addResourcesItem("namespaceclaims");
-		rule.addVerbsItem("*");
-		rule.addResourceNamesItem(claimName);
-		clusterRole.addRulesItem(rule);
-//		V1ClusterRole replaceResult = K8sApiCaller.replaceClusterRole( clusterRole );	
-		logger.info("Add rules of NameSpace claim [ " + claimName + " ] to Trial Owner [ " + clusterRoleName + " ] Success");
 	}
 
 	private void createTrialRoleBinding(V1Namespace nsResult) throws ApiException {
