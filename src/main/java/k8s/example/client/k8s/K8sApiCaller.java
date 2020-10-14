@@ -5948,7 +5948,6 @@ public class K8sApiCaller {
 												}
 											}
 										}
-
 										// 6. Check if ClusterRole has NameSpace GET rule
 									} else if (roleRef.getKind().equalsIgnoreCase("ClusterRole")) {
 										logger.info("User [ " + userId + " ] has ClusterRole [" + roleRef.getName() + " ]");
