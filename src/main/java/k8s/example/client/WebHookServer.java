@@ -6,7 +6,6 @@ import org.slf4j.Logger;
 
 import fi.iki.elonen.NanoHTTPD;
 import fi.iki.elonen.router.RouterNanoHTTPD;
-import k8s.example.client.audit.handler.AuditApiHandler;
 import k8s.example.client.handler.CatalogHandler;
 import k8s.example.client.handler.EmailHandler;
 import k8s.example.client.handler.NameSpaceClaimHandler;
@@ -38,6 +37,5 @@ public class WebHookServer extends RouterNanoHTTPD {
     	addRoute("/nameSpace", NameSpaceHandler.class);
     	addRoute("/nameSpaceClaim", NameSpaceClaimHandler.class);
     	addRoute("/registry/event", RegistryEventHandler.class);
-    	addRoute("/audit", AuditApiHandler.class);
     }
 }

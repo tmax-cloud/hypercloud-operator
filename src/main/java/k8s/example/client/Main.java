@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 
 import io.kubernetes.client.openapi.models.V1Namespace;
 import io.kubernetes.client.openapi.models.V1NamespaceList;
-import k8s.example.client.audit.AuditController;
 import k8s.example.client.k8s.K8sApiCaller;
 import k8s.example.client.metering.MeteringJob;
 
@@ -37,10 +36,6 @@ public class Main {
 			// Start Trial Namespace Timer
 			logger.info("[Main] Start Trial Namespace Timer");
 			startTrialNSTimer();
-			
-			// Start Audit
-			logger.info("[Main] Start Audit controller");
-			AuditController.start();
 			
 			// Start Start K8S watchers & Controllers
 			logger.info("[Main] Start K8S watchers");
