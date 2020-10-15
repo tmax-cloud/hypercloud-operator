@@ -5729,7 +5729,7 @@ public class K8sApiCaller {
 		} catch (ApiException e) {
 			logger.error("Response body: " + e.getResponseBody());
 			e.printStackTrace();
-
+			throw e;
 		} catch (Exception e) {
 			logger.error("Exception: " + e.getMessage());
 			e.printStackTrace();
