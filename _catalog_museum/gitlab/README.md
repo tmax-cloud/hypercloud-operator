@@ -1,8 +1,6 @@
 # GitLab Template Guide
 
-GitLab의 정상적인 작동을 위해 GitLab 생성 이후 `external_url` 변수를 지정하는 방법은 아래와 같음.
-
-1.  Template 생성
+1. Template 생성
 ```bash
 kubectl apply -f template.yaml
 ```
@@ -12,11 +10,24 @@ kubectl apply -f template.yaml
 kubectl apply -f instance.yaml
 ```
 
-3. Deployment 수정
-(2단계에서 APP_NAME이 gitlab-test-deploy로 설정되고 SERVICE_TYPE이 LoadBalancer로 설정됨을 가정)
-```bash
-APP_NAME=gitlab-test-deploy
-IP=$(kubectl get svc gitlab-test-deploy-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-kubectl set env deployment $APP_NAME GITLAB_OMNIBUS_CONFIG="external_url 'http://$IP/';"
-```
+### Parameter 설명
+- APP_NAME  
+: GitLab Deployment 제목
 
+- STORAGE  
+: GitLab용 PersistentVolumeClaim 크기
+
+- SERVICE_TYPE  
+: GitLab용 서비스 종류 (ClsuterIP/NodePort/LoadBalancer/Ingress)
+
+- WEB_NODE_PORT  
+: SERVICE_TYPE에 NodePort를 사용하는 경우, 사용할 NodePort 명시.
+: 명시되지 않을 경우 자동으로 배정되는 NodePort 사용 (Service 객체를 통해 포트 확인 필요)
+
+- INGRESS_HOST  
+: SERVICE_TYPE에 Ingress를 사용하는 경우, Host 명시.
+: 명시되지 않을 경우 `<APP_NAME>.<네임스페이스>.<Ingress 컨트롤러 IP>.nip.io` 사용
+
+- SSH_PORT  
+: SSH 포트 포워딩
+: 명시되지 않을 경우 2221 포트 사용
