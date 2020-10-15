@@ -92,17 +92,13 @@ public class NamespaceClaimController extends Thread {
 										}
 									}
 
-									// Set Owner Label from Annotation 'Creator'
-									String owner = null;
+									// Set Owner Annotation from Annotation 'Creator'
 									if ( claim.getMetadata().getAnnotations() != null && claim.getMetadata().getAnnotations().get("creator")!=null
 											&& !claim.getMetadata().getAnnotations().get("creator").contains(":")) { // 방어로직
-										if (claim.getMetadata().getLabels().get("owner") == null){
-											logger.info("[NamespaceClaim Controller] Set Owner Label from Annotation 'Creator'" );
-											K8sApiCaller.patchLabel(claimName, "owner" ,claim.getMetadata().getAnnotations()
-													.get("creator"), Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, false, null);// FIXME
-											owner = claim.getMetadata().getAnnotations().get("creator");
-										} else {
-											owner = claim.getMetadata().getLabels().get("owner");
+										if (claim.getMetadata().getAnnotations().get("owner") == null){
+											logger.info("[NamespaceClaim Controller] Set Owner Annotation from Annotation 'Creator'" );
+											K8sApiCaller.patchAnnotation(claimName, "owner" ,claim.getMetadata().getAnnotations()
+													.get("creator"), Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, false, null);
 										}
 									}
 									break;
@@ -126,7 +122,7 @@ public class NamespaceClaimController extends Thread {
 
 										// If Trial Type 
 										if ( nsResult.getMetadata().getLabels() != null && nsResult.getMetadata().getLabels().get("trial") !=null 
-												&& nsResult.getMetadata().getLabels().get("owner") !=null) {
+												&& nsResult.getMetadata().getAnnotations() != null && nsResult.getMetadata().getAnnotations().get("owner") !=null) {
 											// Make RoleBinding for Trial User
 											try{ 
 												// namspace-owner rolebinding
@@ -163,8 +159,8 @@ public class NamespaceClaimController extends Thread {
 										K8sApiCaller.patchLabel(claimName, "handled" ,"t", Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM , false, null);// FIXME
 
 									} else if ( status.equals( Constants.CLAIM_STATUS_REJECT )) {
-										if ( claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") !=null 
-												&& claim.getMetadata().getLabels().get("owner") !=null  ) {
+										if ( claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") !=null
+												&& claim.getMetadata().getAnnotations() != null && claim.getMetadata().getAnnotations().get("owner") !=null  ) {
 											// Send Fail confirm Mail
 											sendConfirmMail ( claim, null, false );										
 										}
@@ -219,7 +215,7 @@ public class NamespaceClaimController extends Thread {
 			String accessToken = HyperAuthCaller.loginAsAdmin();
 			JsonArray userListJsonArray = HyperAuthCaller.getUserList( accessToken.replaceAll("\"",""));
     		for(JsonElement userJson : userListJsonArray) {
-    			if(userJson.getAsJsonObject().get("username").toString().equalsIgnoreCase("\"" + claim.getMetadata().getLabels().get("owner") + "\"" )) {
+    			if(userJson.getAsJsonObject().get("username").toString().equalsIgnoreCase("\"" + claim.getMetadata().getAnnotations().get("owner") + "\"" )) {
     				email = userJson.getAsJsonObject().get("email").toString().replaceAll("\"","");
     				break;
     			}
@@ -281,7 +277,7 @@ public class NamespaceClaimController extends Thread {
 		V1Subject subject = new V1Subject();
 		subject.setApiGroup(Constants.RBAC_API_GROUP);
 		subject.setKind("User");
-		subject.setName(nsResult.getMetadata().getLabels().get("owner"));
+		subject.setName(nsResult.getMetadata().getAnnotations().get("owner"));
 		subjectList.add(subject);
 		rbcForTrial.setSubjects(subjectList);
 
@@ -313,7 +309,7 @@ public class NamespaceClaimController extends Thread {
 		V1Subject subject = new V1Subject();
 		subject.setApiGroup(Constants.RBAC_API_GROUP);
 		subject.setKind("User");
-		subject.setName(nsResult.getMetadata().getLabels().get("owner"));
+		subject.setName(nsResult.getMetadata().getAnnotations().get("owner"));
 		roleBinding.addSubjectsItem(subject);
 
 		try {
@@ -345,7 +341,7 @@ public class NamespaceClaimController extends Thread {
 		V1Subject subject = new V1Subject();
 		subject.setApiGroup(Constants.RBAC_API_GROUP);
 		subject.setKind("User");
-		subject.setName(claim.getMetadata().getLabels().get("owner"));
+		subject.setName(claim.getMetadata().getAnnotations().get("owner"));
 		subjectList.add(subject);
 		rbcForNSC.setSubjects(subjectList);
 

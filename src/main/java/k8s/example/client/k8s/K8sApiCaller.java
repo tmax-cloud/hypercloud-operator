@@ -5242,22 +5242,18 @@ public class K8sApiCaller {
 		V1ObjectMeta namespaceMeta = new V1ObjectMeta();
 		Map<String, String> labels = new HashMap<>();
 		labels.put("fromClaim", claim.getMetadata().getName());
-		labels.put("owner", claim.getMetadata().getLabels().get("owner"));
+
+		Map<String, String> annotations = new HashMap<>();
+		annotations.put("owner", claim.getMetadata().getAnnotations().get("owner"));
 
 		//Add Trial Label if exists
-		if (claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") != null
-				 && claim.getMetadata().getLabels().get("owner") != null) {
+		if (claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") != null) {
 			labels.put("trial", claim.getMetadata().getLabels().get("trial"));
-			labels.put("owner", claim.getMetadata().getLabels().get("owner"));
 			labels.put("period", claim.getMetadata().getLabels().get("period"));
-		}
-		
-		//Add Annotations if exists
-		if (claim.getMetadata().getAnnotations() != null ) {
-			namespaceMeta.setAnnotations(claim.getMetadata().getAnnotations());
 		}
 				
 		namespaceMeta.setLabels(labels);
+		namespaceMeta.setAnnotations(annotations);
 		namespaceMeta.setName(claim.getResourceName());
 		namespace.setMetadata(namespaceMeta);
 
@@ -5298,22 +5294,18 @@ public class K8sApiCaller {
 		V1ObjectMeta namespaceMeta = new V1ObjectMeta();
 		Map<String, String> labels = new HashMap<>();
 		labels.put("fromClaim", claim.getMetadata().getName());
-		labels.put("owner", claim.getMetadata().getLabels().get("owner"));
+
+		Map<String, String> annotations = new HashMap<>();
+		annotations.put("owner", claim.getMetadata().getAnnotations().get("owner"));
 
 		//Add Trial Label if exists
-		if (claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") != null 
-				&& claim.getMetadata().getLabels().get("owner") !=null) {
+		if (claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") != null) {
 			labels.put("trial", claim.getMetadata().getLabels().get("trial"));
-			labels.put("owner", claim.getMetadata().getLabels().get("owner"));
 			labels.put("period", claim.getMetadata().getLabels().get("period"));
 		}
-		
-		//Add Trial Annotations if exists
-		if (claim.getMetadata().getAnnotations() != null ) {
-			namespaceMeta.setAnnotations(claim.getMetadata().getAnnotations());
-		}
-				
+
 		namespaceMeta.setLabels(labels);
+		namespaceMeta.setAnnotations(annotations);
 		namespaceMeta.setName(claim.getResourceName());
 		namespace.setMetadata(namespaceMeta);
 
@@ -6086,8 +6078,8 @@ public class K8sApiCaller {
 					}
 					if (possibleNscList != null && possibleNscList.getItems()!=null && possibleNscList.getItems().size() > 0) {
 				    	for( NamespaceClaim possibleNsc :  possibleNscList.getItems()) {
-							if ( possibleNsc.getMetadata().getLabels() != null && possibleNsc.getMetadata().getLabels().get("owner")!= null) {
-								if ( possibleNsc.getMetadata().getLabels().get("owner").toString().equalsIgnoreCase(userId) ){
+							if ( possibleNsc.getMetadata().getAnnotations() != null && possibleNsc.getMetadata().getAnnotations().get("owner")!= null) {
+								if ( possibleNsc.getMetadata().getAnnotations().get("owner").equalsIgnoreCase(userId) ){
 									if (nscItems == null) nscItems = new ArrayList<>();
 									nscItems.add(possibleNsc);
 					    		}
@@ -6583,6 +6575,35 @@ public class K8sApiCaller {
 				customObjectApi.patchNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP, 
 						Constants.CUSTOM_OBJECT_VERSION, namespace, cumtomObjectResource, resourceName, patchArray);
 			}		
+		} catch (ApiException e) {
+			logger.error(e.getResponseBody());
+			logger.error("ApiException Code: " + e.getCode());
+			throw e;
+		}
+	}
+
+	public static void patchAnnotation( String resourceName, String annotation, String value, String cumtomObjectResource, boolean isNamespaced, String namespace ) throws ApiException {
+		JsonArray patchArray = new JsonArray();
+		JsonObject patch = new JsonObject();
+		patch.addProperty("op", "replace");
+		patch.addProperty("path", "/metadata/annotations/" + annotation);
+		patch.addProperty("value", value);
+		patchArray.add(patch);
+
+		logger.debug( "Patch Object : " + patchArray );
+
+		try {
+			if ( !isNamespaced) {
+				customObjectApi.patchClusterCustomObject(
+						Constants.CUSTOM_OBJECT_GROUP,
+						Constants.CUSTOM_OBJECT_VERSION,
+						cumtomObjectResource,
+						resourceName,
+						patchArray);
+			} else {
+				customObjectApi.patchNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
+						Constants.CUSTOM_OBJECT_VERSION, namespace, cumtomObjectResource, resourceName, patchArray);
+			}
 		} catch (ApiException e) {
 			logger.error(e.getResponseBody());
 			logger.error("ApiException Code: " + e.getCode());
