@@ -4,7 +4,7 @@ metadata:
   name: gitlab-template
   namespace: default
   annotations:
-    template-version: 1.1.4
+    template-version: 1.1.5
     tested-operator-version: 4.1.3.2
 shortDescription: "GitLab Deployment"
 longDescription: "GitLab Deployment"
@@ -26,8 +26,18 @@ parameters:
   required: true
 - name: SERVICE_TYPE
   displayName: ServiceType
-  description: Service Type (ClsuterIP/NodePort/LoadBalancer)
+  description: Service Type (ClsuterIP/NodePort/LoadBalancer/Ingress)
   required: true
+- name: WEB_NODE_PORT
+  displayName: WebNodePort
+  description: (Only for NodePort type) Web NodePort
+  required: false
+  value: 80
+  valueType: number
+- name: INGRESS_HOST
+  displayName: IngressHost
+  description: (Only for Ingress type) Ingress hostname
+  required: false
 - name: SSH_PORT
   displayName: SshPort
   description: SSH port for git clone/pull/push
@@ -36,13 +46,39 @@ parameters:
   valueType: number
 objects:
 - apiVersion: v1
+  kind: ServiceAccount
+  metadata:
+    name: ${APP_NAME}-account
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: Role
+  metadata:
+    name: ${APP_NAME}-role
+  rules:
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["get", "list", "create", "patch", "update"]
+  - apiGroups: ["networkings", "extensions"]
+    resources: ["ingresses"]
+    verbs: ["get", "list", "create", "patch", "update", "delete"]
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: RoleBinding
+  metadata:
+    name: ${APP_NAME}-binding
+  subjects:
+  - kind: ServiceAccount
+    name: ${APP_NAME}-account
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: Role
+    name: ${APP_NAME}-role
+- apiVersion: v1
   kind: Service
   metadata:
     name: ${APP_NAME}-service
     labels:
       app: ${APP_NAME}
   spec:
-    type: ${SERVICE_TYPE}
+    type: ClusterIP
     ports:
     - name: http
       port: 80
@@ -53,6 +89,20 @@ objects:
       targetPort: 22
     selector:
       app: ${APP_NAME}
+- apiVersion: networking.k8s.io/v1beta1
+  kind: Ingress
+  metadata:
+    name: ${APP_NAME}-ingress
+    annotations:
+      kubernetes.io/ingress.class: nginx-shd
+  spec:
+    rules:
+    - host: waiting.ip
+      http:
+        paths:
+        - backend:
+            serviceName: ${APP_NAME}-service
+            servicePort: ${WEB_NODE_PORT}
 - apiVersion: v1
   kind: PersistentVolumeClaim
   metadata:
@@ -83,12 +133,94 @@ objects:
         labels:
           app: ${APP_NAME}
       spec:
+        serviceAccountName: ${APP_NAME}-account
+        initContainers:
+        - name: parse-svc
+          image: bitnami/kubectl
+          env:
+          - name: NODE_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.hostIP
+          - name: NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          volumeMounts:
+          - name: shared
+            mountPath: /tmp/shared
+          command:
+          - /bin/bash
+          - -c
+          - -x
+          - |
+            SVC_TYPE="${SERVICE_TYPE}"
+            PORT="${WEB_NODE_PORT}"
+            PORT_SSH="${SSH_PORT}"
+
+            # Configure Service
+            if [[ "$SVC_TYPE" == "NodePort" ]]; then
+                if [[ "$PORT" == "80.0" ]]; then
+                  kubectl patch service ${APP_NAME}-service --type=json -p '[{"op": "replace", "path": "/spec/type", "value": "NodePort"}]'
+                  PORT=$(kubectl get service ${APP_NAME}-service -o jsonpath='{.spec.ports[?(@.name=="http")].nodePort}')
+                fi
+                kubectl patch service ${APP_NAME}-service --type=json -p '[{"op": "replace", "path": "/spec/type", "value": "NodePort"}, {"op": "replace", "path": "/spec/ports/0/nodePort", "value": '$PORT'}, {"op": "replace", "path": "/spec/ports/0/port", "value": '$PORT'}, {"op": "replace", "path": "/spec/ports/0/targetPort", "value": '$PORT'}]'
+            elif [[ "$SVC_TYPE" == "LoadBalancer" ]]; then
+                kubectl patch service ${APP_NAME}-service --type=json -p '[{"op": "replace", "path": "/spec/type", "value": "LoadBalancer"}]'
+            fi
+
+            # Delete Ingress if SVC_TYPE is not Ingress
+            if [[ "$SVC_TYPE" != "Ingress" ]]; then
+                kubectl delete ingress ${APP_NAME}-ingress
+            fi
+
+            # Get external ip and port
+            if [[ "$SVC_TYPE" == "ClusterIP" ]]; then
+                EXTERNAL_IP="http://$(kubectl get service ${APP_NAME}-service -o jsonpath='{.spec.clusterIP}')/"
+            elif  [[ "$SVC_TYPE" == "NodePort" ]]; then
+                PORT=$(kubectl get service ${APP_NAME}-service -o jsonpath='{.spec.ports[?(@.name=="http")].nodePort}')
+                EXTERNAL_IP="http://$NODE_IP:$PORT/"
+            elif  [[ "$SVC_TYPE" == "LoadBalancer" ]]; then
+                IP=""
+                while [ "$IP" == "" ]; do
+                  IP=$(kubectl get service ${APP_NAME}-service -o jsonpath='{.status.loadBalancer.ingress[].ip}')
+                  sleep 1
+                done
+                EXTERNAL_IP="http://$IP/"
+            elif  [[ "$SVC_TYPE" == "Ingress" ]]; then
+                if [[ "${INGRESS_HOST}" == "" ]]; then
+                    NOW_IP=""
+                    while [ "$NOW_IP" == "" ]; do
+                        NOW_IP=$(kubectl get ingress ${APP_NAME}-ingress -o jsonpath='{.status.loadBalancer.ingress[].ip}')
+                    done
+                    ING_HOST="${APP_NAME}.$NAMESPACE.${NOW_IP}.nip.io"
+                    EXTERNAL_IP="http://$ING_HOST/"
+                else
+                    ING_HOST="${INGRESS_HOST}"
+                    EXTERNAL_IP="http://${INGRESS_HOST}/"
+                fi
+                kubectl patch ingress ${APP_NAME}-ingress --type=json -p '[{"op": "replace", "path": "/spec/rules/0/host", "value": "'$ING_HOST'"}]'
+            else
+                echo "Something's wrong"
+            fi
+
+            cat <<EOF >> /tmp/shared/omnibus.env
+            external_url '$EXTERNAL_IP'
+            gitlab_rails['gitlab_shell_ssh_port'] = $PORT_SSH
+            EOF
         containers:
         - name: ${APP_NAME}
           image: gitlab/gitlab-ce:12.9.2-ce.0
+          command:
+          - /bin/sh
+          - -c
+          - -x
+          - |
+            export GITLAB_OMNIBUS_CONFIG="$(cat /tmp/shared/omnibus.env)"
+            /assets/wrapper
           ports:
           - name: http
-            containerPort: 80
+            containerPort: ${WEB_NODE_PORT}
           - name: https
             containerPort: 443
           - name: ssh
@@ -100,6 +232,8 @@ objects:
           - name: ${APP_NAME}-pv
             mountPath: /var/opt/gitlab
             subPath: data
+          - name: shared
+            mountPath: /tmp/shared
           readinessProbe:
             exec:
               command:
@@ -107,22 +241,12 @@ objects:
               - -c
               - |
                 /opt/gitlab/bin/gitlab-healthcheck --fail --max-time 10
-          lifecycle:
-            postStart:
-              exec:
-                command:
-                - "/bin/bash"
-                - "-c"
-                - |
-                  FILE=/etc/gitlab/gitlab.rb
-                  while [ ! -f "$FILE" ]; do
-                      sleep 1
-                  done
-                  sed -E -i "s/[# ]*(gitlab_rails\['gitlab_shell_ssh_port'\][ ]*=[ ]*).*/\1 ${SSH_PORT}/" $FILE
         volumes:
         - name: ${APP_NAME}-pv
           persistentVolumeClaim:
             claimName: ${APP_NAME}-pvc
+        - name: shared
+          emptyDir: {}
 plans:
 - name: gitlab-plan1
   description: "GitLab Plan"
