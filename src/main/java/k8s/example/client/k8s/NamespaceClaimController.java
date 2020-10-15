@@ -216,34 +216,39 @@ public class NamespaceClaimController extends Thread {
 			JsonArray userListJsonArray = HyperAuthCaller.getUserList( accessToken.replaceAll("\"",""));
     		for(JsonElement userJson : userListJsonArray) {
     			if(userJson.getAsJsonObject().get("username").toString().equalsIgnoreCase("\"" + claim.getMetadata().getAnnotations().get("owner") + "\"" )) {
-    				email = userJson.getAsJsonObject().get("email").toString().replaceAll("\"","");
-    				break;
+    				if ( userJson.getAsJsonObject().get("email") != null ){
+						email = userJson.getAsJsonObject().get("email").toString().replaceAll("\"","");
+						break;
+					}
     			}
     		}
 			logger.info("email : " + email);
-
-			if (flag) {
-				subject = " HyperCloud 서비스 신청 승인 완료 ";
-				body = Constants.TRIAL_SUCCESS_CONFIRM_MAIL_CONTENTS;
-				body = body.replaceAll("%%NAMESPACE_NAME%%", claim.getResourceName());
-				body = body.replaceAll("%%TRIAL_START_TIME%%", createTime.toDateTime().toString("yyyy-MM-dd"));
-				body = body.replaceAll("%%TRIAL_END_TIME%%", createTime.plusDays(30).toDateTime().toString("yyyy-MM-dd"));
+			if ( email != null){
+				if (flag) {
+					subject = " HyperCloud 서비스 신청 승인 완료 ";
+					body = Constants.TRIAL_SUCCESS_CONFIRM_MAIL_CONTENTS;
+					body = body.replaceAll("%%NAMESPACE_NAME%%", claim.getResourceName());
+					body = body.replaceAll("%%TRIAL_START_TIME%%", createTime.toDateTime().toString("yyyy-MM-dd"));
+					body = body.replaceAll("%%TRIAL_END_TIME%%", createTime.plusDays(30).toDateTime().toString("yyyy-MM-dd"));
 //				body = body.replaceAll("%%SUCCESS_REASON%%", claim.getStatus().getReason());
-				imgPath = "/home/tmax/hypercloud4-operator/_html/img/trial-approval.png";
-				imgCid = "trial-approval";
-			}else {
-				subject = " HyperCloud 서비스 신청 승인 거절  ";
-				body = Constants.TRIAL_FAIL_CONFIRM_MAIL_CONTENTS;
-				if ( claim.getStatus()!= null && claim.getStatus().getReason() != null ) {
-					body = body.replaceAll("%%FAIL_REASON%%", claim.getStatus().getReason());
+					imgPath = "/home/tmax/hypercloud4-operator/_html/img/trial-approval.png";
+					imgCid = "trial-approval";
 				}else {
-					body = body.replaceAll("%%FAIL_REASON%%", "Unknown Reason");
-				}
-				imgPath = "/home/tmax/hypercloud4-operator/_html/img/trial-disapproval.png";
-				imgCid = "trial-disapproval";
+					subject = " HyperCloud 서비스 신청 승인 거절  ";
+					body = Constants.TRIAL_FAIL_CONFIRM_MAIL_CONTENTS;
+					if ( claim.getStatus()!= null && claim.getStatus().getReason() != null ) {
+						body = body.replaceAll("%%FAIL_REASON%%", claim.getStatus().getReason());
+					}else {
+						body = body.replaceAll("%%FAIL_REASON%%", "Unknown Reason");
+					}
+					imgPath = "/home/tmax/hypercloud4-operator/_html/img/trial-disapproval.png";
+					imgCid = "trial-disapproval";
 
+				}
+				Util.sendMail(email, subject, body, imgPath, imgCid);
+			} else {
+				logger.info("Owner [ " + claim.getMetadata().getAnnotations().get("owner") + " ] Has No Email Address, Will not Send Mail");
 			}
-			Util.sendMail(email, subject, body, imgPath, imgCid);
 		} catch (Throwable e) {
 			if (e.getMessage().contains("not found") || e.getMessage().contains("404")) {
 				logger.info("This Trial NSC was made by Unknown user or System admin, Will not Send Email");
@@ -357,8 +362,8 @@ public class NamespaceClaimController extends Thread {
 				logger.info(e2.getResponseBody());
 				throw e2;
 			}
-		}catch(ApiException e) {
-			if (e.getMessage().contains("not found")) {
+		}catch(Exception e) {
+			if (e.getMessage().contains("Not Found") || e.getMessage().contains("not found")) {
 				try {
 					// Create New ClusterroleBinding
 					K8sApiCaller.createClusterRoleBinding(rbcForNSC);
@@ -367,7 +372,7 @@ public class NamespaceClaimController extends Thread {
 					throw e2;
 				}
 			} else{
-				logger.info(e.getResponseBody());
+				logger.info(e.getMessage());
 				throw e;
 			}
 		}

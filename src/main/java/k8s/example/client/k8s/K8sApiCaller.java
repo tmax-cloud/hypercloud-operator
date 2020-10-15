@@ -5676,8 +5676,12 @@ public class K8sApiCaller {
 
 	public static void deleteClusterRoleBinding(String name) throws Exception {
 		try {
+			logger.debug("deleteClusterRoleBinding [" + name + " ] Start");
+
 			V1DeleteOptions body = new V1DeleteOptions();
 			rbacApi.deleteClusterRoleBinding(name, null, null, null, null, null, body);
+			logger.debug("deleteClusterRoleBinding [" + name + " ] Success");
+
 		} catch (ApiException e) {
 			logger.error("Response body: " + e.getResponseBody());
 			e.printStackTrace();
@@ -5722,9 +5726,11 @@ public class K8sApiCaller {
 	}
 
 	public static V1ClusterRoleBinding readClusterRoleBinding(String clusterRoleBindingName) throws Exception{
+		logger.debug("readClusterRoleBinding [" + clusterRoleBindingName + " ] Start");
 		V1ClusterRoleBinding clusterRoleBinding = null;
 		try {
 			clusterRoleBinding = rbacApi.readClusterRoleBinding( clusterRoleBindingName, "true");
+			logger.debug("readClusterRoleBinding [" + clusterRoleBindingName + " ] Success");
 
 		} catch (ApiException e) {
 			logger.error("Response body: " + e.getResponseBody());
