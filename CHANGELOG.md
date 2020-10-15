@@ -1,6 +1,31 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.5.0 start -------------------->
+
+## HyperCloudServer_4.1.5.0 (Fri Oct 16 08:14:24 KST 2020)
+
+### Added
+  - [feat] namespaceController 구현 : nsc로부터 만들어진 ns가 지워졌을때, 관련 ClusterRoleBinding 삭제, nsc상태 Deleted로 변경 by dnxorjs1
+  - [feat] nscDeleteWatcher 구현 [mod] nscController 로그 정리 & nsc생성시 nsc에 대한 권한 owner에게 주는 부분 구현 by dnxorjs1
+
+### Changed
+  - [mod] 메일이 없는 사용자가 nsc신청했을때 방어로직 추가 by dnxorjs1
+  - [mod] NamespaceClaim owner label --> owner annotation으로 변경에 따른 로직 수정 by dnxorjs1
+  - [mod] 메일 html 한글 깨짐 수정 by dnxorjs1
+  - [feat] nscDeleteWatcher 구현 [mod] nscController 로그 정리 & nsc생성시 nsc에 대한 권한 owner에게 주는 부분 구현 by dnxorjs1
+  - [mod] nsc 로직 정리 및 patch owner 필터링 추가 by dnxorjs1
+  - [mod] 6.default-auth-object-init.yaml 변경 by dnxorjs1
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+  - [etc] Delete Audit from operator by sangwon_cho
+
+<!--------------------- v4.1.5.0 end --------------------->
+
 <!-------------------- v4.1.4.7 start -------------------->
 
 ## HyperCloudServer_4.1.4.7 (Thu Sep 17 10:53:26 KST 2020)
