@@ -5625,7 +5625,7 @@ public class K8sApiCaller {
 		try {
 			rbacApi.createNamespacedRoleBinding(roleBinding.getMetadata().getNamespace(), roleBinding, null, null, null);
 		} catch (ApiException e) {
-			if(e.getResponseBody().contains("Not Found") || e.getResponseBody().contains("404")) {
+			if(e.getResponseBody().contains("not found") || e.getResponseBody().contains("404")) {
 				logger.info("Namespace [ " + roleBinding.getMetadata().getNamespace() + " ] does not exist, Do nothing ");
 			} else {
 				logger.error(e.getResponseBody());
@@ -6522,7 +6522,7 @@ public class K8sApiCaller {
 				logger.debug("default networkPolicy is not set yet" );
 			}
 		} catch (ApiException e) {
-			if (e.getResponseBody().contains("Not Found") || e.getResponseBody().contains("404")) {
+			if (e.getResponseBody().contains("not found") || e.getResponseBody().contains("404")) {
 				// Make ConfigMap default-networkpolicy-configmap in hypercloud4-system Namespace
 				V1ConfigMap configMap = new V1ConfigMap();
 				V1ObjectMeta metadata = new V1ObjectMeta();

@@ -245,7 +245,7 @@ public class NamespaceClaimController extends Thread {
 			}
 			Util.sendMail(email, subject, body, imgPath, imgCid);
 		} catch (Throwable e) {
-			if (e.getMessage().contains("Not Found") || e.getMessage().contains("404")) {
+			if (e.getMessage().contains("not found") || e.getMessage().contains("404")) {
 				logger.info("This Trial NSC was made by Unknown user or System admin, Will not Send Email");
 			}else {
 				e.printStackTrace();
@@ -358,7 +358,7 @@ public class NamespaceClaimController extends Thread {
 				throw e2;
 			}
 		}catch(ApiException e) {
-			if (e.getMessage().contains("Not Found")) {
+			if (e.getMessage().contains("not found")) {
 				try {
 					// Create New ClusterroleBinding
 					K8sApiCaller.createClusterRoleBinding(rbcForNSC);
