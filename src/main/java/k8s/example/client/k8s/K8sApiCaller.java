@@ -5242,22 +5242,18 @@ public class K8sApiCaller {
 		V1ObjectMeta namespaceMeta = new V1ObjectMeta();
 		Map<String, String> labels = new HashMap<>();
 		labels.put("fromClaim", claim.getMetadata().getName());
-		labels.put("owner", claim.getMetadata().getLabels().get("owner"));
+
+		Map<String, String> annotations = new HashMap<>();
+		annotations.put("owner", claim.getMetadata().getAnnotations().get("owner"));
 
 		//Add Trial Label if exists
-		if (claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") != null
-				 && claim.getMetadata().getLabels().get("owner") != null) {
+		if (claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") != null) {
 			labels.put("trial", claim.getMetadata().getLabels().get("trial"));
-			labels.put("owner", claim.getMetadata().getLabels().get("owner"));
 			labels.put("period", claim.getMetadata().getLabels().get("period"));
-		}
-		
-		//Add Annotations if exists
-		if (claim.getMetadata().getAnnotations() != null ) {
-			namespaceMeta.setAnnotations(claim.getMetadata().getAnnotations());
 		}
 				
 		namespaceMeta.setLabels(labels);
+		namespaceMeta.setAnnotations(annotations);
 		namespaceMeta.setName(claim.getResourceName());
 		namespace.setMetadata(namespaceMeta);
 
@@ -5298,22 +5294,18 @@ public class K8sApiCaller {
 		V1ObjectMeta namespaceMeta = new V1ObjectMeta();
 		Map<String, String> labels = new HashMap<>();
 		labels.put("fromClaim", claim.getMetadata().getName());
-		labels.put("owner", claim.getMetadata().getLabels().get("owner"));
+
+		Map<String, String> annotations = new HashMap<>();
+		annotations.put("owner", claim.getMetadata().getAnnotations().get("owner"));
 
 		//Add Trial Label if exists
-		if (claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") != null 
-				&& claim.getMetadata().getLabels().get("owner") !=null) {
+		if (claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") != null) {
 			labels.put("trial", claim.getMetadata().getLabels().get("trial"));
-			labels.put("owner", claim.getMetadata().getLabels().get("owner"));
 			labels.put("period", claim.getMetadata().getLabels().get("period"));
 		}
-		
-		//Add Trial Annotations if exists
-		if (claim.getMetadata().getAnnotations() != null ) {
-			namespaceMeta.setAnnotations(claim.getMetadata().getAnnotations());
-		}
-				
+
 		namespaceMeta.setLabels(labels);
+		namespaceMeta.setAnnotations(annotations);
 		namespaceMeta.setName(claim.getResourceName());
 		namespace.setMetadata(namespaceMeta);
 
@@ -5633,7 +5625,7 @@ public class K8sApiCaller {
 		try {
 			rbacApi.createNamespacedRoleBinding(roleBinding.getMetadata().getNamespace(), roleBinding, null, null, null);
 		} catch (ApiException e) {
-			if(e.getResponseBody().contains("Not Found") || e.getResponseBody().contains("404")) {
+			if(e.getResponseBody().contains("not found") || e.getResponseBody().contains("404")) {
 				logger.info("Namespace [ " + roleBinding.getMetadata().getNamespace() + " ] does not exist, Do nothing ");
 			} else {
 				logger.error(e.getResponseBody());
@@ -5684,8 +5676,12 @@ public class K8sApiCaller {
 
 	public static void deleteClusterRoleBinding(String name) throws Exception {
 		try {
+			logger.debug("deleteClusterRoleBinding [" + name + " ] Start");
+
 			V1DeleteOptions body = new V1DeleteOptions();
 			rbacApi.deleteClusterRoleBinding(name, null, null, null, null, null, body);
+			logger.debug("deleteClusterRoleBinding [" + name + " ] Success");
+
 		} catch (ApiException e) {
 			logger.error("Response body: " + e.getResponseBody());
 			e.printStackTrace();
@@ -5730,14 +5726,16 @@ public class K8sApiCaller {
 	}
 
 	public static V1ClusterRoleBinding readClusterRoleBinding(String clusterRoleBindingName) throws Exception{
+		logger.debug("readClusterRoleBinding [" + clusterRoleBindingName + " ] Start");
 		V1ClusterRoleBinding clusterRoleBinding = null;
 		try {
 			clusterRoleBinding = rbacApi.readClusterRoleBinding( clusterRoleBindingName, "true");
+			logger.debug("readClusterRoleBinding [" + clusterRoleBindingName + " ] Success");
 
 		} catch (ApiException e) {
 			logger.error("Response body: " + e.getResponseBody());
 			e.printStackTrace();
-
+			throw e;
 		} catch (Exception e) {
 			logger.error("Exception: " + e.getMessage());
 			e.printStackTrace();
@@ -5948,7 +5946,6 @@ public class K8sApiCaller {
 												}
 											}
 										}
-
 										// 6. Check if ClusterRole has NameSpace GET rule
 									} else if (roleRef.getKind().equalsIgnoreCase("ClusterRole")) {
 										logger.info("User [ " + userId + " ] has ClusterRole [" + roleRef.getName() + " ]");
@@ -6087,8 +6084,8 @@ public class K8sApiCaller {
 					}
 					if (possibleNscList != null && possibleNscList.getItems()!=null && possibleNscList.getItems().size() > 0) {
 				    	for( NamespaceClaim possibleNsc :  possibleNscList.getItems()) {
-							if ( possibleNsc.getMetadata().getLabels() != null && possibleNsc.getMetadata().getLabels().get("owner")!= null) {
-								if ( possibleNsc.getMetadata().getLabels().get("owner").toString().equalsIgnoreCase(userId) ){
+							if ( possibleNsc.getMetadata().getAnnotations() != null && possibleNsc.getMetadata().getAnnotations().get("owner")!= null) {
+								if ( possibleNsc.getMetadata().getAnnotations().get("owner").equalsIgnoreCase(userId) ){
 									if (nscItems == null) nscItems = new ArrayList<>();
 									nscItems.add(possibleNsc);
 					    		}
@@ -6531,7 +6528,7 @@ public class K8sApiCaller {
 				logger.debug("default networkPolicy is not set yet" );
 			}
 		} catch (ApiException e) {
-			if (e.getResponseBody().contains("Not Found") || e.getResponseBody().contains("404")) {
+			if (e.getResponseBody().contains("not found") || e.getResponseBody().contains("404")) {
 				// Make ConfigMap default-networkpolicy-configmap in hypercloud4-system Namespace
 				V1ConfigMap configMap = new V1ConfigMap();
 				V1ObjectMeta metadata = new V1ObjectMeta();
@@ -6584,6 +6581,35 @@ public class K8sApiCaller {
 				customObjectApi.patchNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP, 
 						Constants.CUSTOM_OBJECT_VERSION, namespace, cumtomObjectResource, resourceName, patchArray);
 			}		
+		} catch (ApiException e) {
+			logger.error(e.getResponseBody());
+			logger.error("ApiException Code: " + e.getCode());
+			throw e;
+		}
+	}
+
+	public static void patchAnnotation( String resourceName, String annotation, String value, String cumtomObjectResource, boolean isNamespaced, String namespace ) throws ApiException {
+		JsonArray patchArray = new JsonArray();
+		JsonObject patch = new JsonObject();
+		patch.addProperty("op", "replace");
+		patch.addProperty("path", "/metadata/annotations/" + annotation);
+		patch.addProperty("value", value);
+		patchArray.add(patch);
+
+		logger.debug( "Patch Object : " + patchArray );
+
+		try {
+			if ( !isNamespaced) {
+				customObjectApi.patchClusterCustomObject(
+						Constants.CUSTOM_OBJECT_GROUP,
+						Constants.CUSTOM_OBJECT_VERSION,
+						cumtomObjectResource,
+						resourceName,
+						patchArray);
+			} else {
+				customObjectApi.patchNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
+						Constants.CUSTOM_OBJECT_VERSION, namespace, cumtomObjectResource, resourceName, patchArray);
+			}
 		} catch (ApiException e) {
 			logger.error(e.getResponseBody());
 			logger.error("ApiException Code: " + e.getCode());

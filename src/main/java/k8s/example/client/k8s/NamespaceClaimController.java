@@ -92,17 +92,13 @@ public class NamespaceClaimController extends Thread {
 										}
 									}
 
-									// Set Owner Label from Annotation 'Creator'
-									String owner = null;
+									// Set Owner Annotation from Annotation 'Creator'
 									if ( claim.getMetadata().getAnnotations() != null && claim.getMetadata().getAnnotations().get("creator")!=null
 											&& !claim.getMetadata().getAnnotations().get("creator").contains(":")) { // 방어로직
-										if (claim.getMetadata().getLabels().get("owner") == null){
-											logger.info("[NamespaceClaim Controller] Set Owner Label from Annotation 'Creator'" );
-											K8sApiCaller.patchLabel(claimName, "owner" ,claim.getMetadata().getAnnotations()
-													.get("creator"), Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, false, null);// FIXME
-											owner = claim.getMetadata().getAnnotations().get("creator");
-										} else {
-											owner = claim.getMetadata().getLabels().get("owner");
+										if (claim.getMetadata().getAnnotations().get("owner") == null){
+											logger.info("[NamespaceClaim Controller] Set Owner Annotation from Annotation 'Creator'" );
+											K8sApiCaller.patchAnnotation(claimName, "owner" ,claim.getMetadata().getAnnotations()
+													.get("creator"), Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM, false, null);
 										}
 									}
 									break;
@@ -126,7 +122,7 @@ public class NamespaceClaimController extends Thread {
 
 										// If Trial Type 
 										if ( nsResult.getMetadata().getLabels() != null && nsResult.getMetadata().getLabels().get("trial") !=null 
-												&& nsResult.getMetadata().getLabels().get("owner") !=null) {
+												&& nsResult.getMetadata().getAnnotations() != null && nsResult.getMetadata().getAnnotations().get("owner") !=null) {
 											// Make RoleBinding for Trial User
 											try{ 
 												// namspace-owner rolebinding
@@ -163,8 +159,8 @@ public class NamespaceClaimController extends Thread {
 										K8sApiCaller.patchLabel(claimName, "handled" ,"t", Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM , false, null);// FIXME
 
 									} else if ( status.equals( Constants.CLAIM_STATUS_REJECT )) {
-										if ( claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") !=null 
-												&& claim.getMetadata().getLabels().get("owner") !=null  ) {
+										if ( claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") !=null
+												&& claim.getMetadata().getAnnotations() != null && claim.getMetadata().getAnnotations().get("owner") !=null  ) {
 											// Send Fail confirm Mail
 											sendConfirmMail ( claim, null, false );										
 										}
@@ -219,37 +215,42 @@ public class NamespaceClaimController extends Thread {
 			String accessToken = HyperAuthCaller.loginAsAdmin();
 			JsonArray userListJsonArray = HyperAuthCaller.getUserList( accessToken.replaceAll("\"",""));
     		for(JsonElement userJson : userListJsonArray) {
-    			if(userJson.getAsJsonObject().get("username").toString().equalsIgnoreCase("\"" + claim.getMetadata().getLabels().get("owner") + "\"" )) {
-    				email = userJson.getAsJsonObject().get("email").toString().replaceAll("\"","");
-    				break;
+    			if(userJson.getAsJsonObject().get("username").toString().equalsIgnoreCase("\"" + claim.getMetadata().getAnnotations().get("owner") + "\"" )) {
+    				if ( userJson.getAsJsonObject().get("email") != null ){
+						email = userJson.getAsJsonObject().get("email").toString().replaceAll("\"","");
+						break;
+					}
     			}
     		}
 			logger.info("email : " + email);
-
-			if (flag) {
-				subject = " HyperCloud 서비스 신청 승인 완료 ";
-				body = Constants.TRIAL_SUCCESS_CONFIRM_MAIL_CONTENTS;
-				body = body.replaceAll("%%NAMESPACE_NAME%%", claim.getResourceName());
-				body = body.replaceAll("%%TRIAL_START_TIME%%", createTime.toDateTime().toString("yyyy-MM-dd"));
-				body = body.replaceAll("%%TRIAL_END_TIME%%", createTime.plusDays(30).toDateTime().toString("yyyy-MM-dd"));
+			if ( email != null){
+				if (flag) {
+					subject = " HyperCloud 서비스 신청 승인 완료 ";
+					body = Constants.TRIAL_SUCCESS_CONFIRM_MAIL_CONTENTS;
+					body = body.replaceAll("%%NAMESPACE_NAME%%", claim.getResourceName());
+					body = body.replaceAll("%%TRIAL_START_TIME%%", createTime.toDateTime().toString("yyyy-MM-dd"));
+					body = body.replaceAll("%%TRIAL_END_TIME%%", createTime.plusDays(30).toDateTime().toString("yyyy-MM-dd"));
 //				body = body.replaceAll("%%SUCCESS_REASON%%", claim.getStatus().getReason());
-				imgPath = "/home/tmax/hypercloud4-operator/_html/img/trial-approval.png";
-				imgCid = "trial-approval";
-			}else {
-				subject = " HyperCloud 서비스 신청 승인 거절  ";
-				body = Constants.TRIAL_FAIL_CONFIRM_MAIL_CONTENTS;
-				if ( claim.getStatus()!= null && claim.getStatus().getReason() != null ) {
-					body = body.replaceAll("%%FAIL_REASON%%", claim.getStatus().getReason());
+					imgPath = "/home/tmax/hypercloud4-operator/_html/img/trial-approval.png";
+					imgCid = "trial-approval";
 				}else {
-					body = body.replaceAll("%%FAIL_REASON%%", "Unknown Reason");
-				}
-				imgPath = "/home/tmax/hypercloud4-operator/_html/img/trial-disapproval.png";
-				imgCid = "trial-disapproval";
+					subject = " HyperCloud 서비스 신청 승인 거절  ";
+					body = Constants.TRIAL_FAIL_CONFIRM_MAIL_CONTENTS;
+					if ( claim.getStatus()!= null && claim.getStatus().getReason() != null ) {
+						body = body.replaceAll("%%FAIL_REASON%%", claim.getStatus().getReason());
+					}else {
+						body = body.replaceAll("%%FAIL_REASON%%", "Unknown Reason");
+					}
+					imgPath = "/home/tmax/hypercloud4-operator/_html/img/trial-disapproval.png";
+					imgCid = "trial-disapproval";
 
+				}
+				Util.sendMail(email, subject, body, imgPath, imgCid);
+			} else {
+				logger.info("Owner [ " + claim.getMetadata().getAnnotations().get("owner") + " ] Has No Email Address, Will not Send Mail");
 			}
-			Util.sendMail(email, subject, body, imgPath, imgCid);
 		} catch (Throwable e) {
-			if (e.getMessage().contains("Not Found") || e.getMessage().contains("404")) {
+			if (e.getMessage().contains("not found") || e.getMessage().contains("404")) {
 				logger.info("This Trial NSC was made by Unknown user or System admin, Will not Send Email");
 			}else {
 				e.printStackTrace();
@@ -281,7 +282,7 @@ public class NamespaceClaimController extends Thread {
 		V1Subject subject = new V1Subject();
 		subject.setApiGroup(Constants.RBAC_API_GROUP);
 		subject.setKind("User");
-		subject.setName(nsResult.getMetadata().getLabels().get("owner"));
+		subject.setName(nsResult.getMetadata().getAnnotations().get("owner"));
 		subjectList.add(subject);
 		rbcForTrial.setSubjects(subjectList);
 
@@ -313,7 +314,7 @@ public class NamespaceClaimController extends Thread {
 		V1Subject subject = new V1Subject();
 		subject.setApiGroup(Constants.RBAC_API_GROUP);
 		subject.setKind("User");
-		subject.setName(nsResult.getMetadata().getLabels().get("owner"));
+		subject.setName(nsResult.getMetadata().getAnnotations().get("owner"));
 		roleBinding.addSubjectsItem(subject);
 
 		try {
@@ -345,7 +346,7 @@ public class NamespaceClaimController extends Thread {
 		V1Subject subject = new V1Subject();
 		subject.setApiGroup(Constants.RBAC_API_GROUP);
 		subject.setKind("User");
-		subject.setName(claim.getMetadata().getLabels().get("owner"));
+		subject.setName(claim.getMetadata().getAnnotations().get("owner"));
 		subjectList.add(subject);
 		rbcForNSC.setSubjects(subjectList);
 
@@ -361,8 +362,8 @@ public class NamespaceClaimController extends Thread {
 				logger.info(e2.getResponseBody());
 				throw e2;
 			}
-		}catch(ApiException e) {
-			if (e.getMessage().contains("Not Found")) {
+		}catch(Exception e) {
+			if (e.getMessage().contains("Not Found") || e.getMessage().contains("not found")) {
 				try {
 					// Create New ClusterroleBinding
 					K8sApiCaller.createClusterRoleBinding(rbcForNSC);
@@ -371,7 +372,7 @@ public class NamespaceClaimController extends Thread {
 					throw e2;
 				}
 			} else{
-				logger.info(e.getResponseBody());
+				logger.info(e.getMessage());
 				throw e;
 			}
 		}

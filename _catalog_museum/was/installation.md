@@ -121,20 +121,17 @@
     ```bash
     REGISTRY=[IP:PORT]
        
-    yq w -i task-s2i.yaml 'spec.steps[0].image' $REGISTRY/cicd-util:1.1.4
-    yq w -i task-s2i.yaml 'spec.steps[1].image' $REGISTRY/cicd-util:1.1.4
-    yq w -i task-s2i.yaml 'spec.steps[2].image' $REGISTRY/s2i:nightly
-    yq w -i task-s2i.yaml 'spec.steps[3].image' $REGISTRY/buildah:latest
-    yq w -i task-s2i.yaml 'spec.steps[4].image' $REGISTRY/buildah:latest
-    yq w -i task-deploy.yaml 'spec.steps[0].image' $REGISTRY/cicd-util:1.1.4
-    yq w -i task-deploy.yaml 'spec.steps[1].image' $REGISTRY/cicd-util:1.1.4
-    yq w -i task-git-clone.yaml 'spec.steps[0].image' $REGISTRY/git-init:v0.12.1 # Tekton Pipleine 설치 과정에서 설치된 이미지
+    sed -i "s/tmaxcloudck\/cicd-util:.*/$REGISTRY\/cicd-util:1.1.4/g" task-s2i.yaml
+    sed -i "s/quay\.io\/openshift-pipeline\/s2i:.*/$REGISTRY\/s2i:nightly/g" task-s2i.yaml
+    sed -i "s/quay\.io\/buildah\/stable/$REGISTRY\/buildah:latest/g" task-s2i.yaml
+    sed -i "s/tmaxcloudck\/cicd-util:.*/$REGISTRY\/cicd-util:1.1.4/g" task-deploy.yaml
+    sed -i "s/gcr\.io\/tekton-releases\/github\.com\/tektoncd\/pipeline\/cmd\/git-init:.*/$REGISTRY\/git-init:v0.12.1/g" task-git-clone.yaml
 
-    yq w -i apache-template.yaml 'objects[4].spec.tasks[0].params[0].value' $REGISTRY/s2i-apache:2.4
-    yq w -i django-template.yaml 'objects[4].spec.tasks[0].params[0].value' $REGISTRY/s2i-django:35
-    yq w -i nodejs-template.yaml 'objects[4].spec.tasks[0].params[0].value' $REGISTRY/s2i-nodejs:12
-    yq w -i tomcat-template.yaml 'objects[4].spec.tasks[0].params[0].value' $REGISTRY/s2i-tomcat:latest
-    yq w -i wildfly-template.yaml 'objects[4].spec.tasks[0].params[0].value' $REGISTRY/s2i-wildfly:latest
+    sed -i "s/tmaxcloudck\/s2i-apache:.*/$REGISTRY\/s2i-apache:2.4/g" apache-template.yaml
+    sed -i "s/tmaxcloudck\/s2i-django:.*/$REGISTRY\/s2i-django:35/g" django-template.yaml
+    sed -i "s/tmaxcloudck\/s2i-nodejs:.*/$REGISTRY\/s2i-nodejs:12/g" nodejs-template.yaml
+    sed -i "s/tmaxcloudck\/s2i-tomcat:.*/$REGISTRY\/s2i-tomcat:8.5/g" tomcat-template.yaml
+    sed -i "s/tmaxcloudck\/s2i-wildfly:.*/$REGISTRY\/s2i-wildfly:18/g" wildfly-template.yaml
     ```
 
 ## Install Steps
