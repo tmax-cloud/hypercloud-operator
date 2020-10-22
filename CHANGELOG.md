@@ -1,6 +1,24 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.6.0 start -------------------->
+
+## HyperCloudServer_4.1.6.0 (Fri Oct 23 06:05:35 KST 2020)
+
+### Added
+
+### Changed
+  - [mod] add plural in OperatorFunc by jitae_yun
+  - [mod] admin-tmax.co.kr --> admin@tmax.co.kr by dnxorjs1
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.6.0 end --------------------->
+
 <!-------------------- v4.1.5.0 start -------------------->
 
 ## HyperCloudServer_4.1.5.0 (Fri Oct 16 08:14:24 KST 2020)
