@@ -5235,7 +5235,7 @@ public class K8sApiCaller {
 	}
 	
 
-	public static V1Namespace createNamespace(NamespaceClaim claim) throws Throwable {
+	public static V1Namespace createNamespaceFromClaim(NamespaceClaim claim) throws Throwable {
 		logger.debug("[K8S ApiCaller] Create Namespace Start");
 
 		V1Namespace namespace = new V1Namespace();
@@ -5255,11 +5255,17 @@ public class K8sApiCaller {
 		namespaceMeta.setLabels(labels);
 		namespaceMeta.setAnnotations(annotations);
 		namespaceMeta.setName(claim.getResourceName());
+		List <String> finalizers = new ArrayList<>();
+		finalizers.add( "namespace/finalizers" );
+		namespaceMeta.setFinalizers(finalizers);
 		namespace.setMetadata(namespaceMeta);
 
 		V1Namespace namespaceResult;
 		try {
 			namespaceResult = api.createNamespace(namespace, null, null, null);
+			for (String finalizerString : namespaceResult.getMetadata().getFinalizers() ) {
+				logger.debug("[K8S ApiCaller] finalizerString : " + finalizerString);
+			}
 		} catch (ApiException e) {
 			logger.error(e.getResponseBody());
 			throw e;
@@ -5287,7 +5293,7 @@ public class K8sApiCaller {
 		return namespaceResult;
 	}
 
-	public static void updateNamespace(NamespaceClaim claim) throws Throwable {
+	public static void updateNamespaceFromClaim(NamespaceClaim claim) throws Throwable {
 		logger.debug("[K8S ApiCaller] Update Namespace Start");
 
 		V1Namespace namespace = new V1Namespace();
@@ -5307,6 +5313,9 @@ public class K8sApiCaller {
 		namespaceMeta.setLabels(labels);
 		namespaceMeta.setAnnotations(annotations);
 		namespaceMeta.setName(claim.getResourceName());
+		List <String> finalizers = new ArrayList<>();
+		finalizers.add( "namespace/finalizers" );
+		namespaceMeta.setFinalizers(finalizers);
 		namespace.setMetadata(namespaceMeta);
 
 		V1Namespace namespaceResult;

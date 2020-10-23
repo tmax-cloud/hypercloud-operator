@@ -22,16 +22,19 @@ public class NamespaceController extends Thread {
         private Watch<V1Namespace> nsController;
         private static long latestResourceVersion = 0;
         private CustomObjectsApi customApi = null;
-
+        private CoreV1Api api = null;
+        ApiClient client = null;
         private Logger logger = Main.logger;
         StateCheckInfo sci = new StateCheckInfo();
 
         NamespaceController(ApiClient client, CoreV1Api api, CustomObjectsApi customApi,  long resourceVersion) throws Exception {
-            nsController = Watch.createWatch(client, api.listNamespaceCall(null, null, null,null, null, null, null, null, Boolean.TRUE,null ),
+            nsController = Watch.createWatch(client, api.listNamespaceCall(null, null, null,null, null, null, "0", null, Boolean.TRUE,null ),
                 new TypeToken<Watch.Response<V1Namespace>>() {}.getType());
-        latestResourceVersion = resourceVersion;
-        this.customApi = customApi;
-    }
+            latestResourceVersion = resourceVersion;
+            this.customApi = customApi;
+            this.api = api;
+            this.client = client;
+        }
 
         @Override
         public void run () {
@@ -56,34 +59,40 @@ public class NamespaceController extends Thread {
                             latestResourceVersion = Long.parseLong(response.object.getMetadata().getResourceVersion());
                             String eventType = response.type; //ADDED, MODIFIED, DELETED
 
-                            switch (eventType) {
-                                case Constants.EVENT_TYPE_DELETED:
-                                    if ( ns.getMetadata().getLabels()!=null && ns.getMetadata().getLabels().get("fromClaim")!=null){
-                                        logger.info("[Namespace Controller] Event Type : " + eventType);
-                                        logger.info("[Namespace Controller] Namespace [ " + ns.getMetadata().getName() + " ] from " +
-                                                "NamespaceClaim [ " + ns.getMetadata().getLabels().get("fromClaim") +" ] Deleted");
-                                        logger.debug("[Namespace Controller] == Namespace == " + ns.toString());
-
-                                        // Delete ClusterRoleBinding for NSC Claim User
-                                        logger.info("[Namespace Controller] Delete ClusterRoleBinding [ CRB-" + ns.getMetadata().getName() + " ]");
-                                        try{
-                                            K8sApiCaller.deleteClusterRoleBinding("CRB-" + ns.getMetadata().getName());
-                                        } catch (Exception e) {
-                                            if (e.getMessage().contains("Not Found")) {
-                                                logger.info("[Namespace Controller] ClusterRoleBinding [ CRB-" + ns.getMetadata().getName() + " ] " +
-                                                        "is Already Deleted, Do nothing");
-                                            } else {
-                                                logger.error(e.getMessage());
-                                                e.getStackTrace();
-                                            }
-                                        }
-
-                                        // Update NamespaceClaim Status to Deleted
-                                        logger.info("[Namespace Controller] Update NamespaceClaim [ " + ns.getMetadata().getLabels().get("fromClaim") + " ] Status to Deleted");
-                                        replaceNscStatus( ns.getMetadata().getLabels().get("fromClaim"), Constants.CLAIM_STATUS_DELETED,
-                                                "Namespace " + ns.getMetadata().getName() + " Deleted" );
+                            if(eventType.equalsIgnoreCase(Constants.EVENT_TYPE_MODIFIED) || eventType.equalsIgnoreCase(Constants.EVENT_TYPE_ADDED) ){
+                                if( ns.getStatus().getPhase().equalsIgnoreCase("Terminating") &&
+                                        ns.getMetadata().getLabels()!=null && ns.getMetadata().getLabels().get("fromClaim")!=null){
+                                    logger.info("[Namespace Controller] Event Type : " + eventType);
+                                    logger.info("[Namespace Controller] Delete Finalizer");
+                                    if ( ns.getMetadata().getFinalizers()!=null){
+                                        ns.getMetadata().getFinalizers().remove("namespace/finalizers");
+                                        K8sApiCaller.replaceNamespace(ns);
+                                        logger.info("[Namespace Controller] Delete Finalizer Success");
                                     }
-                                    break;
+
+                                    logger.info("[Namespace Controller] Namespace [ " + ns.getMetadata().getName() + " ] from " +
+                                            "NamespaceClaim [ " + ns.getMetadata().getLabels().get("fromClaim") +" ] Deleted");
+                                    logger.debug("[Namespace Controller] == Namespace == " + ns.toString());
+
+                                    // Delete ClusterRoleBinding for NSC Claim User
+                                    logger.info("[Namespace Controller] Delete ClusterRoleBinding [ CRB-" + ns.getMetadata().getName() + " ]");
+                                    try{
+                                        K8sApiCaller.deleteClusterRoleBinding("CRB-" + ns.getMetadata().getName());
+                                    } catch (Exception e) {
+                                        if (e.getMessage().contains("Not Found")) {
+                                            logger.info("[Namespace Controller] ClusterRoleBinding [ CRB-" + ns.getMetadata().getName() + " ] " +
+                                                    "is Already Deleted, Do nothing");
+                                        } else {
+                                            logger.error(e.getMessage());
+                                            e.getStackTrace();
+                                        }
+                                    }
+
+                                    // Update NamespaceClaim Status to Deleted
+                                    logger.info("[Namespace Controller] Update NamespaceClaim [ " + ns.getMetadata().getLabels().get("fromClaim") + " ] Status to Deleted");
+                                    replaceNscStatus( ns.getMetadata().getLabels().get("fromClaim"), Constants.CLAIM_STATUS_DELETED,
+                                            "Namespace " + ns.getMetadata().getName() + " Deleted" );
+                                }
                             }
                         }
                     } catch (Exception e) {
