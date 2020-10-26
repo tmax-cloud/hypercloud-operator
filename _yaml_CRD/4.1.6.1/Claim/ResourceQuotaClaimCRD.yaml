@@ -1,31 +1,29 @@
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
-  name: namespaceclaims.tmax.io
+  name: resourcequotaclaims.tmax.io
   annotations:
-    operator.version: %latest%
+    operator.version: 4.1.6.1
 spec:
   group: tmax.io
   versions:
   - name: v1
     served: true
     storage: true
-  scope: Cluster
+  scope: Namespaced
   names:
-    plural: namespaceclaims
-    singular: namespaceclaim
-    kind: NamespaceClaim
+    plural: resourcequotaclaims
+    singular: resourcequotaclaim
+    kind: ResourceQuotaClaim
     shortNames:
-    - nsc
+    - rqc
   preserveUnknownFields: true
   validation:
     openAPIV3Schema:
-        # Users use namespaceclaim to request namespace and quotas.
-        # The spec of namespaceclaim is the same as resourcequota.
-        # Admins can change the 'status' of the namespaceclaim.
-        # If Admin change the Status to 'Success', a namespace and resourcequota are created.
-        # For Trial Type NameSpaceClaim, Add label 'trial: t'
-        # For Trial Type NameSpaceClaim, Add label 'owner: "userId"'
+        # Users use resourcequotaclaim to modify quotas.
+        # The spec of resourcequotaclaim is the same as resourcequota.
+        # Admins can change the 'status' of the resourcequotaclaim.
+        # If Admin change the Status to 'Success', resourcequota is updated.
         type: object
         required: [resourceName,apiVersion,kind,metadata,spec]
         properties:
@@ -131,7 +129,7 @@ spec:
                   requests.nvidia.com/gpu:
                     x-kubernetes-int-or-string: true
                     pattern: "^([+]?[0-9.]+)([einumkKMGTP]*[-+]?[0-9]*)$"
-                  ssd-ceph-fs.storageclass.storage.k8s.io/requests.storage:   
+                  ssd-ceph-fs.storageclass.storage.k8s.io/requests.storage:    
                     x-kubernetes-int-or-string: true
                     pattern: "^([+]?[0-9.]+)([einumkKMGTP]*[-+]?[0-9]*)$"
                   hdd-ceph-fs.storageclass.storage.k8s.io/requests.storage:
@@ -160,7 +158,6 @@ spec:
                   - Success
                   - Reject
                   - Error
-                  - Deleted
   additionalPrinterColumns:
   - name: Status
     type: string

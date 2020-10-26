@@ -109,12 +109,12 @@ public class NamespaceClaimController extends Thread {
 
 									String status = getClaimStatus( claimName );		
 									if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && K8sApiCaller.namespaceAlreadyExist( resourceName ) ) {	
-										K8sApiCaller.updateNamespace( claim );
+										K8sApiCaller.updateNamespaceFromClaim( claim );
 										K8sApiCaller.patchLabel(claimName, "handled" ,"t", Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM , false, null);// FIXME
 										replaceNscStatus( claimName, Constants.CLAIM_STATUS_SUCCESS, "namespace update success." );
 										
 									} else if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && !K8sApiCaller.namespaceAlreadyExist( resourceName ) ) {
-										V1Namespace nsResult = K8sApiCaller.createNamespace( claim );
+										V1Namespace nsResult = K8sApiCaller.createNamespaceFromClaim( claim );
 										logger.info(" Create NameSpace [ " + nsResult.getMetadata().getName() + " ] Success");
 
 										// clusterrole-NSC clusterrolebinding

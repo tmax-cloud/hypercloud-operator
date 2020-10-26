@@ -3,7 +3,7 @@ kind: CustomResourceDefinition
 metadata:
   name: namespaceclaims.tmax.io
   annotations:
-    operator.version: %latest%
+    operator.version: 4.1.6.0
 spec:
   group: tmax.io
   versions:
@@ -160,7 +160,6 @@ spec:
                   - Success
                   - Reject
                   - Error
-                  - Deleted
   additionalPrinterColumns:
   - name: Status
     type: string

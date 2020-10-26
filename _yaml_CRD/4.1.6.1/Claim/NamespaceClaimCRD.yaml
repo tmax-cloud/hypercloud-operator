@@ -3,7 +3,7 @@ kind: CustomResourceDefinition
 metadata:
   name: namespaceclaims.tmax.io
   annotations:
-    operator.version: %latest%
+    operator.version: 4.1.6.1
 spec:
   group: tmax.io
   versions:
