@@ -325,7 +325,10 @@ public class InstanceOperator extends Thread {
 			        				//logger.debug("[Instance Operator] @@@@@@@@@@@@@@@@@ Split Template Object[1] : " + splitStr[1]);
 			        				//logger.debug("[Instance Operator] Template Object : " + objStr);
 
-			        				JsonNode replacedObject = numberTypeConverter(mapper.readTree(objSb.toString()));
+									JsonNode replacedObject = numberTypeConverter(mapper.readTree(objSb.toString()));
+									ObjectNode metadata = (ObjectNode) replacedObject.get("metadata");
+									metadata.put("namespace",(instanceObj.get("metadata").get("namespace").asText()));
+
 			        				logger.debug("[Instance Operator] Replaced Template Object : " + replacedObject);
 			        				
 			        				//if(!objStr.contains("${")) {
