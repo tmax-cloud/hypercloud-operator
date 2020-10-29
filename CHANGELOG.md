@@ -1,6 +1,24 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.6.1 start -------------------->
+
+## HyperCloudServer_4.1.6.1 (Fri Oct 23 10:48:03 KST 2020)
+
+### Added
+
+### Changed
+  - [mod] nsc를 통해 만들어진 ns에 finalizer 로직 추가 by dnxorjs1
+
+### Fixed
+  - [ims][242904] nscCRD Status Enum 추가 by dnxorjs1
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.6.1 end --------------------->
+
 <!-------------------- v4.1.6.0 start -------------------->
 
 ## HyperCloudServer_4.1.6.0 (Fri Oct 23 06:05:35 KST 2020)
