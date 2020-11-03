@@ -231,14 +231,18 @@ public class K8sApiCaller {
 		} catch(IOException e) {
 			logger.info("patchRegistrySpec Exception: " + e.getMessage());
 		}
-		
-		try {
-			// Init Registry Image
-			initializeImageList();
-		} catch(Exception e) {
-			logger.info("initializeImageList Exception: " + e.getMessage());
-		}
-				
+
+		Thread thread = new Thread(() -> {
+			try {
+				// Init Registry Image
+				initializeImageList();
+			} catch(Exception e) {
+				logger.info("initializeImageList Exception: " + e.getMessage());
+			}
+
+		});
+		thread.start();
+
 		// Update ResourceVersion
 		logger.info("Update ResourceVersion");
 		long registryLatestResourceVersion = getLatestResourceVersion(Constants.CUSTOM_OBJECT_PLURAL_REGISTRY, true);
