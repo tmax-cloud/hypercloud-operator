@@ -11,11 +11,13 @@ import io.kubernetes.client.openapi.models.V1Namespace;
 import io.kubernetes.client.util.Watch;
 import k8s.example.client.Constants;
 import k8s.example.client.Main;
+import k8s.example.client.models.NamespaceClaim;
 import k8s.example.client.models.StateCheckInfo;
 import org.slf4j.Logger;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.sql.Timestamp;
 
 public class NamespaceController extends Thread {
 
@@ -54,7 +56,6 @@ public class NamespaceController extends Thread {
                     // Logic here
                     try {
                         V1Namespace ns = response.object;
-
                         if (ns != null) {
                             latestResourceVersion = Long.parseLong(response.object.getMetadata().getResourceVersion());
                             String eventType = response.type; //ADDED, MODIFIED, DELETED
@@ -106,6 +107,10 @@ public class NamespaceController extends Thread {
                         e.printStackTrace();
                     }
                 });
+                logger.info("=============== NS 'For Each' END ===============");
+                nsController = Watch.createWatch(client, api.listNamespaceCall(null, null, null,null, null, null, "0", null, Boolean.TRUE,null ),
+                        new TypeToken<Watch.Response<V1Namespace>>() {}.getType());
+
             }
 
         } catch (Exception e) {

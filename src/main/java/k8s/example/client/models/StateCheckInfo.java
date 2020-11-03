@@ -32,17 +32,17 @@ public class StateCheckInfo {
 	}
 	
 	public void checkThreadState() throws Exception {
+		logger.info("tryCount: " + tryCount);
 		if(++tryCount == CHECK_TRY_COUNT) {
 			Timestamp curTime = new Timestamp(System.currentTimeMillis());
 			logger.info("check times: " + (curTime.getTime() - baseTime.getTime()));
-
 			if( curTime.getTime() - baseTime.getTime() < THRESHHOLD_TIME ) {
 				logger.info("Catch abnormal thread conditions!!");
 				throw new Exception("abnormal");
 			}
-
 			baseTime = new Timestamp(System.currentTimeMillis());
 			tryCount = 0;
+
 		}
 	}
 }
