@@ -1,6 +1,25 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.6.2 start -------------------->
+
+## HyperCloudServer_4.1.6.2 (Wed Nov  4 03:47:41 KST 2020)
+
+### Added
+  - [feat] owner labelToAnno.sh 추가 by dnxorjs1
+
+### Changed
+  - [mod] instance 생성 시, object에 namespace insert 로직 추가 by jitae_yun
+
+### Fixed
+  - [ims][243066] Operator 기동 시 Image 동기화 작업을 별도 thread로 실행 by sukhee_yun
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.6.2 end --------------------->
+
 <!-------------------- v4.1.6.1 start -------------------->
 
 ## HyperCloudServer_4.1.6.1 (Fri Oct 23 10:48:03 KST 2020)
