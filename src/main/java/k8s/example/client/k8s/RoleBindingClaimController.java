@@ -51,8 +51,7 @@ public class RoleBindingClaimController extends Thread {
 					} catch (Exception e) {
 						logger.error(e.getMessage());
 					}
-					
-					
+
 					// Logic here
 					String claimName = "unknown";
 					String resourceName = "unknown";
