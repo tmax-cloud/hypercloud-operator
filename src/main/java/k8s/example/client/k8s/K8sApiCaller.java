@@ -4769,12 +4769,12 @@ public class K8sApiCaller {
 
 		JsonNode templateList = numberTypeConverter(objectToJsonNode(templates).get("items"));
 
-
 		if (templateList.isArray()) {
 			for (JsonNode template : templateList) {
 				ServiceOffering service = new ServiceOffering();
 				ServiceMetadata serviceMeta = new ServiceMetadata();
 				List<ServicePlan> planList = new ArrayList<ServicePlan>();
+				String uid = template.get("metadata").get("uid").asText();
 
 				service.setName(template.get("metadata").get("name").asText());
 				service.setId(template.get("metadata").get("name").asText());
@@ -4872,8 +4872,7 @@ public class K8sApiCaller {
 									InputParametersSchema create = new InputParametersSchema();
 									Map<String, String> parameters = null;
 
-									String uuid = UUID.randomUUID().toString();
-									servicePlan.setId(uuid);
+									servicePlan.setId(uid +"-"+ defaultPlaneId);
 									if (plan.get("name") == null) {
 										servicePlan.setName(template.get("metadata").get("name").asText() + "-plan"
 												+ defaultPlaneId);
