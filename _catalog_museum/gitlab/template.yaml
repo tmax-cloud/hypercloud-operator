@@ -4,7 +4,7 @@ metadata:
   name: gitlab-template
   namespace: default
   annotations:
-    template-version: 1.1.5
+    template-version: 1.1.6
     tested-operator-version: 4.1.3.2
 shortDescription: "GitLab Deployment"
 longDescription: "GitLab Deployment"
@@ -28,6 +28,11 @@ parameters:
   displayName: ServiceType
   description: Service Type (ClsuterIP/NodePort/LoadBalancer/Ingress)
   required: true
+- name: WEB_NODE_IP
+  displayName: WebNodeIP
+  description: (Only for NodePort type) Web NodeIP
+  required: false
+  value: ''
 - name: WEB_NODE_PORT
   displayName: WebNodePort
   description: (Only for NodePort type) Web NodePort
@@ -182,6 +187,9 @@ objects:
             if [[ "$SVC_TYPE" == "ClusterIP" ]]; then
                 EXTERNAL_IP="http://$(kubectl get service ${APP_NAME}-service -o jsonpath='{.spec.clusterIP}')/"
             elif  [[ "$SVC_TYPE" == "NodePort" ]]; then
+                if [[ "${WEB_NODE_IP}" != "" ]]; then
+                    NODE_IP="${WEB_NODE_IP}"
+                fi
                 PORT=$(kubectl get service ${APP_NAME}-service -o jsonpath='{.spec.ports[?(@.name=="http")].nodePort}')
                 EXTERNAL_IP="http://$NODE_IP:$PORT/"
             elif  [[ "$SVC_TYPE" == "LoadBalancer" ]]; then
