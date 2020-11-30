@@ -1,6 +1,25 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.7.0 start -------------------->
+
+## HyperCloudServer_4.1.7.0 (Mon Nov 30 09:16:55 KST 2020)
+
+### Added
+
+### Changed
+  - [mod] main 버그 수정 by dnxorjs1
+  - [mod] response message 수정 by dnxorjs1
+
+### Fixed
+  - [ims][246030] catalog- service plan, cluster service plan 이  쌓이는 현상 수정 by jitae_yun
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.7.0 end --------------------->
+
 <!-------------------- v4.1.6.2 start -------------------->
 
 ## HyperCloudServer_4.1.6.2 (Wed Nov  4 03:47:41 KST 2020)
