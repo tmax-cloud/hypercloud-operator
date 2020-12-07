@@ -139,6 +139,10 @@ import io.kubernetes.client.openapi.models.V1Toleration;
 import io.kubernetes.client.openapi.models.V1Volume;
 import io.kubernetes.client.openapi.models.V1VolumeDevice;
 import io.kubernetes.client.openapi.models.V1VolumeMount;
+import io.kubernetes.client.openapi.models.V1Endpoints;
+import io.kubernetes.client.openapi.models.V1ReplicationController;
+import io.kubernetes.client.openapi.models.V1ServiceAccount;
+import io.kubernetes.client.openapi.models.V1PersistentVolume;
 import io.kubernetes.client.util.Config;
 import k8s.example.client.Constants;
 import k8s.example.client.DataObject.RegistryEvent;
@@ -6622,6 +6626,165 @@ public class K8sApiCaller {
 				customObjectApi.patchNamespacedCustomObject(Constants.CUSTOM_OBJECT_GROUP,
 						Constants.CUSTOM_OBJECT_VERSION, namespace, cumtomObjectResource, resourceName, patchArray);
 			}
+		} catch (ApiException e) {
+			logger.error(e.getResponseBody());
+			logger.error("ApiException Code: " + e.getCode());
+			throw e;
+		}
+	}
+
+	public static V1ObjectMeta getCoreGroupMetadata(String plural, String name, String namespace) throws ApiException {
+		V1ObjectMeta metadata = new V1ObjectMeta();
+		try {
+			switch (plural) {
+				case "namespaces":
+					metadata = api.readNamespace(name, "true", null, null).getMetadata();
+					break;
+				case "configmaps":
+					metadata = api.readNamespacedConfigMap(name, namespace, null, null, null).getMetadata();
+					break;
+				case "endpoints":
+					metadata = api.readNamespacedEndpoints(name, namespace, null, null, null).getMetadata();
+					break;
+				case "persistentvolumeclaims": 
+					metadata = api.readNamespacedPersistentVolumeClaim(name, namespace, null, null, null).getMetadata();
+					break;
+				case "pods":
+					metadata = api.readNamespacedPod(name, namespace, null, null, null).getMetadata();
+					break;
+				case "reaplicationcontrollers":
+					metadata = api.readNamespacedReplicationController(name, namespace, null, null, null).getMetadata();
+					break;
+				case "resourcesquotas":
+					metadata = api.readNamespacedResourceQuota(name, namespace, null, null, null).getMetadata();
+					break;
+				case "secrets":
+					metadata = api.readNamespacedSecret(name, namespace, null, null, null).getMetadata();
+					break;
+				case "services":
+					metadata = api.readNamespacedService(name, namespace, null, null, null).getMetadata();
+					break;
+				case "serviceaccounts":
+					metadata = api.readNamespacedServiceAccount(name, namespace, null, null, null).getMetadata();
+					break;
+				case "persistentvolumes":
+					metadata = api.readPersistentVolume(name, "true", null, null).getMetadata();
+					break;
+				}
+		} catch (ApiException e) {
+			logger.error(e.getResponseBody());
+			logger.error("ApiException Code: " + e.getCode());
+			throw e;
+		}
+		return metadata;
+	}
+
+	public static void patchCoreGroupOwnerReferences(String plural, String name, String namespace, V1OwnerReference ownerRef) throws ApiException {
+		List<V1OwnerReference> ownerRefs = new ArrayList<>();
+		V1Namespace ns = null;
+		V1ConfigMap cm = null;
+		V1Endpoints ep = null;
+		V1PersistentVolumeClaim pvc = null;
+		V1Pod pod = null;
+		V1ReplicationController rc=null;
+		V1ResourceQuota rq = null;
+		V1Secret secret = null;
+		V1Service svc = null;
+		V1ServiceAccount sa = null;
+		V1PersistentVolume pv = null;
+		V1ObjectMeta metadata = null;
+		try {
+			switch (plural) {
+				case "namespaces":
+					ns = api.readNamespace(name, "true", null, null);
+					metadata = ns.getMetadata();
+					//if(metadata.getOwnerReferences()!=null) ownerRefs=metadata.getOwnerReferences();
+					ownerRefs.add(ownerRef);
+					ns.getMetadata().setOwnerReferences(ownerRefs);
+					api.replaceNamespace(name, ns, null, null, null);
+					break;
+				case "configmaps":
+					cm = api.readNamespacedConfigMap(name, namespace, null, null, null);
+					metadata = cm.getMetadata();
+					//if(metadata.getOwnerReferences()!=null) ownerRefs=metadata.getOwnerReferences();
+					ownerRefs.add(ownerRef);
+					cm.getMetadata().setOwnerReferences(ownerRefs);
+					api.replaceNamespacedConfigMap(name, namespace, cm, null, null, null);
+					break;
+				case "endpoints":
+					ep = api.readNamespacedEndpoints(name, namespace, null, null, null);
+					metadata = ep.getMetadata();
+					//if(metadata.getOwnerReferences()!=null) ownerRefs=metadata.getOwnerReferences();
+					ownerRefs.add(ownerRef);
+					ep.getMetadata().setOwnerReferences(ownerRefs);
+					api.replaceNamespacedEndpoints(name, namespace, ep, null, null, null);
+					break;
+				case "persistentvolumeclaims": 
+					pvc = api.readNamespacedPersistentVolumeClaim(name, namespace, null, null, null);
+					metadata = pvc.getMetadata();
+					//if(metadata.getOwnerReferences()!=null) ownerRefs=metadata.getOwnerReferences();
+					ownerRefs.add(ownerRef);
+					pvc.getMetadata().setOwnerReferences(ownerRefs);
+					api.replaceNamespacedPersistentVolumeClaim(name, namespace, pvc, null, null, null);
+					break;
+				case "pods":
+					pod = api.readNamespacedPod(name, namespace, null, null, null);
+					metadata = pod.getMetadata();
+					//if(metadata.getOwnerReferences()!=null) ownerRefs=metadata.getOwnerReferences();
+					ownerRefs.add(ownerRef);
+					pod.getMetadata().setOwnerReferences(ownerRefs);
+					api.replaceNamespacedPod(name, namespace, pod, null, null, null);
+					break;
+				case "reaplicationcontrollers":
+					rc = api.readNamespacedReplicationController(name, namespace, null, null, null);
+					metadata = rc.getMetadata();
+					//if(metadata.getOwnerReferences()!=null) ownerRefs=metadata.getOwnerReferences();
+					ownerRefs.add(ownerRef);
+					rc.getMetadata().setOwnerReferences(ownerRefs);
+					api.replaceNamespacedReplicationController(name, namespace, rc, null, null, null);
+					break;
+				case "resourcesquotas":
+					rq = api.readNamespacedResourceQuota(name, namespace, null, null, null);
+					metadata = rq.getMetadata();
+					//if(metadata.getOwnerReferences()!=null) ownerRefs=metadata.getOwnerReferences();
+					ownerRefs.add(ownerRef);
+					rq.getMetadata().setOwnerReferences(ownerRefs);
+					api.replaceNamespacedResourceQuota(name, namespace, rq, null, null, null);
+					break;
+				case "secrets":
+					secret = api.readNamespacedSecret(name, namespace, null, null, null);
+					metadata = secret.getMetadata();
+					//if(metadata.getOwnerReferences()!=null) ownerRefs=metadata.getOwnerReferences();
+					ownerRefs.add(ownerRef);
+					secret.getMetadata().setOwnerReferences(ownerRefs);
+					api.replaceNamespacedSecret(name, namespace, secret, null, null, null);
+					break;
+				case "services":
+					svc = api.readNamespacedService(name, namespace, null, null, null);
+					metadata = svc.getMetadata();
+					//if(metadata.getOwnerReferences()!=null) ownerRefs=metadata.getOwnerReferences();
+					ownerRefs.add(ownerRef);
+					svc.getMetadata().setOwnerReferences(ownerRefs);
+					api.replaceNamespacedService(name, namespace, svc, null, null, null);
+					break;
+				case "serviceaccounts":
+					sa = api.readNamespacedServiceAccount(name, namespace, null, null, null);
+					metadata = sa.getMetadata();
+					//if(metadata.getOwnerReferences()!=null) ownerRefs=metadata.getOwnerReferences();
+					ownerRefs.add(ownerRef);
+					sa.getMetadata().setOwnerReferences(ownerRefs);
+					api.replaceNamespacedServiceAccount(name, namespace, sa, null, null, null);
+					break;
+				case "persistentvolumes":
+					pv = api.readPersistentVolume(name, "true", null, null);
+					metadata = pv.getMetadata();
+					//if(metadata.getOwnerReferences()!=null) ownerRefs=metadata.getOwnerReferences();
+					ownerRefs.add(ownerRef);
+					pv.getMetadata().setOwnerReferences(ownerRefs);
+					api.replacePersistentVolume(name, pv, null, null, null);
+					break;
+					//api.updateNamespaceFromClaim
+				}
 		} catch (ApiException e) {
 			logger.error(e.getResponseBody());
 			logger.error("ApiException Code: " + e.getCode());
