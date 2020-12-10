@@ -159,7 +159,7 @@ public class Constants {
 	public static final String CLAIM_STATUS_PENDING = "Pending";
 	public static final String CLAIM_STATUS_REJECT = "Reject";
 	public static final String CLAIM_STATUS_ERROR = "Error";
-	public static final String CLAIM_STATUS_DELETED = "Deleted";
+	public static final String CLAIM_STATUS_NAMESPACE_DELETED = "Namespace Deleted";
 
 	// Custom Resource Annoatation To Know Modified Fields
 	public static final String LAST_CUSTOM_RESOURCE = CUSTOM_OBJECT_GROUP + "/last-custom-resource";

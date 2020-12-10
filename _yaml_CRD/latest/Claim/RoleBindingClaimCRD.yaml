@@ -82,6 +82,9 @@ spec:
                   - Reject
                   - Error
   additionalPrinterColumns:
+  - name: ResourceName
+    type: string
+    JSONPath: .resourceName
   - name: Status
     type: string
     JSONPath: .status.status

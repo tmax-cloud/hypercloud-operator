@@ -91,7 +91,7 @@ public class NamespaceController extends Thread {
 
                                     // Update NamespaceClaim Status to Deleted
                                     logger.info("[Namespace Controller] Update NamespaceClaim [ " + ns.getMetadata().getLabels().get("fromClaim") + " ] Status to Deleted");
-                                    replaceNscStatus( ns.getMetadata().getLabels().get("fromClaim"), Constants.CLAIM_STATUS_DELETED,
+                                    replaceNscStatus( ns.getMetadata().getLabels().get("fromClaim"), Constants.CLAIM_STATUS_NAMESPACE_DELETED,
                                             "Namespace " + ns.getMetadata().getName() + " Deleted" );
                                 }
                             }
