@@ -287,6 +287,9 @@ public class Util {
 			deleteTime = createTime.plusDays( Integer.parseInt(nsResult.getMetadata().getLabels().get("period")) * 30 );
 			mailTime = deleteTime.minusDays(7);
 		}
+		// for test delete later !!
+		mailTime = createTime.plusMinutes(5);
+		deleteTime = createTime.plusMinutes(10);
 
 		Timer timer = new Timer(nsResult.getMetadata().getUid() + "#" + nsResult.getMetadata().getName() + "#" + nsResult.getMetadata().getLabels().get("owner") + "#" + deleteTime.toDateTime().toString("yyyy-MM-dd") );
 		
