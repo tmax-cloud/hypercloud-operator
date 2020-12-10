@@ -1,6 +1,23 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.8.0 start -------------------->
+
+## HyperCloudServer_4.1.8.0 (Thu Dec 10 09:20:54 KST 2020)
+
+### Added
+
+### Changed
+
+### Fixed
+  - [ims][247348] Claim CRD resourceName 출력되도록 변경 [ims][247336] nsc Deleted --> Namespace Deleted 상태 변경 by dnxorjs1
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.8.0 end --------------------->
+
 <!-------------------- v4.1.7.0 start -------------------->
 
 ## HyperCloudServer_4.1.7.0 (Mon Nov 30 09:16:55 KST 2020)
