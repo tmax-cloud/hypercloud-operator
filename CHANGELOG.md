@@ -1,6 +1,23 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.8.4 start -------------------->
+
+## HyperCloudServer_4.1.8.4 (Fri Dec 11 07:17:15 KST 2020)
+
+### Added
+
+### Changed
+  - [mod] 메일 내용 수정 by dnxorjs1
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.8.4 end --------------------->
+
 <!-------------------- v4.1.8.3 start -------------------->
 
 ## HyperCloudServer_4.1.8.3 (Fri Dec 11 07:05:47 KST 2020)
