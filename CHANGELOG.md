@@ -1,6 +1,23 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.8.2 start -------------------->
+
+## HyperCloudServer_4.1.8.2 (Fri Dec 11 03:04:49 KST 2020)
+
+### Added
+
+### Changed
+  - [mod] trial 버전 nsc timer 오작동 현상 해결 by dnxorjs1
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.8.2 end --------------------->
+
 <!-------------------- v4.1.8.1 start -------------------->
 
 ## HyperCloudServer_4.1.8.1 (Thu Dec 10 09:27:04 KST 2020)
