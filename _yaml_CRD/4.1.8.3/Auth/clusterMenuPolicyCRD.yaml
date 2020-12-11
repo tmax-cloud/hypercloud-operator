@@ -1,0 +1,37 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  # name must match the spec fields below, and be in the form: <plural>.<group>
+  name: clustermenupolicies.ui.tmax.io
+  annotations:
+    operator.version: 4.1.8.3
+spec:
+  # group name to use for REST API: /apis/<group>/<version>
+  group: ui.tmax.io
+  # version name to use for REST API: /apis/<group>/<version>
+  version: v1
+  # either Namespaced or Cluster
+  scope: Cluster
+  names:
+    # plural name to be used in the URL: /apis/<group>/<version>/<plural>
+    plural: clustermenupolicies
+    # singular name to be used as an alias on the CLI and for display
+    singular: clustermenupolicy
+    # kind is normally the CamelCased singular type. Your resource manifests use this.
+    kind: ClusterMenuPolicy
+    listKind: ClusterMenuPolicyList
+    # shortNames allow shorter string to match your resource on the CLI
+    shortNames:
+    - cmp
+  validation:
+    openAPIV3Schema:
+      description: Cluster Menu Policy for customizing cluster scope menus
+      type: object
+      required:
+        - menus
+      properties:
+        menus:
+          description: menus for enable 
+          type: array
+          items:
+            type: object
