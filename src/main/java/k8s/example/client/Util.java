@@ -152,15 +152,11 @@ public class Util {
 		});		
 		
 		session.setDebug( true );
-
 		MimeMessage mimeMessage = new MimeMessage(session);
-
 		// Sender
 		mimeMessage.setFrom( new InternetAddress(sender, sender, charSetUtf));
-		
 		// Receiver
 		mimeMessage.setRecipient( Message.RecipientType.TO, new InternetAddress( recipient ) );
-		
 		// Make Subject
 		mimeMessage.setSubject( MimeUtility.encodeText(subject,  charSetUtf, "B") );
 
@@ -265,7 +261,6 @@ public class Util {
 			metadata.remove("selfLink");
 			metadata.remove("uid");
 		}
-		
 		return json;
 	}
     
