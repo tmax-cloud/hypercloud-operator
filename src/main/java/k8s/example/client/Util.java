@@ -288,7 +288,11 @@ public class Util {
 			mailTime = deleteTime.minusDays(7);
 		}
 
-		Timer timer = new Timer(nsResult.getMetadata().getUid() + "#" + nsResult.getMetadata().getName() + "#" + nsResult.getMetadata().getLabels().get("owner") + "#" + deleteTime.toDateTime().toString("yyyy-MM-dd") );
+		// For test Delete !!!!!!
+		mailTime = createTime.plusMinutes(1);
+		deleteTime = createTime.plusMinutes(2);
+
+		Timer timer = new Timer(nsResult.getMetadata().getUid() + "#" + nsResult.getMetadata().getName() + "#" + nsResult.getMetadata().getAnnotations().get("owner") + "#" + deleteTime.toDateTime().toString("yyyy-MM-dd") );
 		
 		if( mailTime.isAfter(currentTime) ) {
 			timer.schedule(new TimerTask() {
@@ -303,22 +307,23 @@ public class Util {
 						
 						V1Namespace nameSpace = K8sApiCaller.getNameSpace(nsName);
 						if ( nameSpace.getMetadata().getLabels() != null && nameSpace.getMetadata().getLabels().get("trial") != null
-								&& nameSpace.getMetadata().getLabels().get("owner") != null) {
+								&& nameSpace.getMetadata().getAnnotations()!= null && nameSpace.getMetadata().getAnnotations().get("owner") != null) {
 							logger.info(" [Trial Timer] Still Trial NameSpace, Send Info Mail to User [ " + userId + " ]");
 							String email = null;
-							String accessToken = HyperAuthCaller.loginAsAdmin();
-							JsonArray userListJsonArray = HyperAuthCaller.getUserList( accessToken.replaceAll("\"",""));
-				    		for(JsonElement userJson : userListJsonArray) {
-				    			if(userJson.getAsJsonObject().get("username").toString().replaceAll("\"","").equalsIgnoreCase( userId )) {
-				    				email = userJson.getAsJsonObject().get("email").toString().replaceAll("\"","");
-				    				break;
-				    			}
-				    		}
-							logger.info(" [Trial Timer] Email : " + email );
-							String subject = " 신청해주신 Trial NameSpace [ " + nameSpace.getMetadata().getName() + " ] 만료 안내 ";
-							String body = Constants.TRIAL_TIME_OUT_CONTENTS;
-							body = body.replaceAll("%%TRIAL_END_TIME%%", deleteTime);
-							Util.sendMail(email, subject, body, "/home/tmax/hypercloud4-operator/_html/img/service-timeout.png", "service-timeout");
+							try{
+								// Call hyperauth to get Email with userId
+								JsonObject userDetailJsonObject = HyperAuthCaller.getUserDetailWithoutToken( userId );
+								if ( userDetailJsonObject != null) {
+									email = userDetailJsonObject.get("email").toString().replaceAll("\"", "");
+								}
+								logger.info(" [Trial Timer] Email : " + email );
+								String subject = " 신청해주신 Trial NameSpace [ " + nameSpace.getMetadata().getName() + " ] 만료 안내 ";
+								String body = Constants.TRIAL_TIME_OUT_CONTENTS;
+								body = body.replaceAll("%%TRIAL_END_TIME%%", deleteTime);
+								Util.sendMail(email, subject, body, "/home/tmax/hypercloud4-operator/_html/img/service-timeout.png", "service-timeout");
+							}catch (Exception e){
+								logger.info("User [ " + userId + " ] not Exists in HyperAuth Server, Nothing to do");
+							}
 						} else {
 							logger.info(" [Trial Timer] Paid NameSpace, Nothing to do ");
 						}
@@ -342,7 +347,7 @@ public class Util {
 				labels.put("mailSendDate", mailTime.toString().replaceAll(":", "-").substring(0, 19));
 			}
 		} else {
-			logger.info(" [Trial Timer] Mail for Alert Deletion for This Trial Namespace [" + nsResult.getMetadata().getName() + "] already Sent to " + nsResult.getMetadata().getLabels().get("owner") );
+			logger.info(" [Trial Timer] Mail for Alert Deletion for This Trial Namespace [" + nsResult.getMetadata().getName() + "] already Sent to " + nsResult.getMetadata().getAnnotations().get("owner") );
 		}
 		
 		if( deleteTime.isAfter(currentTime) ) {
@@ -357,11 +362,11 @@ public class Util {
 						
 						V1Namespace nameSpace = K8sApiCaller.getNameSpace(nsName);
 						if ( nameSpace.getMetadata().getLabels() != null && nameSpace.getMetadata().getLabels().get("trial") != null 
-								&& nameSpace.getMetadata().getLabels().get("owner") != null) {
+								&& nameSpace.getMetadata().getAnnotations()!= null && nameSpace.getMetadata().getAnnotations().get("owner") != null) {
 							logger.info(" [Trial Timer] Still Trial NameSpace, Delete Expired Namespace [ " + nsName + " ]");
 							K8sApiCaller.deleteRoleBinding(nsName, "trial-" + nsName);
 							// Delete ClusterRoleBinding for Trial New User
-							K8sApiCaller.deleteClusterRoleBinding("trial-" + nsName);
+							K8sApiCaller.deleteClusterRoleBinding("CRB-" + nsName);
 							K8sApiCaller.deleteNameSpace(nsName);
 						} else {
 							logger.info(" [Trial Timer] Paid NameSpace, Nothing to do ");

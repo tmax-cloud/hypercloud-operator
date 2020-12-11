@@ -25,7 +25,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -6628,90 +6627,4 @@ public class K8sApiCaller {
 			throw e;
 		}
 	}
-
-
-//	public static void updateClusterRoleBindingOfGroup(String userGroupName, String userId) throws Exception {
-//		V1ClusterRoleBindingList crbList = null;
-//		boolean flag = false;
-//		try{
-//			crbList = rbacApi.listClusterRoleBinding("true", false, null, null, null, 1000 , null, 60, false);
-//			for (V1ClusterRoleBinding item : crbList.getItems()) {
-//				List<V1Subject> subjects = item.getSubjects();
-////				V1RoleRef roleRef = item.getRoleRef();
-//				if (subjects != null) {
-//					for( V1Subject subject : subjects ) {
-//						if ( subject.getKind().equalsIgnoreCase("Group")) {
-//							if( subject.getName().equalsIgnoreCase( userGroupName )) {
-//								// 유저 이름으로 만들어진 해당 클러스터 롤이 존재하는지 파악
-//								for( V1Subject subject2 : subjects ) {
-//									if ( subject2.getKind().equalsIgnoreCase("User")) {
-//										if( subject2.getName().equalsIgnoreCase( userId )) {
-//											flag = true;  // 이미 만들어짐
-//										}
-//									}
-//								}
-//								if (!flag) {
-//									// 존재하지 않으면 subject 추가해준다 만들어준다
-//									V1Subject newSubject = new V1Subject();
-//									newSubject.setKind("User");
-//									newSubject.setApiGroup("rbac.authorization.k8s.io");
-//									newSubject.setName( userId );
-//									item.addSubjectsItem(newSubject);
-//									rbacApi.replaceClusterRoleBinding(item.getMetadata().getName(), item, null, null, null);
-//								}	
-//							}
-//						}
-//					}	
-//				}			
-//			}
-//		} catch (Exception e) {
-//			logger.info(e.getMessage());
-//			throw e;
-//		} finally {
-//		}
-//		
-//	}
-//
-//	public static void deleteClusterRoleBindingOfGroup(Set<String> keySet, String userId) throws Exception {
-//		V1ClusterRoleBindingList crbList = null;
-//		boolean flag = false;
-//		try{
-//			crbList = rbacApi.listClusterRoleBinding("true", false, null, null, null, 1000 , null, 60, false);
-//			for (V1ClusterRoleBinding item : crbList.getItems()) {
-//				List<V1Subject> subjects = item.getSubjects();
-////				V1RoleRef roleRef = item.getRoleRef();
-//				if (subjects != null) {
-//					for( int i=0 ; i < subjects.size(); i++) {   
-//						V1Subject subject = subjects.get(i);
-//						if ( subject.getKind().equalsIgnoreCase("User")) {
-//							if( subject.getName().equalsIgnoreCase( userId )) {
-//								// user로 맵핑 된 clusterRoleBinding 중  Group을 역시나 가지고 있는애가 있는지 파악
-//								for( V1Subject subject2 : subjects ) {
-//									if ( subject2.getKind().equalsIgnoreCase("Group")) {
-//										for (String userGroupName : keySet) {
-//											if( subject2.getName().equalsIgnoreCase( userGroupName )) {
-//												flag = true;  // 존재함
-//											}
-//										}
-//										if (!flag) {
-//											// 존재하지 subject를 지우고 replace를 해라
-//											subjects.remove(i);
-//											item.setSubjects(subjects);
-//											rbacApi.replaceClusterRoleBinding(item.getMetadata().getName(), item, null, null, null);
-//										}
-//										
-//										
-//									}
-//								}
-//							}
-//						}
-//					}	
-//				}			
-//			}
-//		} catch (Exception e) {
-//			logger.info(e.getMessage());
-//			throw e;
-//		} finally {
-//		}
-//	}
 }

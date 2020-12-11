@@ -11,7 +11,6 @@ import org.slf4j.Logger;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
@@ -21,7 +20,6 @@ import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CustomObjectsApi;
 import io.kubernetes.client.util.Watch;
 import k8s.example.client.Constants;
-import k8s.example.client.DataObject.UserCR;
 import k8s.example.client.Main;
 import k8s.example.client.Util;
 import k8s.example.client.metering.TimerMap;
@@ -204,7 +202,6 @@ public class NamespaceClaimController extends Thread {
 	}
 
 	private void sendConfirmMail(NamespaceClaim claim, DateTime createTime, boolean flag ) throws Throwable {
-		UserCR user = null;
 		String subject = null;
 		String body = null;
 		String imgPath = null;
@@ -212,16 +209,10 @@ public class NamespaceClaimController extends Thread {
 		String email = null;
 		
 		try {
-			String accessToken = HyperAuthCaller.loginAsAdmin();
-			JsonArray userListJsonArray = HyperAuthCaller.getUserList( accessToken.replaceAll("\"",""));
-    		for(JsonElement userJson : userListJsonArray) {
-    			if(userJson.getAsJsonObject().get("username").toString().equalsIgnoreCase("\"" + claim.getMetadata().getAnnotations().get("owner") + "\"" )) {
-    				if ( userJson.getAsJsonObject().get("email") != null ){
-						email = userJson.getAsJsonObject().get("email").toString().replaceAll("\"","");
-						break;
-					}
-    			}
-    		}
+			JsonObject userDetailJsonObject = HyperAuthCaller.getUserDetailWithoutToken( claim.getMetadata().getAnnotations().get("owner") );
+			if ( userDetailJsonObject != null) {
+				email = userDetailJsonObject.get("email").toString().replaceAll("\"", "");
+			}
 			logger.info("email : " + email);
 			if ( email != null){
 				if (flag) {
