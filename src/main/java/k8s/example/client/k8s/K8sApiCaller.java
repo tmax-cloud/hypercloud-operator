@@ -6066,8 +6066,8 @@ public class K8sApiCaller {
 					nscList.getMetadata().setContinue("wrongLabelorNoResource");
 				}
 		    } else {
-		    	// 3. User has No NSC List Permission --> Check if there is owner NSC with label	
-				logger.debug("3. User has No NSC List Permission --> Check if there is owner NSC with label");
+		    	// 3. User has No NSC List Permission --> Check if there is owner NSC with Annotations
+				logger.debug("3. User has No NSC List Permission --> Check if there is owner NSC with Annotations");
 				List < NamespaceClaim > nscItems = null;
 
 				body = new V1SelfSubjectAccessReview(); // V1SelfSubjectAccessReview 

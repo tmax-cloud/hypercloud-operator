@@ -112,7 +112,7 @@ public class NameSpaceHandler extends GeneralHandler {
 
     		// Update Period Label
     		if ( namespace.getMetadata().getLabels() != null && namespace.getMetadata().getLabels().get("trial") != null
-    				&& namespace.getMetadata().getLabels().get("owner") != null) {
+				 	&& namespace.getMetadata().getAnnotations()!= null && namespace.getMetadata().getAnnotations().get("owner") != null) {
     			Map<String, String> labels = namespace.getMetadata().getLabels();
         		if ( labels.keySet().contains("period")) {
         			labels.replace("period", period);
