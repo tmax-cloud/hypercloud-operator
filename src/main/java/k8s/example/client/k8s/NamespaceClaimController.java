@@ -139,7 +139,7 @@ public class NamespaceClaimController extends Thread {
 											}			
 											
 											// Send Success confirm Mail
-											sendConfirmMail ( claim, nsResult.getMetadata().getCreationTimestamp(),  true );																			
+											sendConfirmMail ( claim,true );
 										} else {
 											// Make Namespaced RoleBinding for non-trial User
 											try{
@@ -160,7 +160,7 @@ public class NamespaceClaimController extends Thread {
 										if ( claim.getMetadata().getLabels() != null && claim.getMetadata().getLabels().get("trial") !=null
 												&& claim.getMetadata().getAnnotations() != null && claim.getMetadata().getAnnotations().get("owner") !=null  ) {
 											// Send Fail confirm Mail
-											sendConfirmMail ( claim, null, false );										
+											sendConfirmMail ( claim,false );
 										}
 										K8sApiCaller.patchLabel(claimName, "handled" ,"t", Constants.CUSTOM_OBJECT_PLURAL_NAMESPACECLAIM , false, null);// FIXME
 									}				
@@ -201,7 +201,7 @@ public class NamespaceClaimController extends Thread {
 		}
 	}
 
-	private void sendConfirmMail(NamespaceClaim claim, DateTime createTime, boolean flag ) throws Throwable {
+	private void sendConfirmMail(NamespaceClaim claim, boolean flag ) throws Throwable {
 		String subject = null;
 		String body = null;
 		String imgPath = null;
@@ -213,6 +213,8 @@ public class NamespaceClaimController extends Thread {
 			if ( userDetailJsonObject != null) {
 				email = userDetailJsonObject.get("email").toString().replaceAll("\"", "");
 			}
+			V1Namespace namespace = K8sApiCaller.getNameSpace(claim.getResourceName());
+			DateTime createTime = namespace.getMetadata().getCreationTimestamp();
 			logger.info("email : " + email);
 			if ( email != null){
 				if (flag) {
@@ -220,7 +222,7 @@ public class NamespaceClaimController extends Thread {
 					body = Constants.TRIAL_SUCCESS_CONFIRM_MAIL_CONTENTS;
 					body = body.replaceAll("%%NAMESPACE_NAME%%", claim.getResourceName());
 					body = body.replaceAll("%%TRIAL_START_TIME%%", createTime.toDateTime().toString("yyyy-MM-dd"));
-					body = body.replaceAll("%%TRIAL_END_TIME%%", createTime.plusDays(30).toDateTime().toString("yyyy-MM-dd"));
+					body = body.replaceAll("%%TRIAL_END_TIME%%", namespace.getMetadata().getLabels().get("deletionDate"));
 //				body = body.replaceAll("%%SUCCESS_REASON%%", claim.getStatus().getReason());
 					imgPath = "/home/tmax/hypercloud4-operator/_html/img/trial-approval.png";
 					imgCid = "trial-approval";

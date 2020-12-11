@@ -5297,13 +5297,14 @@ public class K8sApiCaller {
 
 	public static void updateNamespaceFromClaim(NamespaceClaim claim) throws Throwable {
 		logger.debug("[K8S ApiCaller] Update Namespace Start");
+		V1Namespace prevNamespace = getNameSpace(claim.getResourceName());
 
 		V1Namespace namespace = new V1Namespace();
 		V1ObjectMeta namespaceMeta = new V1ObjectMeta();
-		Map<String, String> labels = new HashMap<>();
+		Map<String, String> labels = prevNamespace.getMetadata().getLabels();
 		labels.put("fromClaim", claim.getMetadata().getName());
 
-		Map<String, String> annotations = new HashMap<>();
+		Map<String, String> annotations = prevNamespace.getMetadata().getAnnotations();
 		annotations.put("owner", claim.getMetadata().getAnnotations().get("owner"));
 
 		//Add Trial Label if exists

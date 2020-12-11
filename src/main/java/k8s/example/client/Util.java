@@ -288,9 +288,9 @@ public class Util {
 			mailTime = deleteTime.minusDays(7);
 		}
 
-		// For test Delete !!!!!!
-		mailTime = createTime.plusMinutes(1);
-		deleteTime = createTime.plusMinutes(2);
+////		 For test Delete !!!!!!
+//		mailTime = createTime.plusMinutes(1);
+//		deleteTime = createTime.plusMinutes(3);
 
 		Timer timer = new Timer(nsResult.getMetadata().getUid() + "#" + nsResult.getMetadata().getName() + "#" + nsResult.getMetadata().getAnnotations().get("owner") + "#" + deleteTime.toDateTime().toString("yyyy-MM-dd") );
 		
@@ -342,9 +342,9 @@ public class Util {
 			
 			// Replace Or Put Mail Time Label
 			if ( labels.keySet().contains("mailSendDate")) {
-				labels.replace("mailSendDate", mailTime.toString().replaceAll(":", "-").substring(0, 19));
+				labels.replace("mailSendDate", mailTime.toString().replaceAll(":", "-").substring(0, 10));
 			}else {
-				labels.put("mailSendDate", mailTime.toString().replaceAll(":", "-").substring(0, 19));
+				labels.put("mailSendDate", mailTime.toString().replaceAll(":", "-").substring(0, 10));
 			}
 		} else {
 			logger.info(" [Trial Timer] Mail for Alert Deletion for This Trial Namespace [" + nsResult.getMetadata().getName() + "] already Sent to " + nsResult.getMetadata().getAnnotations().get("owner") );
@@ -386,9 +386,9 @@ public class Util {
 			
 			// Replace Or Put Deletion Time Label
 			if ( labels.keySet().contains("deletionDate")) {
-				labels.replace("deletionDate", deleteTime.toString().replaceAll(":", "-").substring(0, 19));
+				labels.replace("deletionDate", deleteTime.toString().replaceAll(":", "-").substring(0, 10));
 			}else {
-				labels.put("deletionDate", deleteTime.toString().replaceAll(":", "-").substring(0, 19));
+				labels.put("deletionDate", deleteTime.toString().replaceAll(":", "-").substring(0, 10));
 			}
 			
 			// patchNameSpace with new label
