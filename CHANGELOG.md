@@ -1,6 +1,24 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.8.7 start -------------------->
+
+## HyperCloudServer_4.1.8.7 (Tue Dec 15 06:16:28 KST 2020)
+
+### Added
+
+### Changed
+  - [mod] trial mail html 수정 by dnxorjs1
+  - [mod] trial 승인 거절 안내메일 안보내지는 버그 수정 by dnxorjs1
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.8.7 end --------------------->
+
 <!-------------------- v4.1.8.6 start -------------------->
 
 ## HyperCloudServer_4.1.8.6 (Mon Dec 14 06:59:06 KST 2020)
