@@ -4,7 +4,7 @@ metadata:
   name: gitlab-template
   namespace: default
   annotations:
-    template-version: 1.1.7
+    template-version: 1.1.8
     tested-operator-version: 4.1.3.2
 shortDescription: "GitLab Deployment"
 longDescription: "GitLab Deployment"
@@ -49,6 +49,14 @@ parameters:
   required: true
   value: 2221
   valueType: number
+- name: RESOURCE_CPU
+  displayName: ResourceCPU
+  description: Resource request, CPU (e.g., 1)
+  required: true
+- name: RESOURCE_MEM
+  displayName: ResourceMem
+  description: Resource request, Mem (e.g., 1Gi)
+  required: true
 objects:
 - apiVersion: v1
   kind: ServiceAccount
@@ -156,6 +164,13 @@ objects:
           volumeMounts:
           - name: shared
             mountPath: /tmp/shared
+          resources:
+            limits:
+              cpu: ${RESOURCE_CPU}
+              memory: ${RESOURCE_MEM}
+            requests:
+              cpu: ${RESOURCE_CPU}
+              memory: ${RESOURCE_MEM}
           command:
           - /bin/bash
           - -c
@@ -250,6 +265,13 @@ objects:
             subPath: data
           - name: shared
             mountPath: /tmp/shared
+          resources:
+            limits:
+              cpu: ${RESOURCE_CPU}
+              memory: ${RESOURCE_MEM}
+            requests:
+              cpu: ${RESOURCE_CPU}
+              memory: ${RESOURCE_MEM}
           readinessProbe:
             exec:
               command:
