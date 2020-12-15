@@ -302,7 +302,7 @@ public class Constants {
 			"            </p>\r\n" + 
 			"            <p style=\"line-height: 1.38rem;\">\r\n" +
 			"                안녕하세요? <br>\r\n" +
-			"                HyperCloud를 이용해 주셔서 감사합니다. <br>\r\n" +
+			"                TmaxCloud를 이용해 주셔서 감사합니다. <br>\r\n" +
 			"                로그인 화면에서 인증번호를 입력해 주세요. <br>\r\n" +
 			"                감사합니다. <br>\r\n" +
 			"            </p>\r\n" + 
@@ -321,14 +321,14 @@ public class Constants {
 			"<html lang=\"en\">\r\n" + 
 			"<head>\r\n" + 
 			"    <meta charset=\"UTF-8\">\r\n" + 
-			"    <title>HyperCloud 서비스 기간 만료 안내 알림</title>\r\n" +
+			"    <title>Trial 서비스 기간 만료 안내 알림</title>\r\n" +
 			"</head>\r\n" + 
 			"<body>\r\n" + 
 			"<div style=\"border: #c5c5c8 0.06rem solid; border-bottom: 0; width: 42.5rem; height: 43.19rem; padding: 0 1.25rem\">\r\n" + 
 			"    <header>\r\n" + 
 			"        <div style=\"margin: 0;\">\r\n" + 
 			"            <p style=\"font-size: 1rem; font-weight: bold; color: #333333; line-height: 3rem; letter-spacing: 0; border-bottom: #c5c5c8 0.06rem solid;\">\r\n" + 
-			"                HyperCloud 서비스 기간 만료 안내 알림\r\n" +
+			"                TmaxCloud 서비스 기간 만료 안내 알림\r\n" +
 			"            </p>\r\n" + 
 			"        </div>\r\n" + 
 			"    </header>\r\n" + 
@@ -343,7 +343,7 @@ public class Constants {
 			"<!--            </p>-->\r\n" + 
 			"            <p style=\"line-height: 1.38rem;\">\r\n" +
 			"                안녕하세요? <br>\r\n" +
-			"                HyperCloud를 이용해 주셔서 감사합니다. <br>\r\n" +
+			"                TmaxCloud 이용해 주셔서 감사합니다. <br>\r\n" +
 			"                고객님께서 사용중인 Trial 서비스가 <span style=\"color: #F26868;\">%%TRIAL_END_TIME%%</span>에 만료됩니다. <br>\r\n" +
 			"                Trial 서비스 이용 만료 시 사용중인 네임스페이스의 리소스는 모두 삭제됩니다. <br>\r\n" +
 			"                Trial 서비스 만료 기간 이전에 <span style=\"color: #187EE3;\">유료 서비스로 전환</span> 혹은 리소스를 백업해주시기 바랍니다. <br>\r\n" +
@@ -366,14 +366,14 @@ public class Constants {
 			"<html lang=\"en\">\r\n" + 
 			"<head>\r\n" + 
 			"    <meta charset=\"UTF-8\">\r\n" + 
-			"    <title>HyperCloud 서비스 신청 승인 완료</title>\r\n" +
+			"    <title>Trial 서비스 신청 승인 완료</title>\r\n" +
 			"</head>\r\n" + 
 			"<body>\r\n" + 
 			"<div style=\"border: #c5c5c8 0.06rem solid; border-bottom: 0; width: 42.5rem; height: 53.82rem; padding: 0 1.25rem\">\r\n" + 
 			"    <header>\r\n" + 
 			"        <div style=\"margin: 0;\">\r\n" + 
 			"            <p style=\"font-size: 1rem; font-weight: bold; color: #333333; line-height: 3rem; letter-spacing: 0; border-bottom: #c5c5c8 0.06rem solid;\">\r\n" + 
-			"                HyperCloud 서비스 신청 승인 완료\r\n" +
+			"                TmaxCloud 서비스 신청 승인 완료\r\n" +
 			"            </p>\r\n" + 
 			"        </div>\r\n" + 
 			"    </header>\r\n" + 
@@ -387,9 +387,9 @@ public class Constants {
 			"                축하합니다.\r\n" +
 			"            </p>\r\n" +
 			"            <p style=\"line-height: 1.38rem;\">\r\n" +
-			"                고객님의 Trial 서비스 신청이 성공적으로 승인되었습니다. <br>\r\n" +
+			"                고객님의 무료 체험 구독 신청이 성공적으로 승인되었습니다. <br>\r\n" +
 			"                지금 바로 티맥스의 소프트웨어와 검증을 거친 오픈소스 서비스를 결합한 클라우드 플랫폼, <br>\r\n" +
-			"                HyperCloud를 이용해 보세요. <br>\r\n" +
+			"                TmaxCloud의 서비스를 이용해 보세요. <br>\r\n" +
 			"                <br>\r\n" +
 			"                네임스페이스 이름 : <span style=\"font-weight: 600;\">%%NAMESPACE_NAME%%</span> <br>\r\n" +
 			"                Trial 기한 : %%TRIAL_START_TIME%% ~ %%TRIAL_END_TIME%% <br>\r\n" +
@@ -423,14 +423,14 @@ public class Constants {
 			"<html lang=\"en\">\r\n" + 
 			"<head>\r\n" + 
 			"    <meta charset=\"UTF-8\">\r\n" + 
-			"    <title>HyperCloud 서비스 신청 결과 알림</title>\r\n" +
+			"    <title>Trial 서비스 구독 신청 결과 알림</title>\r\n" +
 			"</head>\r\n" + 
 			"<body>\r\n" + 
 			"<div style=\"border: #c5c5c8 0.06rem solid; border-bottom: 0; width: 42.5rem; height: 43.19rem; padding: 0 1.25rem\">\r\n" + 
 			"    <header>\r\n" + 
 			"        <div style=\"margin: 0;\">\r\n" + 
 			"            <p style=\"font-size: 1rem; font-weight: bold; color: #333333; line-height: 3rem; letter-spacing: 0; border-bottom: #c5c5c8 0.06rem solid;\">\r\n" + 
-			"                HyperCloud 서비스 신청 결과 알림\r\n" +
+			"                Trial 서비스 구독 신청 결과 알림\r\n" +
 			"            </p>\r\n" + 
 			"        </div>\r\n" + 
 			"    </header>\r\n" + 
@@ -442,7 +442,7 @@ public class Constants {
 			"        <div style=\"width: 35.70rem; margin: 2rem 2.27rem;\">\r\n" + 
 			"            <p style=\"line-height: 1.38rem;\">\r\n" + 
 			"                안녕하세요? TmaxCloud 입니다. <br>\r\n" +
-			"                HyperCloud에 관심을 가져 주셔서 감사합니다. 고객님의 서비스 신청을 검토하였으며, <br>\r\n" +
+			"                TmaxCloud의 서비스를 이용해 주셔서 감사합니다. 고객님의 서비스 신청을 검토하였으며, <br>\r\n" +
 			"                그 결과로 고객님의 서비스 신청이 승인되지 않았음을 알려드립니다. <br>\r\n" +
 			"                비승인 사유는 아래와 같습니다. <br>\r\n" +
 			"                <br>\r\n" +
