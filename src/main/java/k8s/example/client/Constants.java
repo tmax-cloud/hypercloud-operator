@@ -442,7 +442,7 @@ public class Constants {
 			"        <div style=\"width: 35.70rem; margin: 2rem 2.27rem;\">\r\n" + 
 			"            <p style=\"line-height: 1.38rem;\">\r\n" + 
 			"                안녕하세요? TmaxCloud 입니다. <br>\r\n" +
-			"                TmaxCloud에 관심을 가져 주셔서 감사합니다. 고객님의 서비스 신청을 검토하였으며, <br>\r\n" +
+			"                HyperCloud에 관심을 가져 주셔서 감사합니다. 고객님의 서비스 신청을 검토하였으며, <br>\r\n" +
 			"                그 결과로 고객님의 서비스 신청이 승인되지 않았음을 알려드립니다. <br>\r\n" +
 			"                비승인 사유는 아래와 같습니다. <br>\r\n" +
 			"                <br>\r\n" +

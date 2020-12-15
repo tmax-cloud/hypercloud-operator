@@ -103,7 +103,7 @@ public class NamespaceClaimController extends Thread {
 
 								case Constants.EVENT_TYPE_MODIFIED :
 									logger.info("[NamespaceClaim Controller] Event Type : " + eventType );
-									logger.debug("[NamespaceClaim Controller] == NamespcaeClaim == " + claim.toString());
+									logger.debug("[NamespaceClaim Controller] == NamespaceClaim == " + claim.toString());
 
 									String status = getClaimStatus( claimName );		
 									if ( status.equals( Constants.CLAIM_STATUS_SUCCESS ) && K8sApiCaller.namespaceAlreadyExist( resourceName ) ) {	
@@ -213,11 +213,11 @@ public class NamespaceClaimController extends Thread {
 			if ( userDetailJsonObject != null) {
 				email = userDetailJsonObject.get("email").toString().replaceAll("\"", "");
 			}
-			V1Namespace namespace = K8sApiCaller.getNameSpace(claim.getResourceName());
-			DateTime createTime = namespace.getMetadata().getCreationTimestamp();
 			logger.info("email : " + email);
 			if ( email != null){
 				if (flag) {
+					V1Namespace namespace = K8sApiCaller.getNameSpace(claim.getResourceName());
+					DateTime createTime = namespace.getMetadata().getCreationTimestamp();
 					subject = " HyperCloud 서비스 신청 승인 완료 ";
 					body = Constants.TRIAL_SUCCESS_CONFIRM_MAIL_CONTENTS;
 					body = body.replaceAll("%%NAMESPACE_NAME%%", claim.getResourceName());
@@ -226,7 +226,7 @@ public class NamespaceClaimController extends Thread {
 //				body = body.replaceAll("%%SUCCESS_REASON%%", claim.getStatus().getReason());
 					imgPath = "/home/tmax/hypercloud4-operator/_html/img/trial-approval.png";
 					imgCid = "trial-approval";
-				}else {
+				} else {
 					subject = " HyperCloud 서비스 신청 승인 거절  ";
 					body = Constants.TRIAL_FAIL_CONFIRM_MAIL_CONTENTS;
 					if ( claim.getStatus()!= null && claim.getStatus().getReason() != null ) {
