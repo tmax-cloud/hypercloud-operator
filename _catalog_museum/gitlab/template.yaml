@@ -4,7 +4,7 @@ metadata:
   name: gitlab-template
   namespace: default
   annotations:
-    template-version: 1.1.6
+    template-version: 1.1.8
     tested-operator-version: 4.1.3.2
 shortDescription: "GitLab Deployment"
 longDescription: "GitLab Deployment"
@@ -49,6 +49,14 @@ parameters:
   required: true
   value: 2221
   valueType: number
+- name: RESOURCE_CPU
+  displayName: ResourceCPU
+  description: Resource request, CPU (e.g., 1)
+  required: true
+- name: RESOURCE_MEM
+  displayName: ResourceMem
+  description: Resource request, Mem (e.g., 1Gi)
+  required: true
 objects:
 - apiVersion: v1
   kind: ServiceAccount
@@ -61,9 +69,11 @@ objects:
   rules:
   - apiGroups: [""]
     resources: ["services"]
+    resourceNames: ["${APP_NAME}-service"]
     verbs: ["get", "list", "create", "patch", "update"]
   - apiGroups: ["networkings", "extensions"]
     resources: ["ingresses"]
+    resourceNames: ["${APP_NAME}-ingress"]
     verbs: ["get", "list", "create", "patch", "update", "delete"]
 - apiVersion: rbac.authorization.k8s.io/v1
   kind: RoleBinding
@@ -154,6 +164,13 @@ objects:
           volumeMounts:
           - name: shared
             mountPath: /tmp/shared
+          resources:
+            limits:
+              cpu: ${RESOURCE_CPU}
+              memory: ${RESOURCE_MEM}
+            requests:
+              cpu: ${RESOURCE_CPU}
+              memory: ${RESOURCE_MEM}
           command:
           - /bin/bash
           - -c
@@ -219,6 +236,8 @@ objects:
             cat <<EOF >> /tmp/shared/omnibus.env
             external_url '$EXTERNAL_IP'
             gitlab_rails['gitlab_shell_ssh_port'] = $PORT_SSH
+            prometheus['enable'] = false
+            prometheus['monitor_kubernetes'] = false
             EOF
         containers:
         - name: ${APP_NAME}
@@ -246,6 +265,13 @@ objects:
             subPath: data
           - name: shared
             mountPath: /tmp/shared
+          resources:
+            limits:
+              cpu: ${RESOURCE_CPU}
+              memory: ${RESOURCE_MEM}
+            requests:
+              cpu: ${RESOURCE_CPU}
+              memory: ${RESOURCE_MEM}
           readinessProbe:
             exec:
               command:
@@ -277,3 +303,4 @@ plans:
         parameters:
           APP_NAME: gitlab-deploy
           STORAGE: 10Gi
+

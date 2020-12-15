@@ -4,7 +4,7 @@ metadata:
   name: gitlab-template-instance
   namespace: default
   annotations:
-    template-version: 1.1.6
+    template-version: 1.1.8
     tested-operator-version: 4.1.3.2
 spec:
   template:
@@ -19,3 +19,7 @@ spec:
       value: LoadBalancer
     - name: SSH_PORT
       value: 2221
+    - name: RESOURCE_CPU
+      value: 1
+    - name: RESOURCE_MEM
+      value: 4Gi
