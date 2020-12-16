@@ -3,7 +3,7 @@ kind: ClusterTask
 metadata:
   name: s2i
   annotations:
-    template-version: 1.1.8
+    template-version: 1.2.0
     tested-operator-version: 4.1.3.2
 spec:
   description: S2I Task
@@ -37,7 +37,7 @@ spec:
       description: Tag-updated image url
   steps:
     - name: update-image-url
-      image: tmaxcloudck/cicd-util:1.1.8
+      image: tmaxcloudck/cicd-util:1.2.0
       args:
         - update-image-url
       env:
@@ -48,7 +48,7 @@ spec:
         - name: TARGET_FILE
           value: $(results.image-url.path)
     - name: parse-registry-cred
-      image: tmaxcloudck/cicd-util:1.1.8
+      image: tmaxcloudck/cicd-util:1.2.0
       args:
         - parse-registry-cred
       env:
@@ -59,7 +59,7 @@ spec:
         - name: TARGET_FILE
           value: $(results.registry-cred.path)
     - name: generate
-      image: quay.io/openshift-pipeline/s2i:nightly
+      image: tmaxcloudck/cicd-util:1.2.0
       script: |
         #!/bin/sh
         set -ex
@@ -81,6 +81,7 @@ spec:
         fi
 
         /usr/local/bin/s2i \
+        --clearCache \
         --loglevel=$(inputs.params.LOGLEVEL) \
         -E $FILENAME \
         build $(inputs.params.PATH_CONTEXT) $(inputs.params.BUILDER_IMAGE) \
