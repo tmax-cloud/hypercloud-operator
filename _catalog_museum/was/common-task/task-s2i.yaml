@@ -3,7 +3,7 @@ kind: ClusterTask
 metadata:
   name: s2i
   annotations:
-    template-version: 1.2.0
+    template-version: 1.2.1
     tested-operator-version: 4.1.3.2
 spec:
   description: S2I Task
@@ -37,7 +37,9 @@ spec:
       description: Tag-updated image url
   steps:
     - name: update-image-url
-      image: tmaxcloudck/cicd-util:1.2.0
+      image: tmaxcloudck/cicd-util:1.2.1
+      command:
+        - /cicd-util
       args:
         - update-image-url
       env:
@@ -48,7 +50,9 @@ spec:
         - name: TARGET_FILE
           value: $(results.image-url.path)
     - name: parse-registry-cred
-      image: tmaxcloudck/cicd-util:1.2.0
+      image: tmaxcloudck/cicd-util:1.2.1
+      command:
+        - /cicd-util
       args:
         - parse-registry-cred
       env:
@@ -59,7 +63,7 @@ spec:
         - name: TARGET_FILE
           value: $(results.registry-cred.path)
     - name: generate
-      image: tmaxcloudck/cicd-util:1.2.0
+      image: tmaxcloudck/cicd-util:1.2.1
       script: |
         #!/bin/sh
         set -ex
