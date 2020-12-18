@@ -284,13 +284,13 @@ public class Util {
 		}
 
 //		 For test Delete !!!!!!!!!!!!!!!!!!!!!!!!!!
-		mailTime = createTime.plusMinutes(3);
-		deleteTime = createTime.plusMinutes(6);
-
-		if ( nsResult.getMetadata().getLabels().get("period") != null ) {
-			deleteTime = createTime.plusMinutes( Integer.parseInt(nsResult.getMetadata().getLabels().get("period")) * 3 );
-			mailTime = createTime.plusMinutes( Integer.parseInt(nsResult.getMetadata().getLabels().get("period")) * 6 );
-		}
+//		mailTime = createTime.plusMinutes(3);
+//		deleteTime = createTime.plusMinutes(6);
+//
+//		if ( nsResult.getMetadata().getLabels().get("period") != null ) {
+//			deleteTime = createTime.plusMinutes( Integer.parseInt(nsResult.getMetadata().getLabels().get("period")) * 3 );
+//			mailTime = createTime.plusMinutes( Integer.parseInt(nsResult.getMetadata().getLabels().get("period")) * 6 );
+//		}
 //		 For test Delete !!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
