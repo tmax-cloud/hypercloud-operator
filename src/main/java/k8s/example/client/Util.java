@@ -283,15 +283,15 @@ public class Util {
 			mailTime = deleteTime.minusDays(7);
 		}
 
-//		 For test Delete !!!!!!!!!!!!!!!!!!!!!!!!!!
-		mailTime = createTime.plusMinutes(3);
-		deleteTime = createTime.plusMinutes(6);
-
-		if ( nsResult.getMetadata().getLabels().get("period") != null ) {
-			deleteTime = createTime.plusMinutes( Integer.parseInt(nsResult.getMetadata().getLabels().get("period")) * 6 );
-			mailTime = createTime.plusMinutes( Integer.parseInt(nsResult.getMetadata().getLabels().get("period")) * 3 );
-		}
-//		 For test Delete !!!!!!!!!!!!!!!!!!!!!!!!!!!
+//		 For test Must Delete !!!!!!!!!!!!!!!!!!!!!!!!!!
+//		mailTime = createTime.plusMinutes(3);
+//		deleteTime = createTime.plusMinutes(6);
+//
+//		if ( nsResult.getMetadata().getLabels().get("period") != null ) {
+//			deleteTime = createTime.plusMinutes( Integer.parseInt(nsResult.getMetadata().getLabels().get("period")) * 6 );
+//			mailTime = createTime.plusMinutes( Integer.parseInt(nsResult.getMetadata().getLabels().get("period")) * 3 );
+//		}
+//		 For test Must Delete !!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
 		Timer timer = new Timer(nsResult.getMetadata().getUid() + "#" + nsResult.getMetadata().getName() + "#" + nsResult.getMetadata().getAnnotations().get("owner") + "#" + deleteTime.toDateTime().toString("yyyy-MM-dd") );
