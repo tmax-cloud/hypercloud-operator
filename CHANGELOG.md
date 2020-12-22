@@ -1,6 +1,22 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.8.9 start -------------------->
+
+## HyperCloudServer_4.1.8.9 (Fri Dec 18 04:05:36 KST 2020)
+
+### Added
+
+### Changed
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.8.9 end --------------------->
+
 <!-------------------- v4.1.8.8 start -------------------->
 
 ## HyperCloudServer_4.1.8.8 (Fri Dec 18 03:43:15 KST 2020)
