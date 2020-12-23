@@ -5827,8 +5827,9 @@ public class K8sApiCaller {
 		try {
 			// 1. Get UserGroup List if Exists
 			logger.debug(" userId :" + userId);
-			if(HyperAuthCaller.getUserDetailWithoutToken(userId) != null && HyperAuthCaller.getUserDetailWithoutToken(userId).get("groups") != null ) {
-				JsonArray userGroups = HyperAuthCaller.getUserDetailWithoutToken(userId).get("groups").getAsJsonArray();
+			JsonObject userDetail = HyperAuthCaller.getUserDetailWithoutToken(userId);
+			if(userDetail != null && userDetail.get("groups") != null ) {
+				JsonArray userGroups = userDetail.get("groups").getAsJsonArray();
 				for (JsonElement userGroupName : userGroups) {
 					if (userGroupList == null) userGroupList = new ArrayList<>();
 					logger.debug(" userGroupName :" + userGroupName.toString().replaceAll("\"", ""));
