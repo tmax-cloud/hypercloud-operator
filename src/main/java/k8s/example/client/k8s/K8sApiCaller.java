@@ -2680,11 +2680,12 @@ public class K8sApiCaller {
 
 						if(registry.getSpec().getService().getLoadBalancer() != null) {
 							if(registry.getSpec().getService().getLoadBalancer().getPort() < 1
-									|| registry.getSpec().getService().getLoadBalancer().getPort() > 65535)
+									|| registry.getSpec().getService().getLoadBalancer().getPort() > 65535) {
 								lbPort = registry.getSpec().getService().getLoadBalancer().getPort();
-							patchArray.add(Util.makePatchJsonObject("replace", "/spec/service/loadBalancer/port", 443));
+								patchArray.add(Util.makePatchJsonObject("replace", "/spec/service/loadBalancer/port", 443));
+							}
 						}
-						
+
 						if(patchArray.size() == 0) 
 							continue;
 						

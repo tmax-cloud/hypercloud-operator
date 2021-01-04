@@ -1,6 +1,41 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.9.2 start -------------------->
+
+## HyperCloudServer_4.1.9.2 (Thu Dec 31 05:47:23 KST 2020)
+
+### Added
+  - [feat] adminCMP annotations 추가 by hyejin_park2
+
+### Changed
+  - [mod] registry: fix patching port number 443 if service type is lbtype by sukhee_yun
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.9.2 end --------------------->
+
+<!-------------------- v4.1.9.1 start -------------------->
+
+## HyperCloudServer_4.1.9.1 (Wed Dec 23 04:30:57 KST 2020)
+
+### Added
+
+### Changed
+  - [mod] namespaceListGet 에서 userDetail 부르는 작업 고도화 by dnxorjs1
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.9.1 end --------------------->
+
 <!-------------------- v4.1.9.0 start -------------------->
 
 ## HyperCloudServer_4.1.9.0 (Tue Dec 22 04:05:56 KST 2020)
