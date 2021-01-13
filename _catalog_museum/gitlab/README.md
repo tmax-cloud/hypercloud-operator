@@ -10,7 +10,7 @@ kubectl apply -f template.yaml
 kubectl apply -f instance.yaml
 ```
 
-### Parameter 설명
+## Parameter 설명
 - APP_NAME  
 : GitLab Deployment 제목
 
@@ -35,3 +35,29 @@ kubectl apply -f instance.yaml
 - SSH_PORT  
 : SSH 포트 포워딩
 : 명시되지 않을 경우 2221 포트 사용
+
+- RESOURCE_CPU / RESOURCE_MEM  
+: 컨테이너 리소스 request/limit
+
+- KEYCLOAK_URL  
+: 키클록 URL (`http://` 포함)
+
+- KEYCLOAK_CLIENT  
+: 키클록 클라이언트 이름
+
+- KEYCLOAK_SECRET  
+: 키클록 클라이언트 Credential
+
+## 키클록 연동 방법
+1. 키클록에서 클라이언트 생성
+- Name  
+: `gitlab`
+- Client-Protocol  
+: `openid-connect`
+- AccessType  
+: `confidential`
+- Valid Redirect URIs  
+: `*`
+
+2. 시크릿 복사
+- `Client > gitlab > Credentials > Secret` 복사
