@@ -72,11 +72,11 @@ spec:
         - containerPort: 28677
         resources:
           limits:
-            cpu: "1"
-            memory: "1Gi"
+            cpu: "300m"
+            memory: "512Mi"
           requests:
-            cpu: "1"
-            memory: "1Gi"
+            cpu: "200m"
+            memory: "256Mi"
       serviceAccountName: hypercloud4-admin
 
 ---
