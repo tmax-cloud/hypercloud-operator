@@ -1123,7 +1123,7 @@ public class K8sApiCaller {
 			}
 
 			if(serviceType.equals(RegistryService.SVC_TYPE_INGRESS)) {
-				registryDomain = registryName + "." + ingressDomain;
+				registryDomain = namespace + "." + registryName + "." + ingressDomain;
 				logger.debug("[registryDomain]:" + registryDomain);
 			}
 
@@ -1337,7 +1337,7 @@ public class K8sApiCaller {
 			}
 
 			if(serviceType.equals(RegistryService.SVC_TYPE_INGRESS)) {
-				registryDomain = registryName + "." + ingressDomain;
+				registryDomain = namespace + "." + registryName + "." + ingressDomain;
 				logger.debug("[registryDomain]:" + registryDomain);
 			}
 
@@ -1530,7 +1530,7 @@ public class K8sApiCaller {
 			}
 			ingressDomain = getRegistryIngressDomain(ingCtlIP);
 			
-			registryDomain = registryName + "." + ingressDomain;
+			registryDomain = namespace + "." + registryName + "." + ingressDomain;
 			logger.debug("[registryDomain]:" + registryDomain);
 
 			registrySVCPort = registryService.REGISTRY_INGRESS_PORT;
