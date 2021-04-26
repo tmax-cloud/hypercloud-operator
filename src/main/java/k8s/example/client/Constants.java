@@ -217,6 +217,7 @@ public class Constants {
 	public static final String QUERY_PARAMETER_CONTINUE = "continue";
 	public static final String QUERY_PARAMETER_PERIOD = "period";
 	public static final String TRIAL_PERIOD_EXTEND_FAILED = "Trial NameSpace Period Extend Failed";
+	public static final String QUERY_PARAMETER_USER_GROUP = "userGroup";
 
 	// User Get Query Parameters
 	public static final String QUERY_PARAMETER_ID = "id";

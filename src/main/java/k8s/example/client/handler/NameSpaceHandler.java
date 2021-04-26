@@ -1,5 +1,6 @@
 package k8s.example.client.handler;
 
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -39,12 +40,16 @@ public class NameSpaceHandler extends GeneralHandler {
 		String outDO = null; 
 		String accessToken = null;
 		String userId = SimpleUtil.getQueryParameter( session.getParameters(), Constants.QUERY_PARAMETER_USER_ID );
-//		String userId = "admin-tmax.co.kr";
+
 		// if limit exists
 		String limit = SimpleUtil.getQueryParameter( session.getParameters(), Constants.QUERY_PARAMETER_LIMIT );
 		
 		//if label selector exists
 		String labelSelector = SimpleUtil.getQueryParameter( session.getParameters(), Constants.QUERY_PARAMETER_LABEL_SELECTOR );
+
+		// 2104265 hyperauth 와의 dependency 를 없애기
+		List<String> userGroupList = SimpleUtil.getQueryParameterArray (session.getParameters(), Constants.QUERY_PARAMETER_USER_GROUP);
+		userGroupList.forEach(s-> logger.info("userGroup : " + s));
 		
 		try {			
 			// Read AccessToken from Header
@@ -56,7 +61,7 @@ public class NameSpaceHandler extends GeneralHandler {
 			}
     		logger.debug( "  Token: " + accessToken );	
     		
-			nsList = K8sApiCaller.getAccessibleNS(userId, labelSelector);
+			nsList = K8sApiCaller.getAccessibleNS(userId, labelSelector, userGroupList);
 			status = Status.OK;
 
 			// Limit

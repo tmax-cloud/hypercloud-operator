@@ -5815,28 +5815,28 @@ public class K8sApiCaller {
 		return uid;
 	}
 
-	public static V1NamespaceList getAccessibleNS(String userId, String labelSelector) throws Exception {
+	public static V1NamespaceList getAccessibleNS(String userId, String labelSelector, List<String> userGroupList) throws Exception {
 		V1NamespaceList nsList = new V1NamespaceList();
 		V1ListMeta metadata = new V1ListMeta();
 		nsList.setMetadata(metadata);
 		List<String> nsNameList = null;
-		List<String> userGroupList = null;
+//		List<String> userGroupList = null;
 		
 		V1ClusterRoleBindingList crbList = null;
 		List<String> clusterRoleList = null;
 		boolean clusterRoleFlag = false;
 		try {
-			// 1. Get UserGroup List if Exists
-			logger.debug(" userId :" + userId);
-			JsonObject userDetail = HyperAuthCaller.getUserDetailWithoutToken(userId);
-			if(userDetail != null && userDetail.get("groups") != null ) {
-				JsonArray userGroups = userDetail.get("groups").getAsJsonArray();
-				for (JsonElement userGroupName : userGroups) {
-					if (userGroupList == null) userGroupList = new ArrayList<>();
-					logger.debug(" userGroupName :" + userGroupName.toString().replaceAll("\"", ""));
-					userGroupList.add(userGroupName.toString().replaceAll("\"", ""));
-				}
-			}
+//			// 1. Get UserGroup List if Exists
+//			logger.debug(" userId :" + userId);
+//			JsonObject userDetail = HyperAuthCaller.getUserDetailWithoutToken(userId);
+//			if(userDetail != null && userDetail.get("groups") != null ) {
+//				JsonArray userGroups = userDetail.get("groups").getAsJsonArray();
+//				for (JsonElement userGroupName : userGroups) {
+//					if (userGroupList == null) userGroupList = new ArrayList<>();
+//					logger.debug(" userGroupName :" + userGroupName.toString().replaceAll("\"", ""));
+//					userGroupList.add(userGroupName.toString().replaceAll("\"", ""));
+//				}
+//			}
 			
 			// 2. List of ClusterRoleBinding
 			crbList = rbacApi.listClusterRoleBinding("true", false, null, null, null, 1000, null, 60, false);
