@@ -1,6 +1,23 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.9.4 start -------------------->
+
+## HyperCloudServer_4.1.9.4 (Mon Apr 26 03:14:30 KST 2021)
+
+### Added
+
+### Changed
+  - [mod] namespace list get hyperauth와의 dependency 제거 by dnxorjs1
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.9.4 end --------------------->
+
 <!-------------------- v4.1.9.3 start -------------------->
 
 ## HyperCloudServer_4.1.9.3 (Mon Feb  1 05:50:37 KST 2021)
