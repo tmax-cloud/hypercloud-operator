@@ -49,8 +49,10 @@ public class NameSpaceHandler extends GeneralHandler {
 
 		// 2104265 hyperauth 와의 dependency 를 없애기
 		List<String> userGroupList = SimpleUtil.getQueryParameterArray (session.getParameters(), Constants.QUERY_PARAMETER_USER_GROUP);
-		userGroupList.forEach(s-> logger.info("userGroup : " + s));
-		
+		if(userGroupList!= null){
+			userGroupList.forEach(s-> logger.info("userGroup : " + s));
+		}
+
 		try {			
 			// Read AccessToken from Header
 			if(!session.getHeaders().get("authorization").isEmpty()) {
