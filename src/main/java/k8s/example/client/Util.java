@@ -314,10 +314,11 @@ public class Util {
 							String email = null;
 							try{
 								// Call hyperauth to get Email with userId
-								JsonObject userDetailJsonObject = HyperAuthCaller.getUserDetailWithoutToken( userId );
-								if ( userDetailJsonObject != null) {
-									email = userDetailJsonObject.get("email").toString().replaceAll("\"", "");
-								}
+//								JsonObject userDetailJsonObject = HyperAuthCaller.getUserDetailWithoutToken( userId );
+//								if ( userDetailJsonObject != null) {
+//									email = userDetailJsonObject.get("email").toString().replaceAll("\"", "");
+//								}
+								email = userId;
 								logger.info(" [Trial Timer] Email : " + email );
 								String subject = " 신청해주신 Trial NameSpace [ " + nameSpace.getMetadata().getName() + " ] 만료 안내 ";
 								String body = Constants.TRIAL_TIME_OUT_CONTENTS;

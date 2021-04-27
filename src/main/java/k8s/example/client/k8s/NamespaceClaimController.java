@@ -209,10 +209,11 @@ public class NamespaceClaimController extends Thread {
 		String email = null;
 		
 		try {
-			JsonObject userDetailJsonObject = HyperAuthCaller.getUserDetailWithoutToken( claim.getMetadata().getAnnotations().get("owner") );
-			if ( userDetailJsonObject != null) {
-				email = userDetailJsonObject.get("email").toString().replaceAll("\"", "");
-			}
+//			JsonObject userDetailJsonObject = HyperAuthCaller.getUserDetailWithoutToken( claim.getMetadata().getAnnotations().get("owner") );
+//			if ( userDetailJsonObject != null) {
+//				email = userDetailJsonObject.get("email").toString().replaceAll("\"", "");
+//			}
+			email = claim.getMetadata().getAnnotations().get("owner");
 			logger.info("email : " + email);
 			if ( email != null){
 				if (flag) {
