@@ -356,8 +356,8 @@ public class NamespaceClaimController extends Thread {
 				logger.info(e2.getResponseBody());
 				throw e2;
 			}
-		}catch(Exception e) {
-			if (e.getMessage().contains("Not Found") || e.getMessage().contains("not found")) {
+		}catch(ApiException e) {
+			if (e.getResponseBody().contains("Not Found") || e.getResponseBody().contains("not found")) {
 				try {
 					// Create New ClusterroleBinding
 					K8sApiCaller.createClusterRoleBinding(rbcForNSC);
@@ -365,10 +365,10 @@ public class NamespaceClaimController extends Thread {
 					logger.info(e2.getResponseBody());
 					throw e2;
 				}
-			} else{
-				logger.info(e.getMessage());
-				throw e;
 			}
+		}catch(Exception e) {
+			logger.info(e.getMessage());
+			throw e;
 		}
 	}
 
