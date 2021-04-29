@@ -1,36 +1,18 @@
-< hypercloud 4.1 에 kafka test 용도 코드 적용 버전>
-
-
 package k8s.example.client;
 
 import com.google.gson.Gson;
-import javafx.util.Duration;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.clients.producer.ProducerRecord;
+
 import org.apache.kafka.common.config.SslConfigs;
 import org.apache.kafka.common.serialization.StringDeserializer;
-import org.apache.kafka.common.serialization.StringSerializer;
-import org.quartz.CronScheduleBuilder;
-import org.quartz.CronTrigger;
-import org.quartz.JobBuilder;
-import org.quartz.JobDetail;
-import org.quartz.Scheduler;
-import org.quartz.SchedulerException;
-import org.quartz.TriggerBuilder;
-import org.quartz.impl.StdSchedulerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.kubernetes.client.openapi.models.V1Namespace;
-import io.kubernetes.client.openapi.models.V1NamespaceList;
-import k8s.example.client.k8s.K8sApiCaller;
-import k8s.example.client.metering.MeteringJob;
+
 
 import java.util.Collections;
 import java.util.Properties;
@@ -39,91 +21,14 @@ public class Main {
 	public static Logger logger = LoggerFactory.getLogger("K8SOperator");
 	public static void main(String[] args) {
 		try {
-			// Start webhook server
-//			logger.info("[Main] Start webhook server");
-//			new WebHookServer();
-//			kafkaProducer();
 			System.out.println("[Main] Start kafka consumer");
 			kafkaConsumer();
-
-//			// Start Metering
-//			logger.info("[Main] Start Metering per 30 mins");
-//			startMeteringTimer();
-//
-//			// Init K8S Client
-//			logger.info("[Main] Init K8S Client");
-//			K8sApiCaller.initK8SClient();
-//
-//			// Start Trial Namespace Timer
-//			logger.info("[Main] Start Trial Namespace Timer");
-//			startTrialNSTimer();
-//
-//			// Start Start K8S watchers & Controllers
-//			logger.info("[Main] Start K8S watchers");
-//			K8sApiCaller.startWatcher(); // Infinite loop
-			
-			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
-
-
-////////////////////////////////////
-
-//	private static void kafkaProducer() {
-//		String value = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-//		String topic = "tmax";
-//
-//		//reset thread context
-//		resetThreadContext();
-//
-//		// create the producer
-//		KafkaProducer<String, String> producer = new KafkaProducer<>(getProperties());
-//
-//		// create a producer record
-//		Gson gson = new Gson();
-//		String jsonValue = gson.toJson(value);
-//		ProducerRecord<String, String> eventRecord =
-//				new ProducerRecord<String, String>(topic, jsonValue);
-//
-//		new Thread(
-//				() -> {
-//					try {
-//						producer.send(eventRecord, (metadata, exception) -> {
-//							if (exception != null) {
-//								logger.info("KAFKA EXCEPTION : "  + exception.getMessage());
-//								logger.info("Failed to Send to Topic Server, Load to DB for retry");
-//								//
-//							}else{
-//								logger.info("Success to load data");
-//							}
-//						});
-//						logger.info("out!!!!!!!!!");
-//
-//					} catch (Exception e) {
-//						e.printStackTrace();
-//					} finally {
-//						producer.flush();
-//						producer.close();
-//					}
-//				}
-//		).start();
-//	}
-//
-//	private static void resetThreadContext() {
-//		Thread.currentThread().setContextClassLoader(null);
-//	}
-//	public static Properties getProperties() {
-//		Properties properties = new Properties();
-//		properties.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, BOOTSTRAP_SERVER);
-//		properties.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
-//		properties.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
-//		properties.setProperty(ProducerConfig.MAX_BLOCK_MS_CONFIG, "5000"); // Wait 5Seconds until producer.send() timeout
-//		return properties;
-//	}
-//private final static String BOOTSTRAP_SERVER = "172.22.6.2:31000,172.22.6.2:31001,172.22.6.2:31002";
-private final static String BOOTSTRAP_SERVER = "kafka-1.hyperauth:9092,kafka-2.hyperauth:9092,kafka-3.hyperauth:9092";
+    private final static String BOOTSTRAP_SERVER = "172.22.6.2:31000,172.22.6.2:31001,172.22.6.2:31002";
+//	private final static String BOOTSTRAP_SERVER = "kafka-1.hyperauth:9092,kafka-2.hyperauth:9092,kafka-3.hyperauth:9092";
 
 	private static void kafkaConsumer() {
 		String TOPIC_NAME = "tmax";
@@ -185,265 +90,112 @@ private final static String BOOTSTRAP_SERVER = "kafka-1.hyperauth:9092,kafka-2.h
 				}
 			}
 		}
-	}
-////////////////////////////////////
-
-
-	private static void startTrialNSTimer() {
-		try {
-			V1NamespaceList nsList = K8sApiCaller.listNameSpace();
-			for ( V1Namespace ns : nsList.getItems()) {
-				if( ns.getMetadata().getLabels() != null && ns.getMetadata().getLabels().get("trial") != null
-						&& ns.getMetadata().getAnnotations() != null && ns.getMetadata().getAnnotations().get("owner") != null) {
-					logger.info("[Main] Trial NameSpace : " + ns.getMetadata().getName());
-					Util.setTrialNSTimer(ns);
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	private static void startMeteringTimer() throws SchedulerException {
-		JobDetail job = JobBuilder.newJob( MeteringJob.class )
-				.withIdentity( "MeteringJob" ).build();
-
-		CronTrigger cronTrigger = TriggerBuilder
-				.newTrigger()
-				.withIdentity( "MeteringCronTrigger" )
-				.withSchedule(
-				CronScheduleBuilder.cronSchedule( Constants.METERING_CRON_EXPRESSION ))
-				.build();
-
-		Scheduler sch = new StdSchedulerFactory().getScheduler();
-		sch.start(); sch.scheduleJob( job, cronTrigger );
 	}
 }
 
 
 
+--------------------------------------------------------------------------------------------------------------
 
+//<gradle.build>
 
+/*
+ * This file was generated by the Gradle 'init' task.
+ *
+ * This generated file contains a sample Java Library project to get you started.
+ * For more details take a look at the Java Libraries chapter in the Gradle
+ * User Manual available at https://docs.gradle.org/5.4/userguide/java_library_plugin.html
+ */
+plugins {
+    // Apply the java-library plugin to add support for Java Library
+    id 'java-library'
+}
 
-------------------------------------------------------------------------------------
+repositories {
+    // Use jcenter for resolving your dependencies.
+    // You can declare any Maven/Ivy/file repository here.
+    jcenter()
+}
 
+compileJava.options.encoding = 'UTF-8'
 
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
 
-package k8s.example.client;
+dependencies {
+    // This dependency is exported to consumers, that is to say found on their compile classpath.
+    api 'org.apache.commons:commons-math3:3.6.1'
 
-import com.google.gson.Gson;
-import javafx.util.Duration;
-import org.apache.kafka.clients.CommonClientConfigs;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.common.config.SslConfigs;
-import org.apache.kafka.common.serialization.StringDeserializer;
-import org.apache.kafka.common.serialization.StringSerializer;
-import org.quartz.CronScheduleBuilder;
-import org.quartz.CronTrigger;
-import org.quartz.JobBuilder;
-import org.quartz.JobDetail;
-import org.quartz.Scheduler;
-import org.quartz.SchedulerException;
-import org.quartz.TriggerBuilder;
-import org.quartz.impl.StdSchedulerFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+    // This dependency is used internally, and not exposed to consumers on their own compile classpath.
+    compile 'com.google.guava:guava:27.0.1-jre'
+	compile 'io.kubernetes:client-java-api:8.0.0'
+    compile 'io.kubernetes:client-java:8.0.0'
+    compile 'io.kubernetes:client-java-proto:8.0.0'
+	compile 'org.nanohttpd:nanohttpd:2.3.1'
+	compile 'org.nanohttpd:nanohttpd-nanolets:2.3.1'
+	compile 'com.auth0:java-jwt:3.9.0'
+	compile 'com.fasterxml.jackson.core:jackson-databind:2.3.1'
+	compile 'com.fasterxml.jackson.datatype:jackson-datatype-joda:2.3.1'
+	compile 'org.apache.httpcomponents:httpclient:4.5.10'
+	compile 'com.googlecode.json-simple:json-simple:1.1'
+	compile 'com.squareup.okhttp:okhttp:2.7.5'
+	compile 'ch.qos.logback:logback-classic:1.2.3'
+    compile 'ch.qos.logback:logback-core:1.2.3'
+    compile(group: "com.github.java-json-tools", name: "json-patch", version: "1.11")
+	compile 'org.quartz-scheduler:quartz:2.3.0'
+	compile 'mysql:mysql-connector-java:5.1.6'
+	compile 'javax.mail:mail:1.4.1'
+	compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.11.1'
+	compile 'org.apache.kafka:kafka-clients:2.6.0'
 
-import io.kubernetes.client.openapi.models.V1Namespace;
-import io.kubernetes.client.openapi.models.V1NamespaceList;
-import k8s.example.client.k8s.K8sApiCaller;
-import k8s.example.client.metering.MeteringJob;
+	// Use JUnit test framework
+    testImplementation 'junit:junit:4.12'    
+}
 
-import java.util.Collections;
-import java.util.Properties;
+task doBuild {
+	dependsOn "makeJar"
+	dependsOn "copyDependencies"
+	dependsOn "copyStartShell"
+	dependsOn "copyK8sOperatorHome"
+	dependsOn "copyCatalogMuseum"
+	dependsOn "copyHtml"
+}
 
-public class Main {
-	public static Logger logger = LoggerFactory.getLogger("K8SOperator");
-	public static void main(String[] args) {
-		try {
-			// Start webhook server
-//			logger.info("[Main] Start webhook server");
-//			new WebHookServer();
-//			kafkaProducer();
-			System.out.println("[Main] Start kafka consumer");
-			kafkaConsumer();
+task makeJar(type: Jar) {
+    archiveName "hypercloud4-operator.jar"
+    destinationDir = file("build/hypercloud4-operator/lib")
 
-//			// Start Metering
-//			logger.info("[Main] Start Metering per 30 mins");
-//			startMeteringTimer();
-//
-//			// Init K8S Client
-//			logger.info("[Main] Init K8S Client");
-//			K8sApiCaller.initK8SClient();
-//
-//			// Start Trial Namespace Timer
-//			logger.info("[Main] Start Trial Namespace Timer");
-//			startTrialNSTimer();
-//
-//			// Start Start K8S watchers & Controllers
-//			logger.info("[Main] Start K8S watchers");
-//			K8sApiCaller.startWatcher(); // Infinite loop
-			
-			
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
+	from(sourceSets.main.output.classesDirs) {
+        include("**")
+    }
+    manifest {
+        attributes 'Main-Class': 'k8s.example.client.Main'
+        attributes "Class-Path": configurations.compile.collect { it.getName() }.join(' ')
+    }
+}
 
+task copyDependencies(type: Copy) {
+	into "build/hypercloud4-operator/lib"
+	from configurations.compile
+}
 
-////////////////////////////////////
+task copyStartShell(type: Copy) {
+	into "build"
+	from "start.sh"
+}
 
-//	private static void kafkaProducer() {
-//		String value = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-//		String topic = "tmax";
-//
-//		//reset thread context
-//		resetThreadContext();
-//
-//		// create the producer
-//		KafkaProducer<String, String> producer = new KafkaProducer<>(getProperties());
-//
-//		// create a producer record
-//		Gson gson = new Gson();
-//		String jsonValue = gson.toJson(value);
-//		ProducerRecord<String, String> eventRecord =
-//				new ProducerRecord<String, String>(topic, jsonValue);
-//
-//		new Thread(
-//				() -> {
-//					try {
-//						producer.send(eventRecord, (metadata, exception) -> {
-//							if (exception != null) {
-//								logger.info("KAFKA EXCEPTION : "  + exception.getMessage());
-//								logger.info("Failed to Send to Topic Server, Load to DB for retry");
-//								//
-//							}else{
-//								logger.info("Success to load data");
-//							}
-//						});
-//						logger.info("out!!!!!!!!!");
-//
-//					} catch (Exception e) {
-//						e.printStackTrace();
-//					} finally {
-//						producer.flush();
-//						producer.close();
-//					}
-//				}
-//		).start();
-//	}
-//
-//	private static void resetThreadContext() {
-//		Thread.currentThread().setContextClassLoader(null);
-//	}
-//	public static Properties getProperties() {
-//		Properties properties = new Properties();
-//		properties.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, BOOTSTRAP_SERVER);
-//		properties.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
-//		properties.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
-//		properties.setProperty(ProducerConfig.MAX_BLOCK_MS_CONFIG, "5000"); // Wait 5Seconds until producer.send() timeout
-//		return properties;
-//	}
-//private final static String BOOTSTRAP_SERVER = "172.22.6.2:31000,172.22.6.2:31001,172.22.6.2:31002";
-private final static String BOOTSTRAP_SERVER = "kafka-1.hyperauth:9092,kafka-2.hyperauth:9092,kafka-3.hyperauth:9092";
+task copyK8sOperatorHome(type: Copy) {
+	from '_operator'
+	into 'build/hypercloud4-operator'
+}
 
-	private static void kafkaConsumer() {
-		String TOPIC_NAME = "tmax";
-		Properties properties = new Properties();
-		properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, BOOTSTRAP_SERVER);
-		properties.put(ConsumerConfig.ALLOW_AUTO_CREATE_TOPICS_CONFIG, false);
-		properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
-		properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
-		properties.put(ConsumerConfig.GROUP_ID_CONFIG, "hypercloud");   // TODO: Change group id to your hyperauth client Name
-		properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-		properties.put(ConsumerConfig.FETCH_MAX_WAIT_MS_CONFIG, "1000");
+task copyCatalogMuseum(type: Copy) {
+	from '_catalog_museum'
+	into 'build/hypercloud4-operator/_catalog_museum'
+}
 
-		// for SSL
-		properties.setProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
-		properties.setProperty(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, "/etc/ssl/kafka/hypercloud.truststore.jks");
-		properties.setProperty(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, "tmax@23");
-		properties.setProperty(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, "/etc/ssl/kafka/hypercloud.keystore.jks");
-		properties.setProperty(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, "tmax@23");
-		properties.setProperty(SslConfigs.SSL_KEY_PASSWORD_CONFIG, "tmax@23");
-
-		KafkaConsumer<String, String> consumer = new KafkaConsumer<>(properties);
-		consumer.subscribe(Collections.singletonList(TOPIC_NAME));
-
-		while (true) {
-			ConsumerRecords<String, String> records = consumer.poll(100);
-			for (ConsumerRecord<String, String> record : records) {
-				String s = record.topic();
-				if (TOPIC_NAME.equals(s)) {
-					System.out.println("[[ MESSAGE FROM TMAX TOPIC ]]");
-					System.out.println(record.value());
-					try {
-						Gson gson = new Gson();
-						TopicEvent topicEvent = gson.fromJson(record.value(), TopicEvent.class);
-						switch (topicEvent.getType()){
-							case "LOGIN":
-								System.out.println("User [ " + topicEvent.getUserName() + " ] Login !!");
-								break;
-							case "LOGOUT":
-								System.out.println("User [ " + topicEvent.getUserName() + " ] Logout !!");
-								break;
-							case "LOGIN_FAILED":
-								System.out.println("User [ " + topicEvent.getUserName() + " ] Login failed due to " + topicEvent.getError());
-								break;
-							case "USER_DELETE":
-								System.out.println("User [ " + topicEvent.getUserName() + " ] Deleted !!");
-								break;
-							case "USER_WITHDRAWAL":
-								System.out.println("User [ " + topicEvent.getUserName() + " ] Withdrawal request has been submitted !!");
-								break;
-							default:
-								System.out.println("Unknown Event");
-								break;
-						}
-					}catch(Exception e) {
-						System.out.println(e.getMessage());
-					}
-				} else {
-					System.out.println("get message on topic " + record.topic());
-				}
-			}
-		}
-	}
-////////////////////////////////////
-
-
-	private static void startTrialNSTimer() {
-		try {
-			V1NamespaceList nsList = K8sApiCaller.listNameSpace();
-			for ( V1Namespace ns : nsList.getItems()) {
-				if( ns.getMetadata().getLabels() != null && ns.getMetadata().getLabels().get("trial") != null
-						&& ns.getMetadata().getAnnotations() != null && ns.getMetadata().getAnnotations().get("owner") != null) {
-					logger.info("[Main] Trial NameSpace : " + ns.getMetadata().getName());
-					Util.setTrialNSTimer(ns);
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	private static void startMeteringTimer() throws SchedulerException {
-		JobDetail job = JobBuilder.newJob( MeteringJob.class )
-				.withIdentity( "MeteringJob" ).build();
-
-		CronTrigger cronTrigger = TriggerBuilder
-				.newTrigger()
-				.withIdentity( "MeteringCronTrigger" )
-				.withSchedule(
-				CronScheduleBuilder.cronSchedule( Constants.METERING_CRON_EXPRESSION ))
-				.build();
-
-		Scheduler sch = new StdSchedulerFactory().getScheduler();
-		sch.start(); sch.scheduleJob( job, cronTrigger );
-	}
+task copyHtml(type: Copy) {
+	from '_html'
+	into 'build/hypercloud4-operator/_html'
 }
