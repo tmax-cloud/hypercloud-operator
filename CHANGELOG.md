@@ -1,6 +1,23 @@
 # HyperCloudServer changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v4.1.9.8 start -------------------->
+
+## HyperCloudServer_4.1.9.8 (Tue Apr 27 03:21:00 KST 2021)
+
+### Added
+
+### Changed
+  - [mod] nsc success로 안되느 현상 해결 by dnxorjs1
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!--------------------- v4.1.9.8 end --------------------->
+
 <!-------------------- v4.1.9.7 start -------------------->
 
 ## HyperCloudServer_4.1.9.7 (Tue Apr 27 01:46:09 KST 2021)
