@@ -2,7 +2,7 @@ node {
 	def gitBaseAddress = "github.com"
 	def gitBuildAddress = "${gitBaseAddress}/tmax-cloud/hypercloud-operator.git"
 	
-	def hcBuildDir = "/var/lib/jenkins/workspace/hypercloud-operator"
+	def hcBuildDir = "/var/lib/jenkins/workspace/hypercloud4-operator"
 	def imageBuildHome = "/root/HyperCloud-image-build/hypercloud4-operator"
 
 	def version = "${params.majorVersion}.${params.minorVersion}.${params.tinyVersion}.${params.hotfixVersion}"
