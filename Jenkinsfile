@@ -11,9 +11,9 @@ node {
 	def binaryHome = "${hcBuildDir}/build"
 	def scriptHome = "${hcBuildDir}/scripts"
 		
-	def credentialsId = "hypercloud_github"
-	def userName = "seonho_choi"
-	def userEmail = "seonho_choi@tmax.co.kr"
+	def credentialsId = "e4c70fc7-e6c3-4343-9283-6b63c254cdbb"
+	def userName = "dnxorjs1"
+	def userEmail = "taegeon_woo@tmax.co.kr"
 
     stage('gradle build') {
         //deleteDir()
