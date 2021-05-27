@@ -1,6 +1,6 @@
 FROM 192.168.9.12:5000/alpine_with_encoding:3.9
 
-LABEL maintainer="seonho_choi@tmax.co.kr"
+LABEL maintainer="taegeon_woo@tmax.co.kr"
 
 ADD ./hypercloud4-operator /home/tmax/hypercloud4-operator
 ADD ./start.sh /home/tmax/
